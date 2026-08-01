@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  /* Brand palette — indigo/blue, enterprise-education tone */
+  --color-brand-50: oklch(97% 0.014 264);
+  --color-brand-100: oklch(93% 0.032 264);
+  --color-brand-200: oklch(86% 0.06 264);
+  --color-brand-300: oklch(77% 0.1 264);
+  --color-brand-400: oklch(68% 0.14 264);
+  --color-brand-500: oklch(58% 0.18 264);
+  --color-brand-600: oklch(50% 0.19 264);
+  --color-brand-700: oklch(43% 0.17 264);
+  --color-brand-800: oklch(36% 0.14 264);
+  --color-brand-900: oklch(29% 0.11 264);
+
+  /* Semantic tokens */
+  --color-background: oklch(99% 0.002 247.8);
+  --color-foreground: oklch(15% 0.012 256);
+  --color-card: oklch(100% 0 0);
+  --color-card-foreground: oklch(15% 0.012 256);
+  --color-primary: oklch(50% 0.19 264);
+  --color-primary-foreground: oklch(100% 0 0);
+  --color-secondary: oklch(96.8% 0.007 247.9);
+  --color-secondary-foreground: oklch(44.7% 0.018 256);
+  --color-muted: oklch(98.2% 0.004 247.9);
+  --color-muted-foreground: oklch(57.9% 0.02 254.1);
+  --color-accent: oklch(93% 0.032 264);
+  --color-accent-foreground: oklch(43% 0.17 264);
+  --color-destructive: oklch(63.7% 0.237 25.3);
+  --color-destructive-foreground: oklch(100% 0 0);
+  --color-success: oklch(64% 0.15 152);
+  --color-success-foreground: oklch(100% 0 0);
+  --color-warning: oklch(75% 0.16 80);
+  --color-warning-foreground: oklch(20% 0.02 80);
+  --color-border: oklch(91.9% 0.013 248.6);
+  --color-input: oklch(91.9% 0.013 248.6);
+  --color-ring: oklch(58% 0.18 264);
+  --color-popover: oklch(100% 0 0);
+  --color-popover-foreground: oklch(15% 0.012 256);
+
+  /* Sidebar */
+  --color-sidebar: oklch(100% 0 0);
+  --color-sidebar-foreground: oklch(44.7% 0.018 256);
+  --color-sidebar-border: oklch(91.9% 0.013 248.6);
+  --color-sidebar-accent: oklch(93% 0.032 264);
+  --color-sidebar-accent-foreground: oklch(43% 0.17 264);
+
+  /* Border radius */
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+  }
+
+  #root {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+}
