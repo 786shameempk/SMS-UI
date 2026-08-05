@@ -9,6 +9,7 @@ import {
   FileCheck2,
   GraduationCap,
   LayoutDashboard,
+  Library,
   ShieldCheck,
   UserCheck,
   UsersRound,
@@ -62,6 +63,11 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Finance",
     permissionKey: "fees",
     items: [{ label: "Fee Management", to: "/fees", icon: Wallet }],
+  },
+  {
+    title: "Library",
+    permissionKey: "library",
+    items: [{ label: "Library Management", to: "/library", icon: Library }],
   },
   {
     title: "Administration",
