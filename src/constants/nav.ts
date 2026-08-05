@@ -1,5 +1,19 @@
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, GraduationCap, LayoutDashboard, ShieldCheck, UsersRound, Users } from "lucide-react";
+import {
+  Briefcase,
+  BookOpenCheck,
+  CalendarCheck,
+  CalendarClock,
+  CalendarRange,
+  ClipboardList,
+  FileCheck2,
+  GraduationCap,
+  LayoutDashboard,
+  ShieldCheck,
+  UserCheck,
+  UsersRound,
+  Users,
+} from "lucide-react";
 import type { ModulePermissions } from "@/types/auth";
 
 export interface NavItem {
@@ -20,6 +34,7 @@ export interface NavSection {
 export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
+  { label: "My Homework", to: "/my-homework", icon: BookOpenCheck, permissionKey: "homework" },
 ];
 
 /** Grouped nav sections (Academics, Administration, ...). Populated module-by-module. */
@@ -27,7 +42,15 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Academics",
     permissionKey: "students",
-    items: [{ label: "Students", to: "/students", icon: GraduationCap }],
+    items: [
+      { label: "Students", to: "/students", icon: GraduationCap },
+      { label: "Academic Setup", to: "/academics", icon: CalendarRange, permissionKey: "academics" },
+      { label: "Attendance", to: "/attendance", icon: CalendarCheck, permissionKey: "attendance" },
+      { label: "Teachers", to: "/teachers", icon: UserCheck, permissionKey: "teachers" },
+      { label: "Timetable", to: "/timetable", icon: CalendarClock, permissionKey: "timetable" },
+      { label: "Examinations", to: "/examinations", icon: FileCheck2, permissionKey: "examinations" },
+      { label: "Homework", to: "/homework", icon: ClipboardList, permissionKey: "homework" },
+    ],
   },
   {
     title: "Human Resources",
