@@ -21,6 +21,7 @@ import TimetableManagementPage from "@/features/timetable/pages/TimetableManagem
 import ExaminationManagementPage from "@/features/examinations/pages/ExaminationManagementPage";
 import HomeworkManagementPage from "@/features/homework/pages/HomeworkManagementPage";
 import MyHomeworkPage from "@/features/homework/pages/MyHomeworkPage";
+import FeeManagementPage from "@/features/fees/pages/FeeManagementPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
       { path: "examinations", element: <ExaminationManagementPage /> },
       { path: "homework", element: <HomeworkManagementPage /> },
       { path: "my-homework", element: <MyHomeworkPage /> },
+      { path: "fees", element: <FeeManagementPage /> },
     ],
   },
 ]);

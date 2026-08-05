@@ -102,6 +102,7 @@ export const SEED_DISCOUNTS: FeeDiscount[] = [
     type: "percentage",
     value: 5,
     appliesTo: "all",
+    studentIds: [],
     description: "5% off for early full-year fee payment.",
   },
 ];

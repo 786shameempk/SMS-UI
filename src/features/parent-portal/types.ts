@@ -38,8 +38,14 @@ export interface ExamResult {
   grade: string;
 }
 
-export type FeeInvoiceStatus = "paid" | "due" | "overdue";
+export type FeeInvoiceStatus = "paid" | "due" | "overdue" | "partial";
 
+/**
+ * Backed by the real Fee Management module (src/features/fees) — see api.ts's
+ * listFeeInvoices/payFeeInvoice, which adapt src/features/fees FeeInvoice records into this
+ * shape. `amount` reflects the net payable amount (after discounts/fines), not the raw
+ * fee-structure amount.
+ */
 export interface FeeInvoice {
   id: string;
   studentId: string;
@@ -48,6 +54,7 @@ export interface FeeInvoice {
   dueDate: string;
   status: FeeInvoiceStatus;
   paidOn?: string;
+  paidAmount?: number;
 }
 
 export interface ThreadMessage {

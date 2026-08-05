@@ -1,11 +1,12 @@
 import { mockDelay } from "@/utils/mockDelay";
 import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
+import { listInvoicesForStudent, payInvoiceOnline } from "@/features/fees/api";
+import type { FeeInvoice as FeesInvoice } from "@/features/fees/types";
 import { PARENT_CHILDREN_MAP } from "./constants";
 import {
   buildAttendanceSummary,
   buildExamResults,
-  buildFeeInvoices,
   buildHomework,
   buildLeaveRequests,
   buildMessageThreads,
@@ -22,7 +23,6 @@ import type {
   ParentNotification,
 } from "./types";
 
-const FEES_KEY = "sms-mock-parent-fees";
 const THREADS_KEY = "sms-mock-parent-threads";
 const LEAVE_KEY = "sms-mock-parent-leave";
 const NOTIFICATIONS_KEY = "sms-mock-parent-notifications";
@@ -45,17 +45,21 @@ function saveJson(key: string, value: unknown) {
   }
 }
 
-let feesByStudent = loadJson<Record<string, FeeInvoice[]>>(FEES_KEY, {});
 let threadsByStudent = loadJson<Record<string, MessageThread[]>>(THREADS_KEY, {});
 let leaveByStudent = loadJson<Record<string, LeaveRequest[]>>(LEAVE_KEY, {});
 let notifications = loadJson<ParentNotification[]>(NOTIFICATIONS_KEY, buildNotifications());
 
-function ensureFees(studentId: string): FeeInvoice[] {
-  if (!feesByStudent[studentId]) {
-    feesByStudent = { ...feesByStudent, [studentId]: buildFeeInvoices(studentId) };
-    saveJson(FEES_KEY, feesByStudent);
-  }
-  return feesByStudent[studentId];
+function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
+  return {
+    id: invoice.id,
+    studentId: invoice.studentId,
+    term: invoice.term,
+    amount: invoice.netAmount,
+    dueDate: invoice.dueDate,
+    status: invoice.status,
+    paidOn: invoice.paidOn,
+    paidAmount: invoice.paidAmount,
+  };
 }
 
 function ensureThreads(studentId: string, teacherName: string): MessageThread[] {
@@ -93,21 +97,14 @@ export async function listExamResults(studentId: string): Promise<ExamResult[]> 
 }
 
 export async function listFeeInvoices(studentId: string): Promise<FeeInvoice[]> {
-  return mockDelay([...ensureFees(studentId)], 350);
+  const invoices = await listInvoicesForStudent(studentId);
+  return invoices.map(toParentFeeInvoice);
 }
 
 export async function payFeeInvoice(studentId: string, invoiceId: string): Promise<FeeInvoice> {
-  const invoices = ensureFees(studentId);
-  const idx = invoices.findIndex((f) => f.id === invoiceId);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Invoice not found");
-  }
-  const updated: FeeInvoice = { ...invoices[idx], status: "paid", paidOn: new Date().toISOString() };
-  const nextList = invoices.map((f) => (f.id === invoiceId ? updated : f));
-  feesByStudent = { ...feesByStudent, [studentId]: nextList };
-  saveJson(FEES_KEY, feesByStudent);
-  return mockDelay(updated, 900);
+  void studentId;
+  const { invoice } = await payInvoiceOnline(invoiceId);
+  return toParentFeeInvoice(invoice);
 }
 
 export async function listMessageThreads(studentId: string, teacherName: string): Promise<MessageThread[]> {

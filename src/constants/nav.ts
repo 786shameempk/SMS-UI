@@ -13,6 +13,7 @@ import {
   UserCheck,
   UsersRound,
   Users,
+  Wallet,
 } from "lucide-react";
 import type { ModulePermissions } from "@/types/auth";
 
@@ -56,6 +57,11 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Human Resources",
     permissionKey: "staff",
     items: [{ label: "Staff Management", to: "/staff", icon: Briefcase }],
+  },
+  {
+    title: "Finance",
+    permissionKey: "fees",
+    items: [{ label: "Fee Management", to: "/fees", icon: Wallet }],
   },
   {
     title: "Administration",
