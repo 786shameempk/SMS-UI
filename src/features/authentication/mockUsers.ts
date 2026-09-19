@@ -26,22 +26,27 @@ const FULL_PERMISSIONS: ModulePermissions = {
   homework: true,
 };
 
+/** Fee/Library/Transport/Hostel/Communication/Reports are restricted to admin users only. */
+const ADMIN_ONLY_MODULES = ["fees", "library", "transport", "hostel", "communication", "reports"] as const satisfies ReadonlyArray<keyof ModulePermissions>;
+
 const permissionsForRole = (role: UserRole): ModulePermissions => {
+  const isAdmin = role === "admin" || role === "superAdmin";
+  const adminOnlyOverrides = Object.fromEntries(ADMIN_ONLY_MODULES.map((key) => [key, isAdmin])) as Record<(typeof ADMIN_ONLY_MODULES)[number], boolean>;
+
   if (role === "parent" || role === "student") {
     return {
       ...FULL_PERMISSIONS,
+      ...adminOnlyOverrides,
       staff: false,
       students: false,
-      fees: role === "parent",
       administration: false,
-      reports: false,
       parentPortal: role === "parent",
     };
   }
   if (role === "teacher") {
-    return { ...FULL_PERMISSIONS, staff: false, administration: false };
+    return { ...FULL_PERMISSIONS, ...adminOnlyOverrides, staff: false, administration: false };
   }
-  return FULL_PERMISSIONS;
+  return { ...FULL_PERMISSIONS, ...adminOnlyOverrides };
 };
 
 export const MOCK_ACCOUNTS: MockAccount[] = [
