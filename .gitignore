@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 /.vs/SMS UI/CopilotIndices/18.9.1311.36310
+/.vs/SMS UI.slnx/FileContentIndex
+/.vs/slnx.sqlite
+/.vs
