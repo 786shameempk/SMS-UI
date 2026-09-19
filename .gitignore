@@ -26,3 +26,10 @@ dist-ssr
 /.vs/SMS UI.slnx/FileContentIndex
 /.vs/slnx.sqlite
 /.vs
+
+
+# amplify
+node_modules
+.amplify
+amplify_outputs*
+amplifyconfiguration*

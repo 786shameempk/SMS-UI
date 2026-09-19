@@ -21,12 +21,20 @@ export interface AuthUser {
 export interface ModulePermissions {
   dashboard: boolean;
   students: boolean;
+  academics: boolean;
+  attendance: boolean;
   staff: boolean;
+  teachers: boolean;
   fees: boolean;
   library: boolean;
   transport: boolean;
   hostel: boolean;
+  communication: boolean;
+  reports: boolean;
   administration: boolean;
+  timetable: boolean;
+  examinations: boolean;
+  homework: boolean;
   [module: string]: boolean;
 }
 

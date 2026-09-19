@@ -14,6 +14,7 @@ const STATUS_CONFIG: Record<FeeInvoiceStatus, { label: string; variant: "success
   paid: { label: "Paid", variant: "success" },
   due: { label: "Due", variant: "warning" },
   overdue: { label: "Overdue", variant: "danger" },
+  partial: { label: "Partially paid", variant: "warning" },
 };
 
 export default function FeesTab({ studentId }: { studentId: string }) {

@@ -9,13 +9,21 @@ interface MockAccount {
 const FULL_PERMISSIONS: ModulePermissions = {
   dashboard: true,
   students: true,
+  academics: true,
+  attendance: true,
   staff: true,
+  teachers: true,
   fees: true,
   library: true,
   transport: true,
   hostel: true,
+  communication: true,
+  reports: true,
   administration: true,
   parentPortal: false,
+  timetable: true,
+  examinations: true,
+  homework: true,
 };
 
 const permissionsForRole = (role: UserRole): ModulePermissions => {
@@ -26,6 +34,7 @@ const permissionsForRole = (role: UserRole): ModulePermissions => {
       students: false,
       fees: role === "parent",
       administration: false,
+      reports: false,
       parentPortal: role === "parent",
     };
   }
