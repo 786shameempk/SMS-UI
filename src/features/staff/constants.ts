@@ -8,6 +8,7 @@ export const DESIGNATIONS: StaffDesignation[] = [
   "Receptionist",
   "Librarian",
   "Driver",
+  "Warden",
   "Cleaner",
   "Security",
   "HR",

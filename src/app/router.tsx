@@ -23,6 +23,13 @@ import HomeworkManagementPage from "@/features/homework/pages/HomeworkManagement
 import MyHomeworkPage from "@/features/homework/pages/MyHomeworkPage";
 import FeeManagementPage from "@/features/fees/pages/FeeManagementPage";
 import LibraryManagementPage from "@/features/library/pages/LibraryManagementPage";
+import TransportManagementPage from "@/features/transport/pages/TransportManagementPage";
+import HostelManagementPage from "@/features/hostel/pages/HostelManagementPage";
+import CommunicationCenterPage from "@/features/communication/pages/CommunicationCenterPage";
+import NotificationCenterPage from "@/features/notifications/pages/NotificationCenterPage";
+import CalendarPage from "@/features/calendar/pages/CalendarPage";
+import ReportsPage from "@/features/reports/pages/ReportsPage";
+import SettingsPage from "@/features/settings/pages/SettingsPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -41,6 +48,7 @@ export const router = createBrowserRouter([
       { path: "account/security", element: <SecuritySettingsPage /> },
       { path: "admin/users", element: <UserManagementPage /> },
       { path: "admin/roles", element: <RolePermissionManagementPage /> },
+      { path: "admin/settings", element: <SettingsPage /> },
       { path: "students", element: <StudentManagementPage /> },
       { path: "students/:studentId", element: <StudentProfilePage /> },
       { path: "academics", element: <AcademicManagementPage /> },
@@ -56,6 +64,12 @@ export const router = createBrowserRouter([
       { path: "my-homework", element: <MyHomeworkPage /> },
       { path: "fees", element: <FeeManagementPage /> },
       { path: "library", element: <LibraryManagementPage /> },
+      { path: "transport", element: <TransportManagementPage /> },
+      { path: "hostel", element: <HostelManagementPage /> },
+      { path: "communication", element: <CommunicationCenterPage /> },
+      { path: "notifications", element: <NotificationCenterPage /> },
+      { path: "calendar", element: <CalendarPage /> },
+      { path: "reports", element: <ReportsPage /> },
     ],
   },
 ]);

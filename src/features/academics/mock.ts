@@ -159,4 +159,12 @@ export const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
   },
   { id: "cal-9", title: "Republic Day", type: "holiday", startDate: "2026-01-26", academicYearId: "ay-3" },
   { id: "cal-10", title: "Term 3 ends", type: "term_end", startDate: "2026-04-30", academicYearId: "ay-3" },
+  {
+    id: "cal-11",
+    title: "Parent-Teacher Meeting (PTA)",
+    type: "other",
+    startDate: "2026-09-25",
+    academicYearId: "ay-4",
+    description: "School-wide Parent-Teacher meeting to discuss student progress.",
+  },
 ];

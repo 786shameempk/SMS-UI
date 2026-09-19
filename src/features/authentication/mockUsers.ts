@@ -17,6 +17,8 @@ const FULL_PERMISSIONS: ModulePermissions = {
   library: true,
   transport: true,
   hostel: true,
+  communication: true,
+  reports: true,
   administration: true,
   parentPortal: false,
   timetable: true,
@@ -32,6 +34,7 @@ const permissionsForRole = (role: UserRole): ModulePermissions => {
       students: false,
       fees: role === "parent",
       administration: false,
+      reports: false,
       parentPortal: role === "parent",
     };
   }

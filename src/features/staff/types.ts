@@ -6,6 +6,7 @@ export type StaffDesignation =
   | "Receptionist"
   | "Librarian"
   | "Driver"
+  | "Warden"
   | "Cleaner"
   | "Security"
   | "HR"

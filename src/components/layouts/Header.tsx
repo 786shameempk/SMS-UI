@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import NotificationBell from "@/features/notifications/components/NotificationBell";
 
 function initialsOf(name: string | undefined | null) {
   if (!name) return "U";
@@ -33,6 +34,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-30 h-14 flex items-center gap-4 px-6 border-b border-slate-200/80 bg-white/70 backdrop-blur-md shrink-0">
       <div className="flex-1 min-w-0" />
+
+      <NotificationBell />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

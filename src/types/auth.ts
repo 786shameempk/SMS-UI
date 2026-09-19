@@ -29,6 +29,8 @@ export interface ModulePermissions {
   library: boolean;
   transport: boolean;
   hostel: boolean;
+  communication: boolean;
+  reports: boolean;
   administration: boolean;
   timetable: boolean;
   examinations: boolean;

@@ -1,15 +1,22 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Bell,
   Briefcase,
   BookOpenCheck,
+  Building2,
+  Bus,
   CalendarCheck,
   CalendarClock,
+  CalendarDays,
   CalendarRange,
+  ChartColumn,
   ClipboardList,
   FileCheck2,
   GraduationCap,
   LayoutDashboard,
   Library,
+  Megaphone,
+  Settings,
   ShieldCheck,
   UserCheck,
   UsersRound,
@@ -35,6 +42,8 @@ export interface NavSection {
 /** Core, ungrouped nav items shown above the sectioned nav. Extended as each module ships. */
 export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
+  { label: "Notifications", to: "/notifications", icon: Bell },
+  { label: "Calendar", to: "/calendar", icon: CalendarDays },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
   { label: "My Homework", to: "/my-homework", icon: BookOpenCheck, permissionKey: "homework" },
 ];
@@ -70,11 +79,32 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [{ label: "Library Management", to: "/library", icon: Library }],
   },
   {
+    title: "Transport",
+    permissionKey: "transport",
+    items: [{ label: "Transport Management", to: "/transport", icon: Bus }],
+  },
+  {
+    title: "Hostel",
+    permissionKey: "hostel",
+    items: [{ label: "Hostel Management", to: "/hostel", icon: Building2 }],
+  },
+  {
+    title: "Communication",
+    permissionKey: "communication",
+    items: [{ label: "Communication Center", to: "/communication", icon: Megaphone }],
+  },
+  {
+    title: "Reports",
+    permissionKey: "reports",
+    items: [{ label: "Reports & Analytics", to: "/reports", icon: ChartColumn }],
+  },
+  {
     title: "Administration",
     permissionKey: "administration",
     items: [
       { label: "User Management", to: "/admin/users", icon: Users },
       { label: "Roles & Permissions", to: "/admin/roles", icon: ShieldCheck },
+      { label: "Settings", to: "/admin/settings", icon: Settings },
     ],
   },
 ];
