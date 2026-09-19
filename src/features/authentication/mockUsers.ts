@@ -13,7 +13,11 @@ const FULL_PERMISSIONS: ModulePermissions = {
   attendance: true,
   staff: true,
   teachers: true,
+  payroll: true,
   fees: true,
+  accounting: true,
+  inventory: true,
+  certificates: true,
   library: true,
   transport: true,
   hostel: true,
@@ -26,8 +30,8 @@ const FULL_PERMISSIONS: ModulePermissions = {
   homework: true,
 };
 
-/** Fee/Library/Transport/Hostel/Communication/Reports are restricted to admin users only. */
-const ADMIN_ONLY_MODULES = ["fees", "library", "transport", "hostel", "communication", "reports"] as const satisfies ReadonlyArray<keyof ModulePermissions>;
+/** Fee/Accounting/Payroll/Inventory/Certificates/Library/Transport/Hostel/Communication/Reports are restricted to admin users only. */
+const ADMIN_ONLY_MODULES = ["fees", "accounting", "payroll", "inventory", "certificates", "library", "transport", "hostel", "communication", "reports"] as const satisfies ReadonlyArray<keyof ModulePermissions>;
 
 const permissionsForRole = (role: UserRole): ModulePermissions => {
   const isAdmin = role === "admin" || role === "superAdmin";
@@ -50,6 +54,11 @@ const permissionsForRole = (role: UserRole): ModulePermissions => {
 };
 
 export const MOCK_ACCOUNTS: MockAccount[] = [
+  {
+    password: "superadmin123",
+    mfaEnabled: true,
+    user: { id: "u-1000", name: "Nikhil Shetty", email: "superadmin@educore.dev", role: "superAdmin", avatarUrl: null },
+  },
   {
     password: "admin123",
     mfaEnabled: true,

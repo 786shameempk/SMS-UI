@@ -1,14 +1,21 @@
 import { mockDelay } from "@/utils/mockDelay";
+import { listClasses, listSections } from "@/features/academics/api";
 import { SEED_ADMISSIONS, SEED_STUDENTS } from "./mock";
-import { FINAL_CLASS } from "./constants";
+import { ADMISSION_FEE_AMOUNT, ADMISSION_STAGE_CONFIG, CLASS_OPTIONS, FINAL_CLASS } from "./constants";
 import type {
   AdmissionApplication,
+  AdmissionDecisionFormValues,
+  AdmissionExamFormValues,
+  AdmissionFeePaymentFormValues,
   AdmissionFormValues,
-  AdmissionStatus,
+  AdmissionInterviewFormValues,
+  AdmissionRegistrationFormValues,
+  AdmissionStage,
   EmergencyContact,
   GuardianDetails,
   HostelDetails,
   MedicalInfo,
+  SeatAvailability,
   Student,
   StudentDocument,
   StudentFormValues,
@@ -38,7 +45,21 @@ function saveJson(key: string, value: unknown) {
 }
 
 let students = loadJson<Student[]>(STUDENTS_KEY, SEED_STUDENTS.map((s) => ({ ...s })));
-let admissions = loadJson<AdmissionApplication[]>(ADMISSIONS_KEY, SEED_ADMISSIONS.map((a) => ({ ...a })));
+
+/**
+ * Guards against admissions data cached in localStorage from before the flat
+ * status/approved-reject model was rewritten into the 9-stage pipeline (see
+ * PROGRESS.md task 15) — a stale record with no recognized `stage` would otherwise
+ * crash the Admissions table. Unrecognized stages fall back to "inquiry".
+ */
+function normalizeAdmissionStage(stage: AdmissionStage): AdmissionStage {
+  return stage in ADMISSION_STAGE_CONFIG ? stage : "inquiry";
+}
+
+let admissions = loadJson<AdmissionApplication[]>(ADMISSIONS_KEY, SEED_ADMISSIONS.map((a) => ({ ...a }))).map((a) => ({
+  ...a,
+  stage: normalizeAdmissionStage(a.stage),
+}));
 
 function persistStudents() {
   saveJson(STUDENTS_KEY, students);
@@ -60,6 +81,21 @@ function requireStudent(id: string): Student {
   const student = students.find((s) => s.id === id);
   if (!student) throw new Error("Student not found");
   return student;
+}
+
+function requireAdmission(id: string): AdmissionApplication {
+  const application = admissions.find((a) => a.id === id);
+  if (!application) throw new Error("Application not found");
+  return application;
+}
+
+function nextApplicationNumber(): string {
+  const year = new Date().getFullYear();
+  const max = admissions.reduce((acc, a) => {
+    const match = a.applicationNumber.match(/(\d+)$/);
+    return match ? Math.max(acc, Number(match[1])) : acc;
+  }, 0);
+  return `ADM-${year}-${String(max + 1).padStart(4, "0")}`;
 }
 
 function buildStudentFromValues(values: StudentFormValues): Student {
@@ -226,17 +262,20 @@ export async function graduateStudents(className: string = FINAL_CLASS): Promise
   return mockDelay({ graduatedCount: count }, 500);
 }
 
-// ── Admissions ───────────────────────────────────────────────────────────
+// ── Admissions: Inquiry → Registration → Entrance Exam → Interview → ─────
+// ── Selection → Fee Collection → Student Creation, plus seat availability ─
 
 export async function listAdmissions(): Promise<AdmissionApplication[]> {
   return mockDelay([...admissions], 400);
 }
 
+/** Step 1 — Inquiry: a lightweight first submission, before any review has happened. */
 export async function createAdmission(values: AdmissionFormValues): Promise<AdmissionApplication> {
   const application: AdmissionApplication = {
     id: `adm-${Math.random().toString(36).slice(2, 8)}`,
+    applicationNumber: nextApplicationNumber(),
     ...values,
-    status: "pending",
+    stage: "inquiry",
     submittedAt: new Date().toISOString(),
   };
   admissions = [application, ...admissions];
@@ -244,23 +283,112 @@ export async function createAdmission(values: AdmissionFormValues): Promise<Admi
   return mockDelay(application, 450);
 }
 
-export async function setAdmissionStatus(id: string, status: AdmissionStatus): Promise<AdmissionApplication> {
-  const idx = admissions.findIndex((a) => a.id === id);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Application not found");
-  }
-  const updated = { ...admissions[idx], status };
+/** Step 2 — Registration: the inquiry is formalized with full contact/history details. */
+export async function registerAdmission(id: string, values: AdmissionRegistrationFormValues): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  const updated: AdmissionApplication = { ...existing, ...values, stage: "registration", registeredAt: new Date().toISOString() };
   admissions = admissions.map((a) => (a.id === id ? updated : a));
   persistAdmissions();
   return mockDelay(updated, 400);
 }
 
-export async function approveAdmission(id: string): Promise<{ application: AdmissionApplication; student: Student }> {
-  const application = admissions.find((a) => a.id === id);
-  if (!application) {
+/** Step 3 — Entrance Exam: schedule a date, then (re-open the same action) record the result. */
+export async function updateAdmissionExam(id: string, values: AdmissionExamFormValues): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  const updated: AdmissionApplication = { ...existing, ...values, stage: "entrance_exam" };
+  admissions = admissions.map((a) => (a.id === id ? updated : a));
+  persistAdmissions();
+  return mockDelay(updated, 400);
+}
+
+/** Step 4 — Interview: schedule/record an interview against the exam-cleared applicant. */
+export async function updateAdmissionInterview(id: string, values: AdmissionInterviewFormValues): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  const updated: AdmissionApplication = { ...existing, ...values, stage: "interview" };
+  admissions = admissions.map((a) => (a.id === id ? updated : a));
+  persistAdmissions();
+  return mockDelay(updated, 400);
+}
+
+/**
+ * Step 5 — Selection: the decision routes the application straight to its next stage —
+ * "selected" moves to Fee Collection (with the standard admission fee applied), "waitlisted"
+ * and "rejected" are terminal until/unless promoted from the waitlist.
+ */
+export async function decideAdmission(id: string, values: AdmissionDecisionFormValues): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  const updated: AdmissionApplication = {
+    ...existing,
+    ...values,
+    decidedAt: new Date().toISOString(),
+    stage: values.decision === "selected" ? "fee_collection" : values.decision,
+    admissionFeeAmount: values.decision === "selected" ? ADMISSION_FEE_AMOUNT : existing.admissionFeeAmount,
+  };
+  admissions = admissions.map((a) => (a.id === id ? updated : a));
+  persistAdmissions();
+  return mockDelay(updated, 400);
+}
+
+/** A waitlisted applicant can be pulled back in once a seat frees up, re-entering at Fee Collection. */
+export async function promoteFromWaitlist(id: string): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  if (existing.stage !== "waitlisted") {
     await mockDelay(null, 300);
-    throw new Error("Application not found");
+    throw new Error("Only waitlisted applications can be promoted");
+  }
+  const updated: AdmissionApplication = {
+    ...existing,
+    stage: "fee_collection",
+    decision: "selected",
+    admissionFeeAmount: existing.admissionFeeAmount ?? ADMISSION_FEE_AMOUNT,
+  };
+  admissions = admissions.map((a) => (a.id === id ? updated : a));
+  persistAdmissions();
+  return mockDelay(updated, 400);
+}
+
+/** Step 6 — Fee Collection: records payment. Enrollment (student creation) is a separate, explicit step. */
+export async function recordAdmissionFeePayment(id: string, values: AdmissionFeePaymentFormValues): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  if (existing.stage !== "fee_collection") {
+    await mockDelay(null, 300);
+    throw new Error("This application isn't at the fee collection stage");
+  }
+  const receiptNumber = `RCT-ADM-${String(admissions.filter((a) => a.admissionFeeReceiptNumber).length + 1).padStart(4, "0")}`;
+  const updated: AdmissionApplication = {
+    ...existing,
+    admissionFeeAmount: values.amount,
+    admissionFeePaid: true,
+    admissionFeePaidOn: new Date().toISOString(),
+    admissionFeeReceiptNumber: receiptNumber,
+  };
+  admissions = admissions.map((a) => (a.id === id ? updated : a));
+  persistAdmissions();
+  return mockDelay(updated, 450);
+}
+
+export async function rejectAdmission(id: string, remarks?: string): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  const updated: AdmissionApplication = { ...existing, stage: "rejected", decision: "rejected", decisionRemarks: remarks ?? existing.decisionRemarks, decidedAt: new Date().toISOString() };
+  admissions = admissions.map((a) => (a.id === id ? updated : a));
+  persistAdmissions();
+  return mockDelay(updated, 350);
+}
+
+export async function withdrawAdmission(id: string): Promise<AdmissionApplication> {
+  const existing = requireAdmission(id);
+  const updated: AdmissionApplication = { ...existing, stage: "withdrawn" };
+  admissions = admissions.map((a) => (a.id === id ? updated : a));
+  persistAdmissions();
+  return mockDelay(updated, 350);
+}
+
+/** Step 7 — Student Creation: only reachable once the admission fee has actually been paid. */
+export async function enrollAdmission(id: string): Promise<{ application: AdmissionApplication; student: Student }> {
+  const application = requireAdmission(id);
+  if (application.stage !== "fee_collection" || !application.admissionFeePaid) {
+    await mockDelay(null, 300);
+    throw new Error("The admission fee must be paid before enrolling this applicant");
   }
   const student = buildStudentFromValues({
     firstName: application.applicantFirstName,
@@ -269,7 +397,7 @@ export async function approveAdmission(id: string): Promise<{ application: Admis
     gender: application.gender,
     className: application.appliedClass,
     section: "A",
-    address: "",
+    address: application.address ?? "",
     guardianName: application.guardianName,
     guardianRelation: "guardian",
     guardianPhone: application.guardianPhone,
@@ -277,9 +405,35 @@ export async function approveAdmission(id: string): Promise<{ application: Admis
   students = [student, ...students];
   persistStudents();
 
-  const updatedApplication = { ...application, status: "approved" as const };
+  const updatedApplication: AdmissionApplication = { ...application, stage: "enrolled", studentId: student.id, enrolledAt: new Date().toISOString() };
   admissions = admissions.map((a) => (a.id === id ? updatedApplication : a));
   persistAdmissions();
 
   return mockDelay({ application: updatedApplication, student }, 500);
+}
+
+// ── Seat availability ────────────────────────────────────────────────────
+
+/**
+ * Joins by class name against the Academic Management module's real `Section` capacity/
+ * currentStrength (the same string-matching workaround Attendance/Teachers/Examinations/
+ * Homework already use, since `Student.className` isn't id-linked to academics' `Class` yet).
+ */
+export async function listSeatAvailability(): Promise<SeatAvailability[]> {
+  const [classes, sections] = await Promise.all([listClasses(), listSections()]);
+  const classByName = new Map(classes.map((c) => [c.name, c] as const));
+
+  const result: SeatAvailability[] = CLASS_OPTIONS.map((className) => {
+    const schoolClass = classByName.get(className);
+    const classSections = schoolClass ? sections.filter((s) => s.classId === schoolClass.id) : [];
+    const capacity = classSections.reduce((sum, s) => sum + s.capacity, 0);
+    const currentStrength = classSections.reduce((sum, s) => sum + s.currentStrength, 0);
+    return { className, capacity, currentStrength, availableSeats: Math.max(0, capacity - currentStrength) };
+  });
+  return mockDelay(result, 350);
+}
+
+export async function getSeatAvailability(className: string): Promise<SeatAvailability | null> {
+  const all = await listSeatAvailability();
+  return all.find((s) => s.className === className) ?? null;
 }

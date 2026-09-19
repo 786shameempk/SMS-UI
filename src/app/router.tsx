@@ -22,6 +22,10 @@ import ExaminationManagementPage from "@/features/examinations/pages/Examination
 import HomeworkManagementPage from "@/features/homework/pages/HomeworkManagementPage";
 import MyHomeworkPage from "@/features/homework/pages/MyHomeworkPage";
 import FeeManagementPage from "@/features/fees/pages/FeeManagementPage";
+import AccountingPage from "@/features/accounting/pages/AccountingPage";
+import PayrollPage from "@/features/payroll/pages/PayrollPage";
+import InventoryManagementPage from "@/features/inventory/pages/InventoryManagementPage";
+import CertificatesPage from "@/features/certificates/pages/CertificatesPage";
 import LibraryManagementPage from "@/features/library/pages/LibraryManagementPage";
 import TransportManagementPage from "@/features/transport/pages/TransportManagementPage";
 import HostelManagementPage from "@/features/hostel/pages/HostelManagementPage";
@@ -63,6 +67,10 @@ export const router = createBrowserRouter([
       { path: "homework", element: <HomeworkManagementPage /> },
       { path: "my-homework", element: <MyHomeworkPage /> },
       { path: "fees", element: <FeeManagementPage /> },
+      { path: "accounting", element: <AccountingPage /> },
+      { path: "payroll", element: <PayrollPage /> },
+      { path: "inventory", element: <InventoryManagementPage /> },
+      { path: "certificates", element: <CertificatesPage /> },
       { path: "library", element: <LibraryManagementPage /> },
       { path: "transport", element: <TransportManagementPage /> },
       { path: "hostel", element: <HostelManagementPage /> },

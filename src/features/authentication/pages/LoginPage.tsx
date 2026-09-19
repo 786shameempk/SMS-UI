@@ -207,8 +207,8 @@ export default function LoginPage() {
         )}
 
         <p className="text-center text-xs text-slate-400 mt-5">
-          Demo accounts: admin@educore.dev / admin123 (MFA code 123456) &middot; teacher@educore.dev / teacher123 &middot;{" "}
-          parent@educore.dev / parent123
+          Demo accounts: superadmin@educore.dev / superadmin123 (MFA code 123456) &middot; admin@educore.dev / admin123 (MFA
+          code 123456) &middot; teacher@educore.dev / teacher123 &middot; parent@educore.dev / parent123
         </p>
       </div>
     </div>

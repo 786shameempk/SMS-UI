@@ -153,9 +153,9 @@ export async function getTeacherPerformanceReport(): Promise<TeacherPerformanceP
 
 export async function getAdmissionsReport(): Promise<AdmissionsReport> {
   const admissions = await listAdmissions();
-  const statusCounts = new Map<string, number>();
-  for (const a of admissions) statusCounts.set(a.status, (statusCounts.get(a.status) ?? 0) + 1);
-  const statusBreakdown = Array.from(statusCounts.entries()).map(([status, count]) => ({ status, count }));
+  const stageCounts = new Map<string, number>();
+  for (const a of admissions) stageCounts.set(a.stage, (stageCounts.get(a.stage) ?? 0) + 1);
+  const statusBreakdown = Array.from(stageCounts.entries()).map(([status, count]) => ({ status, count }));
 
   const monthKeys = lastNMonthKeys(6);
   const byMonth = new Map<string, number>(monthKeys.map((k) => [k, 0]));
@@ -165,8 +165,8 @@ export async function getAdmissionsReport(): Promise<AdmissionsReport> {
   }
   const monthlyApplications = monthKeys.map((key) => ({ month: monthLabel(key), value: byMonth.get(key) ?? 0 }));
 
-  const approved = statusCounts.get("approved") ?? 0;
-  const approvalRate = admissions.length ? Math.round((approved / admissions.length) * 100) : 0;
+  const enrolled = stageCounts.get("enrolled") ?? 0;
+  const approvalRate = admissions.length ? Math.round((enrolled / admissions.length) * 100) : 0;
 
   return { statusBreakdown, monthlyApplications, totalApplications: admissions.length, approvalRate };
 }

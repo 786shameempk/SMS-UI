@@ -9,6 +9,10 @@ import RevenueChart from "../components/RevenueChart";
 import TodayClassesCard from "../components/TodayClassesCard";
 import UpcomingExamsCard from "../components/UpcomingExamsCard";
 import PendingAssignmentsCard from "../components/PendingAssignmentsCard";
+import FeeDueCard from "../components/FeeDueCard";
+import LibraryDueBooksCard from "../components/LibraryDueBooksCard";
+import BusStatusCard from "../components/BusStatusCard";
+import HostelOccupancyCard from "../components/HostelOccupancyCard";
 import NotificationsCard from "../components/NotificationsCard";
 import BirthdaysCard from "../components/BirthdaysCard";
 import HolidaysCard from "../components/HolidaysCard";
@@ -40,8 +44,8 @@ export default function DashboardPage() {
   const role = user?.role ?? "admin";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", role],
-    queryFn: () => fetchDashboardData(role),
+    queryKey: ["dashboard", role, user?.email],
+    queryFn: () => fetchDashboardData(role, user?.email),
   });
 
   if (isLoading || !data) return <DashboardSkeleton />;
@@ -83,6 +87,13 @@ export default function DashboardPage() {
         <TodayClassesCard classes={data.todayClasses} />
         <UpcomingExamsCard exams={data.upcomingExams} />
         <PendingAssignmentsCard assignments={data.pendingAssignments} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <FeeDueCard fees={data.feesDue} />
+        <LibraryDueBooksCard books={data.libraryDue} />
+        <BusStatusCard busStatus={data.busStatus} />
+        <HostelOccupancyCard hostel={data.hostelOccupancy} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">

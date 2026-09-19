@@ -1,3 +1,6 @@
+import type { BusTrackingStatus } from "@/features/transport/types";
+import type { FeeInvoiceStatus } from "@/features/fees/types";
+
 export interface StatCardData {
   id: string;
   label: string;
@@ -14,11 +17,62 @@ export interface AttendanceSummary {
   totalMarked: number;
 }
 
-export interface FeeSummary {
-  collected: number;
-  pending: number;
-  overdue: number;
+export interface FeeDueItem {
+  id: string;
+  studentName: string;
+  term: string;
+  amount: number;
+  dueDate: string;
+  status: FeeInvoiceStatus;
+}
+
+export interface FeeDueSummary {
+  totalPending: number;
+  totalOverdue: number;
   currency: string;
+  items: FeeDueItem[];
+}
+
+export interface LibraryDueItem {
+  id: string;
+  bookTitle: string;
+  borrowerName: string;
+  dueDate: string;
+  overdue: boolean;
+}
+
+export interface BusFleetStatusCount {
+  status: BusTrackingStatus;
+  count: number;
+}
+
+export interface MyBusStatus {
+  routeName: string;
+  busRegNumber: string;
+  status: BusTrackingStatus;
+  currentStopName?: string;
+}
+
+export interface BusStatusSummary {
+  fleet: BusFleetStatusCount[];
+  mine: MyBusStatus | null;
+}
+
+export interface HostelOccupancyItem {
+  hostelName: string;
+  occupiedCount: number;
+  bedCount: number;
+}
+
+export interface MyHostelAllocation {
+  hostelName: string;
+  roomNumber: string;
+  bedNumber: number;
+}
+
+export interface HostelOccupancySummary {
+  hostels: HostelOccupancyItem[];
+  mine: MyHostelAllocation | null;
 }
 
 export interface ClassSession {
@@ -101,10 +155,13 @@ export interface RevenueTrendPoint {
 export interface DashboardData {
   stats: StatCardData[];
   attendance: AttendanceSummary;
-  fees: FeeSummary;
   todayClasses: ClassSession[];
   upcomingExams: UpcomingExam[];
   pendingAssignments: PendingAssignment[];
+  feesDue: FeeDueSummary;
+  libraryDue: LibraryDueItem[];
+  busStatus: BusStatusSummary;
+  hostelOccupancy: HostelOccupancySummary;
   notifications: NotificationItem[];
   birthdays: BirthdayItem[];
   holidays: HolidayItem[];

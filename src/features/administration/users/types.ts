@@ -18,7 +18,20 @@ export interface SystemUser {
   avatarUrl?: string | null;
   createdAt: string;
   lastLoginAt: string | null;
+  mfaEnabled: boolean;
   preferences: UserPreferences;
+}
+
+export type LoginOutcome = "success" | "failed_password" | "failed_mfa";
+
+export interface LoginHistoryEntry {
+  id: string;
+  at: string;
+  outcome: LoginOutcome;
+  device: string;
+  browser: string;
+  ipAddress: string;
+  location: string;
 }
 
 export interface UserFormValues {

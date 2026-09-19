@@ -3,6 +3,7 @@ import {
   Bell,
   Briefcase,
   BookOpenCheck,
+  BookOpenText,
   Building2,
   Bus,
   CalendarCheck,
@@ -16,12 +17,15 @@ import {
   LayoutDashboard,
   Library,
   Megaphone,
+  PackageSearch,
+  ScrollText,
   Settings,
   ShieldCheck,
   UserCheck,
   UsersRound,
   Users,
   Wallet,
+  WalletCards,
 } from "lucide-react";
 import type { ModulePermissions } from "@/types/auth";
 
@@ -66,12 +70,28 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Human Resources",
     permissionKey: "staff",
-    items: [{ label: "Staff Management", to: "/staff", icon: Briefcase }],
+    items: [
+      { label: "Staff Management", to: "/staff", icon: Briefcase },
+      { label: "Payroll", to: "/payroll", icon: WalletCards, permissionKey: "payroll" },
+    ],
   },
   {
     title: "Finance",
     permissionKey: "fees",
-    items: [{ label: "Fee Management", to: "/fees", icon: Wallet }],
+    items: [
+      { label: "Fee Management", to: "/fees", icon: Wallet },
+      { label: "Accounting", to: "/accounting", icon: BookOpenText, permissionKey: "accounting" },
+    ],
+  },
+  {
+    title: "Inventory",
+    permissionKey: "inventory",
+    items: [{ label: "Inventory Management", to: "/inventory", icon: PackageSearch }],
+  },
+  {
+    title: "Certificates",
+    permissionKey: "certificates",
+    items: [{ label: "Certificate Generator", to: "/certificates", icon: ScrollText }],
   },
   {
     title: "Library",

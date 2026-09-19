@@ -1,6 +1,7 @@
 import { mockDelay } from "@/utils/mockDelay";
-import { SEED_USERS } from "./mock";
-import type { SystemUser, UserFormValues, UserPreferences, UserStatus } from "./types";
+import type { DeviceRecord, SessionRecord } from "@/features/authentication/types";
+import { buildDevicesForUser, buildLoginHistoryForUser, buildSessionsForUser, SEED_USERS } from "./mock";
+import type { LoginHistoryEntry, SystemUser, UserFormValues, UserPreferences, UserStatus } from "./types";
 
 const STORAGE_KEY = "sms-mock-users";
 
@@ -49,6 +50,7 @@ export async function createUser(values: UserFormValues): Promise<SystemUser> {
     avatarUrl: null,
     createdAt: new Date().toISOString(),
     lastLoginAt: null,
+    mfaEnabled: false,
     preferences: { theme: "system", language: "en", emailNotifications: true, smsNotifications: false },
   };
   users = [user, ...users];
@@ -130,4 +132,48 @@ export async function updateUserAvatar(id: string, avatarUrl: string | null): Pr
   users = users.map((u) => (u.id === id ? updated : u));
   saveUsers(users);
   return mockDelay(updated, 350);
+}
+
+export async function setUserMfaEnabled(id: string, mfaEnabled: boolean): Promise<SystemUser> {
+  const idx = users.findIndex((u) => u.id === id);
+  if (idx === -1) {
+    await mockDelay(null, 300);
+    throw new Error("User not found");
+  }
+  const updated = { ...users[idx], mfaEnabled };
+  users = users.map((u) => (u.id === id ? updated : u));
+  saveUsers(users);
+  return mockDelay(updated, 350);
+}
+
+async function requireUser(id: string): Promise<SystemUser> {
+  const user = users.find((u) => u.id === id);
+  if (!user) {
+    await mockDelay(null, 300);
+    throw new Error("User not found");
+  }
+  return user;
+}
+
+export async function listUserLoginHistory(id: string): Promise<LoginHistoryEntry[]> {
+  const user = await requireUser(id);
+  return mockDelay(buildLoginHistoryForUser(user), 400);
+}
+
+export async function listUserSessions(id: string): Promise<SessionRecord[]> {
+  const user = await requireUser(id);
+  return mockDelay(buildSessionsForUser(user), 400);
+}
+
+export async function revokeUserSession(_id: string, _sessionId: string): Promise<{ message: string }> {
+  return mockDelay({ message: "Session signed out" }, 400);
+}
+
+export async function listUserDevices(id: string): Promise<DeviceRecord[]> {
+  const user = await requireUser(id);
+  return mockDelay(buildDevicesForUser(user), 400);
+}
+
+export async function revokeUserDevice(_id: string, _deviceId: string): Promise<{ message: string }> {
+  return mockDelay({ message: "Device removed" }, 400);
 }

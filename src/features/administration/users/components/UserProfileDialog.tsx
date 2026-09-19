@@ -12,6 +12,8 @@ import type { Role } from "@/features/administration/roles/types";
 import { updateUserAvatar, updateUserPreferences } from "../api";
 import type { SystemUser, UserPreferences } from "../types";
 import UserStatusBadge from "./UserStatusBadge";
+import SecurityTab from "./SecurityTab";
+import SessionsTab from "./SessionsTab";
 
 function initialsOf(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
@@ -82,16 +84,18 @@ export default function UserProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
           <DialogTitle>User profile</DialogTitle>
-          <DialogDescription>View account details and manage preferences.</DialogDescription>
+          <DialogDescription>View account details, security, and manage preferences.</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="profile">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="sessions">Sessions</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-5">
@@ -196,6 +200,14 @@ export default function UserProfileDialog({
                 onCheckedChange={(v) => updatePreference("smsNotifications", v)}
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="security">
+            <SecurityTab user={user} />
+          </TabsContent>
+
+          <TabsContent value="sessions">
+            <SessionsTab user={user} />
           </TabsContent>
         </Tabs>
       </DialogContent>

@@ -25,7 +25,11 @@ export interface ModulePermissions {
   attendance: boolean;
   staff: boolean;
   teachers: boolean;
+  payroll: boolean;
   fees: boolean;
+  accounting: boolean;
+  inventory: boolean;
+  certificates: boolean;
   library: boolean;
   transport: boolean;
   hostel: boolean;

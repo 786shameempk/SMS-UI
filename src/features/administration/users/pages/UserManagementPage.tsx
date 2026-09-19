@@ -146,6 +146,11 @@ export default function UserManagementPage() {
       cell: ({ row }) => <UserStatusBadge status={row.original.status} />,
     },
     {
+      accessorKey: "mfaEnabled",
+      header: "2FA",
+      cell: ({ row }) => <Badge variant={row.original.mfaEnabled ? "success" : "neutral"}>{row.original.mfaEnabled ? "On" : "Off"}</Badge>,
+    },
+    {
       accessorKey: "lastLoginAt",
       header: "Last login",
       cell: ({ row }) => (

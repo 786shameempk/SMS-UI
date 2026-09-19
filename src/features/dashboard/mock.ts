@@ -5,15 +5,11 @@ import type {
   BirthdayItem,
   CalendarEvent,
   ClassSession,
-  DashboardData,
-  FeeSummary,
   HolidayItem,
   NotificationItem,
-  PendingAssignment,
   PerformanceTrendPoint,
   RevenueTrendPoint,
   StatCardData,
-  UpcomingExam,
 } from "./types";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
@@ -39,11 +35,6 @@ function buildAttendance(role: UserRole): AttendanceSummary {
   return { present: 1148, absent: 62, late: 24, onLeave: 15, totalMarked: 1249 };
 }
 
-function buildFees(role: UserRole): FeeSummary {
-  if (role === "parent") return { collected: 45000, pending: 15000, overdue: 0, currency: "INR" };
-  return { collected: 4812000, pending: 683000, overdue: 214000, currency: "INR" };
-}
-
 function buildTodayClasses(role: UserRole): ClassSession[] {
   const all: ClassSession[] = [
     { id: "cs-1", subject: "Mathematics", className: "Grade 8 - A", room: "Room 204", startTime: "09:00", endTime: "09:45" },
@@ -52,28 +43,6 @@ function buildTodayClasses(role: UserRole): ClassSession[] {
     { id: "cs-4", subject: "Computer Science", className: "Grade 11 - C", room: "Lab 1", startTime: "13:30", endTime: "14:15" },
   ];
   if (role === "parent") return all.slice(0, 2);
-  return all;
-}
-
-function buildUpcomingExams(role: UserRole): UpcomingExam[] {
-  const all: UpcomingExam[] = [
-    { id: "ex-1", subject: "Mathematics", className: "Grade 8 - A", date: iso(3), durationMinutes: 90 },
-    { id: "ex-2", subject: "Science", className: "Grade 8 - A", date: iso(6), durationMinutes: 90 },
-    { id: "ex-3", subject: "Physics", className: "Grade 10 - B", date: iso(9), durationMinutes: 120 },
-    { id: "ex-4", subject: "History", className: "Grade 9 - A", date: iso(12), durationMinutes: 60 },
-  ];
-  if (role === "parent") return all.slice(0, 2);
-  if (role === "teacher") return all.slice(0, 3);
-  return all;
-}
-
-function buildPendingAssignments(role: UserRole): PendingAssignment[] {
-  const all: PendingAssignment[] = [
-    { id: "as-1", title: "Algebra worksheet 4", subject: "Mathematics", className: "Grade 8 - A", dueDate: iso(2), submittedCount: 24, totalCount: 30 },
-    { id: "as-2", title: "Lab report — refraction", subject: "Physics", className: "Grade 10 - B", dueDate: iso(1), submittedCount: 18, totalCount: 28 },
-    { id: "as-3", title: "Essay: Industrial Revolution", subject: "History", className: "Grade 9 - A", dueDate: iso(5), submittedCount: 10, totalCount: 26 },
-  ];
-  if (role === "parent") return [{ ...all[0], id: "as-parent-1" }];
   return all;
 }
 
@@ -148,20 +117,20 @@ function buildStats(role: UserRole): StatCardData[] {
   ];
 }
 
-export function buildDashboardData(role: UserRole): DashboardData {
-  return {
-    stats: buildStats(role),
-    attendance: buildAttendance(role),
-    fees: buildFees(role),
-    todayClasses: buildTodayClasses(role),
-    upcomingExams: buildUpcomingExams(role),
-    pendingAssignments: buildPendingAssignments(role),
-    notifications: buildNotifications(),
-    birthdays: buildBirthdays(),
-    holidays: buildHolidays(),
-    calendarEvents: buildCalendarEvents(),
-    recentActivity: buildRecentActivity(role),
-    performanceTrend: buildPerformanceTrend(),
-    revenueTrend: buildRevenueTrend(),
-  };
-}
+/** Everything here is still synthetic — the pieces of DashboardData that have no owning
+ * module yet (notifications/birthdays/holidays are dashboard-only concepts, and
+ * today's classes / performance / revenue trends would need Timetable/Examinations/Fees
+ * aggregation beyond this task's scope). Real per-module data (homework, exams, fees,
+ * library, transport, hostel) is assembled in api.ts instead. */
+export {
+  buildStats,
+  buildAttendance,
+  buildTodayClasses,
+  buildNotifications,
+  buildBirthdays,
+  buildHolidays,
+  buildCalendarEvents,
+  buildRecentActivity,
+  buildPerformanceTrend,
+  buildRevenueTrend,
+};
