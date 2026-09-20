@@ -18,24 +18,48 @@ const FULL_PERMISSIONS: ModulePermissions = {
   accounting: true,
   inventory: true,
   certificates: true,
+  health: true,
+  visitors: true,
+  helpdesk: true,
+  surveys: true,
   library: true,
   transport: true,
   hostel: true,
   communication: true,
   reports: true,
   administration: true,
+  platformConsole: false,
   parentPortal: false,
   timetable: true,
   examinations: true,
   homework: true,
 };
 
-/** Fee/Accounting/Payroll/Inventory/Certificates/Library/Transport/Hostel/Communication/Reports are restricted to admin users only. */
-const ADMIN_ONLY_MODULES = ["fees", "accounting", "payroll", "inventory", "certificates", "library", "transport", "hostel", "communication", "reports"] as const satisfies ReadonlyArray<keyof ModulePermissions>;
+/** Fee/Accounting/Payroll/Inventory/Certificates/Health/Visitors/HelpDesk/Surveys/Library/Transport/Hostel/Communication/Reports are restricted to admin users only. */
+const ADMIN_ONLY_MODULES = [
+  "fees",
+  "accounting",
+  "payroll",
+  "inventory",
+  "certificates",
+  "health",
+  "visitors",
+  "helpdesk",
+  "surveys",
+  "library",
+  "transport",
+  "hostel",
+  "communication",
+  "reports",
+] as const satisfies ReadonlyArray<keyof ModulePermissions>;
 
 const permissionsForRole = (role: UserRole): ModulePermissions => {
   const isAdmin = role === "admin" || role === "superAdmin";
   const adminOnlyOverrides = Object.fromEntries(ADMIN_ONLY_MODULES.map((key) => [key, isAdmin])) as Record<(typeof ADMIN_ONLY_MODULES)[number], boolean>;
+  /** Unlike every other admin-only module, the Platform Console is superAdmin-only — a regular
+   *  admin manages their own school, not the multi-tenant SaaS layer above it. This is the
+   *  first thing in the app that actually distinguishes the two roles' permissions. */
+  const platformConsole = role === "superAdmin";
 
   if (role === "parent" || role === "student") {
     return {
@@ -44,13 +68,14 @@ const permissionsForRole = (role: UserRole): ModulePermissions => {
       staff: false,
       students: false,
       administration: false,
+      platformConsole,
       parentPortal: role === "parent",
     };
   }
   if (role === "teacher") {
-    return { ...FULL_PERMISSIONS, ...adminOnlyOverrides, staff: false, administration: false };
+    return { ...FULL_PERMISSIONS, ...adminOnlyOverrides, staff: false, administration: false, platformConsole };
   }
-  return { ...FULL_PERMISSIONS, ...adminOnlyOverrides };
+  return { ...FULL_PERMISSIONS, ...adminOnlyOverrides, platformConsole };
 };
 
 export const MOCK_ACCOUNTS: MockAccount[] = [

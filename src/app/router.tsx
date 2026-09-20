@@ -26,6 +26,11 @@ import AccountingPage from "@/features/accounting/pages/AccountingPage";
 import PayrollPage from "@/features/payroll/pages/PayrollPage";
 import InventoryManagementPage from "@/features/inventory/pages/InventoryManagementPage";
 import CertificatesPage from "@/features/certificates/pages/CertificatesPage";
+import HealthMedicalPage from "@/features/health/pages/HealthMedicalPage";
+import VisitorManagementPage from "@/features/visitors/pages/VisitorManagementPage";
+import HelpDeskPage from "@/features/helpdesk/pages/HelpDeskPage";
+import SurveysFeedbackPage from "@/features/surveys/pages/SurveysFeedbackPage";
+import PlatformConsolePage from "@/features/platform/pages/PlatformConsolePage";
 import LibraryManagementPage from "@/features/library/pages/LibraryManagementPage";
 import TransportManagementPage from "@/features/transport/pages/TransportManagementPage";
 import HostelManagementPage from "@/features/hostel/pages/HostelManagementPage";
@@ -71,6 +76,11 @@ export const router = createBrowserRouter([
       { path: "payroll", element: <PayrollPage /> },
       { path: "inventory", element: <InventoryManagementPage /> },
       { path: "certificates", element: <CertificatesPage /> },
+      { path: "health", element: <HealthMedicalPage /> },
+      { path: "visitors", element: <VisitorManagementPage /> },
+      { path: "helpdesk", element: <HelpDeskPage /> },
+      { path: "surveys", element: <SurveysFeedbackPage /> },
+      { path: "platform", element: <PlatformConsolePage /> },
       { path: "library", element: <LibraryManagementPage /> },
       { path: "transport", element: <TransportManagementPage /> },
       { path: "hostel", element: <HostelManagementPage /> },

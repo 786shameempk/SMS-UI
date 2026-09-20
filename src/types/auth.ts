@@ -30,12 +30,17 @@ export interface ModulePermissions {
   accounting: boolean;
   inventory: boolean;
   certificates: boolean;
+  health: boolean;
+  visitors: boolean;
+  helpdesk: boolean;
+  surveys: boolean;
   library: boolean;
   transport: boolean;
   hostel: boolean;
   communication: boolean;
   reports: boolean;
   administration: boolean;
+  platformConsole: boolean;
   timetable: boolean;
   examinations: boolean;
   homework: boolean;

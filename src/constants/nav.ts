@@ -13,8 +13,12 @@ import {
   ChartColumn,
   ClipboardList,
   FileCheck2,
+  Globe,
   GraduationCap,
+  HeartPulse,
+  IdCard,
   LayoutDashboard,
+  LifeBuoy,
   Library,
   Megaphone,
   PackageSearch,
@@ -24,6 +28,7 @@ import {
   UserCheck,
   UsersRound,
   Users,
+  Vote,
   Wallet,
   WalletCards,
 } from "lucide-react";
@@ -94,6 +99,26 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [{ label: "Certificate Generator", to: "/certificates", icon: ScrollText }],
   },
   {
+    title: "Health",
+    permissionKey: "health",
+    items: [{ label: "Health & Medical", to: "/health", icon: HeartPulse }],
+  },
+  {
+    title: "Visitors",
+    permissionKey: "visitors",
+    items: [{ label: "Visitor Management", to: "/visitors", icon: IdCard }],
+  },
+  {
+    title: "Help Desk",
+    permissionKey: "helpdesk",
+    items: [{ label: "Complaint / Help Desk", to: "/helpdesk", icon: LifeBuoy }],
+  },
+  {
+    title: "Surveys",
+    permissionKey: "surveys",
+    items: [{ label: "Surveys & Feedback", to: "/surveys", icon: Vote }],
+  },
+  {
     title: "Library",
     permissionKey: "library",
     items: [{ label: "Library Management", to: "/library", icon: Library }],
@@ -126,5 +151,10 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Roles & Permissions", to: "/admin/roles", icon: ShieldCheck },
       { label: "Settings", to: "/admin/settings", icon: Settings },
     ],
+  },
+  {
+    title: "Platform",
+    permissionKey: "platformConsole",
+    items: [{ label: "Platform Console", to: "/platform", icon: Globe }],
   },
 ];
