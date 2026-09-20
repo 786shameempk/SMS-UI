@@ -10,6 +10,10 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+// Starter/Growth stay pinned to the same first-8/first-16 modules they always were — see the
+// doc comment on AVAILABLE_MODULE_LABELS. Enterprise alone picks up everything appended since,
+// including the newest additions: AI Features, Parent Portal, and Branch Management (multi-branch
+// campuses), each a genuine "scale" feature that fits Enterprise's own positioning.
 const STARTER_MODULES = AVAILABLE_MODULE_LABELS.slice(0, 8);
 const GROWTH_MODULES = AVAILABLE_MODULE_LABELS.slice(0, 16);
 const ENTERPRISE_MODULES = [...AVAILABLE_MODULE_LABELS];

@@ -1,6 +1,7 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import AppLayout from "@/layouts/AppLayout";
+import LandingPage from "@/features/marketing/pages/LandingPage";
 import LoginPage from "@/features/authentication/pages/LoginPage";
 import ForgotPasswordPage from "@/features/authentication/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/features/authentication/pages/ResetPasswordPage";
@@ -43,18 +44,20 @@ import ReportsPage from "@/features/reports/pages/ReportsPage";
 import SettingsPage from "@/features/settings/pages/SettingsPage";
 
 export const router = createBrowserRouter([
+  { path: "/", element: <LandingPage /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
   {
-    path: "/",
+    // Pathless layout route: contributes no URL segment of its own, so every child below
+    // still resolves to the same absolute path it always has (e.g. "dashboard" -> "/dashboard").
+    // "/" itself now belongs to the public LandingPage above, not this protected tree.
     element: (
       <ProtectedRoute>
         <AppLayout />
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
       { path: "account/security", element: <SecuritySettingsPage /> },
       { path: "admin/users", element: <UserManagementPage /> },
