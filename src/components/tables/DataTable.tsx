@@ -56,7 +56,7 @@ export function DataTable<TData>({
                     <th
                       key={header.id}
                       className={cn(
-                        "text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap",
+                        "text-left px-[var(--space-row-padding-x)] py-[var(--space-row-padding-y)] text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap",
                         canSort && "cursor-pointer select-none",
                       )}
                       onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
@@ -70,7 +70,7 @@ export function DataTable<TData>({
                             ) : sortDir === "desc" ? (
                               <ArrowDown className="w-3 h-3" />
                             ) : (
-                              <ArrowUpDown className="w-3 h-3 text-slate-300" />
+                              <ArrowUpDown className="w-3 h-3 text-muted-foreground/50" />
                             ))}
                         </span>
                       )}
@@ -84,14 +84,14 @@ export function DataTable<TData>({
             {isLoading &&
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={`skeleton-${i}`} className="border-b border-border last:border-0">
-                  <td colSpan={columns.length} className="px-4 py-3.5">
-                    <div className="h-4 w-full max-w-sm rounded bg-slate-100 animate-pulse" />
+                  <td colSpan={columns.length} className="px-[var(--space-row-padding-x)] py-3.5">
+                    <div className="h-4 w-full max-w-sm rounded bg-muted animate-pulse" />
                   </td>
                 </tr>
               ))}
             {!isLoading && rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={columns.length} className="px-[var(--space-row-padding-x)] py-10 text-center text-sm text-muted-foreground">
                   {emptyMessage}
                 </td>
               </tr>
@@ -100,7 +100,7 @@ export function DataTable<TData>({
               rows.map((row) => (
                 <tr key={row.id} className="border-b border-border last:border-0 hover:bg-secondary/40 transition-colors">
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 align-middle">
+                    <td key={cell.id} className="px-[var(--space-row-padding-x)] py-[var(--space-row-padding-y)] align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}

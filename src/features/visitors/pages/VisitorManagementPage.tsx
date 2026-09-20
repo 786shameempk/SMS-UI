@@ -8,8 +8,8 @@ export default function VisitorManagementPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Visitor Management</h1>
-        <p className="text-sm text-slate-500 mt-1">Front-desk visitor check-in/out, scheduled appointments, and a security watchlist.</p>
+        <h1 className="text-xl font-bold text-foreground">Visitor Management</h1>
+        <p className="text-sm text-muted-foreground mt-1">Front-desk visitor check-in/out, scheduled appointments, and a security watchlist.</p>
       </div>
 
       <Tabs defaultValue="log">

@@ -13,8 +13,8 @@ export default function ReportsPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Reports & analytics</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Reports & analytics</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Dashboards pulled live from every module — student performance, attendance, fees, teachers, admissions, dropout risk,
           library usage, transport, and hostel occupancy.
         </p>

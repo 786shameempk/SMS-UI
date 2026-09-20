@@ -7,8 +7,8 @@ export default function HelpDeskPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Complaint / Help Desk</h1>
-        <p className="text-sm text-slate-500 mt-1">Log, assign, and track complaints and support tickets to resolution.</p>
+        <h1 className="text-xl font-bold text-foreground">Complaint / Help Desk</h1>
+        <p className="text-sm text-muted-foreground mt-1">Log, assign, and track complaints and support tickets to resolution.</p>
       </div>
 
       <Tabs defaultValue="tickets">

@@ -112,14 +112,14 @@ function SessionsTab() {
           <div key={session.id} className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                <Monitor className="w-4 h-4 text-slate-500" />
+                <Monitor className="w-4 h-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-slate-800 truncate">{session.browser}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{session.browser}</p>
                   {session.isCurrent && <Badge variant="success">Current</Badge>}
                 </div>
-                <p className="text-xs text-slate-500 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {session.location} &middot; {session.ipAddress} &middot; last active{" "}
                   {new Date(session.lastActiveAt).toLocaleString()}
                 </p>
@@ -170,11 +170,11 @@ function DevicesTab() {
             <div key={device.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-slate-500" />
+                  <Icon className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{device.name}</p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">{device.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {device.os} &middot; last used {new Date(device.lastUsedAt).toLocaleString()}
                   </p>
                 </div>
@@ -199,8 +199,8 @@ function DevicesTab() {
 export default function SecuritySettingsPage() {
   return (
     <div className="p-6 max-w-3xl space-y-1">
-      <h1 className="text-xl font-bold text-slate-900">Security</h1>
-      <p className="text-sm text-slate-500 mb-5">Manage your password, sessions, and trusted devices.</p>
+      <h1 className="text-xl font-bold text-foreground">Security</h1>
+      <p className="text-sm text-muted-foreground mb-5">Manage your password, sessions, and trusted devices.</p>
 
       <Tabs defaultValue="password">
         <TabsList>

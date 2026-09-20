@@ -123,8 +123,8 @@ export default function UserManagementPage() {
               <AvatarFallback className="text-[11px]">{initialsOf(u.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate group-hover:text-brand-600 transition-colors">{u.name}</p>
-              <p className="text-xs text-slate-500 truncate">{u.email}</p>
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-brand-600 transition-colors">{u.name}</p>
+              <p className="text-xs text-muted-foreground truncate">{u.email}</p>
             </div>
           </button>
         );
@@ -133,12 +133,12 @@ export default function UserManagementPage() {
     {
       accessorKey: "roleId",
       header: "Role",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{roles.find((r) => r.id === row.original.roleId)?.name}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{roles.find((r) => r.id === row.original.roleId)?.name}</span>,
     },
     {
       accessorKey: "department",
       header: "Department",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.department || "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.department || "—"}</span>,
     },
     {
       accessorKey: "status",
@@ -154,7 +154,7 @@ export default function UserManagementPage() {
       accessorKey: "lastLoginAt",
       header: "Last login",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-muted-foreground">
           {row.original.lastLoginAt ? new Date(row.original.lastLoginAt).toLocaleDateString() : "Never"}
         </span>
       ),
@@ -228,8 +228,8 @@ export default function UserManagementPage() {
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">User management</h1>
-          <p className="text-sm text-slate-500 mt-1">Create and manage staff and administrator accounts.</p>
+          <h1 className="text-xl font-bold text-foreground">User management</h1>
+          <p className="text-sm text-muted-foreground mt-1">Create and manage staff and administrator accounts.</p>
         </div>
         <Button
           onClick={() => {
@@ -244,7 +244,7 @@ export default function UserManagementPage() {
 
       <DataTableToolbar>
         <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input placeholder="Search by name or email" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex items-center gap-2">

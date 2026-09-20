@@ -9,8 +9,8 @@ export default function AccountingPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Accounting</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Accounting</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Chart of accounts, double-entry journal, trial balance, profit &amp; loss, and GST.
         </p>
       </div>

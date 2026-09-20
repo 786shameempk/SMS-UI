@@ -38,7 +38,7 @@ export default function StaffProfilePage() {
   if (isError || !staff) {
     return (
       <div className="p-6">
-        <p className="text-sm text-slate-600">That staff record could not be found.</p>
+        <p className="text-sm text-muted-foreground">That staff record could not be found.</p>
         <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/staff")}>
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to staff
@@ -55,12 +55,12 @@ export default function StaffProfilePage() {
           Back to staff
         </Button>
         <div className="flex items-center gap-2.5 flex-wrap">
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-foreground">
             {staff.firstName} {staff.lastName}
           </h1>
           <StaffStatusBadge status={staff.status} />
         </div>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           {staff.designation} &middot; {staff.department} &middot; {staff.employeeId}
         </p>
       </div>

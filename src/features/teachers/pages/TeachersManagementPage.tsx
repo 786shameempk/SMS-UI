@@ -114,10 +114,10 @@ export default function TeachersManagementPage() {
               <AvatarFallback className="text-[11px]">{initialsOf(t.firstName, t.lastName)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate group-hover:text-brand-600 transition-colors">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-brand-600 transition-colors">
                 {t.firstName} {t.lastName}
               </p>
-              <p className="text-xs text-slate-500 truncate">{t.employeeId}</p>
+              <p className="text-xs text-muted-foreground truncate">{t.employeeId}</p>
             </div>
           </button>
         );
@@ -126,7 +126,7 @@ export default function TeachersManagementPage() {
     {
       accessorKey: "department",
       header: "Department",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.department || "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.department || "—"}</span>,
     },
     {
       id: "subjects",
@@ -183,15 +183,15 @@ export default function TeachersManagementPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Teacher management</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Teacher management</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Subject &amp; class assignments, lesson plans, and student performance for teaching staff.
         </p>
       </div>
 
       <DataTableToolbar>
         <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input placeholder="Search by name, ID, or department" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex items-center gap-2">

@@ -19,8 +19,8 @@ export default function MyHomeworkPage() {
     <div className="p-6 space-y-5 max-w-[1000px]">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">My homework</h1>
-          <p className="text-sm text-slate-500 mt-1">Assigned homework, learning resources, and quizzes for the selected student.</p>
+          <h1 className="text-xl font-bold text-foreground">My homework</h1>
+          <p className="text-sm text-muted-foreground mt-1">Assigned homework, learning resources, and quizzes for the selected student.</p>
         </div>
         <div className="w-56">
           <Select value={studentId} onValueChange={setStudentId} disabled={isLoading || activeStudents.length === 0}>

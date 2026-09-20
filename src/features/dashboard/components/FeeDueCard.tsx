@@ -18,8 +18,8 @@ export default function FeeDueCard({ fees }: { fees: FeeDueSummary }) {
         {fees.items.map((item) => (
           <div key={item.id} className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate">{item.studentName}</p>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-sm font-medium text-foreground truncate">{item.studentName}</p>
+              <p className="text-xs text-muted-foreground truncate">
                 {item.term} &middot; {formatCurrency(item.amount)}
               </p>
             </div>

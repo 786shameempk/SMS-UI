@@ -1,25 +1,28 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuthStore } from "@/store/authStore";
+import AppearanceTab from "../components/AppearanceTab";
 import AuditLogTab from "../components/AuditLogTab";
 import BackupTab from "../components/BackupTab";
-import BrandingTab from "../components/BrandingTab";
 import LocalizationTab from "../components/LocalizationTab";
 import SchoolProfileTab from "../components/SchoolProfileTab";
 import TemplatesTab from "../components/TemplatesTab";
 
 export default function SettingsPage() {
+  const activeTenantId = useAuthStore((s) => s.activeTenantId);
+
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Settings &amp; administration</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          School profile, branding, localization, system templates, backups, and the audit log.
+        <h1 className="text-xl font-bold text-foreground">Settings &amp; administration</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          School profile, appearance, localization, system templates, backups, and the audit log.
         </p>
       </div>
 
       <Tabs defaultValue="profile">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="profile">School Profile</TabsTrigger>
-          <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="branding">Appearance</TabsTrigger>
           <TabsTrigger value="localization">Localization</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="backup">Backup &amp; Restore</TabsTrigger>
@@ -29,7 +32,10 @@ export default function SettingsPage() {
           <SchoolProfileTab />
         </TabsContent>
         <TabsContent value="branding">
-          <BrandingTab />
+          {/* Remounts on tenant switch: its 3 preset queries sit outside the CSS-variable
+              re-apply TenantSwitcher already does, and a fresh mount is the one guaranteed way
+              to avoid this tab ever showing a stale selection if it's open during a switch. */}
+          <AppearanceTab key={activeTenantId} />
         </TabsContent>
         <TabsContent value="localization">
           <LocalizationTab />

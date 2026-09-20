@@ -6,8 +6,8 @@ export default function PayrollPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Payroll</h1>
-        <p className="text-sm text-slate-500 mt-1">Run monthly payroll for staff, then track and pay out individual payslips.</p>
+        <h1 className="text-xl font-bold text-foreground">Payroll</h1>
+        <p className="text-sm text-muted-foreground mt-1">Run monthly payroll for staff, then track and pay out individual payslips.</p>
       </div>
 
       <Tabs defaultValue="runs">

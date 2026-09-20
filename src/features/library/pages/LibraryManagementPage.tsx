@@ -10,8 +10,8 @@ export default function LibraryManagementPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Library management</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Library management</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Maintain the book catalog, manage members, issue and return books, track fines, and handle reservations.
         </p>
       </div>

@@ -102,10 +102,10 @@ function StudentsTab() {
               <AvatarFallback className="text-[11px]">{initialsOf(s.firstName, s.lastName)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate group-hover:text-brand-600 transition-colors">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-brand-600 transition-colors">
                 {s.firstName} {s.lastName}
               </p>
-              <p className="text-xs text-slate-500 truncate">{s.admissionNumber}</p>
+              <p className="text-xs text-muted-foreground truncate">{s.admissionNumber}</p>
             </div>
           </button>
         );
@@ -115,7 +115,7 @@ function StudentsTab() {
       id: "class",
       header: "Class",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-700">
+        <span className="text-sm text-foreground">
           {row.original.className} - {row.original.section}
         </span>
       ),
@@ -123,7 +123,7 @@ function StudentsTab() {
     {
       accessorKey: "rollNumber",
       header: "Roll no.",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.rollNumber || "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.rollNumber || "—"}</span>,
     },
     {
       accessorKey: "status",
@@ -136,7 +136,7 @@ function StudentsTab() {
       cell: ({ row }) => {
         const g = row.original.guardians[0];
         return (
-          <span className="text-sm text-slate-600 whitespace-nowrap block max-w-[220px] truncate">
+          <span className="text-sm text-muted-foreground whitespace-nowrap block max-w-[220px] truncate">
             {g ? `${g.name} · ${g.phone}` : "—"}
           </span>
         );
@@ -185,7 +185,7 @@ function StudentsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input placeholder="Search by name or admission no." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex items-center gap-2">
@@ -264,8 +264,8 @@ export default function StudentManagementPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Student management</h1>
-        <p className="text-sm text-slate-500 mt-1">Registration, admissions, and the student directory.</p>
+        <h1 className="text-xl font-bold text-foreground">Student management</h1>
+        <p className="text-sm text-muted-foreground mt-1">Registration, admissions, and the student directory.</p>
       </div>
 
       <Tabs defaultValue="students">

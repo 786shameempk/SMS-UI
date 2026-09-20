@@ -38,7 +38,7 @@ export default function StudentProfilePage() {
   if (isError || !student) {
     return (
       <div className="p-6">
-        <p className="text-sm text-slate-600">That student record could not be found.</p>
+        <p className="text-sm text-muted-foreground">That student record could not be found.</p>
         <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/students")}>
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to students
@@ -55,12 +55,12 @@ export default function StudentProfilePage() {
           Back to students
         </Button>
         <div className="flex items-center gap-2.5 flex-wrap">
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-foreground">
             {student.firstName} {student.lastName}
           </h1>
           <StudentStatusBadge status={student.status} />
         </div>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           {student.className} - {student.section} &middot; Admission No. {student.admissionNumber}
         </p>
       </div>

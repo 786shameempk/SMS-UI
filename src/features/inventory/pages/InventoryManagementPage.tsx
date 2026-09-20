@@ -8,8 +8,8 @@ export default function InventoryManagementPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Inventory management</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Inventory management</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Track items and stock levels, record purchases and issues, and manage vendors and categories.
         </p>
       </div>

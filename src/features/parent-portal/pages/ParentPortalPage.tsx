@@ -46,8 +46,8 @@ export default function ParentPortalPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1000px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Parent portal</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Parent portal</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Welcome{user?.name ? `, ${user.name.split(" ")[0]}` : ""} — track attendance, homework, results, and fees for your children.
         </p>
       </div>

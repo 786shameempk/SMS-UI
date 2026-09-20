@@ -15,10 +15,10 @@ export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSumma
         {busStatus.mine ? (
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="min-w-0 flex items-center gap-2.5">
-              <Bus className="w-4 h-4 text-slate-400 shrink-0" />
+              <Bus className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{busStatus.mine.busRegNumber}</p>
-                <p className="text-xs text-slate-500 truncate flex items-center gap-1">
+                <p className="text-sm font-medium text-foreground truncate">{busStatus.mine.busRegNumber}</p>
+                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
                   {busStatus.mine.routeName}
                   {busStatus.mine.currentStopName && (
                     <>
@@ -40,7 +40,7 @@ export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSumma
             {busStatus.fleet.map((f) => (
               <div key={f.status} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
                 <Badge variant={TRACKING_STATUS_CONFIG[f.status].variant}>{TRACKING_STATUS_CONFIG[f.status].label}</Badge>
-                <span className="text-sm font-semibold text-slate-800 tabular-nums">{f.count}</span>
+                <span className="text-sm font-semibold text-foreground tabular-nums">{f.count}</span>
               </div>
             ))}
           </div>

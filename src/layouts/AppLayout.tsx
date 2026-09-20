@@ -4,7 +4,7 @@ import Header from "@/components/layouts/Header";
 
 export default function AppLayout() {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header />

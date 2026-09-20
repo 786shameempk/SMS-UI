@@ -75,8 +75,8 @@ export default function CalendarPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1200px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Calendar</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Calendar</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Holidays, exams, the academic calendar, homework due dates, staff leave, and birthdays — all in one place.
         </p>
       </div>
@@ -89,7 +89,7 @@ export default function CalendarPage() {
               <button
                 type="button"
                 onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-muted-foreground cursor-pointer"
                 aria-label="Previous month"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function CalendarPage() {
               <button
                 type="button"
                 onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+                className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-muted-foreground cursor-pointer"
                 aria-label="Next month"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -109,7 +109,7 @@ export default function CalendarPage() {
             {!isLoading && (
               <div className="grid grid-cols-7 gap-1">
                 {WEEKDAYS.map((wd) => (
-                  <span key={wd} className="text-xs font-semibold text-slate-400 text-center pb-1.5">
+                  <span key={wd} className="text-xs font-semibold text-muted-foreground text-center pb-1.5">
                     {wd}
                   </span>
                 ))}
@@ -132,7 +132,7 @@ export default function CalendarPage() {
                       <span className={cn("text-sm", isToday && !isSelected && "font-bold text-brand-600")}>{day.getDate()}</span>
                       <div className="flex gap-0.5 h-1.5">
                         {categoriesToday.slice(0, 4).map((c) => (
-                          <span key={c} className={cn("w-1.5 h-1.5 rounded-full", isSelected ? "bg-white" : CATEGORY_CONFIG[c].dotClass)} />
+                          <span key={c} className={cn("w-1.5 h-1.5 rounded-full", isSelected ? "bg-card" : CATEGORY_CONFIG[c].dotClass)} />
                         ))}
                       </div>
                     </button>
@@ -155,7 +155,7 @@ export default function CalendarPage() {
                   <label key={category} className="flex items-center gap-2.5 cursor-pointer">
                     <Checkbox checked={activeCategories.has(category)} onCheckedChange={() => toggleCategory(category)} />
                     <span className={cn("w-2 h-2 rounded-full", config.dotClass)} />
-                    <span className="text-sm text-slate-700">{config.label}</span>
+                    <span className="text-sm text-foreground">{config.label}</span>
                   </label>
                 );
               })}
@@ -175,7 +175,7 @@ export default function CalendarPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant={config.badgeVariant}>{config.label}</Badge>
                     </div>
-                    <p className="text-sm font-medium text-slate-800">{e.title}</p>
+                    <p className="text-sm font-medium text-foreground">{e.title}</p>
                     {e.description && <p className="text-xs text-muted-foreground">{e.description}</p>}
                   </div>
                 );

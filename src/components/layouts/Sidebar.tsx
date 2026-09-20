@@ -22,7 +22,9 @@ function NavItemLink({ item, isCollapsed }: { item: NavItem; isCollapsed: boolea
       className={cn(
         "relative flex items-center rounded-lg transition-colors duration-150 select-none",
         isCollapsed ? "h-10 w-10 justify-center mx-auto" : "h-9 gap-3 px-3",
-        isActive ? "bg-brand-50 text-brand-600" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+        isActive
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "text-sidebar-foreground hover:bg-secondary hover:text-foreground",
       )}
     >
       {isActive && !isCollapsed && (
@@ -32,7 +34,10 @@ function NavItemLink({ item, isCollapsed }: { item: NavItem; isCollapsed: boolea
           transition={SPRING}
         />
       )}
-      <item.icon style={{ width: 15, height: 15 }} className={cn("relative z-10 shrink-0", isActive && "text-brand-500")} />
+      <item.icon
+        style={{ width: 15, height: 15 }}
+        className={cn("relative z-10 shrink-0", isActive && "text-sidebar-accent-foreground")}
+      />
       {!isCollapsed && <span className="relative z-10 text-[13px] font-medium whitespace-nowrap">{item.label}</span>}
     </NavLink>
   );
@@ -52,7 +57,7 @@ function NavSectionBlock({ title, items, isCollapsed }: { title: string; items: 
   if (isCollapsed) {
     return (
       <div className="space-y-0.5">
-        <div className="mx-3 my-1.5 h-px bg-slate-100" />
+        <div className="mx-3 my-1.5 h-px bg-border" />
         {items.map((item) => (
           <NavItemLink key={item.to} item={item} isCollapsed />
         ))}
@@ -63,7 +68,7 @@ function NavSectionBlock({ title, items, isCollapsed }: { title: string; items: 
   return (
     <div className="space-y-0.5">
       <div className="flex items-center gap-2 px-3 h-7">
-        <span className="flex-1 text-left text-[10px] font-bold uppercase tracking-[0.13em] text-slate-400">{title}</span>
+        <span className="flex-1 text-left text-[10px] font-bold uppercase tracking-[0.13em] text-muted-foreground">{title}</span>
       </div>
       <div className="space-y-0.5">
         {items.map((item) => (
@@ -90,8 +95,7 @@ export default function Sidebar() {
       <motion.aside
         animate={{ width: isSidebarCollapsed ? W_COLLAPSED : W_EXPANDED }}
         transition={SPRING}
-        className="flex flex-col h-screen shrink-0 overflow-hidden bg-white"
-        style={{ borderRight: "1px solid rgba(0,0,0,0.08)" }}
+        className="flex flex-col h-screen shrink-0 overflow-hidden bg-sidebar border-r border-sidebar-border"
       >
         <div className={cn("flex items-center shrink-0 overflow-hidden", isSidebarCollapsed ? "justify-center h-[60px]" : "gap-3 px-5 h-[60px]")}>
           <div
@@ -102,12 +106,12 @@ export default function Sidebar() {
           </div>
           {!isSidebarCollapsed && (
             <div className="overflow-hidden">
-              <p className="text-[15px] font-extrabold tracking-tight text-slate-900 leading-none whitespace-nowrap">EduCore</p>
-              <p className="text-[10px] font-medium mt-0.5 text-slate-400 whitespace-nowrap">Management Suite</p>
+              <p className="text-[15px] font-extrabold tracking-tight text-foreground leading-none whitespace-nowrap">EduCore</p>
+              <p className="text-[10px] font-medium mt-0.5 text-muted-foreground whitespace-nowrap">Management Suite</p>
             </div>
           )}
         </div>
-        <div className="mx-4 shrink-0" style={{ height: 1, background: "rgba(0,0,0,0.06)" }} />
+        <div className="mx-4 shrink-0 h-px bg-sidebar-border" />
 
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-0.5">
           {visibleCoreItems.map((item) => (
@@ -128,7 +132,7 @@ export default function Sidebar() {
                 type="button"
                 onClick={toggleSidebar}
                 aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors duration-150 cursor-pointer"
+                className="flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors duration-150 cursor-pointer"
               >
                 {isSidebarCollapsed ? <PanelLeftOpen style={{ width: 14, height: 14 }} /> : <PanelLeftClose style={{ width: 14, height: 14 }} />}
               </button>

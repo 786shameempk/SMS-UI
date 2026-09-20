@@ -9,8 +9,8 @@ import {
   resetCurrentTenantData,
   scopedToCurrentTenant,
 } from "@/utils/tenant";
-import { applyBrandPreset } from "./theme";
-import type { BrandPresetKey } from "./theme";
+import { applyBrandPreset, applyDensityPreset, applyRadiusPreset } from "./theme";
+import type { BrandPresetKey, DensityPresetKey, RadiusPresetKey } from "./theme";
 import { DEFAULT_LOCALIZATION, DEFAULT_SCHOOL_PROFILE } from "./constants";
 import { SEED_AUDIT_LOG, SEED_SYSTEM_TEMPLATES } from "./mock";
 import type {
@@ -30,6 +30,8 @@ const TEMPLATES_KEY = "sms-mock-settings-templates";
 const AUDIT_KEY = "sms-mock-settings-audit-log";
 const BACKUP_HISTORY_KEY = "sms-mock-settings-backup-history";
 const BRAND_KEY = "sms-mock-settings-branding";
+const RADIUS_KEY = "sms-mock-settings-radius";
+const DENSITY_KEY = "sms-mock-settings-density";
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -79,6 +81,8 @@ let localizationByTenant = loadTenantMap<LocalizationSettings>(
   (r): r is LocalizationSettings => typeof r === "object" && r !== null && "language" in r,
 );
 let brandByTenant = loadTenantMap<BrandPresetKey>(BRAND_KEY, (r): r is BrandPresetKey => typeof r === "string");
+let radiusByTenant = loadTenantMap<RadiusPresetKey>(RADIUS_KEY, (r): r is RadiusPresetKey => typeof r === "string");
+let densityByTenant = loadTenantMap<DensityPresetKey>(DENSITY_KEY, (r): r is DensityPresetKey => typeof r === "string");
 
 let templates = migrateLegacyRecordsToDefaultTenant(
   loadJson<SystemTemplate[]>(TEMPLATES_KEY, SEED_SYSTEM_TEMPLATES.map((t) => ({ ...t, tenantId: DEFAULT_TENANT_ID }))),
@@ -94,6 +98,8 @@ const persistTemplates = () => saveJson(TEMPLATES_KEY, templates);
 const persistAuditLog = () => saveJson(AUDIT_KEY, auditLog);
 const persistBackupHistory = () => saveJson(BACKUP_HISTORY_KEY, backupHistory);
 const persistBrand = () => saveJson(BRAND_KEY, brandByTenant);
+const persistRadius = () => saveJson(RADIUS_KEY, radiusByTenant);
+const persistDensity = () => saveJson(DENSITY_KEY, densityByTenant);
 
 function currentActorName(): string {
   return useAuthStore.getState().user?.name ?? "Unknown user";
@@ -156,6 +162,38 @@ export async function updateBrandPreset(preset: BrandPresetKey): Promise<BrandPr
   persistBrand();
   applyBrandPreset(preset);
   logAudit("changed the brand theme", "settings", preset);
+  return mockDelay(preset, 300);
+}
+
+// ── Corner style ─────────────────────────────────────────────────────────
+
+export async function getRadiusPreset(): Promise<RadiusPresetKey> {
+  const tenantId = getCurrentTenantId();
+  return mockDelay(radiusByTenant[tenantId] ?? "rounded", 200);
+}
+
+export async function updateRadiusPreset(preset: RadiusPresetKey): Promise<RadiusPresetKey> {
+  const tenantId = getCurrentTenantId();
+  radiusByTenant = { ...radiusByTenant, [tenantId]: preset };
+  persistRadius();
+  applyRadiusPreset(preset);
+  logAudit("changed the corner style", "settings", preset);
+  return mockDelay(preset, 300);
+}
+
+// ── Density ──────────────────────────────────────────────────────────────
+
+export async function getDensityPreset(): Promise<DensityPresetKey> {
+  const tenantId = getCurrentTenantId();
+  return mockDelay(densityByTenant[tenantId] ?? "comfortable", 200);
+}
+
+export async function updateDensityPreset(preset: DensityPresetKey): Promise<DensityPresetKey> {
+  const tenantId = getCurrentTenantId();
+  densityByTenant = { ...densityByTenant, [tenantId]: preset };
+  persistDensity();
+  applyDensityPreset(preset);
+  logAudit("changed the layout density", "settings", preset);
   return mockDelay(preset, 300);
 }
 

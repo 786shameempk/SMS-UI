@@ -15,8 +15,8 @@ export default function LibraryDueBooksCard({ books }: { books: LibraryDueItem[]
         {books.map((book) => (
           <div key={book.id} className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate">{book.bookTitle}</p>
-              <p className="text-xs text-slate-500 truncate">{book.borrowerName}</p>
+              <p className="text-sm font-medium text-foreground truncate">{book.bookTitle}</p>
+              <p className="text-xs text-muted-foreground truncate">{book.borrowerName}</p>
             </div>
             <Badge variant={book.overdue ? "danger" : "warning"} className="shrink-0">
               {formatRelativeDay(book.dueDate)}

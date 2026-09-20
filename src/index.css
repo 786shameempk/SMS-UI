@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/*
+ * Selector-based dark mode: lets `dark:` utilities respond to a manually-toggleable
+ * `data-theme="dark"` attribute on <html> (set by settings/theme.ts's applyThemeMode) instead of
+ * only `prefers-color-scheme`. Most of the app never needs `dark:` at all — its semantic tokens
+ * below are CSS custom properties that already get overridden wholesale in the dark block, so
+ * every `bg-card`/`text-foreground`/`border-border` utility repaints for free. `dark:` is only
+ * for the handful of spots (like Badge's colored status variants) that use a literal Tailwind
+ * color scale instead of a semantic token and need an explicit alternate shade.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   /* Brand palette — indigo/blue, enterprise-education tone */
   --color-brand-50: oklch(97% 0.014 264);
@@ -52,6 +63,57 @@
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Density — the "comfortable" default. Settings > Appearance's "compact" preset overrides
+     these three on :root at runtime, the same way a brand preset overrides --color-brand-*. */
+  --space-card-padding: 1.25rem; /* comfortable: p-5, compact: p-3.5 */
+  --space-row-padding-y: 0.625rem; /* comfortable: py-2.5, compact: py-1.5 */
+  --space-row-padding-x: 1rem; /* comfortable: px-4, compact: px-3 */
+}
+
+/*
+ * Dark palette — overrides only the neutral surface/text/border tokens. The brand-* ramp and its
+ * preset-swap mechanism (settings/theme.ts) are untouched: an indigo brand color is still the
+ * same indigo, just --color-primary/--color-ring below pick a lighter shade index for contrast
+ * against a dark background (applyBrandPreset already recomputes these on every preset change,
+ * dark or light, so this only sets the *initial* values before a preset has been applied).
+ */
+:root[data-theme="dark"] {
+  /* Deliberately a "soft" charcoal, not near-black: this pass makes dark mode fully correct for
+     the app shell, every shared src/components/ui/* primitive, DataTable, and Dashboard (see
+     PROGRESS.md) — a moderate background lightness means any *other* page that still has a
+     literal text-slate-900-style class (not yet migrated to text-foreground) degrades to
+     low-contrast-but-legible instead of truly invisible, rather than assuming every page in the
+     app has been touched. */
+  --color-background: oklch(22% 0.012 256);
+  --color-foreground: oklch(93% 0.006 256);
+  --color-card: oklch(27% 0.013 256);
+  --color-card-foreground: oklch(93% 0.006 256);
+  --color-primary: oklch(68% 0.14 264);
+  --color-primary-foreground: oklch(15% 0.012 256);
+  --color-secondary: oklch(32% 0.014 256);
+  --color-secondary-foreground: oklch(85% 0.008 256);
+  --color-muted: oklch(29% 0.013 256);
+  --color-muted-foreground: oklch(68% 0.014 256);
+  --color-accent: oklch(30% 0.05 264);
+  --color-accent-foreground: oklch(86% 0.06 264);
+  --color-destructive: oklch(58% 0.2 25.3);
+  --color-destructive-foreground: oklch(95% 0.006 256);
+  --color-success: oklch(58% 0.13 152);
+  --color-success-foreground: oklch(95% 0.006 256);
+  --color-warning: oklch(68% 0.15 80);
+  --color-warning-foreground: oklch(18% 0.02 80);
+  --color-border: oklch(34% 0.014 256);
+  --color-input: oklch(34% 0.014 256);
+  --color-ring: oklch(68% 0.14 264);
+  --color-popover: oklch(27% 0.013 256);
+  --color-popover-foreground: oklch(93% 0.006 256);
+
+  --color-sidebar: oklch(17% 0.011 256);
+  --color-sidebar-foreground: oklch(78% 0.01 256);
+  --color-sidebar-border: oklch(28% 0.013 256);
+  --color-sidebar-accent: oklch(30% 0.05 264);
+  --color-sidebar-accent-foreground: oklch(86% 0.06 264);
 }
 
 @layer base {

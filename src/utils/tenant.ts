@@ -88,8 +88,14 @@ function isGlobalKey(key: string): boolean {
   return GLOBAL_KEYS.has(key) || key.endsWith("-seeded");
 }
 
-/** Settings' three singleton values, stored as Record<tenantId, T> once tenant-scoped. */
-const TENANT_MAP_KEYS = new Set(["sms-mock-settings-profile", "sms-mock-settings-localization", "sms-mock-settings-branding"]);
+/** Settings' singleton values, stored as Record<tenantId, T> once tenant-scoped. */
+const TENANT_MAP_KEYS = new Set([
+  "sms-mock-settings-profile",
+  "sms-mock-settings-localization",
+  "sms-mock-settings-branding",
+  "sms-mock-settings-radius",
+  "sms-mock-settings-density",
+]);
 
 function isTenantTaggedArray(value: unknown): value is Array<{ tenantId?: string }> {
   return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && "tenantId" in item);

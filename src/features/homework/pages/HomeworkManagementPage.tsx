@@ -7,8 +7,8 @@ export default function HomeworkManagementPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Homework &amp; assignments</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Homework &amp; assignments</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Assign homework, grade submissions, share learning resources and quizzes, and track engagement across classes.
         </p>
       </div>

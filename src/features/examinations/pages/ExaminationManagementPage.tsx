@@ -9,8 +9,8 @@ export default function ExaminationManagementPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Examination management</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-bold text-foreground">Examination management</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Schedule exams, enter marks, and review grades, rankings, report cards, and transcripts.
         </p>
       </div>

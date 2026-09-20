@@ -12,10 +12,10 @@ export default function HostelOccupancyCard({ hostel }: { hostel: HostelOccupanc
       <CardContent className="space-y-2">
         {hostel.mine ? (
           <div className="flex items-center gap-2.5 rounded-lg border border-border p-3">
-            <BedDouble className="w-4 h-4 text-slate-400 shrink-0" />
+            <BedDouble className="w-4 h-4 text-muted-foreground shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate">{hostel.mine.hostelName}</p>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-sm font-medium text-foreground truncate">{hostel.mine.hostelName}</p>
+              <p className="text-xs text-muted-foreground truncate">
                 Room {hostel.mine.roomNumber} &middot; Bed {hostel.mine.bedNumber}
               </p>
             </div>
@@ -28,12 +28,12 @@ export default function HostelOccupancyCard({ hostel }: { hostel: HostelOccupanc
             return (
               <div key={h.hostelName} className="rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-slate-800 truncate">{h.hostelName}</p>
-                  <span className="text-xs text-slate-500 shrink-0 tabular-nums">
+                  <p className="text-sm font-medium text-foreground truncate">{h.hostelName}</p>
+                  <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
                     {h.occupiedCount}/{h.bedCount}
                   </span>
                 </div>
-                <div className="mt-2 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div className="mt-2 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
                   <div className="h-full bg-brand-500" style={{ width: `${pct}%` }} />
                 </div>
               </div>

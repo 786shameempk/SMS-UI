@@ -9,8 +9,8 @@ export default function HealthMedicalPage() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Health & Medical</h1>
-        <p className="text-sm text-slate-500 mt-1">Student health records, checkups, vaccinations, and infirmary visits.</p>
+        <h1 className="text-xl font-bold text-foreground">Health & Medical</h1>
+        <p className="text-sm text-muted-foreground mt-1">Student health records, checkups, vaccinations, and infirmary visits.</p>
       </div>
 
       <Tabs defaultValue="records">
