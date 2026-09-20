@@ -3,6 +3,8 @@ import type { Student } from "@/features/students/types";
 
 export interface TeacherSubjectAssignment {
   id: string;
+  tenantId: string;
+  branchId: string;
   staffId: string;
   subjectId: string;
   classId: string;
@@ -18,6 +20,8 @@ export type LessonPlanStatus = "draft" | "published";
 
 export interface LessonPlan {
   id: string;
+  tenantId: string;
+  branchId: string;
   staffId: string;
   subjectId: string;
   classId: string;

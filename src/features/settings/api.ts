@@ -1,5 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
 import { useAuthStore } from "@/store/authStore";
+import {
+  DEFAULT_TENANT_ID,
+  exportTenantSnapshot,
+  getCurrentTenantId,
+  mergeTenantSnapshot,
+  migrateLegacyRecordsToDefaultTenant,
+  resetCurrentTenantData,
+  scopedToCurrentTenant,
+} from "@/utils/tenant";
 import { applyBrandPreset } from "./theme";
 import type { BrandPresetKey } from "./theme";
 import { DEFAULT_LOCALIZATION, DEFAULT_SCHOOL_PROFILE } from "./constants";
@@ -44,26 +53,62 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let profile = loadJson<SchoolProfile>(PROFILE_KEY, DEFAULT_SCHOOL_PROFILE);
-let localization = loadJson<LocalizationSettings>(LOCALIZATION_KEY, DEFAULT_LOCALIZATION);
-let templates = loadJson<SystemTemplate[]>(TEMPLATES_KEY, SEED_SYSTEM_TEMPLATES.map((t) => ({ ...t })));
-let auditLog = loadJson<AuditLogEntry[]>(AUDIT_KEY, SEED_AUDIT_LOG.map((a) => ({ ...a })));
-let backupHistory = loadJson<BackupEvent[]>(BACKUP_HISTORY_KEY, []);
-let brandPreset = loadJson<BrandPresetKey>(BRAND_KEY, "blue");
+/**
+ * profile/localization/brandPreset predate multi-tenancy as flat singletons at their storage
+ * key. This migrates a pre-existing flat value into a Record<tenantId, T> map under
+ * DEFAULT_TENANT_ID the first time this runs against old browser data — `isLegacy` tells a
+ * flat value apart from an already-migrated map (whose values, not the map itself, have that
+ * shape).
+ */
+function loadTenantMap<T>(key: string, isLegacy: (raw: unknown) => raw is T): Record<string, T> {
+  const raw = loadJson<unknown>(key, null);
+  if (raw === null) return {};
+  if (isLegacy(raw)) {
+    console.warn(`[settings] Migrating legacy singleton at "${key}" to a per-tenant map under "${DEFAULT_TENANT_ID}".`);
+    return { [DEFAULT_TENANT_ID]: raw };
+  }
+  return raw as Record<string, T>;
+}
 
-const persistProfile = () => saveJson(PROFILE_KEY, profile);
-const persistLocalization = () => saveJson(LOCALIZATION_KEY, localization);
+let profileByTenant = loadTenantMap<SchoolProfile>(
+  PROFILE_KEY,
+  (r): r is SchoolProfile => typeof r === "object" && r !== null && "name" in r,
+);
+let localizationByTenant = loadTenantMap<LocalizationSettings>(
+  LOCALIZATION_KEY,
+  (r): r is LocalizationSettings => typeof r === "object" && r !== null && "language" in r,
+);
+let brandByTenant = loadTenantMap<BrandPresetKey>(BRAND_KEY, (r): r is BrandPresetKey => typeof r === "string");
+
+let templates = migrateLegacyRecordsToDefaultTenant(
+  loadJson<SystemTemplate[]>(TEMPLATES_KEY, SEED_SYSTEM_TEMPLATES.map((t) => ({ ...t, tenantId: DEFAULT_TENANT_ID }))),
+);
+let auditLog = migrateLegacyRecordsToDefaultTenant(
+  loadJson<AuditLogEntry[]>(AUDIT_KEY, SEED_AUDIT_LOG.map((a) => ({ ...a, tenantId: DEFAULT_TENANT_ID }))),
+);
+let backupHistory = migrateLegacyRecordsToDefaultTenant(loadJson<BackupEvent[]>(BACKUP_HISTORY_KEY, []));
+
+const persistProfile = () => saveJson(PROFILE_KEY, profileByTenant);
+const persistLocalization = () => saveJson(LOCALIZATION_KEY, localizationByTenant);
 const persistTemplates = () => saveJson(TEMPLATES_KEY, templates);
 const persistAuditLog = () => saveJson(AUDIT_KEY, auditLog);
 const persistBackupHistory = () => saveJson(BACKUP_HISTORY_KEY, backupHistory);
-const persistBrand = () => saveJson(BRAND_KEY, brandPreset);
+const persistBrand = () => saveJson(BRAND_KEY, brandByTenant);
 
 function currentActorName(): string {
   return useAuthStore.getState().user?.name ?? "Unknown user";
 }
 
 function logAudit(action: string, category: AuditCategory, detail?: string) {
-  const entry: AuditLogEntry = { id: genId("aud"), actor: currentActorName(), action, category, detail, createdAt: new Date().toISOString() };
+  const entry: AuditLogEntry = {
+    id: genId("aud"),
+    tenantId: getCurrentTenantId(),
+    actor: currentActorName(),
+    action,
+    category,
+    detail,
+    createdAt: new Date().toISOString(),
+  };
   auditLog = [entry, ...auditLog];
   persistAuditLog();
 }
@@ -71,51 +116,58 @@ function logAudit(action: string, category: AuditCategory, detail?: string) {
 // ── School profile ──────────────────────────────────────────────────────
 
 export async function getSchoolProfile(): Promise<SchoolProfile> {
-  return mockDelay({ ...profile }, 300);
+  const tenantId = getCurrentTenantId();
+  return mockDelay({ ...(profileByTenant[tenantId] ?? DEFAULT_SCHOOL_PROFILE) }, 300);
 }
 
 export async function updateSchoolProfile(values: SchoolProfile): Promise<SchoolProfile> {
-  profile = { ...values };
+  const tenantId = getCurrentTenantId();
+  profileByTenant = { ...profileByTenant, [tenantId]: { ...values } };
   persistProfile();
   logAudit("updated school profile details", "settings");
-  return mockDelay({ ...profile }, 350);
+  return mockDelay({ ...values }, 350);
 }
 
 // ── Localization ─────────────────────────────────────────────────────────
 
 export async function getLocalization(): Promise<LocalizationSettings> {
-  return mockDelay({ ...localization }, 300);
+  const tenantId = getCurrentTenantId();
+  return mockDelay({ ...(localizationByTenant[tenantId] ?? DEFAULT_LOCALIZATION) }, 300);
 }
 
 export async function updateLocalization(values: LocalizationSettings): Promise<LocalizationSettings> {
-  localization = { ...values };
+  const tenantId = getCurrentTenantId();
+  localizationByTenant = { ...localizationByTenant, [tenantId]: { ...values } };
   persistLocalization();
   logAudit("updated localization settings", "settings", `${values.language} · ${values.timezone} · ${values.currency}`);
-  return mockDelay({ ...localization }, 350);
+  return mockDelay({ ...values }, 350);
 }
 
 // ── Branding ─────────────────────────────────────────────────────────────
 
 export async function getBrandPreset(): Promise<BrandPresetKey> {
-  return mockDelay(brandPreset, 200);
+  const tenantId = getCurrentTenantId();
+  return mockDelay(brandByTenant[tenantId] ?? "blue", 200);
 }
 
 export async function updateBrandPreset(preset: BrandPresetKey): Promise<BrandPresetKey> {
-  brandPreset = preset;
+  const tenantId = getCurrentTenantId();
+  brandByTenant = { ...brandByTenant, [tenantId]: preset };
   persistBrand();
   applyBrandPreset(preset);
   logAudit("changed the brand theme", "settings", preset);
-  return mockDelay(brandPreset, 300);
+  return mockDelay(preset, 300);
 }
 
 // ── System templates ─────────────────────────────────────────────────────
 
 export async function listSystemTemplates(): Promise<SystemTemplate[]> {
-  return mockDelay([...templates], 300);
+  return mockDelay(scopedToCurrentTenant(templates), 300);
 }
 
 export async function updateSystemTemplate(id: string, values: SystemTemplateFormValues): Promise<SystemTemplate> {
-  const existing = templates.find((t) => t.id === id);
+  const tenantId = getCurrentTenantId();
+  const existing = templates.find((t) => t.id === id && t.tenantId === tenantId);
   if (!existing) {
     await mockDelay(null, 200);
     throw new Error("Template not found");
@@ -130,30 +182,24 @@ export async function updateSystemTemplate(id: string, values: SystemTemplateFor
 // ── Audit log ────────────────────────────────────────────────────────────
 
 export async function listAuditLog(): Promise<AuditLogEntry[]> {
-  return mockDelay([...auditLog].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), 300);
+  return mockDelay(scopedToCurrentTenant(auditLog).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), 300);
 }
 
 // ── Backup / restore / reset ────────────────────────────────────────────
 
 function recordBackupEvent(type: BackupEventType, filename?: string, sizeBytes?: number) {
-  const event: BackupEvent = { id: genId("bkp"), type, filename, sizeBytes, createdAt: new Date().toISOString() };
+  const event: BackupEvent = { id: genId("bkp"), tenantId: getCurrentTenantId(), type, filename, sizeBytes, createdAt: new Date().toISOString() };
   backupHistory = [event, ...backupHistory];
   persistBackupHistory();
 }
 
 export async function listBackupHistory(): Promise<BackupEvent[]> {
-  return mockDelay([...backupHistory].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), 250);
+  return mockDelay(scopedToCurrentTenant(backupHistory).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), 250);
 }
 
-/** Snapshots every sms-mock-* / sms-settings-* localStorage key so it can be re-imported later. */
+/** Snapshots only the current tenant's slice of every sms-mock- / sms-settings- key so it can be re-imported later. */
 export async function exportBackup(): Promise<{ filename: string; sizeBytes: number }> {
-  const snapshot: Record<string, string> = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key || !(key.startsWith("sms-mock-") || key.startsWith("sms-settings-"))) continue;
-    const value = localStorage.getItem(key);
-    if (value !== null) snapshot[key] = value;
-  }
+  const snapshot = exportTenantSnapshot();
   const payload = JSON.stringify({ exportedAt: new Date().toISOString(), data: snapshot }, null, 2);
   const filename = `educore-backup-${new Date().toISOString().slice(0, 10)}.json`;
   const sizeBytes = new Blob([payload]).size;
@@ -173,10 +219,14 @@ export async function exportBackup(): Promise<{ filename: string; sizeBytes: num
   return mockDelay({ filename, sizeBytes }, 400);
 }
 
-/** Restores a previously exported snapshot file, then reloads so every module re-reads localStorage fresh. */
+/**
+ * Restores a previously exported snapshot file, replacing only the current tenant's rows within
+ * each key (other tenants' rows in the same key are left untouched), then reloads so every
+ * module re-reads localStorage fresh.
+ */
 export async function restoreBackup(file: File): Promise<void> {
   const text = await file.text();
-  let parsed: { data?: Record<string, string> };
+  let parsed: { data?: Record<string, unknown> };
   try {
     parsed = JSON.parse(text);
   } catch {
@@ -186,12 +236,7 @@ export async function restoreBackup(file: File): Promise<void> {
     throw new Error("This file doesn't look like an EduCore backup.");
   }
 
-  for (const key of Object.keys(localStorage)) {
-    if (key.startsWith("sms-mock-") || key.startsWith("sms-settings-")) localStorage.removeItem(key);
-  }
-  for (const [key, value] of Object.entries(parsed.data)) {
-    if (key.startsWith("sms-mock-") || key.startsWith("sms-settings-")) localStorage.setItem(key, value);
-  }
+  mergeTenantSnapshot(parsed.data);
 
   recordBackupEvent("restore", file.name, file.size);
   logAudit("restored a data backup", "data", file.name);
@@ -200,15 +245,15 @@ export async function restoreBackup(file: File): Promise<void> {
 }
 
 /**
- * Wipes every module's mock data back to reseed-fresh, but deliberately preserves this settings
- * module's own data (profile/localization/templates/audit log/backup history/brand preset) —
- * an audit trail and configuration should survive a data reset, not disappear with it.
+ * Wipes the current tenant's own data back to reseed-fresh (re-seeding only actually happens for
+ * the default tenant, which is the only one with seed data to restore to), but deliberately
+ * preserves this settings module's own data (profile/localization/templates/audit log/backup
+ * history/brand preset) — an audit trail and configuration should survive a data reset, not
+ * disappear with it.
  */
 export async function resetDemoData(): Promise<void> {
   logAudit("reset all demo data to defaults", "system");
-  for (const key of Object.keys(localStorage)) {
-    if (key.startsWith("sms-mock-") && !key.startsWith("sms-mock-settings-")) localStorage.removeItem(key);
-  }
+  resetCurrentTenantData();
   recordBackupEvent("reset");
   await mockDelay(undefined, 500);
   window.location.reload();

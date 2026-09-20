@@ -1,5 +1,14 @@
 import { listClasses, listSections } from "@/features/academics/api";
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { SEED_ATTENDANCE_RECORDS, SEED_ROSTER, SEED_STAFF_ATTENDANCE_RECORDS } from "./mock";
 import type {
   AttendanceRecord,
@@ -41,8 +50,15 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let records = loadJson<AttendanceRecord[]>(RECORDS_KEY, SEED_ATTENDANCE_RECORDS.map((r) => ({ ...r })));
-let staffRecords = loadJson<StaffAttendanceRecord[]>(STAFF_RECORDS_KEY, SEED_STAFF_ATTENDANCE_RECORDS.map((r) => ({ ...r })));
+const stampDefault = <T extends object>(records: T[]) =>
+  records.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }));
+
+let records = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(loadJson<AttendanceRecord[]>(RECORDS_KEY, stampDefault(SEED_ATTENDANCE_RECORDS))),
+);
+let staffRecords = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(loadJson<StaffAttendanceRecord[]>(STAFF_RECORDS_KEY, stampDefault(SEED_STAFF_ATTENDANCE_RECORDS))),
+);
 
 const persistRecords = () => saveJson(RECORDS_KEY, records);
 const persistStaffRecords = () => saveJson(STAFF_RECORDS_KEY, staffRecords);
@@ -70,14 +86,18 @@ export async function getSectionRoster(sectionId: string): Promise<StudentRoster
 // ── Student attendance ───────────────────────────────────────────────────
 
 export async function getAttendanceForSectionDate(sectionId: string, date: string): Promise<AttendanceRecord[]> {
-  return mockDelay(records.filter((r) => r.sectionId === sectionId && r.date === date), 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(records).filter((r) => r.sectionId === sectionId && r.date === date), 300);
 }
 
 export async function saveAttendance(params: SaveAttendanceParams): Promise<AttendanceRecord[]> {
   const { sectionId, date, captureMode, entries } = params;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const now = new Date().toISOString();
   const created: AttendanceRecord[] = entries.map((entry) => ({
     id: genId("att"),
+    tenantId,
+    branchId,
     studentId: entry.studentId,
     sectionId,
     date,
@@ -86,13 +106,16 @@ export async function saveAttendance(params: SaveAttendanceParams): Promise<Atte
     remarks: entry.remarks,
     markedAt: now,
   }));
-  records = [...records.filter((r) => !(r.sectionId === sectionId && r.date === date)), ...created];
+  records = [
+    ...records.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.sectionId === sectionId && r.date === date)),
+    ...created,
+  ];
   persistRecords();
   return mockDelay(created, 450);
 }
 
 export async function listAttendanceRecords(filters?: AttendanceRecordFilters): Promise<AttendanceRecord[]> {
-  let result = [...records];
+  let result = scopedToCurrentTenantAndBranch(records);
   if (filters?.sectionId) result = result.filter((r) => r.sectionId === filters.sectionId);
   if (filters?.dateFrom) result = result.filter((r) => r.date >= filters.dateFrom!);
   if (filters?.dateTo) result = result.filter((r) => r.date <= filters.dateTo!);
@@ -102,27 +125,34 @@ export async function listAttendanceRecords(filters?: AttendanceRecordFilters): 
 // ── Staff attendance ─────────────────────────────────────────────────────
 
 export async function getStaffAttendanceForDate(date: string): Promise<StaffAttendanceRecord[]> {
-  return mockDelay(staffRecords.filter((r) => r.date === date), 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(staffRecords).filter((r) => r.date === date), 300);
 }
 
 export async function saveStaffAttendance(params: SaveStaffAttendanceParams): Promise<StaffAttendanceRecord[]> {
   const { date, entries } = params;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const now = new Date().toISOString();
   const created: StaffAttendanceRecord[] = entries.map((entry) => ({
     id: genId("satt"),
+    tenantId,
+    branchId,
     staffId: entry.staffId,
     date,
     status: entry.status,
     markedAt: now,
   }));
   const staffIds = new Set(entries.map((e) => e.staffId));
-  staffRecords = [...staffRecords.filter((r) => !(r.date === date && staffIds.has(r.staffId))), ...created];
+  staffRecords = [
+    ...staffRecords.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.date === date && staffIds.has(r.staffId))),
+    ...created,
+  ];
   persistStaffRecords();
   return mockDelay(created, 450);
 }
 
 export async function listStaffAttendanceRecords(filters?: StaffAttendanceFilters): Promise<StaffAttendanceRecord[]> {
-  let result = [...staffRecords];
+  let result = scopedToCurrentTenantAndBranch(staffRecords);
   if (filters?.dateFrom) result = result.filter((r) => r.date >= filters.dateFrom!);
   if (filters?.dateTo) result = result.filter((r) => r.date <= filters.dateTo!);
   return mockDelay(result, 350);
@@ -138,7 +168,7 @@ export async function getDailySectionSummaries(date: string): Promise<DailySecti
     const section = sections.find((s) => s.id === sectionId);
     const schoolClass = section ? classes.find((c) => c.id === section.classId) : undefined;
     const roster = SEED_ROSTER.filter((r) => r.sectionId === sectionId);
-    const dayRecords = records.filter((r) => r.sectionId === sectionId && r.date === date);
+    const dayRecords = scopedToCurrentTenantAndBranch(records).filter((r) => r.sectionId === sectionId && r.date === date);
     const count = (status: AttendanceStatus) => dayRecords.filter((r) => r.status === status).length;
     const present = count("present");
     const marked = dayRecords.length;
@@ -164,7 +194,7 @@ export async function getDailySectionSummaries(date: string): Promise<DailySecti
 export async function getMonthlyStudentSummary(sectionId: string, year: number, month: number): Promise<MonthlyStudentRow[]> {
   const roster = SEED_ROSTER.filter((r) => r.sectionId === sectionId);
   const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}`;
-  const monthRecords = records.filter((r) => r.sectionId === sectionId && r.date.startsWith(monthPrefix));
+  const monthRecords = scopedToCurrentTenantAndBranch(records).filter((r) => r.sectionId === sectionId && r.date.startsWith(monthPrefix));
 
   const rows: MonthlyStudentRow[] = roster.map((student) => {
     const studentRecords = monthRecords.filter((r) => r.studentId === student.id);
@@ -192,7 +222,8 @@ export async function getMonthlyStudentSummary(sectionId: string, year: number, 
 }
 
 export async function getYearlyTrend(sectionId?: string): Promise<YearlyTrendPoint[]> {
-  const filtered = sectionId ? records.filter((r) => r.sectionId === sectionId) : records;
+  const tenantRecords = scopedToCurrentTenantAndBranch(records);
+  const filtered = sectionId ? tenantRecords.filter((r) => r.sectionId === sectionId) : tenantRecords;
   const byMonth = new Map<string, { present: number; total: number }>();
   for (const record of filtered) {
     const monthKey = record.date.slice(0, 7);

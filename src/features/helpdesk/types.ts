@@ -25,6 +25,8 @@ export interface RaisedByDetails {
 
 export interface Ticket extends RaisedByDetails {
   id: string;
+  tenantId: string;
+  branchId: string;
   ticketNumber: string;
   category: TicketCategory;
   priority: TicketPriority;

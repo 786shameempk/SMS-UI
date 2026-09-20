@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCurrentBranchId } from "@/utils/tenant";
+import { listBranches } from "@/features/administration/branches/api";
 import { DESIGNATIONS } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
 
 const staffFormSchema = z.object({
+  branchId: z.string().min(1, "Select a branch"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
@@ -43,6 +47,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
   } = useForm<StaffFormValues>({
     resolver: zodResolver(staffFormSchema),
     defaultValues: {
+      branchId: getCurrentBranchId(),
       firstName: "",
       lastName: "",
       dateOfBirth: "",
@@ -55,11 +60,14 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
     },
   });
 
+  const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
+
   useEffect(() => {
     if (open) {
       reset(
         staff
           ? {
+              branchId: staff.branchId,
               firstName: staff.firstName,
               lastName: staff.lastName,
               dateOfBirth: staff.dateOfBirth.slice(0, 10),
@@ -71,6 +79,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               address: staff.address,
             }
           : {
+              branchId: getCurrentBranchId(),
               firstName: "",
               lastName: "",
               dateOfBirth: "",
@@ -95,6 +104,29 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="branchId">Branch</Label>
+            <Controller
+              control={control}
+              name="branchId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="branchId">
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.branchId && <p className="text-xs text-red-600">{errors.branchId.message}</p>}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="firstName">First name</Label>

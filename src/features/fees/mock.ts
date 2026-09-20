@@ -20,7 +20,7 @@ const TUITION_CLASS_IDS = [
   "class-10",
 ];
 
-export const SEED_FEE_STRUCTURES: FeeStructure[] = [
+export const SEED_FEE_STRUCTURES: Omit<FeeStructure, "tenantId" | "branchId">[] = [
   ...TUITION_CLASS_IDS.map((classId, index) => ({
     id: `fs-tuition-${index + 1}`,
     name: `Grade ${index + 1} Tuition Fee`,
@@ -77,7 +77,7 @@ export const SEED_FEE_STRUCTURES: FeeStructure[] = [
   },
 ];
 
-export const SEED_DISCOUNTS: FeeDiscount[] = [
+export const SEED_DISCOUNTS: Omit<FeeDiscount, "tenantId" | "branchId">[] = [
   {
     id: "disc-merit",
     name: "Merit Scholarship",
@@ -117,7 +117,7 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function receiptFor(invoice: FeeInvoice, amount: number, paidOn: string, seq: number): Receipt {
+function receiptFor(invoice: Omit<FeeInvoice, "tenantId" | "branchId">, amount: number, paidOn: string, seq: number): Omit<Receipt, "tenantId" | "branchId"> {
   return {
     id: genId("rcpt"),
     invoiceId: invoice.id,
@@ -137,10 +137,10 @@ export function buildSeedFeeData(
   students: Student[],
   structures: FeeStructure[],
   discounts: FeeDiscount[],
-): { invoices: FeeInvoice[]; receipts: Receipt[]; refunds: Refund[] } {
-  const invoices: FeeInvoice[] = [];
-  const receipts: Receipt[] = [];
-  const refunds: Refund[] = [];
+): { invoices: Omit<FeeInvoice, "tenantId" | "branchId">[]; receipts: Omit<Receipt, "tenantId" | "branchId">[]; refunds: Omit<Refund, "tenantId" | "branchId">[] } {
+  const invoices: Omit<FeeInvoice, "tenantId" | "branchId">[] = [];
+  const receipts: Omit<Receipt, "tenantId" | "branchId">[] = [];
+  const refunds: Omit<Refund, "tenantId" | "branchId">[] = [];
   let receiptSeq = 1;
 
   const discountFor = (studentId: string): FeeDiscount | undefined =>
@@ -159,7 +159,7 @@ export function buildSeedFeeData(
     const discountAmount = applyDiscount(tuition.amount, discount);
 
     const term1Net = tuition.amount - discountAmount;
-    const term1: FeeInvoice = {
+    const term1: Omit<FeeInvoice, "tenantId" | "branchId"> = {
       id: `${student.id}-fee-term1`,
       studentId: student.id,
       feeStructureId: tuition.id,
@@ -180,7 +180,7 @@ export function buildSeedFeeData(
 
     const rotation = index % 4;
     const term2Net = tuition.amount - discountAmount;
-    let term2: FeeInvoice = {
+    let term2: Omit<FeeInvoice, "tenantId" | "branchId"> = {
       id: `${student.id}-fee-term2`,
       studentId: student.id,
       feeStructureId: tuition.id,
@@ -210,7 +210,7 @@ export function buildSeedFeeData(
     const extraStructure = student.transport.required
       ? structures.find((s) => s.id === "fs-bus")!
       : structures.find((s) => s.id === "fs-library")!;
-    const extra: FeeInvoice = {
+    const extra: Omit<FeeInvoice, "tenantId" | "branchId"> = {
       id: `${student.id}-fee-extra`,
       studentId: student.id,
       feeStructureId: extraStructure.id,

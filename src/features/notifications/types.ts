@@ -4,6 +4,7 @@ export type NotificationCategory = "announcement" | "academic" | "finance" | "ev
 
 export interface Notification {
   id: string;
+  tenantId: string;
   title: string;
   body: string;
   category: NotificationCategory;

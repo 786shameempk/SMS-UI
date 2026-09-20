@@ -1,6 +1,15 @@
 import { listAcademicYears, listClasses, listSubjects, listTerms } from "@/features/academics/api";
 import { createStudent, getStudent, listStudents } from "@/features/students/api";
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { computeGrade, gradeBandForPercentage, gradePointForGrade } from "./constants";
 import { EXAM_ROSTER_SEEDS, SEED_ABSENT_RESULT, SEED_EXAMS, SEED_EXAM_SCHEDULES } from "./mock";
 import type {
@@ -24,6 +33,8 @@ const SEEDED_KEY = "sms-mock-examinations-seeded";
 
 interface ExamRemark {
   id: string;
+  tenantId: string;
+  branchId: string;
   examId: string;
   studentId: string;
   remarks: string;
@@ -51,18 +62,29 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let exams = loadJson<Exam[]>(EXAMS_KEY, SEED_EXAMS.map((e) => ({ ...e })));
-let examSchedules = loadJson<ExamSchedule[]>(SCHEDULES_KEY, SEED_EXAM_SCHEDULES.map((s) => ({ ...s })));
-let examResults = loadJson<ExamResult[]>(RESULTS_KEY, []);
-let examRemarks = loadJson<ExamRemark[]>(REMARKS_KEY, []);
+let exams = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(
+    loadJson<Exam[]>(EXAMS_KEY, SEED_EXAMS.map((e) => ({ ...e, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }))),
+  ),
+);
+let examSchedules = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(
+    loadJson<ExamSchedule[]>(
+      SCHEDULES_KEY,
+      SEED_EXAM_SCHEDULES.map((s) => ({ ...s, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) })),
+    ),
+  ),
+);
+let examResults = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<ExamResult[]>(RESULTS_KEY, [])));
+let examRemarks = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<ExamRemark[]>(REMARKS_KEY, [])));
 
 const persistExams = () => saveJson(EXAMS_KEY, exams);
 const persistSchedules = () => saveJson(SCHEDULES_KEY, examSchedules);
 const persistResults = () => saveJson(RESULTS_KEY, examResults);
 const persistRemarks = () => saveJson(REMARKS_KEY, examRemarks);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
@@ -105,6 +127,8 @@ async function performSeed(): Promise<void> {
         const marksObtained = isAbsent ? 0 : Math.round((seededPercentage(student.id, schedule.subjectId) / 100) * schedule.maxMarks);
         newResults.push({
           id: genId("exres"),
+          tenantId: DEFAULT_TENANT_ID,
+          branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
           examId: exam.id,
           subjectId: schedule.subjectId,
           studentId: student.id,
@@ -132,12 +156,12 @@ const seedPromise: Promise<void> = performSeed().catch((err) => {
 
 export async function listExams(): Promise<Exam[]> {
   await seedPromise;
-  return mockDelay([...exams], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(exams), 350);
 }
 
 export async function createExam(values: ExamFormValues): Promise<Exam> {
   await seedPromise;
-  const exam: Exam = { id: genId("exam"), ...values };
+  const exam: Exam = { id: genId("exam"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   exams = [exam, ...exams];
   persistExams();
   return mockDelay(exam, 400);
@@ -153,11 +177,13 @@ export async function updateExam(id: string, values: ExamFormValues): Promise<Ex
 
 export async function deleteExam(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(exams, id, "Exam");
-  exams = exams.filter((e) => e.id !== id);
-  examSchedules = examSchedules.filter((s) => s.examId !== id);
-  examResults = examResults.filter((r) => r.examId !== id);
-  examRemarks = examRemarks.filter((r) => r.examId !== id);
+  exams = exams.filter((e) => !(e.id === id && e.tenantId === tenantId && e.branchId === branchId));
+  examSchedules = examSchedules.filter((s) => !(s.examId === id && s.tenantId === tenantId && s.branchId === branchId));
+  examResults = examResults.filter((r) => !(r.examId === id && r.tenantId === tenantId && r.branchId === branchId));
+  examRemarks = examRemarks.filter((r) => !(r.examId === id && r.tenantId === tenantId && r.branchId === branchId));
   persistExams();
   persistSchedules();
   persistResults();
@@ -169,14 +195,15 @@ export async function deleteExam(id: string): Promise<void> {
 
 export async function listExamSchedules(examId?: string): Promise<ExamSchedule[]> {
   await seedPromise;
-  const result = examId ? examSchedules.filter((s) => s.examId === examId) : [...examSchedules];
+  const scoped = scopedToCurrentTenantAndBranch(examSchedules);
+  const result = examId ? scoped.filter((s) => s.examId === examId) : scoped;
   return mockDelay(result, 300);
 }
 
 export async function createExamSchedule(examId: string, values: ExamScheduleFormValues): Promise<ExamSchedule> {
   await seedPromise;
   requireEntity(exams, examId, "Exam");
-  const schedule: ExamSchedule = { id: genId("exsch"), examId, ...values };
+  const schedule: ExamSchedule = { id: genId("exsch"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), examId, ...values };
   examSchedules = [schedule, ...examSchedules];
   persistSchedules();
   return mockDelay(schedule, 400);
@@ -192,9 +219,13 @@ export async function updateExamSchedule(id: string, values: ExamScheduleFormVal
 
 export async function deleteExamSchedule(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const schedule = requireEntity(examSchedules, id, "Exam schedule");
   examSchedules = examSchedules.filter((s) => s.id !== id);
-  examResults = examResults.filter((r) => !(r.examId === schedule.examId && r.subjectId === schedule.subjectId));
+  examResults = examResults.filter(
+    (r) => !(r.tenantId === tenantId && r.branchId === branchId && r.examId === schedule.examId && r.subjectId === schedule.subjectId),
+  );
   persistSchedules();
   persistResults();
   return mockDelay(undefined, 350);
@@ -213,7 +244,11 @@ export async function getExamRoster(examId: string) {
 
 export async function getExamResults(examId: string, subjectId?: string): Promise<ExamResult[]> {
   await seedPromise;
-  const result = examResults.filter((r) => r.examId === examId && (!subjectId || r.subjectId === subjectId));
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const result = examResults.filter(
+    (r) => r.tenantId === tenantId && r.branchId === branchId && r.examId === examId && (!subjectId || r.subjectId === subjectId),
+  );
   return mockDelay(result, 300);
 }
 
@@ -224,11 +259,15 @@ export async function saveExamResults(
   rows: ExamResultEntryRow[],
 ): Promise<ExamResult[]> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(exams, examId, "Exam");
   for (const row of rows) {
     const clamped = Math.max(0, Math.min(row.marksObtained, maxMarks));
     const grade = computeGrade(clamped, maxMarks, row.isAbsent);
-    const existing = examResults.find((r) => r.examId === examId && r.subjectId === subjectId && r.studentId === row.studentId);
+    const existing = examResults.find(
+      (r) => r.tenantId === tenantId && r.branchId === branchId && r.examId === examId && r.subjectId === subjectId && r.studentId === row.studentId,
+    );
     if (existing) {
       examResults = examResults.map((r) =>
         r.id === existing.id ? { ...r, marksObtained: row.isAbsent ? 0 : clamped, maxMarks, grade, isAbsent: row.isAbsent } : r,
@@ -238,6 +277,8 @@ export async function saveExamResults(
         ...examResults,
         {
           id: genId("exres"),
+          tenantId,
+          branchId,
           examId,
           subjectId,
           studentId: row.studentId,
@@ -250,15 +291,20 @@ export async function saveExamResults(
     }
   }
   persistResults();
-  return mockDelay(examResults.filter((r) => r.examId === examId && r.subjectId === subjectId), 450);
+  return mockDelay(
+    examResults.filter((r) => r.tenantId === tenantId && r.branchId === branchId && r.examId === examId && r.subjectId === subjectId),
+    450,
+  );
 }
 
 // ── Results, ranking & report cards ─────────────────────────────────────
 
 export async function getExamClassResults(examId: string): Promise<StudentExamSummary[]> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const exam = requireEntity(exams, examId, "Exam");
-  const results = examResults.filter((r) => r.examId === examId);
+  const results = examResults.filter((r) => r.tenantId === tenantId && r.branchId === branchId && r.examId === examId);
   if (results.length === 0) return mockDelay([], 350);
 
   const [classes, subjects, students, schedules] = await Promise.all([
@@ -319,17 +365,21 @@ export async function getReportCard(examId: string, studentId: string): Promise<
 
 export async function getRemark(examId: string, studentId: string): Promise<string> {
   await seedPromise;
-  const remark = examRemarks.find((r) => r.examId === examId && r.studentId === studentId);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const remark = examRemarks.find((r) => r.tenantId === tenantId && r.branchId === branchId && r.examId === examId && r.studentId === studentId);
   return mockDelay(remark?.remarks ?? "", 250);
 }
 
 export async function saveRemark(examId: string, studentId: string, remarks: string): Promise<void> {
   await seedPromise;
-  const existing = examRemarks.find((r) => r.examId === examId && r.studentId === studentId);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const existing = examRemarks.find((r) => r.tenantId === tenantId && r.branchId === branchId && r.examId === examId && r.studentId === studentId);
   if (existing) {
     examRemarks = examRemarks.map((r) => (r.id === existing.id ? { ...r, remarks } : r));
   } else {
-    examRemarks = [...examRemarks, { id: genId("exrmk"), examId, studentId, remarks }];
+    examRemarks = [...examRemarks, { id: genId("exrmk"), tenantId, branchId, examId, studentId, remarks }];
   }
   persistRemarks();
   return mockDelay(undefined, 300);
@@ -339,18 +389,24 @@ export async function saveRemark(examId: string, studentId: string, remarks: str
 
 export async function getTranscript(studentId: string): Promise<Transcript> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const student = await getStudent(studentId);
   const [terms, academicYears] = await Promise.all([listTerms(), listAcademicYears()]);
 
-  const examIds = [...new Set(examResults.filter((r) => r.studentId === studentId).map((r) => r.examId))];
+  const examIds = [
+    ...new Set(examResults.filter((r) => r.tenantId === tenantId && r.branchId === branchId && r.studentId === studentId).map((r) => r.examId)),
+  ];
   const rows: TranscriptRow[] = [];
   let currentYearGpaSum = 0;
   let currentYearGpaCount = 0;
 
   for (const examId of examIds) {
-    const exam = exams.find((e) => e.id === examId);
+    const exam = exams.find((e) => e.id === examId && e.tenantId === tenantId && e.branchId === branchId);
     if (!exam) continue;
-    const resultsForExam = examResults.filter((r) => r.examId === examId && r.studentId === studentId);
+    const resultsForExam = examResults.filter(
+      (r) => r.tenantId === tenantId && r.branchId === branchId && r.examId === examId && r.studentId === studentId,
+    );
     const totalObtained = resultsForExam.reduce((sum, r) => sum + r.marksObtained, 0);
     const totalMax = resultsForExam.reduce((sum, r) => sum + r.maxMarks, 0);
     const percentage = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
@@ -379,7 +435,11 @@ export async function getTranscript(studentId: string): Promise<Transcript> {
     });
   }
 
-  rows.sort((a, b) => (exams.find((e) => e.id === a.examId)?.startDate ?? "").localeCompare(exams.find((e) => e.id === b.examId)?.startDate ?? ""));
+  rows.sort((a, b) =>
+    (exams.find((e) => e.id === a.examId && e.tenantId === tenantId && e.branchId === branchId)?.startDate ?? "").localeCompare(
+      exams.find((e) => e.id === b.examId && e.tenantId === tenantId && e.branchId === branchId)?.startDate ?? "",
+    ),
+  );
 
   const cgpa = currentYearGpaCount > 0 ? Math.round((currentYearGpaSum / currentYearGpaCount) * 100) / 100 : 0;
 

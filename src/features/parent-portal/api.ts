@@ -1,4 +1,5 @@
 import { mockDelay } from "@/utils/mockDelay";
+import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
 import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { listInvoicesForStudent, payInvoiceOnline } from "@/features/fees/api";
@@ -45,9 +46,15 @@ function saveJson(key: string, value: unknown) {
   }
 }
 
+// threadsByStudent/leaveByStudent are keyed by studentId, not tagged with tenantId directly —
+// like RolePermissionMap in administration/roles, they're only ever reached via a studentId
+// that already passed through a tenant-scoped lookup (getMyChildren -> listStudents), so an
+// opaque, tenant-unreachable key keeps them safe without a parallel tenantId field.
 let threadsByStudent = loadJson<Record<string, MessageThread[]>>(THREADS_KEY, {});
 let leaveByStudent = loadJson<Record<string, LeaveRequest[]>>(LEAVE_KEY, {});
-let notifications = loadJson<ParentNotification[]>(NOTIFICATIONS_KEY, buildNotifications());
+let notifications = migrateLegacyRecordsToDefaultTenant(
+  loadJson<ParentNotification[]>(NOTIFICATIONS_KEY, buildNotifications().map((n) => ({ ...n, tenantId: DEFAULT_TENANT_ID }))),
+);
 
 function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
   return {
@@ -151,11 +158,12 @@ export async function createLeaveRequest(studentId: string, values: LeaveRequest
 }
 
 export async function listNotifications(): Promise<ParentNotification[]> {
-  return mockDelay([...notifications], 300);
+  return mockDelay(scopedToCurrentTenant(notifications), 300);
 }
 
 export async function markNotificationRead(id: string): Promise<ParentNotification[]> {
-  notifications = notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
+  const tenantId = getCurrentTenantId();
+  notifications = notifications.map((n) => (n.id === id && n.tenantId === tenantId ? { ...n, read: true } : n));
   saveJson(NOTIFICATIONS_KEY, notifications);
-  return mockDelay([...notifications], 150);
+  return mockDelay(scopedToCurrentTenant(notifications), 150);
 }

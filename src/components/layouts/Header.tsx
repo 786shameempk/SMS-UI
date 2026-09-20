@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { LogOut, Settings, User } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, Globe, LogOut, Settings, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import {
@@ -9,7 +10,77 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { listTenants } from "@/features/platform/api";
+import { listBranches } from "@/features/administration/branches/api";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
+
+function TenantSwitcher() {
+  const queryClient = useQueryClient();
+  const activeTenantId = useAuthStore((s) => s.activeTenantId);
+  const setActiveTenantId = useAuthStore((s) => s.setActiveTenantId);
+  const { data: tenants = [] } = useQuery({ queryKey: ["platform", "tenants"], queryFn: listTenants });
+
+  return (
+    <Select
+      value={activeTenantId}
+      onValueChange={(id) => {
+        if (id === activeTenantId) return;
+        setActiveTenantId(id);
+        // A hard cache clear (not invalidate) is deliberate: this is a tenant isolation boundary,
+        // and invalidate would leave the previous tenant's data rendered during the background
+        // refetch — exactly the cross-tenant flash this switch must never produce.
+        queryClient.clear();
+      }}
+    >
+      <SelectTrigger className="w-56 h-9">
+        <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <SelectValue placeholder="Select a tenant" />
+      </SelectTrigger>
+      <SelectContent>
+        {tenants.map((t) => (
+          <SelectItem key={t.id} value={t.id}>
+            {t.schoolName}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function BranchSwitcher() {
+  const queryClient = useQueryClient();
+  const activeTenantId = useAuthStore((s) => s.activeTenantId);
+  const activeBranchId = useAuthStore((s) => s.activeBranchId);
+  const setActiveBranchId = useAuthStore((s) => s.setActiveBranchId);
+  const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches", activeTenantId], queryFn: listBranches });
+
+  return (
+    <Select
+      value={activeBranchId}
+      onValueChange={(id) => {
+        if (id === activeBranchId) return;
+        setActiveBranchId(id);
+        // Same hard cache clear as TenantSwitcher, for the same reason: this is a branch
+        // isolation boundary, and invalidate would flash the previous branch's data on screen
+        // during the background refetch.
+        queryClient.clear();
+      }}
+    >
+      <SelectTrigger className="w-48 h-9">
+        <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <SelectValue placeholder="Select a branch" />
+      </SelectTrigger>
+      <SelectContent>
+        {branches.map((b) => (
+          <SelectItem key={b.id} value={b.id}>
+            {b.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 function initialsOf(name: string | undefined | null) {
   if (!name) return "U";
@@ -34,6 +105,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-30 h-14 flex items-center gap-4 px-6 border-b border-slate-200/80 bg-white/70 backdrop-blur-md shrink-0">
       <div className="flex-1 min-w-0" />
+
+      {user?.role === "superAdmin" && <TenantSwitcher />}
+      {(user?.role === "admin" || user?.role === "superAdmin") && <BranchSwitcher />}
 
       <NotificationBell />
 

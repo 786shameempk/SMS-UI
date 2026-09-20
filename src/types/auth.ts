@@ -15,6 +15,11 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   avatarUrl?: string | null;
+  /** Every user belongs to exactly one tenant, except superAdmin (null), who can view any of them. */
+  tenantId: string | null;
+  /** Every user belongs to exactly one branch (campus) within their tenant, except admin/superAdmin
+   *  (null), who aren't locked to one branch and can switch between their tenant's branches. */
+  branchId: string | null;
 }
 
 /** Coarse-grained module visibility flags, refined into per-action permissions by the Role & Permission module. */
@@ -41,6 +46,7 @@ export interface ModulePermissions {
   reports: boolean;
   administration: boolean;
   platformConsole: boolean;
+  aiFeatures: boolean;
   timetable: boolean;
   examinations: boolean;
   homework: boolean;

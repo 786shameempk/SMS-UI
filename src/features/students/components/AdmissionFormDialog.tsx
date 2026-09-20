@@ -10,11 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCurrentBranchId } from "@/utils/tenant";
+import { listBranches } from "@/features/administration/branches/api";
 import { CLASS_OPTIONS } from "../constants";
 import { listSeatAvailability } from "../api";
 import type { AdmissionFormValues } from "../types";
 
 const admissionFormSchema = z.object({
+  branchId: z.string().min(1, "Select a branch"),
   applicantFirstName: z.string().min(1, "First name is required"),
   applicantLastName: z.string().min(1, "Last name is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
@@ -38,6 +41,7 @@ export default function AdmissionFormDialog({
   submitting: boolean;
 }) {
   const { data: seatAvailability = [] } = useQuery({ queryKey: ["students", "seat-availability"], queryFn: listSeatAvailability, enabled: open });
+  const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
 
   const {
     register,
@@ -49,6 +53,7 @@ export default function AdmissionFormDialog({
   } = useForm<AdmissionFormValues>({
     resolver: zodResolver(admissionFormSchema),
     defaultValues: {
+      branchId: getCurrentBranchId(),
       applicantFirstName: "",
       applicantLastName: "",
       dateOfBirth: "",
@@ -64,6 +69,7 @@ export default function AdmissionFormDialog({
   useEffect(() => {
     if (open) {
       reset({
+        branchId: getCurrentBranchId(),
         applicantFirstName: "",
         applicantLastName: "",
         dateOfBirth: "",
@@ -88,6 +94,29 @@ export default function AdmissionFormDialog({
           <DialogDescription>Submit a prospective student for review before enrollment.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, guardianEmail: values.guardianEmail?.trim() || undefined }))} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="branchId">Branch</Label>
+            <Controller
+              control={control}
+              name="branchId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="branchId">
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.branchId && <p className="text-xs text-red-600">{errors.branchId.message}</p>}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="applicantFirstName">First name</Label>

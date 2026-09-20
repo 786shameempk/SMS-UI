@@ -1,8 +1,11 @@
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
 import type { StudentFormValues } from "@/features/students/types";
 import type { Exam, ExamSchedule } from "./types";
 
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
+
 /** class-9 and class-10 (Grade 9 / Grade 10) with terms/subjects from the academics seed. */
-export const SEED_EXAMS: Exam[] = [
+export const SEED_EXAMS: Omit<Exam, "tenantId" | "branchId">[] = [
   {
     id: "exam-1",
     name: "Mid-term Examination",
@@ -35,7 +38,7 @@ export const SEED_EXAMS: Exam[] = [
   },
 ];
 
-export const SEED_EXAM_SCHEDULES: ExamSchedule[] = [
+export const SEED_EXAM_SCHEDULES: Omit<ExamSchedule, "tenantId" | "branchId">[] = [
   // exam-1: Grade 9 mid-term
   { id: "exsch-1", examId: "exam-1", subjectId: "subj-1", date: "2025-11-10", startTime: "09:00", endTime: "11:00", maxMarks: 100, passMarks: 35, room: "Room 101" },
   { id: "exsch-2", examId: "exam-1", subjectId: "subj-2", date: "2025-11-11", startTime: "09:00", endTime: "11:00", maxMarks: 100, passMarks: 35, room: "Room 101" },
@@ -67,7 +70,7 @@ const yearsAgo = (n: number) => new Date(Date.now() - n * DAY_MS * 365).toISOStr
  * (see performSeed in api.ts) rather than by editing students/mock.ts, so that
  * feature folder stays untouched — same pattern the teachers module uses for staff.
  */
-export const EXAM_ROSTER_SEEDS: StudentFormValues[] = [
+const EXAM_ROSTER_SEED_BASE: Omit<StudentFormValues, "branchId">[] = [
   { firstName: "Aditi", lastName: "Rao", dateOfBirth: yearsAgo(14), gender: "female", className: "Grade 9", section: "A", rollNumber: "9A-01", address: "14 Malleswaram, Bengaluru", guardianName: "Shyam Rao", guardianRelation: "father", guardianPhone: "+91 98450 91001" },
   { firstName: "Karan", lastName: "Malhotra", dateOfBirth: yearsAgo(14), gender: "male", className: "Grade 9", section: "A", rollNumber: "9A-02", address: "22 Indiranagar, Bengaluru", guardianName: "Deepa Malhotra", guardianRelation: "mother", guardianPhone: "+91 98450 91002" },
   { firstName: "Zara", lastName: "Ahmed", dateOfBirth: yearsAgo(15), gender: "female", className: "Grade 9", section: "B", rollNumber: "9B-01", address: "5 Frazer Town, Bengaluru", guardianName: "Farhan Ahmed", guardianRelation: "father", guardianPhone: "+91 98450 91003" },
@@ -79,6 +82,8 @@ export const EXAM_ROSTER_SEEDS: StudentFormValues[] = [
   { firstName: "Aditya", lastName: "Nambiar", dateOfBirth: yearsAgo(16), gender: "male", className: "Grade 10", section: "B", rollNumber: "10B-08", address: "11 Ulsoor, Bengaluru", guardianName: "Vinod Nambiar", guardianRelation: "father", guardianPhone: "+91 98450 92003" },
   { firstName: "Farhan", lastName: "Ali", dateOfBirth: yearsAgo(16), gender: "male", className: "Grade 10", section: "B", rollNumber: "10B-09", address: "40 Richmond Town, Bengaluru", guardianName: "Samina Ali", guardianRelation: "mother", guardianPhone: "+91 98450 92004" },
 ];
+
+export const EXAM_ROSTER_SEEDS: StudentFormValues[] = EXAM_ROSTER_SEED_BASE.map((s) => ({ ...s, branchId: DEFAULT_BRANCH_ID }));
 
 /** One deliberate absence, seeded for realism in Results/Report Card views. */
 export const SEED_ABSENT_RESULT = { examId: "exam-2", subjectId: "subj-5" };

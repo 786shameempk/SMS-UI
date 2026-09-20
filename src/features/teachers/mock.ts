@@ -1,16 +1,18 @@
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
 import type { StaffFormValues } from "@/features/staff/types";
 import type { LessonPlanStatus } from "./types";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
 const yearsAgo = (n: number) => new Date(Date.now() - n * DAY_MS * 365).toISOString();
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
 /**
  * The generic staff seed only ships two "Teacher" designated records. These extra
  * teachers are created through staff's own createStaff() API (see performSeed in
  * api.ts) rather than by editing staff/mock.ts, so the staff module stays untouched.
  */
-export const EXTRA_TEACHER_SEEDS: StaffFormValues[] = [
+const EXTRA_TEACHER_SEED_BASE: Omit<StaffFormValues, "branchId">[] = [
   {
     firstName: "Priya",
     lastName: "Nair",
@@ -67,6 +69,8 @@ export const EXTRA_TEACHER_SEEDS: StaffFormValues[] = [
     address: "3 Banashankari, Bengaluru",
   },
 ];
+
+export const EXTRA_TEACHER_SEEDS: StaffFormValues[] = EXTRA_TEACHER_SEED_BASE.map((s) => ({ ...s, branchId: DEFAULT_BRANCH_ID }));
 
 interface SubjectAssignmentSeed {
   teacherEmail: string;

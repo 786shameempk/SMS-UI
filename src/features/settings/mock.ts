@@ -4,7 +4,7 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
 const hoursAgo = (n: number) => new Date(Date.now() - n * 60 * 60 * 1000).toISOString();
 
-export const SEED_SYSTEM_TEMPLATES: SystemTemplate[] = [
+export const SEED_SYSTEM_TEMPLATES: Omit<SystemTemplate, "tenantId">[] = [
   {
     id: "systpl-1",
     key: "welcome_email",
@@ -42,7 +42,7 @@ export const SEED_SYSTEM_TEMPLATES: SystemTemplate[] = [
   },
 ];
 
-export const SEED_AUDIT_LOG: AuditLogEntry[] = [
+export const SEED_AUDIT_LOG: Omit<AuditLogEntry, "tenantId">[] = [
   { id: "aud-1", actor: "Ava Whitfield", action: "created a new academic year", category: "settings", detail: "2026-2027", createdAt: daysAgo(21) },
   { id: "aud-2", actor: "Ava Whitfield", action: "updated the fee structure", category: "data", detail: "Term 2 Tuition Fee", createdAt: daysAgo(14) },
   { id: "aud-3", actor: "Rohan Kulkarni", action: "recorded a fee payment", category: "data", detail: "₹58,000 from Priya Nair", createdAt: daysAgo(9) },

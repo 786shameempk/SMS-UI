@@ -24,7 +24,7 @@ function salaryOf(basic: number, allowances: number, deductions: number) {
   return { basic, allowances, deductions, bankName: "Union National Bank", bankAccountNumber: "XXXX-XXXX-4821", effectiveFrom: yearsAgo(1) };
 }
 
-export const SEED_STAFF: StaffMember[] = [
+export const SEED_STAFF: Omit<StaffMember, "tenantId" | "branchId">[] = [
   {
     id: "stf-1",
     employeeId: "EMP-1001",
@@ -197,7 +197,7 @@ export const SEED_STAFF: StaffMember[] = [
   },
 ];
 
-export const SEED_LEAVE_REQUESTS: StaffLeaveRequest[] = [
+export const SEED_LEAVE_REQUESTS: Omit<StaffLeaveRequest, "tenantId" | "branchId">[] = [
   {
     id: "sl-1",
     staffId: "stf-4",

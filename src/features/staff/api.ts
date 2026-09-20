@@ -1,4 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { SEED_LEAVE_REQUESTS, SEED_STAFF, buildStaffAttendance } from "./mock";
 import type {
   Experience,
@@ -40,8 +50,13 @@ function saveJson(key: string, value: unknown) {
   }
 }
 
-let staff = loadJson<StaffMember[]>(STAFF_KEY, SEED_STAFF.map((s) => ({ ...s })));
-let leaveRequests = loadJson<StaffLeaveRequest[]>(LEAVE_KEY, SEED_LEAVE_REQUESTS.map((l) => ({ ...l })));
+const stampDefault = <T extends object>(records: T[]) =>
+  records.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }));
+
+let staff = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<StaffMember[]>(STAFF_KEY, stampDefault(SEED_STAFF))));
+let leaveRequests = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(loadJson<StaffLeaveRequest[]>(LEAVE_KEY, stampDefault(SEED_LEAVE_REQUESTS))),
+);
 
 function persistStaff() {
   saveJson(STAFF_KEY, staff);
@@ -51,12 +66,12 @@ function persistLeave() {
 }
 
 function nextEmployeeId(): string {
-  const max = staff.reduce((acc, s) => Math.max(acc, Number(s.employeeId.replace("EMP-", "")) || 0), 1000);
+  const max = scopedToCurrentTenant(staff).reduce((acc, s) => Math.max(acc, Number(s.employeeId.replace("EMP-", "")) || 0), 1000);
   return `EMP-${max + 1}`;
 }
 
 function requireStaff(id: string): StaffMember {
-  const member = staff.find((s) => s.id === id);
+  const member = staff.find((s) => s.id === id && s.tenantId === getCurrentTenantId() && s.branchId === getCurrentBranchId());
   if (!member) throw new Error("Staff member not found");
   return member;
 }
@@ -72,7 +87,7 @@ async function patchStaff(id: string, patch: Partial<StaffMember>): Promise<Staf
 // ── Staff directory ──────────────────────────────────────────────────────
 
 export async function listStaff(): Promise<StaffMember[]> {
-  return mockDelay([...staff], 400);
+  return mockDelay(scopedToCurrentTenantAndBranch(staff), 400);
 }
 
 export async function getStaffMember(id: string): Promise<StaffMember> {
@@ -80,12 +95,15 @@ export async function getStaffMember(id: string): Promise<StaffMember> {
 }
 
 export async function createStaff(values: StaffFormValues): Promise<StaffMember> {
-  if (staff.some((s) => s.email.toLowerCase() === values.email.trim().toLowerCase())) {
+  const tenantId = getCurrentTenantId();
+  if (staff.some((s) => s.tenantId === tenantId && s.email.toLowerCase() === values.email.trim().toLowerCase())) {
     await mockDelay(null, 400);
     throw new Error("A staff member with this email already exists");
   }
   const member: StaffMember = {
     id: `stf-${Math.random().toString(36).slice(2, 9)}`,
+    tenantId,
+    branchId: values.branchId,
     employeeId: nextEmployeeId(),
     firstName: values.firstName.trim(),
     lastName: values.lastName.trim(),
@@ -113,12 +131,14 @@ export async function createStaff(values: StaffFormValues): Promise<StaffMember>
 }
 
 export async function updateStaff(id: string, values: StaffFormValues): Promise<StaffMember> {
+  const tenantId = getCurrentTenantId();
   requireStaff(id);
-  if (staff.some((s) => s.id !== id && s.email.toLowerCase() === values.email.trim().toLowerCase())) {
+  if (staff.some((s) => s.tenantId === tenantId && s.id !== id && s.email.toLowerCase() === values.email.trim().toLowerCase())) {
     await mockDelay(null, 400);
     throw new Error("A staff member with this email already exists");
   }
   return patchStaff(id, {
+    branchId: values.branchId,
     firstName: values.firstName.trim(),
     lastName: values.lastName.trim(),
     dateOfBirth: values.dateOfBirth,
@@ -200,6 +220,7 @@ export async function recordSalaryPayment(id: string, month: string): Promise<St
 // ── Attendance ───────────────────────────────────────────────────────────
 
 export async function getStaffAttendance(id: string): Promise<StaffAttendanceSummary> {
+  requireStaff(id);
   return mockDelay(buildStaffAttendance(id), 350);
 }
 
@@ -240,12 +261,15 @@ export async function uploadStaffPhoto(id: string, photoUrl: string | null): Pro
 // ── Leave requests ───────────────────────────────────────────────────────
 
 export async function listLeaveRequests(): Promise<StaffLeaveRequest[]> {
-  return mockDelay([...leaveRequests], 400);
+  return mockDelay(scopedToCurrentTenantAndBranch(leaveRequests), 400);
 }
 
 export async function createLeaveRequest(values: LeaveRequestFormValues): Promise<StaffLeaveRequest> {
+  const member = requireStaff(values.staffId);
   const request: StaffLeaveRequest = {
     id: `sl-${Math.random().toString(36).slice(2, 8)}`,
+    tenantId: getCurrentTenantId(),
+    branchId: member.branchId,
     ...values,
     status: "pending",
     requestedAt: new Date().toISOString(),
@@ -256,7 +280,7 @@ export async function createLeaveRequest(values: LeaveRequestFormValues): Promis
 }
 
 export async function setLeaveStatus(id: string, status: LeaveStatus): Promise<StaffLeaveRequest> {
-  const idx = leaveRequests.findIndex((l) => l.id === id);
+  const idx = leaveRequests.findIndex((l) => l.id === id && l.tenantId === getCurrentTenantId() && l.branchId === getCurrentBranchId());
   if (idx === -1) {
     await mockDelay(null, 300);
     throw new Error("Leave request not found");

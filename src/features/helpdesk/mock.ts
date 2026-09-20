@@ -1,7 +1,10 @@
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
 import type { StaffFormValues, StaffMember } from "@/features/staff/types";
 import type { Student } from "@/features/students/types";
 import { nextTicketNumber } from "./constants";
 import type { Ticket, TicketCategory, TicketComment, TicketPriority, TicketStatus } from "./types";
+
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const HOUR_MS = 1000 * 60 * 60;
@@ -13,7 +16,7 @@ const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
  * holding it. Created through staff's own createStaff() API (see performSeed in api.ts), same
  * convention as EXTRA_NURSE_SEEDS in the health module and EXTRA_WARDEN_SEEDS in hostel.
  */
-export const EXTRA_IT_SUPPORT_SEEDS: StaffFormValues[] = [
+const EXTRA_IT_SUPPORT_SEED_BASE: Omit<StaffFormValues, "branchId">[] = [
   {
     firstName: "Arvind",
     lastName: "Menon",
@@ -26,6 +29,8 @@ export const EXTRA_IT_SUPPORT_SEEDS: StaffFormValues[] = [
     address: "IT Office, Admin Block",
   },
 ];
+
+export const EXTRA_IT_SUPPORT_SEEDS: StaffFormValues[] = EXTRA_IT_SUPPORT_SEED_BASE.map((s) => ({ ...s, branchId: DEFAULT_BRANCH_ID }));
 
 function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -52,7 +57,7 @@ interface TicketSeed {
   resolvedHoursAfterCreation?: number;
 }
 
-export function buildSeedTickets(students: Student[], staff: StaffMember[]): Ticket[] {
+export function buildSeedTickets(students: Student[], staff: StaffMember[]): Omit<Ticket, "tenantId" | "branchId">[] {
   const activeStudents = students.filter((s) => s.status === "active");
   const principal = findStaffByDesignation(staff, "Principal");
   const accountant = findStaffByDesignation(staff, "Accountant");
@@ -206,7 +211,7 @@ export function buildSeedTickets(students: Student[], staff: StaffMember[]): Tic
   ];
 
   const ticketNumbers: string[] = [];
-  const tickets: Ticket[] = seeds.map((seed) => {
+  const tickets: Omit<Ticket, "tenantId" | "branchId">[] = seeds.map((seed) => {
     const createdAt = daysAgo(seed.daysBack);
     const ticketNumber = nextTicketNumber(ticketNumbers);
     ticketNumbers.push(ticketNumber);

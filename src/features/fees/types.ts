@@ -5,6 +5,8 @@ export type FeeFrequency = "one_time" | "monthly" | "term_wise" | "annual";
 
 export interface FeeStructure {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   academicYearId: string;
   classId?: string;
@@ -33,6 +35,8 @@ export type DiscountAppliesTo = "all" | "specific";
 
 export interface FeeDiscount {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   type: DiscountType;
   value: number;
@@ -64,6 +68,8 @@ export type FeeInvoiceStatus = "paid" | "due" | "overdue" | "partial";
 
 export interface FeeInvoice {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   feeStructureId: string;
   feeType: FeeType;
@@ -101,6 +107,8 @@ export interface RecordPaymentParams {
 
 export interface Receipt {
   id: string;
+  tenantId: string;
+  branchId: string;
   invoiceId: string;
   receiptNumber: string;
   amount: number;
@@ -112,6 +120,8 @@ export type RefundStatus = "pending" | "processed";
 
 export interface Refund {
   id: string;
+  tenantId: string;
+  branchId: string;
   invoiceId: string;
   amount: number;
   reason: string;

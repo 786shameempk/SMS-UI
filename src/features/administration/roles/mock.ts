@@ -3,14 +3,14 @@ import type { FeatureToggle, Permission, PermissionCategory, Policy, Role, RoleP
 const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
 
-export const SEED_ROLES: Role[] = [
-  { id: "role-admin", name: "Administrator", description: "Full access to every module and setting.", isSystem: true, createdAt: daysAgo(500) },
-  { id: "role-principal", name: "Principal", description: "Oversight across academics, staff, and finance.", isSystem: true, createdAt: daysAgo(500) },
-  { id: "role-teacher", name: "Teacher", description: "Manages classes, attendance, and grading.", isSystem: true, createdAt: daysAgo(500) },
-  { id: "role-accountant", name: "Accountant", description: "Manages fees, invoices, and financial reports.", isSystem: true, createdAt: daysAgo(500) },
-  { id: "role-librarian", name: "Librarian", description: "Manages the library catalog and book circulation.", isSystem: true, createdAt: daysAgo(500) },
-  { id: "role-receptionist", name: "Receptionist", description: "Front-office visitor and enquiry management.", isSystem: true, createdAt: daysAgo(500) },
-  { id: "role-exam-coordinator", name: "Exam Coordinator", description: "Custom role for scheduling and publishing exam results.", isSystem: false, createdAt: daysAgo(60) },
+export const SEED_ROLES: Omit<Role, "tenantId">[] = [
+  { id: "role-admin", name: "Administrator", description: "Full access to every module and setting.", isSystem: true, grantsAllBranchAccess: true, createdAt: daysAgo(500) },
+  { id: "role-principal", name: "Principal", description: "Oversight across academics, staff, and finance.", isSystem: true, grantsAllBranchAccess: false, createdAt: daysAgo(500) },
+  { id: "role-teacher", name: "Teacher", description: "Manages classes, attendance, and grading.", isSystem: true, grantsAllBranchAccess: false, createdAt: daysAgo(500) },
+  { id: "role-accountant", name: "Accountant", description: "Manages fees, invoices, and financial reports.", isSystem: true, grantsAllBranchAccess: false, createdAt: daysAgo(500) },
+  { id: "role-librarian", name: "Librarian", description: "Manages the library catalog and book circulation.", isSystem: true, grantsAllBranchAccess: false, createdAt: daysAgo(500) },
+  { id: "role-receptionist", name: "Receptionist", description: "Front-office visitor and enquiry management.", isSystem: true, grantsAllBranchAccess: false, createdAt: daysAgo(500) },
+  { id: "role-exam-coordinator", name: "Exam Coordinator", description: "Custom role for scheduling and publishing exam results.", isSystem: false, grantsAllBranchAccess: false, createdAt: daysAgo(60) },
 ];
 
 export const PERMISSION_MODULES = [
@@ -82,7 +82,7 @@ export const SEED_ROLE_PERMISSIONS: RolePermissionMap = {
   "role-exam-coordinator": [...grant("Dashboard", ["menu"]), ...grant("Examinations", ["menu", "api", "screen", "action"])],
 };
 
-export const SEED_POLICIES: Policy[] = [
+export const SEED_POLICIES: Omit<Policy, "tenantId">[] = [
   {
     id: "pol-1",
     name: "Class-scoped grading",
@@ -121,7 +121,7 @@ export const SEED_POLICIES: Policy[] = [
   },
 ];
 
-export const SEED_FEATURE_TOGGLES: FeatureToggle[] = [
+export const SEED_FEATURE_TOGGLES: Omit<FeatureToggle, "tenantId">[] = [
   { id: "ft-1", key: "biometric_attendance", label: "Biometric attendance", description: "Enable fingerprint/RFID attendance devices.", module: "Attendance", enabled: true },
   { id: "ft-2", key: "gps_transport_tracking", label: "GPS transport tracking", description: "Live bus location tracking for parents.", module: "Transport", enabled: true },
   { id: "ft-3", key: "online_classes", label: "Online classes", description: "Zoom/Meet/Teams integration for remote lessons.", module: "Online Classes", enabled: false },

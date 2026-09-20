@@ -1,4 +1,5 @@
 import { mockDelay } from "@/utils/mockDelay";
+import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
 import { listStaff, recordSalaryPayment } from "@/features/staff/api";
 import { buildSeedPayrollData } from "./mock";
 import type { GeneratePayrollResult, PayrollRun, PayrollRunSummary, Payslip, PayslipRow } from "./types";
@@ -29,14 +30,14 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let runs = loadJson<PayrollRun[]>(RUNS_KEY, []);
-let payslips = loadJson<Payslip[]>(PAYSLIPS_KEY, []);
+let runs = migrateLegacyRecordsToDefaultTenant(loadJson<PayrollRun[]>(RUNS_KEY, []));
+let payslips = migrateLegacyRecordsToDefaultTenant(loadJson<Payslip[]>(PAYSLIPS_KEY, []));
 
 const persistRuns = () => saveJson(RUNS_KEY, runs);
 const persistPayslips = () => saveJson(PAYSLIPS_KEY, payslips);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
@@ -47,8 +48,8 @@ async function performSeed(): Promise<void> {
   if (runs.length === 0 && payslips.length === 0) {
     const staff = await listStaff();
     const seeded = buildSeedPayrollData(staff);
-    runs = seeded.runs;
-    payslips = seeded.payslips;
+    runs = seeded.runs.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID }));
+    payslips = seeded.payslips.map((p) => ({ ...p, tenantId: DEFAULT_TENANT_ID }));
     persistRuns();
     persistPayslips();
   }
@@ -61,7 +62,7 @@ const seedPromise: Promise<void> = performSeed().catch((err) => {
 });
 
 function summarize(run: PayrollRun): PayrollRunSummary {
-  const rows = payslips.filter((p) => p.runId === run.id);
+  const rows = payslips.filter((p) => p.tenantId === run.tenantId && p.runId === run.id);
   return {
     ...run,
     staffCount: rows.length,
@@ -73,7 +74,7 @@ function summarize(run: PayrollRun): PayrollRunSummary {
 export async function listPayrollRuns(): Promise<PayrollRunSummary[]> {
   await seedPromise;
   return mockDelay(
-    runs.map(summarize).sort((a, b) => b.month.localeCompare(a.month)),
+    scopedToCurrentTenant(runs).map(summarize).sort((a, b) => b.month.localeCompare(a.month)),
     350,
   );
 }
@@ -87,7 +88,8 @@ export async function listPayslips(runId?: string): Promise<PayslipRow[]> {
   await seedPromise;
   const staff = await listStaff();
   const staffById = new Map(staff.map((s) => [s.id, s] as const));
-  const filtered = runId ? payslips.filter((p) => p.runId === runId) : payslips;
+  const scopedPayslips = scopedToCurrentTenant(payslips);
+  const filtered = runId ? scopedPayslips.filter((p) => p.runId === runId) : scopedPayslips;
   const rows = filtered
     .map((p) => {
       const staffMember = staffById.get(p.staffId);
@@ -100,7 +102,8 @@ export async function listPayslips(runId?: string): Promise<PayslipRow[]> {
 
 export async function generatePayrollRun(month: string): Promise<GeneratePayrollResult> {
   await seedPromise;
-  if (runs.some((r) => r.month === month)) {
+  const tenantId = getCurrentTenantId();
+  if (runs.some((r) => r.tenantId === tenantId && r.month === month)) {
     await mockDelay(null, 300);
     throw new Error(`Payroll for ${month} has already been generated`);
   }
@@ -108,7 +111,7 @@ export async function generatePayrollRun(month: string): Promise<GeneratePayroll
   const staff = await listStaff();
   const eligible = staff.filter((s) => s.status === "active" || s.status === "on-leave");
 
-  const run: PayrollRun = { id: genId("run"), month, status: "draft", generatedAt: new Date().toISOString() };
+  const run: PayrollRun = { id: genId("run"), tenantId, month, status: "draft", generatedAt: new Date().toISOString() };
   let createdCount = 0;
   let skippedCount = 0;
   const created: Payslip[] = [];
@@ -120,6 +123,7 @@ export async function generatePayrollRun(month: string): Promise<GeneratePayroll
     }
     created.push({
       id: genId("psl"),
+      tenantId,
       runId: run.id,
       staffId: s.id,
       month,
@@ -155,13 +159,14 @@ export async function finalizePayrollRun(id: string): Promise<PayrollRun> {
 
 export async function deletePayrollRun(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   const run = requireEntity(runs, id, "Payroll run");
   if (run.status === "finalized") {
     await mockDelay(null, 300);
     throw new Error("Finalized runs can't be deleted");
   }
-  runs = runs.filter((r) => r.id !== id);
-  payslips = payslips.filter((p) => p.runId !== id);
+  runs = runs.filter((r) => !(r.id === id && r.tenantId === tenantId));
+  payslips = payslips.filter((p) => !(p.tenantId === tenantId && p.runId === id));
   persistRuns();
   persistPayslips();
   return mockDelay(undefined, 350);

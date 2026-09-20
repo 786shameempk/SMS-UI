@@ -1,15 +1,17 @@
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
 import type { StaffFormValues } from "@/features/staff/types";
 import type { DayOfWeek, MealType, Room } from "./types";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const yearsAgo = (n: number) => new Date(Date.now() - n * DAY_MS * 365).toISOString();
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
 /**
  * The generic staff seed ships no "Warden" designated records. These are created through
  * staff's own createStaff() API (see performSeed in api.ts) rather than by editing
  * staff/mock.ts, same convention as EXTRA_DRIVER_SEEDS in the transport module.
  */
-export const EXTRA_WARDEN_SEEDS: StaffFormValues[] = [
+const EXTRA_WARDEN_SEED_BASE: Omit<StaffFormValues, "branchId">[] = [
   {
     firstName: "Geeta",
     lastName: "Krishnan",
@@ -34,6 +36,8 @@ export const EXTRA_WARDEN_SEEDS: StaffFormValues[] = [
   },
 ];
 
+export const EXTRA_WARDEN_SEEDS: StaffFormValues[] = EXTRA_WARDEN_SEED_BASE.map((s) => ({ ...s, branchId: DEFAULT_BRANCH_ID }));
+
 interface HostelSeed {
   id: string;
   name: string;
@@ -41,7 +45,7 @@ interface HostelSeed {
   wardenEmail?: string;
   address: string;
   status: "active" | "inactive";
-  rooms: Array<Omit<Room, "id" | "hostelId">>;
+  rooms: Array<Omit<Room, "id" | "tenantId" | "branchId" | "hostelId">>;
 }
 
 export const HOSTEL_PLAN: HostelSeed[] = [

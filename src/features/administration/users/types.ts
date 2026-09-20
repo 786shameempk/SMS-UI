@@ -9,6 +9,9 @@ export interface UserPreferences {
 
 export interface SystemUser {
   id: string;
+  tenantId: string;
+  /** Null only for a user whose role grants all-branch access (Role.grantsAllBranchAccess) — everyone else belongs to exactly one branch. */
+  branchId: string | null;
   name: string;
   email: string;
   phone?: string;
@@ -35,6 +38,7 @@ export interface LoginHistoryEntry {
 }
 
 export interface UserFormValues {
+  branchId: string | null;
   name: string;
   email: string;
   phone?: string;

@@ -4,7 +4,7 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
 const hoursAgo = (n: number) => new Date(Date.now() - n * 60 * 60 * 1000).toISOString();
 
-export const SEED_NOTIFICATIONS: Notification[] = [
+export const SEED_NOTIFICATIONS: Omit<Notification, "tenantId">[] = [
   {
     id: "ntf-1",
     title: "Welcome to EduCore",

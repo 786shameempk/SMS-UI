@@ -3,7 +3,7 @@ import type { Account, JournalEntry } from "./types";
 const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
 
-export const SEED_ACCOUNTS: Account[] = [
+export const SEED_ACCOUNTS: Omit<Account, "tenantId">[] = [
   { id: "acc-1000", code: "1000", name: "Cash in Hand", type: "asset" },
   { id: "acc-1010", code: "1010", name: "Bank Account", type: "asset" },
   { id: "acc-1100", code: "1100", name: "GST Input Credit", type: "asset", description: "Recoverable tax paid on purchases and services." },
@@ -26,10 +26,10 @@ function line(accountId: string, debit: number, credit: number, description?: st
   return { id: `ln-${accountId}-${Math.random().toString(36).slice(2, 8)}`, accountId, debit, credit, description };
 }
 
-export function buildSeedJournalEntries(): JournalEntry[] {
+export function buildSeedJournalEntries(): Omit<JournalEntry, "tenantId">[] {
   let seq = 0;
   const nextNumber = () => `JE-2026-${String(++seq).padStart(4, "0")}`;
-  const entries: Array<Omit<JournalEntry, "entryNumber">> = [
+  const entries: Array<Omit<JournalEntry, "entryNumber" | "tenantId">> = [
     {
       id: "je-1",
       date: daysAgo(178),

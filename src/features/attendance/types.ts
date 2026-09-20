@@ -13,6 +13,8 @@ export interface StudentRosterEntry {
 
 export interface AttendanceRecord {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   sectionId: string;
   date: string;
@@ -37,6 +39,8 @@ export interface SaveAttendanceParams {
 
 export interface StaffAttendanceRecord {
   id: string;
+  tenantId: string;
+  branchId: string;
   staffId: string;
   date: string;
   status: StaffAttendanceStatus;

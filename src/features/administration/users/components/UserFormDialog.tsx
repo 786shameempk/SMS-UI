@@ -2,16 +2,20 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCurrentBranchId } from "@/utils/tenant";
+import { listBranches } from "@/features/administration/branches/api";
 import type { Role } from "@/features/administration/roles/types";
 import type { SystemUser, UserFormValues } from "../types";
 
 const userFormSchema = z.object({
+  branchId: z.string().nullable(),
   name: z.string().min(1, "Name is required"),
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
   phone: z.string().optional(),
@@ -35,23 +39,42 @@ export default function UserFormDialog({ open, onOpenChange, user, roles, onSubm
     handleSubmit,
     reset,
     control,
+    watch,
+    setValue,
+    setError,
     formState: { errors },
   } = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
-    defaultValues: { name: "", email: "", phone: "", roleId: "", department: "" },
+    defaultValues: { branchId: getCurrentBranchId(), name: "", email: "", phone: "", roleId: "", department: "" },
   });
+
+  const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
 
   useEffect(() => {
     if (open) {
       reset(
         user
-          ? { name: user.name, email: user.email, phone: user.phone ?? "", roleId: user.roleId, department: user.department ?? "" }
-          : { name: "", email: "", phone: "", roleId: "", department: "" },
+          ? { branchId: user.branchId, name: user.name, email: user.email, phone: user.phone ?? "", roleId: user.roleId, department: user.department ?? "" }
+          : { branchId: getCurrentBranchId(), name: "", email: "", phone: "", roleId: "", department: "" },
       );
     }
   }, [open, user, reset]);
 
+  const roleId = watch("roleId");
+  const selectedRole = roles.find((r) => r.id === roleId);
+  const needsBranch = !selectedRole?.grantsAllBranchAccess;
+
+  useEffect(() => {
+    if (!needsBranch) setValue("branchId", null);
+    else if (watch("branchId") === null) setValue("branchId", getCurrentBranchId());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsBranch]);
+
   const submit = async (values: UserFormValues) => {
+    if (needsBranch && !values.branchId) {
+      setError("branchId", { message: "Select a branch" });
+      return;
+    }
     await onSubmit(values);
   };
 
@@ -111,6 +134,31 @@ export default function UserFormDialog({ open, onOpenChange, user, roles, onSubm
             />
             {errors.roleId && <p className="text-xs text-red-600">{errors.roleId.message}</p>}
           </div>
+
+          {needsBranch && (
+            <div className="space-y-1.5">
+              <Label htmlFor="branchId">Branch</Label>
+              <Controller
+                control={control}
+                name="branchId"
+                render={({ field }) => (
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger id="branchId">
+                      <SelectValue placeholder="Select branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.branchId && <p className="text-xs text-red-600">{errors.branchId.message}</p>}
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

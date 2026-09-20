@@ -4,6 +4,7 @@ export type PayrollRunStatus = "draft" | "finalized";
 
 export interface PayrollRun {
   id: string;
+  tenantId: string;
   month: string;
   status: PayrollRunStatus;
   generatedAt: string;
@@ -18,6 +19,7 @@ export interface PayrollRunSummary extends PayrollRun {
 
 export interface Payslip {
   id: string;
+  tenantId: string;
   runId: string;
   staffId: string;
   month: string;

@@ -1,4 +1,5 @@
 import { mockDelay } from "@/utils/mockDelay";
+import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
 import { listUsers } from "../users/api";
 import {
   SEED_FEATURE_TOGGLES,
@@ -32,24 +33,32 @@ function saveJson(key: string, value: unknown) {
   }
 }
 
-let roles = loadJson<Role[]>(ROLES_KEY, SEED_ROLES.map((r) => ({ ...r })));
+const stampDefault = <T extends object>(records: T[]) => records.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID }));
+
+let roles = migrateLegacyRecordsToDefaultTenant(loadJson<Role[]>(ROLES_KEY, stampDefault(SEED_ROLES)));
+// Not tenant-scoped — see the RolePermissionMap comment in types.ts: keyed by roleId, which is
+// itself either a shared system-role id or an opaque, tenant-unreachable custom-role id.
 let rolePermissions = loadJson<RolePermissionMap>(ROLE_PERMISSIONS_KEY, { ...SEED_ROLE_PERMISSIONS });
-let policies = loadJson<Policy[]>(POLICIES_KEY, SEED_POLICIES.map((p) => ({ ...p })));
-let featureToggles = loadJson<FeatureToggle[]>(FEATURE_TOGGLES_KEY, SEED_FEATURE_TOGGLES.map((f) => ({ ...f })));
+let policies = migrateLegacyRecordsToDefaultTenant(loadJson<Policy[]>(POLICIES_KEY, stampDefault(SEED_POLICIES)));
+let featureToggles = migrateLegacyRecordsToDefaultTenant(loadJson<FeatureToggle[]>(FEATURE_TOGGLES_KEY, stampDefault(SEED_FEATURE_TOGGLES)));
 
 function nextRoleId(): string {
   return `role-custom-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function nextPolicyId(): string {
-  const max = policies.reduce((acc, p) => Math.max(acc, Number(p.id.replace("pol-", "")) || 0), 0);
+  const max = scopedToCurrentTenant(policies).reduce((acc, p) => Math.max(acc, Number(p.id.replace("pol-", "")) || 0), 0);
   return `pol-${max + 1}`;
 }
 
 // ── Roles ──────────────────────────────────────────────────────────────────
 
 export async function listRoles(): Promise<Role[]> {
-  return mockDelay([...roles], 350);
+  const tenantId = getCurrentTenantId();
+  return mockDelay(
+    roles.filter((r) => r.isSystem || r.tenantId === tenantId),
+    350,
+  );
 }
 
 export async function getRoleUserCounts(): Promise<Record<string, number>> {
@@ -60,15 +69,18 @@ export async function getRoleUserCounts(): Promise<Record<string, number>> {
 }
 
 export async function createRole(values: RoleFormValues): Promise<Role> {
-  if (roles.some((r) => r.name.toLowerCase() === values.name.trim().toLowerCase())) {
+  const tenantId = getCurrentTenantId();
+  if (roles.some((r) => (r.isSystem || r.tenantId === tenantId) && r.name.toLowerCase() === values.name.trim().toLowerCase())) {
     await mockDelay(null, 350);
     throw new Error("A role with this name already exists");
   }
   const role: Role = {
     id: nextRoleId(),
+    tenantId,
     name: values.name.trim(),
     description: values.description.trim(),
     isSystem: false,
+    grantsAllBranchAccess: false,
     createdAt: new Date().toISOString(),
   };
   roles = [...roles, role];
@@ -84,7 +96,8 @@ export async function updateRole(id: string, values: RoleFormValues): Promise<Ro
     await mockDelay(null, 300);
     throw new Error("Role not found");
   }
-  if (roles.some((r) => r.id !== id && r.name.toLowerCase() === values.name.trim().toLowerCase())) {
+  const tenantId = getCurrentTenantId();
+  if (roles.some((r) => r.id !== id && (r.isSystem || r.tenantId === tenantId) && r.name.toLowerCase() === values.name.trim().toLowerCase())) {
     await mockDelay(null, 350);
     throw new Error("A role with this name already exists");
   }
@@ -138,18 +151,18 @@ export async function setRolePermission(roleId: string, permissionId: string, gr
 // ── Policies ─────────────────────────────────────────────────────────────────
 
 export async function listPolicies(): Promise<Policy[]> {
-  return mockDelay([...policies], 350);
+  return mockDelay(scopedToCurrentTenant(policies), 350);
 }
 
 export async function createPolicy(values: PolicyFormValues): Promise<Policy> {
-  const policy: Policy = { id: nextPolicyId(), enabled: true, ...values };
+  const policy: Policy = { id: nextPolicyId(), tenantId: getCurrentTenantId(), enabled: true, ...values };
   policies = [policy, ...policies];
   saveJson(POLICIES_KEY, policies);
   return mockDelay(policy, 400);
 }
 
 export async function updatePolicy(id: string, values: PolicyFormValues): Promise<Policy> {
-  const idx = policies.findIndex((p) => p.id === id);
+  const idx = policies.findIndex((p) => p.id === id && p.tenantId === getCurrentTenantId());
   if (idx === -1) {
     await mockDelay(null, 300);
     throw new Error("Policy not found");
@@ -161,13 +174,14 @@ export async function updatePolicy(id: string, values: PolicyFormValues): Promis
 }
 
 export async function deletePolicy(id: string): Promise<void> {
-  policies = policies.filter((p) => p.id !== id);
+  const tenantId = getCurrentTenantId();
+  policies = policies.filter((p) => !(p.id === id && p.tenantId === tenantId));
   saveJson(POLICIES_KEY, policies);
   await mockDelay(null, 300);
 }
 
 export async function setPolicyEnabled(id: string, enabled: boolean): Promise<Policy> {
-  const idx = policies.findIndex((p) => p.id === id);
+  const idx = policies.findIndex((p) => p.id === id && p.tenantId === getCurrentTenantId());
   if (idx === -1) {
     await mockDelay(null, 300);
     throw new Error("Policy not found");
@@ -181,11 +195,11 @@ export async function setPolicyEnabled(id: string, enabled: boolean): Promise<Po
 // ── Feature toggles ──────────────────────────────────────────────────────────
 
 export async function listFeatureToggles(): Promise<FeatureToggle[]> {
-  return mockDelay([...featureToggles], 300);
+  return mockDelay(scopedToCurrentTenant(featureToggles), 300);
 }
 
 export async function setFeatureToggle(id: string, enabled: boolean): Promise<FeatureToggle> {
-  const idx = featureToggles.findIndex((f) => f.id === id);
+  const idx = featureToggles.findIndex((f) => f.id === id && f.tenantId === getCurrentTenantId());
   if (idx === -1) {
     await mockDelay(null, 300);
     throw new Error("Feature not found");

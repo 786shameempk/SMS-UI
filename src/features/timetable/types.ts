@@ -9,6 +9,8 @@ export interface PeriodDefinition {
 
 export interface Room {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   capacity: number;
 }
@@ -20,6 +22,8 @@ export interface RoomFormValues {
 
 export interface TimetableSlot {
   id: string;
+  tenantId: string;
+  branchId: string;
   sectionId: string;
   dayOfWeek: DayOfWeek;
   periodNumber: number;
@@ -40,6 +44,8 @@ export interface SlotAssignmentValues {
 
 export interface TimetableSubstitution {
   id: string;
+  tenantId: string;
+  branchId: string;
   date: string;
   sectionId: string;
   dayOfWeek: DayOfWeek;

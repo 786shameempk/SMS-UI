@@ -78,8 +78,8 @@ function staffStatusForRoll(roll: number): StaffAttendanceStatus {
   return "late";
 }
 
-function buildSeedAttendanceRecords(): AttendanceRecord[] {
-  const records: AttendanceRecord[] = [];
+function buildSeedAttendanceRecords(): Omit<AttendanceRecord, "tenantId" | "branchId">[] {
+  const records: Omit<AttendanceRecord, "tenantId" | "branchId">[] = [];
   for (let offset = HISTORY_DAYS; offset >= 1; offset--) {
     const date = daysAgo(offset);
     if (date.getDay() === 0) continue;
@@ -100,8 +100,8 @@ function buildSeedAttendanceRecords(): AttendanceRecord[] {
   return records;
 }
 
-function buildSeedStaffAttendanceRecords(): StaffAttendanceRecord[] {
-  const records: StaffAttendanceRecord[] = [];
+function buildSeedStaffAttendanceRecords(): Omit<StaffAttendanceRecord, "tenantId" | "branchId">[] {
+  const records: Omit<StaffAttendanceRecord, "tenantId" | "branchId">[] = [];
   const staffPool = SEED_STAFF.filter((s) => s.status === "active" || s.status === "on-leave");
   for (let offset = HISTORY_DAYS; offset >= 1; offset--) {
     const date = daysAgo(offset);
@@ -121,5 +121,5 @@ function buildSeedStaffAttendanceRecords(): StaffAttendanceRecord[] {
   return records;
 }
 
-export const SEED_ATTENDANCE_RECORDS: AttendanceRecord[] = buildSeedAttendanceRecords();
-export const SEED_STAFF_ATTENDANCE_RECORDS: StaffAttendanceRecord[] = buildSeedStaffAttendanceRecords();
+export const SEED_ATTENDANCE_RECORDS: Omit<AttendanceRecord, "tenantId" | "branchId">[] = buildSeedAttendanceRecords();
+export const SEED_STAFF_ATTENDANCE_RECORDS: Omit<StaffAttendanceRecord, "tenantId" | "branchId">[] = buildSeedStaffAttendanceRecords();

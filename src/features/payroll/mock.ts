@@ -16,9 +16,9 @@ function genId(prefix: string): string {
  * `salaryHistory` (so the payroll seed never contradicts numbers already visible on their profile's
  * Salary tab), plus one finalized-but-unpaid run for last month covering every currently eligible
  * staff member, to give the module something concrete to pay off during a demo. */
-export function buildSeedPayrollData(staff: StaffMember[]): { runs: PayrollRun[]; payslips: Payslip[] } {
-  const runs: PayrollRun[] = [];
-  const payslips: Payslip[] = [];
+export function buildSeedPayrollData(staff: StaffMember[]): { runs: Omit<PayrollRun, "tenantId">[]; payslips: Omit<Payslip, "tenantId">[] } {
+  const runs: Omit<PayrollRun, "tenantId">[] = [];
+  const payslips: Omit<Payslip, "tenantId">[] = [];
   const eligible = staff.filter((s) => s.status === "active" || s.status === "on-leave");
 
   const historicalMonths = ["2026-06", "2026-07"];
@@ -28,7 +28,7 @@ export function buildSeedPayrollData(staff: StaffMember[]): { runs: PayrollRun[]
       .filter((row): row is { staff: StaffMember; payment: NonNullable<(typeof row)["payment"]> } => Boolean(row.payment));
     if (paidStaff.length === 0) continue;
 
-    const run: PayrollRun = {
+    const run: Omit<PayrollRun, "tenantId"> = {
       id: genId("run"),
       month,
       status: "finalized",
@@ -53,7 +53,7 @@ export function buildSeedPayrollData(staff: StaffMember[]): { runs: PayrollRun[]
   }
 
   const currentRunMonth = "2026-08";
-  const currentRun: PayrollRun = {
+  const currentRun: Omit<PayrollRun, "tenantId"> = {
     id: genId("run"),
     month: currentRunMonth,
     status: "finalized",

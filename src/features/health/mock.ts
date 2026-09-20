@@ -1,7 +1,10 @@
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
 import type { StaffFormValues } from "@/features/staff/types";
 import type { Student } from "@/features/students/types";
 import { ageInYears } from "./constants";
 import type { HealthCheckup, InfirmaryVisit, VaccinationRecord } from "./types";
+
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
@@ -12,7 +15,7 @@ const daysFromNow = (n: number) => new Date(Date.now() + n * DAY_MS).toISOString
  * createStaff() API (see performSeed in api.ts), same convention as EXTRA_WARDEN_SEEDS in
  * the hostel module and EXTRA_DRIVER_SEEDS in transport.
  */
-export const EXTRA_NURSE_SEEDS: StaffFormValues[] = [
+const EXTRA_NURSE_SEED_BASE: Omit<StaffFormValues, "branchId">[] = [
   {
     firstName: "Meenal",
     lastName: "Joshi",
@@ -25,6 +28,8 @@ export const EXTRA_NURSE_SEEDS: StaffFormValues[] = [
     address: "School Infirmary, Ground Floor",
   },
 ];
+
+export const EXTRA_NURSE_SEEDS: StaffFormValues[] = EXTRA_NURSE_SEED_BASE.map((s) => ({ ...s, branchId: DEFAULT_BRANCH_ID }));
 
 function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -51,11 +56,15 @@ function approximateVitals(dateOfBirth: string, index: number): { heightCm: numb
 export function buildSeedHealthData(
   students: Student[],
   nurseStaffId: string | undefined,
-): { checkups: HealthCheckup[]; vaccinations: VaccinationRecord[]; visits: InfirmaryVisit[] } {
+): {
+  checkups: Omit<HealthCheckup, "tenantId" | "branchId">[];
+  vaccinations: Omit<VaccinationRecord, "tenantId" | "branchId">[];
+  visits: Omit<InfirmaryVisit, "tenantId" | "branchId">[];
+} {
   const activeStudents = students.filter((s) => s.status === "active");
-  const checkups: HealthCheckup[] = [];
-  const vaccinations: VaccinationRecord[] = [];
-  const visits: InfirmaryVisit[] = [];
+  const checkups: Omit<HealthCheckup, "tenantId" | "branchId">[] = [];
+  const vaccinations: Omit<VaccinationRecord, "tenantId" | "branchId">[] = [];
+  const visits: Omit<InfirmaryVisit, "tenantId" | "branchId">[] = [];
 
   activeStudents.forEach((student, index) => {
     const { heightCm, weightKg } = approximateVitals(student.dateOfBirth, index);

@@ -1,4 +1,5 @@
 import { mockDelay } from "@/utils/mockDelay";
+import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
 import { listStaff } from "@/features/staff/api";
 import { listStudents } from "@/features/students/api";
 import { postFromCommunication } from "@/features/notifications/api";
@@ -41,16 +42,16 @@ function saveJson(key: string, value: unknown) {
   }
 }
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
 
-let templates = loadJson<MessageTemplate[]>(TEMPLATES_KEY, []);
-let groups = loadJson<ContactGroup[]>(GROUPS_KEY, []);
-let messages = loadJson<BroadcastMessage[]>(MESSAGES_KEY, []);
-let deliveryLogs = loadJson<DeliveryLogEntry[]>(DELIVERY_LOGS_KEY, []);
+let templates = migrateLegacyRecordsToDefaultTenant(loadJson<MessageTemplate[]>(TEMPLATES_KEY, []));
+let groups = migrateLegacyRecordsToDefaultTenant(loadJson<ContactGroup[]>(GROUPS_KEY, []));
+let messages = migrateLegacyRecordsToDefaultTenant(loadJson<BroadcastMessage[]>(MESSAGES_KEY, []));
+let deliveryLogs = migrateLegacyRecordsToDefaultTenant(loadJson<DeliveryLogEntry[]>(DELIVERY_LOGS_KEY, []));
 
 const persistTemplates = () => saveJson(TEMPLATES_KEY, templates);
 const persistGroups = () => saveJson(GROUPS_KEY, groups);
@@ -65,8 +66,9 @@ interface ResolvedRecipients {
 
 function resolveRecipients(groupIds: string[], studentIds: string[], staffIds: string[]): ResolvedRecipients {
   const resolved: ResolvedRecipients = { students: new Set(studentIds), staff: new Set(staffIds), parents: new Set() };
+  const tenantId = getCurrentTenantId();
   for (const groupId of groupIds) {
-    const group = groups.find((g) => g.id === groupId);
+    const group = groups.find((g) => g.id === groupId && g.tenantId === tenantId);
     if (!group) continue;
     if (group.audienceType === "students") group.memberIds.forEach((id) => resolved.students.add(id));
     else if (group.audienceType === "staff") group.memberIds.forEach((id) => resolved.staff.add(id));
@@ -79,13 +81,13 @@ function recipientCountOf(resolved: ResolvedRecipients): number {
   return resolved.students.size + resolved.staff.size + resolved.parents.size;
 }
 
-function generateDeliveryLogs(messageId: string, channels: Channel[], resolved: ResolvedRecipients): DeliveryLogEntry[] {
+function generateDeliveryLogs(messageId: string, channels: Channel[], resolved: ResolvedRecipients, tenantId: string): DeliveryLogEntry[] {
   const entries: DeliveryLogEntry[] = [];
   const addFor = (kind: RecipientKind, ids: Set<string>) => {
     ids.forEach((recipientId) => {
       channels.forEach((channel) => {
         const delivered = Math.random() < CHANNEL_SUCCESS_RATE[channel];
-        entries.push({ id: genId("dlv"), messageId, recipientKind: kind, recipientId, channel, status: delivered ? "delivered" : "failed" });
+        entries.push({ id: genId("dlv"), tenantId, messageId, recipientKind: kind, recipientId, channel, status: delivered ? "delivered" : "failed" });
       });
     });
   };
@@ -118,13 +120,13 @@ async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
 
   if (templates.length === 0) {
-    templates = SEED_TEMPLATES.map((t) => ({ ...t }));
+    templates = SEED_TEMPLATES.map((t) => ({ ...t, tenantId: DEFAULT_TENANT_ID }));
     persistTemplates();
   }
 
   if (groups.length === 0) {
     const [students, staff] = await Promise.all([listStudents(), listStaff()]);
-    groups = buildSeedGroups(students, staff);
+    groups = buildSeedGroups(students, staff).map((g) => ({ ...g, tenantId: DEFAULT_TENANT_ID }));
     persistGroups();
   }
 
@@ -140,6 +142,7 @@ async function performSeed(): Promise<void> {
         const sentAt = daysAgo(plan.daysAgoSent);
         newMessages.push({
           id,
+          tenantId: DEFAULT_TENANT_ID,
           subject: plan.subject,
           body: plan.body,
           channels: plan.channels,
@@ -151,10 +154,11 @@ async function performSeed(): Promise<void> {
           createdAt: sentAt,
           status: "sent",
         });
-        newLogs.push(...generateDeliveryLogs(id, plan.channels, resolved));
+        newLogs.push(...generateDeliveryLogs(id, plan.channels, resolved, DEFAULT_TENANT_ID));
       } else if (plan.daysFromNowScheduled !== undefined) {
         newMessages.push({
           id,
+          tenantId: DEFAULT_TENANT_ID,
           subject: plan.subject,
           body: plan.body,
           channels: plan.channels,
@@ -186,12 +190,12 @@ const seedPromise: Promise<void> = performSeed().catch((err) => {
 
 export async function listTemplates(): Promise<MessageTemplate[]> {
   await seedPromise;
-  return mockDelay([...templates], 300);
+  return mockDelay(scopedToCurrentTenant(templates), 300);
 }
 
 export async function createTemplate(values: MessageTemplateFormValues): Promise<MessageTemplate> {
   await seedPromise;
-  const template: MessageTemplate = { id: genId("tpl"), ...values };
+  const template: MessageTemplate = { id: genId("tpl"), tenantId: getCurrentTenantId(), ...values };
   templates = [template, ...templates];
   persistTemplates();
   return mockDelay(template, 350);
@@ -208,8 +212,9 @@ export async function updateTemplate(id: string, values: MessageTemplateFormValu
 
 export async function deleteTemplate(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(templates, id, "Template");
-  templates = templates.filter((t) => t.id !== id);
+  templates = templates.filter((t) => !(t.id === id && t.tenantId === tenantId));
   persistTemplates();
   return mockDelay(undefined, 300);
 }
@@ -218,12 +223,12 @@ export async function deleteTemplate(id: string): Promise<void> {
 
 export async function listGroups(): Promise<ContactGroup[]> {
   await seedPromise;
-  return mockDelay([...groups], 300);
+  return mockDelay(scopedToCurrentTenant(groups), 300);
 }
 
 export async function createGroup(values: ContactGroupFormValues): Promise<ContactGroup> {
   await seedPromise;
-  const group: ContactGroup = { id: genId("grp"), ...values };
+  const group: ContactGroup = { id: genId("grp"), tenantId: getCurrentTenantId(), ...values };
   groups = [group, ...groups];
   persistGroups();
   return mockDelay(group, 350);
@@ -240,12 +245,13 @@ export async function updateGroup(id: string, values: ContactGroupFormValues): P
 
 export async function deleteGroup(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(groups, id, "Group");
-  if (messages.some((m) => m.status === "scheduled" && m.groupIds.includes(id))) {
+  if (messages.some((m) => m.tenantId === tenantId && m.status === "scheduled" && m.groupIds.includes(id))) {
     await mockDelay(null, 300);
     throw new Error("This group is used by a scheduled message — cancel or send that message first");
   }
-  groups = groups.filter((g) => g.id !== id);
+  groups = groups.filter((g) => !(g.id === id && g.tenantId === tenantId));
   persistGroups();
   return mockDelay(undefined, 300);
 }
@@ -261,7 +267,7 @@ export async function previewRecipientCount(groupIds: string[], studentIds: stri
 
 export async function listMessages(): Promise<BroadcastMessage[]> {
   await seedPromise;
-  return mockDelay([...messages].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), 350);
+  return mockDelay(scopedToCurrentTenant(messages).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), 350);
 }
 
 export async function composeMessage(values: ComposeMessageFormValues): Promise<BroadcastMessage> {
@@ -278,12 +284,14 @@ export async function composeMessage(values: ComposeMessageFormValues): Promise<
   }
 
   const id = genId("msg");
+  const tenantId = getCurrentTenantId();
   const now = new Date();
   const scheduledDate = values.scheduledAt ? new Date(values.scheduledAt) : null;
   const isFutureSchedule = Boolean(scheduledDate && scheduledDate.getTime() > now.getTime());
 
   const message: BroadcastMessage = {
     id,
+    tenantId,
     subject: values.subject?.trim() || undefined,
     body: values.body,
     channels: values.channels,
@@ -300,7 +308,7 @@ export async function composeMessage(values: ComposeMessageFormValues): Promise<
   persistMessages();
 
   if (!isFutureSchedule) {
-    const logs = generateDeliveryLogs(id, values.channels, resolved);
+    const logs = generateDeliveryLogs(id, values.channels, resolved, tenantId);
     deliveryLogs = [...deliveryLogs, ...logs];
     persistDeliveryLogs();
     notifyInApp(message);
@@ -321,7 +329,7 @@ export async function sendScheduledNow(id: string): Promise<BroadcastMessage> {
   messages = messages.map((m) => (m.id === id ? updated : m));
   persistMessages();
 
-  const logs = generateDeliveryLogs(id, existing.channels, resolved);
+  const logs = generateDeliveryLogs(id, existing.channels, resolved, existing.tenantId);
   deliveryLogs = [...deliveryLogs, ...logs];
   persistDeliveryLogs();
   notifyInApp(updated);
@@ -344,7 +352,8 @@ export async function cancelScheduledMessage(id: string): Promise<BroadcastMessa
 
 export async function getDeliverySummary(messageId: string): Promise<MessageDeliverySummary[]> {
   await seedPromise;
-  const logs = deliveryLogs.filter((l) => l.messageId === messageId);
+  const tenantId = getCurrentTenantId();
+  const logs = deliveryLogs.filter((l) => l.messageId === messageId && l.tenantId === tenantId);
   const byChannel = new Map<Channel, { delivered: number; failed: number }>();
   logs.forEach((l) => {
     const entry = byChannel.get(l.channel) ?? { delivered: 0, failed: 0 };

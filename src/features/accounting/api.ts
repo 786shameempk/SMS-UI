@@ -1,4 +1,5 @@
 import { mockDelay } from "@/utils/mockDelay";
+import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
 import { DEBIT_NORMAL_TYPES } from "./constants";
 import { buildSeedJournalEntries, SEED_ACCOUNTS } from "./mock";
 import type {
@@ -37,14 +38,14 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let accounts = loadJson<Account[]>(ACCOUNTS_KEY, []);
-let entries = loadJson<JournalEntry[]>(ENTRIES_KEY, []);
+let accounts = migrateLegacyRecordsToDefaultTenant(loadJson<Account[]>(ACCOUNTS_KEY, []));
+let entries = migrateLegacyRecordsToDefaultTenant(loadJson<JournalEntry[]>(ENTRIES_KEY, []));
 
 const persistAccounts = () => saveJson(ACCOUNTS_KEY, accounts);
 const persistEntries = () => saveJson(ENTRIES_KEY, entries);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
@@ -53,11 +54,11 @@ async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
 
   if (accounts.length === 0) {
-    accounts = SEED_ACCOUNTS.map((a) => ({ ...a }));
+    accounts = SEED_ACCOUNTS.map((a) => ({ ...a, tenantId: DEFAULT_TENANT_ID }));
     persistAccounts();
   }
   if (entries.length === 0) {
-    entries = buildSeedJournalEntries();
+    entries = buildSeedJournalEntries().map((e) => ({ ...e, tenantId: DEFAULT_TENANT_ID }));
     persistEntries();
   }
 
@@ -70,7 +71,7 @@ const seedPromise: Promise<void> = performSeed().catch((err) => {
 
 function nextEntryNumber(): string {
   const year = new Date().getFullYear();
-  const max = entries.reduce((acc, e) => {
+  const max = scopedToCurrentTenant(entries).reduce((acc, e) => {
     const match = e.entryNumber.match(/(\d+)$/);
     return match ? Math.max(acc, Number(match[1])) : acc;
   }, 0);
@@ -94,16 +95,17 @@ function validateBalanced(values: JournalEntryFormValues) {
 
 export async function listAccounts(): Promise<Account[]> {
   await seedPromise;
-  return mockDelay([...accounts], 300);
+  return mockDelay(scopedToCurrentTenant(accounts), 300);
 }
 
 export async function createAccount(values: AccountFormValues): Promise<Account> {
   await seedPromise;
-  if (accounts.some((a) => a.code.trim() === values.code.trim())) {
+  const tenantId = getCurrentTenantId();
+  if (accounts.some((a) => a.tenantId === tenantId && a.code.trim() === values.code.trim())) {
     await mockDelay(null, 300);
     throw new Error("An account with this code already exists");
   }
-  const account: Account = { id: genId("acc"), ...values };
+  const account: Account = { id: genId("acc"), tenantId, ...values };
   accounts = [...accounts, account].sort((a, b) => a.code.localeCompare(b.code));
   persistAccounts();
   return mockDelay(account, 350);
@@ -111,8 +113,9 @@ export async function createAccount(values: AccountFormValues): Promise<Account>
 
 export async function updateAccount(id: string, values: AccountFormValues): Promise<Account> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(accounts, id, "Account");
-  if (accounts.some((a) => a.id !== id && a.code.trim() === values.code.trim())) {
+  if (accounts.some((a) => a.tenantId === tenantId && a.id !== id && a.code.trim() === values.code.trim())) {
     await mockDelay(null, 300);
     throw new Error("An account with this code already exists");
   }
@@ -123,13 +126,14 @@ export async function updateAccount(id: string, values: AccountFormValues): Prom
 
 export async function deleteAccount(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(accounts, id, "Account");
-  const inUse = entries.some((e) => e.lines.some((l) => l.accountId === id));
+  const inUse = entries.some((e) => e.tenantId === tenantId && e.lines.some((l) => l.accountId === id));
   if (inUse) {
     await mockDelay(null, 300);
     throw new Error("This account has journal entries posted against it and can't be deleted");
   }
-  accounts = accounts.filter((a) => a.id !== id);
+  accounts = accounts.filter((a) => !(a.id === id && a.tenantId === tenantId));
   persistAccounts();
   return mockDelay(undefined, 350);
 }
@@ -138,7 +142,7 @@ export async function deleteAccount(id: string): Promise<void> {
 
 export async function listJournalEntries(): Promise<JournalEntry[]> {
   await seedPromise;
-  return mockDelay([...entries].sort((a, b) => b.date.localeCompare(a.date)), 350);
+  return mockDelay(scopedToCurrentTenant(entries).sort((a, b) => b.date.localeCompare(a.date)), 350);
 }
 
 export async function getJournalEntry(id: string): Promise<JournalEntry> {
@@ -151,6 +155,7 @@ export async function createJournalEntry(values: JournalEntryFormValues): Promis
   validateBalanced(values);
   const entry: JournalEntry = {
     id: genId("je"),
+    tenantId: getCurrentTenantId(),
     entryNumber: nextEntryNumber(),
     date: values.date,
     reference: values.reference?.trim() || undefined,
@@ -213,10 +218,10 @@ export async function deleteJournalEntry(id: string): Promise<void> {
 
 export async function getTrialBalance(): Promise<TrialBalance> {
   await seedPromise;
-  const accountById = new Map(accounts.map((a) => [a.id, a] as const));
+  const accountById = new Map(scopedToCurrentTenant(accounts).map((a) => [a.id, a] as const));
   const totals = new Map<string, { debit: number; credit: number }>();
 
-  for (const entry of entries) {
+  for (const entry of scopedToCurrentTenant(entries)) {
     if (entry.status !== "posted") continue;
     for (const l of entry.lines) {
       const bucket = totals.get(l.accountId) ?? { debit: 0, credit: 0 };
@@ -248,10 +253,10 @@ export async function getTrialBalance(): Promise<TrialBalance> {
 
 export async function getProfitAndLoss(): Promise<ProfitAndLoss> {
   await seedPromise;
-  const accountById = new Map(accounts.map((a) => [a.id, a] as const));
+  const accountById = new Map(scopedToCurrentTenant(accounts).map((a) => [a.id, a] as const));
   const netByAccount = new Map<string, number>();
 
-  for (const entry of entries) {
+  for (const entry of scopedToCurrentTenant(entries)) {
     if (entry.status !== "posted") continue;
     for (const l of entry.lines) {
       const account = accountById.get(l.accountId);
@@ -280,8 +285,8 @@ export async function getProfitAndLoss(): Promise<ProfitAndLoss> {
 
 export async function getGstSummary(): Promise<GstSummary> {
   await seedPromise;
-  const accountById = new Map(accounts.map((a) => [a.id, a] as const));
-  const gstEntries = entries.filter((e) => e.status === "posted" && e.gstApplicable && e.gstAmount);
+  const accountById = new Map(scopedToCurrentTenant(accounts).map((a) => [a.id, a] as const));
+  const gstEntries = scopedToCurrentTenant(entries).filter((e) => e.status === "posted" && e.gstApplicable && e.gstAmount);
 
   const summaries = gstEntries.map((entry) => {
     const hasIncomeLine = entry.lines.some((l) => accountById.get(l.accountId)?.type === "income");

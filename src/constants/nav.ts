@@ -25,6 +25,7 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Sparkles,
   UserCheck,
   UsersRound,
   Users,
@@ -144,11 +145,17 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [{ label: "Reports & Analytics", to: "/reports", icon: ChartColumn }],
   },
   {
+    title: "AI Features",
+    permissionKey: "aiFeatures",
+    items: [{ label: "AI Features", to: "/ai", icon: Sparkles }],
+  },
+  {
     title: "Administration",
     permissionKey: "administration",
     items: [
       { label: "User Management", to: "/admin/users", icon: Users },
       { label: "Roles & Permissions", to: "/admin/roles", icon: ShieldCheck },
+      { label: "Branch Management", to: "/admin/branches", icon: Building2 },
       { label: "Settings", to: "/admin/settings", icon: Settings },
     ],
   },

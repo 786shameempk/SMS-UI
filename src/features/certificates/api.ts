@@ -1,4 +1,12 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { listStaff } from "@/features/staff/api";
@@ -39,7 +47,7 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let certificates = loadJson<IssuedCertificate[]>(CERTIFICATES_KEY, []);
+let certificates = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<IssuedCertificate[]>(CERTIFICATES_KEY, [])));
 const persistCertificates = () => saveJson(CERTIFICATES_KEY, certificates);
 
 function formalDate(iso: string): string {
@@ -49,7 +57,7 @@ function formalDate(iso: string): string {
 function nextCertificateNumber(type: CertificateType): string {
   const prefix = CERTIFICATE_TYPE_CONFIG[type].prefix;
   const year = new Date().getFullYear();
-  const max = certificates
+  const max = scopedToCurrentTenant(certificates)
     .filter((c) => c.type === type)
     .reduce((acc, c) => {
       const match = c.certificateNumber.match(/(\d+)$/);
@@ -80,20 +88,22 @@ function issue(certificate: IssuedCertificate): IssuedCertificate {
 
 export async function listIssuedCertificates(): Promise<IssuedCertificate[]> {
   return mockDelay(
-    [...certificates].sort((a, b) => b.issuedOn.localeCompare(a.issuedOn)),
+    scopedToCurrentTenantAndBranch(certificates).sort((a, b) => b.issuedOn.localeCompare(a.issuedOn)),
     350,
   );
 }
 
 export async function getIssuedCertificate(id: string): Promise<IssuedCertificate> {
-  const found = certificates.find((c) => c.id === id);
+  const found = certificates.find((c) => c.id === id && c.tenantId === getCurrentTenantId() && c.branchId === getCurrentBranchId());
   if (!found) throw new Error("Certificate not found");
   return mockDelay(found, 250);
 }
 
 export async function deleteIssuedCertificate(id: string): Promise<void> {
-  if (!certificates.some((c) => c.id === id)) throw new Error("Certificate not found");
-  certificates = certificates.filter((c) => c.id !== id);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  if (!certificates.some((c) => c.id === id && c.tenantId === tenantId && c.branchId === branchId)) throw new Error("Certificate not found");
+  certificates = certificates.filter((c) => !(c.id === id && c.tenantId === tenantId && c.branchId === branchId));
   persistCertificates();
   return mockDelay(undefined, 300);
 }
@@ -113,6 +123,8 @@ export async function generateBonafide(values: BonafideFormValues): Promise<Issu
 
   const certificate: IssuedCertificate = {
     id: genId("cert"),
+    tenantId: getCurrentTenantId(),
+    branchId: student.branchId,
     certificateNumber: nextCertificateNumber("bonafide"),
     type: "bonafide",
     recipientType: "student",
@@ -144,6 +156,8 @@ export async function generateTransferCertificate(values: TransferCertificateFor
 
   const certificate: IssuedCertificate = {
     id: genId("cert"),
+    tenantId: getCurrentTenantId(),
+    branchId: student.branchId,
     certificateNumber: record.transferCertificateNumber || nextCertificateNumber("transfer"),
     type: "transfer",
     recipientType: "student",
@@ -172,6 +186,8 @@ export async function generateCharacterCertificate(values: CharacterCertificateF
 
   const certificate: IssuedCertificate = {
     id: genId("cert"),
+    tenantId: getCurrentTenantId(),
+    branchId: student.branchId,
     certificateNumber: nextCertificateNumber("character"),
     type: "character",
     recipientType: "student",
@@ -201,6 +217,8 @@ export async function generateStudyCertificate(values: StudyCertificateFormValue
 
   const certificate: IssuedCertificate = {
     id: genId("cert"),
+    tenantId: getCurrentTenantId(),
+    branchId: student.branchId,
     certificateNumber: nextCertificateNumber("study"),
     type: "study",
     recipientType: "student",
@@ -229,6 +247,8 @@ export async function generateAchievementCertificate(values: AchievementCertific
 
   const certificate: IssuedCertificate = {
     id: genId("cert"),
+    tenantId: getCurrentTenantId(),
+    branchId: student.branchId,
     certificateNumber: nextCertificateNumber("achievement"),
     type: "achievement",
     recipientType: "student",
@@ -262,6 +282,8 @@ export async function generateStaffServiceCertificate(values: StaffServiceCertif
 
   const certificate: IssuedCertificate = {
     id: genId("cert"),
+    tenantId: getCurrentTenantId(),
+    branchId: member.branchId,
     certificateNumber: nextCertificateNumber("staff_service"),
     type: "staff_service",
     recipientType: "staff",

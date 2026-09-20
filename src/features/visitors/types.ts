@@ -15,6 +15,8 @@ export interface HostDetails {
 
 export interface VisitorEntry extends HostDetails {
   id: string;
+  tenantId: string;
+  branchId: string;
   visitorName: string;
   phone: string;
   idProofType?: string;
@@ -48,6 +50,8 @@ export interface VisitorEntryRow extends VisitorEntry {
 
 export interface PreApprovedVisit extends HostDetails {
   id: string;
+  tenantId: string;
+  branchId: string;
   visitorName: string;
   phone: string;
   purpose: VisitPurpose;
@@ -73,6 +77,7 @@ export interface PreApprovedVisitRow extends PreApprovedVisit {
 
 export interface WatchlistEntry {
   id: string;
+  tenantId: string;
   name: string;
   phone?: string;
   reason: string;

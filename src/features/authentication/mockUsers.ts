@@ -1,4 +1,7 @@
 import type { AuthUser, ModulePermissions, UserRole } from "@/types/auth";
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
+
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
 interface MockAccount {
   user: AuthUser;
@@ -29,13 +32,14 @@ const FULL_PERMISSIONS: ModulePermissions = {
   reports: true,
   administration: true,
   platformConsole: false,
+  aiFeatures: true,
   parentPortal: false,
   timetable: true,
   examinations: true,
   homework: true,
 };
 
-/** Fee/Accounting/Payroll/Inventory/Certificates/Health/Visitors/HelpDesk/Surveys/Library/Transport/Hostel/Communication/Reports are restricted to admin users only. */
+/** Fee/Accounting/Payroll/Inventory/Certificates/Health/Visitors/HelpDesk/Surveys/Library/Transport/Hostel/Communication/Reports/AI Features are restricted to admin users only. */
 const ADMIN_ONLY_MODULES = [
   "fees",
   "accounting",
@@ -51,6 +55,7 @@ const ADMIN_ONLY_MODULES = [
   "hostel",
   "communication",
   "reports",
+  "aiFeatures",
 ] as const satisfies ReadonlyArray<keyof ModulePermissions>;
 
 const permissionsForRole = (role: UserRole): ModulePermissions => {
@@ -82,22 +87,32 @@ export const MOCK_ACCOUNTS: MockAccount[] = [
   {
     password: "superadmin123",
     mfaEnabled: true,
-    user: { id: "u-1000", name: "Nikhil Shetty", email: "superadmin@educore.dev", role: "superAdmin", avatarUrl: null },
+    user: { id: "u-1000", name: "Nikhil Shetty", email: "superadmin@educore.dev", role: "superAdmin", avatarUrl: null, tenantId: null, branchId: null },
   },
   {
     password: "admin123",
     mfaEnabled: true,
-    user: { id: "u-1001", name: "Ava Whitfield", email: "admin@educore.dev", role: "admin", avatarUrl: null },
+    user: { id: "u-1001", name: "Ava Whitfield", email: "admin@educore.dev", role: "admin", avatarUrl: null, tenantId: DEFAULT_TENANT_ID, branchId: null },
   },
   {
     password: "teacher123",
     mfaEnabled: false,
-    user: { id: "u-1002", name: "Daniel Reyes", email: "teacher@educore.dev", role: "teacher", avatarUrl: null },
+    user: { id: "u-1002", name: "Daniel Reyes", email: "teacher@educore.dev", role: "teacher", avatarUrl: null, tenantId: DEFAULT_TENANT_ID, branchId: DEFAULT_BRANCH_ID },
   },
   {
     password: "parent123",
     mfaEnabled: false,
-    user: { id: "u-1003", name: "Priya Nair", email: "parent@educore.dev", role: "parent", avatarUrl: null },
+    user: { id: "u-1003", name: "Priya Nair", email: "parent@educore.dev", role: "parent", avatarUrl: null, tenantId: DEFAULT_TENANT_ID, branchId: DEFAULT_BRANCH_ID },
+  },
+  /**
+   * A real, fully-scoped user of a *second* tenant — purely so isolation is demonstrable by
+   * logging in as an actual account, not only via superAdmin's switcher. Riverside has no seed
+   * data of its own (see PROGRESS.md), so this account should see a genuinely empty app.
+   */
+  {
+    password: "riverside123",
+    mfaEnabled: false,
+    user: { id: "u-1004", name: "Meredith Okafor", email: "riverside-admin@educore.dev", role: "admin", avatarUrl: null, tenantId: "tenant-riverside", branchId: null },
   },
 ];
 

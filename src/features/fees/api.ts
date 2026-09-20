@@ -1,4 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { listClasses } from "@/features/academics/api";
 import { listStudents } from "@/features/students/api";
 import { buildSeedFeeData, SEED_DISCOUNTS, SEED_FEE_STRUCTURES } from "./mock";
@@ -46,11 +56,11 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let structures = loadJson<FeeStructure[]>(STRUCTURES_KEY, []);
-let discounts = loadJson<FeeDiscount[]>(DISCOUNTS_KEY, []);
-let invoices = loadJson<FeeInvoice[]>(INVOICES_KEY, []);
-let receipts = loadJson<Receipt[]>(RECEIPTS_KEY, []);
-let refunds = loadJson<Refund[]>(REFUNDS_KEY, []);
+let structures = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<FeeStructure[]>(STRUCTURES_KEY, [])));
+let discounts = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<FeeDiscount[]>(DISCOUNTS_KEY, [])));
+let invoices = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<FeeInvoice[]>(INVOICES_KEY, [])));
+let receipts = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Receipt[]>(RECEIPTS_KEY, [])));
+let refunds = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Refund[]>(REFUNDS_KEY, [])));
 
 const persistStructures = () => saveJson(STRUCTURES_KEY, structures);
 const persistDiscounts = () => saveJson(DISCOUNTS_KEY, discounts);
@@ -58,21 +68,22 @@ const persistInvoices = () => saveJson(INVOICES_KEY, invoices);
 const persistReceipts = () => saveJson(RECEIPTS_KEY, receipts);
 const persistRefunds = () => saveJson(REFUNDS_KEY, refunds);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
 
 async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
+  const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
   if (structures.length === 0) {
-    structures = SEED_FEE_STRUCTURES.map((s) => ({ ...s }));
+    structures = SEED_FEE_STRUCTURES.map((s) => ({ ...s, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
     persistStructures();
   }
   if (discounts.length === 0) {
-    discounts = SEED_DISCOUNTS.map((d) => ({ ...d, studentIds: [...d.studentIds] }));
+    discounts = SEED_DISCOUNTS.map((d) => ({ ...d, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId, studentIds: [...d.studentIds] }));
     persistDiscounts();
   }
   if (invoices.length === 0) {
@@ -82,9 +93,9 @@ async function performSeed(): Promise<void> {
       structures,
       discounts,
     );
-    invoices = seededInvoices;
-    receipts = seededReceipts;
-    refunds = seededRefunds;
+    invoices = seededInvoices.map((inv) => ({ ...inv, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    receipts = seededReceipts.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    refunds = seededRefunds.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
     persistInvoices();
     persistReceipts();
     persistRefunds();
@@ -107,7 +118,7 @@ function deriveInvoice(invoice: FeeInvoice): FeeInvoice {
   const daysLate = daysBetween(dueDate, new Date());
   if (daysLate <= 0) return invoice;
 
-  const structure = structures.find((s) => s.id === invoice.feeStructureId);
+  const structure = structures.find((s) => s.id === invoice.feeStructureId && s.tenantId === invoice.tenantId && s.branchId === invoice.branchId);
   const fineAmount = structure ? (structure.lateFineFlat ?? 0) + (structure.lateFinePerDay ?? 0) * daysLate : invoice.fineAmount;
   const netAmount = invoice.amount - invoice.discountAmount + fineAmount;
   return { ...invoice, status: "overdue", fineAmount, netAmount };
@@ -128,9 +139,11 @@ function deriveAndPersistAll(): FeeInvoice[] {
 }
 
 function applicableDiscount(studentId: string): FeeDiscount | undefined {
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   return (
-    discounts.find((d) => d.appliesTo === "specific" && d.studentIds.includes(studentId)) ??
-    discounts.find((d) => d.appliesTo === "all")
+    discounts.find((d) => d.tenantId === tenantId && d.branchId === branchId && d.appliesTo === "specific" && d.studentIds.includes(studentId)) ??
+    discounts.find((d) => d.tenantId === tenantId && d.branchId === branchId && d.appliesTo === "all")
   );
 }
 
@@ -144,12 +157,12 @@ function computeDiscountAmount(amount: number, discount?: FeeDiscount): number {
 
 export async function listFeeStructures(): Promise<FeeStructure[]> {
   await seedPromise;
-  return mockDelay([...structures], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(structures), 350);
 }
 
 export async function createFeeStructure(values: FeeStructureFormValues): Promise<FeeStructure> {
   await seedPromise;
-  const structure: FeeStructure = { id: genId("fs"), ...values };
+  const structure: FeeStructure = { id: genId("fs"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   structures = [structure, ...structures];
   persistStructures();
   return mockDelay(structure, 400);
@@ -165,8 +178,10 @@ export async function updateFeeStructure(id: string, values: FeeStructureFormVal
 
 export async function deleteFeeStructure(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(structures, id, "Fee structure");
-  structures = structures.filter((s) => s.id !== id);
+  structures = structures.filter((s) => !(s.id === id && s.tenantId === tenantId && s.branchId === branchId));
   persistStructures();
   return mockDelay(undefined, 350);
 }
@@ -175,12 +190,12 @@ export async function deleteFeeStructure(id: string): Promise<void> {
 
 export async function listDiscounts(): Promise<FeeDiscount[]> {
   await seedPromise;
-  return mockDelay([...discounts], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(discounts), 300);
 }
 
 export async function createDiscount(values: FeeDiscountFormValues): Promise<FeeDiscount> {
   await seedPromise;
-  const discount: FeeDiscount = { id: genId("disc"), ...values };
+  const discount: FeeDiscount = { id: genId("disc"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   discounts = [discount, ...discounts];
   persistDiscounts();
   return mockDelay(discount, 400);
@@ -196,8 +211,10 @@ export async function updateDiscount(id: string, values: FeeDiscountFormValues):
 
 export async function deleteDiscount(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(discounts, id, "Discount");
-  discounts = discounts.filter((d) => d.id !== id);
+  discounts = discounts.filter((d) => !(d.id === id && d.tenantId === tenantId && d.branchId === branchId));
   persistDiscounts();
   return mockDelay(undefined, 350);
 }
@@ -222,23 +239,25 @@ export async function applyDiscountToInvoice(invoiceId: string, discountId: stri
 
 export async function listInvoices(): Promise<FeeInvoice[]> {
   await seedPromise;
-  return mockDelay([...deriveAndPersistAll()], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(deriveAndPersistAll()), 350);
 }
 
 export async function listInvoicesForStudent(studentId: string): Promise<FeeInvoice[]> {
   await seedPromise;
-  const all = deriveAndPersistAll();
+  const all = scopedToCurrentTenantAndBranch(deriveAndPersistAll());
   return mockDelay(all.filter((inv) => inv.studentId === studentId), 350);
 }
 
 export async function getInvoice(id: string): Promise<FeeInvoice> {
   await seedPromise;
-  const all = deriveAndPersistAll();
+  const all = scopedToCurrentTenantAndBranch(deriveAndPersistAll());
   return mockDelay(requireEntity(all, id, "Invoice"), 300);
 }
 
 export async function generateInvoicesForStructure(params: GenerateInvoicesParams): Promise<GenerateInvoicesResult> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const structure = requireEntity(structures, params.feeStructureId, "Fee structure");
   const [students, classes] = await Promise.all([listStudents(), listClasses()]);
 
@@ -254,7 +273,12 @@ export async function generateInvoicesForStructure(params: GenerateInvoicesParam
 
   for (const student of eligible) {
     const exists = invoices.some(
-      (inv) => inv.studentId === student.id && inv.feeStructureId === structure.id && inv.term === params.term,
+      (inv) =>
+        inv.tenantId === tenantId &&
+        inv.branchId === branchId &&
+        inv.studentId === student.id &&
+        inv.feeStructureId === structure.id &&
+        inv.term === params.term,
     );
     if (exists) {
       skippedCount++;
@@ -264,6 +288,8 @@ export async function generateInvoicesForStructure(params: GenerateInvoicesParam
     const discountAmount = computeDiscountAmount(structure.amount, discount);
     const invoice: FeeInvoice = {
       id: genId("inv"),
+      tenantId,
+      branchId,
       studentId: student.id,
       feeStructureId: structure.id,
       feeType: structure.feeType,
@@ -342,8 +368,10 @@ export async function recordPayment(invoiceId: string, params: RecordPaymentPara
 
   const receipt: Receipt = {
     id: genId("rcpt"),
+    tenantId: invoice.tenantId,
+    branchId: invoice.branchId,
     invoiceId,
-    receiptNumber: `RCPT-${new Date().getFullYear()}-${String(receipts.length + 1).padStart(4, "0")}`,
+    receiptNumber: `RCPT-${new Date().getFullYear()}-${String(scopedToCurrentTenant(receipts).length + 1).padStart(4, "0")}`,
     amount: params.amount,
     paidOn: now,
     paymentMode: params.mode,
@@ -364,7 +392,7 @@ export async function payInvoiceOnline(invoiceId: string, mode: PaymentMode = "o
 
 export async function listReceipts(): Promise<Receipt[]> {
   await seedPromise;
-  return mockDelay([...receipts], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(receipts), 300);
 }
 
 export async function getReceipt(id: string): Promise<Receipt> {
@@ -376,13 +404,15 @@ export async function getReceipt(id: string): Promise<Receipt> {
 
 export async function listRefunds(): Promise<Refund[]> {
   await seedPromise;
-  return mockDelay([...refunds], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(refunds), 300);
 }
 
 export async function requestRefund(values: RefundFormValues): Promise<Refund> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(invoices, values.invoiceId, "Invoice");
-  const refund: Refund = { id: genId("refund"), ...values, refundedOn: new Date().toISOString(), status: "pending" };
+  const refund: Refund = { id: genId("refund"), tenantId, branchId, ...values, refundedOn: new Date().toISOString(), status: "pending" };
   refunds = [refund, ...refunds];
   persistRefunds();
   return mockDelay(refund, 400);
@@ -395,7 +425,7 @@ export async function processRefund(id: string): Promise<Refund> {
   refunds = refunds.map((r) => (r.id === id ? updated : r));
   persistRefunds();
 
-  const invoice = invoices.find((inv) => inv.id === refund.invoiceId);
+  const invoice = invoices.find((inv) => inv.id === refund.invoiceId && inv.tenantId === refund.tenantId && inv.branchId === refund.branchId);
   if (invoice) {
     const newPaidAmount = Math.max(0, (invoice.paidAmount ?? 0) - refund.amount);
     const status = newPaidAmount <= 0 ? "due" : newPaidAmount >= invoice.netAmount ? "paid" : "partial";

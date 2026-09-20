@@ -1,5 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
 import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
+import {
   SEED_ACADEMIC_YEARS,
   SEED_CALENDAR_EVENTS,
   SEED_CLASSES,
@@ -56,13 +65,18 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let academicYears = loadJson<AcademicYear[]>(ACADEMIC_YEARS_KEY, SEED_ACADEMIC_YEARS.map((y) => ({ ...y })));
-let terms = loadJson<Term[]>(TERMS_KEY, SEED_TERMS.map((t) => ({ ...t })));
-let departments = loadJson<Department[]>(DEPARTMENTS_KEY, SEED_DEPARTMENTS.map((d) => ({ ...d })));
-let classes = loadJson<SchoolClass[]>(CLASSES_KEY, SEED_CLASSES.map((c) => ({ ...c })));
-let sections = loadJson<Section[]>(SECTIONS_KEY, SEED_SECTIONS.map((s) => ({ ...s })));
-let subjects = loadJson<Subject[]>(SUBJECTS_KEY, SEED_SUBJECTS.map((s) => ({ ...s })));
-let calendarEvents = loadJson<CalendarEvent[]>(CALENDAR_EVENTS_KEY, SEED_CALENDAR_EVENTS.map((e) => ({ ...e })));
+const stampDefault = <T extends object>(records: T[]) =>
+  records.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }));
+const migrate = <T extends { tenantId: string; branchId?: string }>(records: T[]) =>
+  migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(records));
+
+let academicYears = migrate(loadJson<AcademicYear[]>(ACADEMIC_YEARS_KEY, stampDefault(SEED_ACADEMIC_YEARS)));
+let terms = migrate(loadJson<Term[]>(TERMS_KEY, stampDefault(SEED_TERMS)));
+let departments = migrate(loadJson<Department[]>(DEPARTMENTS_KEY, stampDefault(SEED_DEPARTMENTS)));
+let classes = migrate(loadJson<SchoolClass[]>(CLASSES_KEY, stampDefault(SEED_CLASSES)));
+let sections = migrate(loadJson<Section[]>(SECTIONS_KEY, stampDefault(SEED_SECTIONS)));
+let subjects = migrate(loadJson<Subject[]>(SUBJECTS_KEY, stampDefault(SEED_SUBJECTS)));
+let calendarEvents = migrate(loadJson<CalendarEvent[]>(CALENDAR_EVENTS_KEY, stampDefault(SEED_CALENDAR_EVENTS)));
 
 const persistAcademicYears = () => saveJson(ACADEMIC_YEARS_KEY, academicYears);
 const persistTerms = () => saveJson(TERMS_KEY, terms);
@@ -72,8 +86,8 @@ const persistSections = () => saveJson(SECTIONS_KEY, sections);
 const persistSubjects = () => saveJson(SUBJECTS_KEY, subjects);
 const persistCalendarEvents = () => saveJson(CALENDAR_EVENTS_KEY, calendarEvents);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
@@ -81,12 +95,16 @@ function requireEntity<T extends { id: string }>(list: T[], id: string, label: s
 // ── Academic years ──────────────────────────────────────────────────────
 
 export async function listAcademicYears(): Promise<AcademicYear[]> {
-  return mockDelay([...academicYears], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(academicYears), 350);
 }
 
 export async function createAcademicYear(values: AcademicYearFormValues): Promise<AcademicYear> {
-  const year: AcademicYear = { id: genId("ay"), ...values };
-  academicYears = values.isCurrent ? academicYears.map((y) => ({ ...y, isCurrent: false })) : academicYears;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const year: AcademicYear = { id: genId("ay"), tenantId, branchId, ...values };
+  academicYears = values.isCurrent
+    ? academicYears.map((y) => (y.tenantId === tenantId && y.branchId === branchId ? { ...y, isCurrent: false } : y))
+    : academicYears;
   academicYears = [year, ...academicYears];
   persistAcademicYears();
   return mockDelay(year, 400);
@@ -94,8 +112,10 @@ export async function createAcademicYear(values: AcademicYearFormValues): Promis
 
 export async function updateAcademicYear(id: string, values: AcademicYearFormValues): Promise<AcademicYear> {
   requireEntity(academicYears, id, "Academic year");
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   academicYears = academicYears.map((y) => {
-    if (values.isCurrent && y.id !== id) return { ...y, isCurrent: false };
+    if (values.isCurrent && y.id !== id && y.tenantId === tenantId && y.branchId === branchId) return { ...y, isCurrent: false };
     return y.id === id ? { ...y, ...values } : y;
   });
   persistAcademicYears();
@@ -112,11 +132,11 @@ export async function deleteAcademicYear(id: string): Promise<void> {
 // ── Terms ────────────────────────────────────────────────────────────────
 
 export async function listTerms(): Promise<Term[]> {
-  return mockDelay([...terms], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(terms), 350);
 }
 
 export async function createTerm(values: TermFormValues): Promise<Term> {
-  const term: Term = { id: genId("term"), ...values };
+  const term: Term = { id: genId("term"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   terms = [term, ...terms];
   persistTerms();
   return mockDelay(term, 400);
@@ -139,11 +159,11 @@ export async function deleteTerm(id: string): Promise<void> {
 // ── Departments / streams ────────────────────────────────────────────────
 
 export async function listDepartments(): Promise<Department[]> {
-  return mockDelay([...departments], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(departments), 300);
 }
 
 export async function createDepartment(values: DepartmentFormValues): Promise<Department> {
-  const department: Department = { id: genId("dept"), ...values };
+  const department: Department = { id: genId("dept"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   departments = [department, ...departments];
   persistDepartments();
   return mockDelay(department, 400);
@@ -166,11 +186,11 @@ export async function deleteDepartment(id: string): Promise<void> {
 // ── Classes ──────────────────────────────────────────────────────────────
 
 export async function listClasses(): Promise<SchoolClass[]> {
-  return mockDelay([...classes], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(classes), 350);
 }
 
 export async function createClass(values: SchoolClassFormValues): Promise<SchoolClass> {
-  const schoolClass: SchoolClass = { id: genId("class"), ...values };
+  const schoolClass: SchoolClass = { id: genId("class"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   classes = [schoolClass, ...classes];
   persistClasses();
   return mockDelay(schoolClass, 400);
@@ -195,11 +215,11 @@ export async function deleteClass(id: string): Promise<void> {
 // ── Sections ─────────────────────────────────────────────────────────────
 
 export async function listSections(): Promise<Section[]> {
-  return mockDelay([...sections], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(sections), 350);
 }
 
 export async function createSection(values: SectionFormValues): Promise<Section> {
-  const section: Section = { id: genId("sec"), ...values };
+  const section: Section = { id: genId("sec"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   sections = [section, ...sections];
   persistSections();
   return mockDelay(section, 400);
@@ -239,11 +259,11 @@ export async function mergeSections(primarySectionId: string, secondarySectionId
 // ── Subjects ─────────────────────────────────────────────────────────────
 
 export async function listSubjects(): Promise<Subject[]> {
-  return mockDelay([...subjects], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(subjects), 350);
 }
 
 export async function createSubject(values: SubjectFormValues): Promise<Subject> {
-  const subject: Subject = { id: genId("subj"), ...values };
+  const subject: Subject = { id: genId("subj"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   subjects = [subject, ...subjects];
   persistSubjects();
   return mockDelay(subject, 400);
@@ -266,11 +286,11 @@ export async function deleteSubject(id: string): Promise<void> {
 // ── Academic calendar ────────────────────────────────────────────────────
 
 export async function listCalendarEvents(): Promise<CalendarEvent[]> {
-  return mockDelay([...calendarEvents], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(calendarEvents), 350);
 }
 
 export async function createCalendarEvent(values: CalendarEventFormValues): Promise<CalendarEvent> {
-  const event: CalendarEvent = { id: genId("cal"), ...values };
+  const event: CalendarEvent = { id: genId("cal"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   calendarEvents = [event, ...calendarEvents];
   persistCalendarEvents();
   return mockDelay(event, 400);

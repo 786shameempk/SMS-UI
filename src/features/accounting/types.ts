@@ -2,6 +2,7 @@ export type AccountType = "asset" | "liability" | "equity" | "income" | "expense
 
 export interface Account {
   id: string;
+  tenantId: string;
   code: string;
   name: string;
   type: AccountType;
@@ -27,6 +28,7 @@ export interface JournalLine {
 
 export interface JournalEntry {
   id: string;
+  tenantId: string;
   entryNumber: string;
   date: string;
   reference?: string;

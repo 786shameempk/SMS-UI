@@ -1,4 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { listStudents } from "@/features/students/api";
 import { listStaff } from "@/features/staff/api";
 import { FINE_PER_DAY } from "./constants";
@@ -51,13 +61,13 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let authors = loadJson<Author[]>(AUTHORS_KEY, []);
-let publishers = loadJson<Publisher[]>(PUBLISHERS_KEY, []);
-let categories = loadJson<BookCategory[]>(CATEGORIES_KEY, []);
-let books = loadJson<Book[]>(BOOKS_KEY, []);
-let members = loadJson<LibraryMember[]>(MEMBERS_KEY, []);
-let loans = loadJson<BookLoan[]>(LOANS_KEY, []);
-let reservations = loadJson<BookReservation[]>(RESERVATIONS_KEY, []);
+let authors = migrateLegacyRecordsToDefaultTenant(loadJson<Author[]>(AUTHORS_KEY, []));
+let publishers = migrateLegacyRecordsToDefaultTenant(loadJson<Publisher[]>(PUBLISHERS_KEY, []));
+let categories = migrateLegacyRecordsToDefaultTenant(loadJson<BookCategory[]>(CATEGORIES_KEY, []));
+let books = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Book[]>(BOOKS_KEY, [])));
+let members = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<LibraryMember[]>(MEMBERS_KEY, [])));
+let loans = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<BookLoan[]>(LOANS_KEY, [])));
+let reservations = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<BookReservation[]>(RESERVATIONS_KEY, [])));
 
 const persistAuthors = () => saveJson(AUTHORS_KEY, authors);
 const persistPublishers = () => saveJson(PUBLISHERS_KEY, publishers);
@@ -67,8 +77,14 @@ const persistMembers = () => saveJson(MEMBERS_KEY, members);
 const persistLoans = () => saveJson(LOANS_KEY, loans);
 const persistReservations = () => saveJson(RESERVATIONS_KEY, reservations);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId());
+  if (!found) throw new Error(`${label} not found`);
+  return found;
+}
+
+function requireBranchEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
@@ -77,27 +93,29 @@ async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
 
   if (authors.length === 0) {
-    authors = SEED_AUTHORS.map((a) => ({ ...a }));
+    authors = SEED_AUTHORS.map((a) => ({ ...a, tenantId: DEFAULT_TENANT_ID }));
     persistAuthors();
   }
   if (publishers.length === 0) {
-    publishers = SEED_PUBLISHERS.map((p) => ({ ...p }));
+    publishers = SEED_PUBLISHERS.map((p) => ({ ...p, tenantId: DEFAULT_TENANT_ID }));
     persistPublishers();
   }
   if (categories.length === 0) {
-    categories = SEED_CATEGORIES.map((c) => ({ ...c }));
+    categories = SEED_CATEGORIES.map((c) => ({ ...c, tenantId: DEFAULT_TENANT_ID }));
     persistCategories();
   }
+  const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
+
   if (books.length === 0) {
-    books = SEED_BOOKS.map((b) => ({ ...b }));
+    books = SEED_BOOKS.map((b) => ({ ...b, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
     persistBooks();
   }
   if (members.length === 0) {
     const [students, staff] = await Promise.all([listStudents(), listStaff()]);
     const seeded = buildSeedLibraryData(students, staff, books);
-    members = seeded.members;
-    loans = seeded.loans;
-    reservations = seeded.reservations;
+    members = seeded.members.map((m) => ({ ...m, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    loans = seeded.loans.map((l) => ({ ...l, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    reservations = seeded.reservations.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
     persistMembers();
     persistLoans();
     persistReservations();
@@ -139,12 +157,12 @@ function deriveAndPersistAllLoans(): BookLoan[] {
 
 export async function listAuthors(): Promise<Author[]> {
   await seedPromise;
-  return mockDelay([...authors], 300);
+  return mockDelay(scopedToCurrentTenant(authors), 300);
 }
 
 export async function createAuthor(values: AuthorFormValues): Promise<Author> {
   await seedPromise;
-  const author: Author = { id: genId("auth"), ...values };
+  const author: Author = { id: genId("auth"), tenantId: getCurrentTenantId(), ...values };
   authors = [author, ...authors];
   persistAuthors();
   return mockDelay(author, 350);
@@ -160,12 +178,13 @@ export async function updateAuthor(id: string, values: AuthorFormValues): Promis
 
 export async function deleteAuthor(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(authors, id, "Author");
-  if (books.some((b) => b.authorId === id)) {
+  if (books.some((b) => b.tenantId === tenantId && b.authorId === id)) {
     await mockDelay(null, 300);
     throw new Error("Cannot delete an author who still has books in the catalog");
   }
-  authors = authors.filter((a) => a.id !== id);
+  authors = authors.filter((a) => !(a.id === id && a.tenantId === tenantId));
   persistAuthors();
   return mockDelay(undefined, 300);
 }
@@ -174,12 +193,12 @@ export async function deleteAuthor(id: string): Promise<void> {
 
 export async function listPublishers(): Promise<Publisher[]> {
   await seedPromise;
-  return mockDelay([...publishers], 300);
+  return mockDelay(scopedToCurrentTenant(publishers), 300);
 }
 
 export async function createPublisher(values: PublisherFormValues): Promise<Publisher> {
   await seedPromise;
-  const publisher: Publisher = { id: genId("pub"), ...values };
+  const publisher: Publisher = { id: genId("pub"), tenantId: getCurrentTenantId(), ...values };
   publishers = [publisher, ...publishers];
   persistPublishers();
   return mockDelay(publisher, 350);
@@ -195,12 +214,13 @@ export async function updatePublisher(id: string, values: PublisherFormValues): 
 
 export async function deletePublisher(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(publishers, id, "Publisher");
-  if (books.some((b) => b.publisherId === id)) {
+  if (books.some((b) => b.tenantId === tenantId && b.publisherId === id)) {
     await mockDelay(null, 300);
     throw new Error("Cannot delete a publisher who still has books in the catalog");
   }
-  publishers = publishers.filter((p) => p.id !== id);
+  publishers = publishers.filter((p) => !(p.id === id && p.tenantId === tenantId));
   persistPublishers();
   return mockDelay(undefined, 300);
 }
@@ -209,12 +229,12 @@ export async function deletePublisher(id: string): Promise<void> {
 
 export async function listCategories(): Promise<BookCategory[]> {
   await seedPromise;
-  return mockDelay([...categories], 300);
+  return mockDelay(scopedToCurrentTenant(categories), 300);
 }
 
 export async function createCategory(values: BookCategoryFormValues): Promise<BookCategory> {
   await seedPromise;
-  const category: BookCategory = { id: genId("cat"), ...values };
+  const category: BookCategory = { id: genId("cat"), tenantId: getCurrentTenantId(), ...values };
   categories = [category, ...categories];
   persistCategories();
   return mockDelay(category, 350);
@@ -230,12 +250,13 @@ export async function updateCategory(id: string, values: BookCategoryFormValues)
 
 export async function deleteCategory(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(categories, id, "Category");
-  if (books.some((b) => b.categoryId === id)) {
+  if (books.some((b) => b.tenantId === tenantId && b.categoryId === id)) {
     await mockDelay(null, 300);
     throw new Error("Cannot delete a category that still has books in the catalog");
   }
-  categories = categories.filter((c) => c.id !== id);
+  categories = categories.filter((c) => !(c.id === id && c.tenantId === tenantId));
   persistCategories();
   return mockDelay(undefined, 300);
 }
@@ -244,12 +265,18 @@ export async function deleteCategory(id: string): Promise<void> {
 
 export async function listBooks(): Promise<Book[]> {
   await seedPromise;
-  return mockDelay([...books], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(books), 350);
 }
 
 export async function createBook(values: BookFormValues): Promise<Book> {
   await seedPromise;
-  const book: Book = { id: genId("bk"), ...values, availableCopies: values.totalCopies };
+  const book: Book = {
+    id: genId("bk"),
+    tenantId: getCurrentTenantId(),
+    branchId: getCurrentBranchId(),
+    ...values,
+    availableCopies: values.totalCopies,
+  };
   books = [book, ...books];
   persistBooks();
   return mockDelay(book, 400);
@@ -257,7 +284,7 @@ export async function createBook(values: BookFormValues): Promise<Book> {
 
 export async function updateBook(id: string, values: BookFormValues): Promise<Book> {
   await seedPromise;
-  const existing = requireEntity(books, id, "Book");
+  const existing = requireBranchEntity(books, id, "Book");
   const issuedCount = existing.totalCopies - existing.availableCopies;
   const availableCopies = Math.max(0, values.totalCopies - issuedCount);
   const updated: Book = { ...existing, ...values, availableCopies };
@@ -268,13 +295,15 @@ export async function updateBook(id: string, values: BookFormValues): Promise<Bo
 
 export async function deleteBook(id: string): Promise<void> {
   await seedPromise;
-  requireEntity(books, id, "Book");
-  if (loans.some((l) => l.bookId === id && l.status !== "returned")) {
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  requireBranchEntity(books, id, "Book");
+  if (loans.some((l) => l.tenantId === tenantId && l.branchId === branchId && l.bookId === id && l.status !== "returned")) {
     await mockDelay(null, 300);
     throw new Error("Cannot delete a book that has copies currently on loan");
   }
-  books = books.filter((b) => b.id !== id);
-  reservations = reservations.filter((r) => r.bookId !== id);
+  books = books.filter((b) => !(b.id === id && b.tenantId === tenantId && b.branchId === branchId));
+  reservations = reservations.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.bookId === id));
   persistBooks();
   persistReservations();
   return mockDelay(undefined, 300);
@@ -284,7 +313,7 @@ export async function deleteBook(id: string): Promise<void> {
 
 function nextMembershipId(personType: LibraryMemberFormValues["personType"]): string {
   const prefix = personType === "student" ? "LM-S-" : "LM-T-";
-  const max = members
+  const max = scopedToCurrentTenant(members)
     .filter((m) => m.membershipId.startsWith(prefix))
     .reduce((acc, m) => Math.max(acc, Number(m.membershipId.slice(prefix.length)) || 0), 0);
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
@@ -292,17 +321,25 @@ function nextMembershipId(personType: LibraryMemberFormValues["personType"]): st
 
 export async function listMembers(): Promise<LibraryMember[]> {
   await seedPromise;
-  return mockDelay([...members], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(members), 350);
 }
 
 export async function createMember(values: LibraryMemberFormValues): Promise<LibraryMember> {
   await seedPromise;
-  if (members.some((m) => m.personType === values.personType && m.personId === values.personId)) {
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  if (
+    members.some(
+      (m) => m.tenantId === tenantId && m.branchId === branchId && m.personType === values.personType && m.personId === values.personId,
+    )
+  ) {
     await mockDelay(null, 300);
     throw new Error("This person is already a library member");
   }
   const member: LibraryMember = {
     id: genId("libmem"),
+    tenantId,
+    branchId,
     ...values,
     membershipId: nextMembershipId(values.personType),
     joinedOn: new Date().toISOString(),
@@ -314,21 +351,23 @@ export async function createMember(values: LibraryMemberFormValues): Promise<Lib
 
 export async function updateMember(id: string, values: LibraryMemberFormValues): Promise<LibraryMember> {
   await seedPromise;
-  requireEntity(members, id, "Member");
+  requireBranchEntity(members, id, "Member");
   members = members.map((m) => (m.id === id ? { ...m, ...values } : m));
   persistMembers();
-  return mockDelay(requireEntity(members, id, "Member"), 350);
+  return mockDelay(requireBranchEntity(members, id, "Member"), 350);
 }
 
 export async function deleteMember(id: string): Promise<void> {
   await seedPromise;
-  requireEntity(members, id, "Member");
-  if (loans.some((l) => l.memberId === id && l.status !== "returned")) {
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  requireBranchEntity(members, id, "Member");
+  if (loans.some((l) => l.tenantId === tenantId && l.branchId === branchId && l.memberId === id && l.status !== "returned")) {
     await mockDelay(null, 300);
     throw new Error("Cannot remove a member with books currently on loan");
   }
-  members = members.filter((m) => m.id !== id);
-  reservations = reservations.filter((r) => r.memberId !== id);
+  members = members.filter((m) => !(m.id === id && m.tenantId === tenantId && m.branchId === branchId));
+  reservations = reservations.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.memberId === id));
   persistMembers();
   persistReservations();
   return mockDelay(undefined, 300);
@@ -338,17 +377,17 @@ export async function deleteMember(id: string): Promise<void> {
 
 export async function listLoans(): Promise<BookLoan[]> {
   await seedPromise;
-  return mockDelay([...deriveAndPersistAllLoans()], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(deriveAndPersistAllLoans()), 350);
 }
 
 export async function issueBook(values: IssueBookFormValues): Promise<BookLoan> {
   await seedPromise;
-  const book = requireEntity(books, values.bookId, "Book");
+  const book = requireBranchEntity(books, values.bookId, "Book");
   if (book.availableCopies <= 0) {
     await mockDelay(null, 300);
     throw new Error("No copies of this book are currently available to issue");
   }
-  const member = requireEntity(members, values.memberId, "Member");
+  const member = requireBranchEntity(members, values.memberId, "Member");
   if (member.status !== "active") {
     await mockDelay(null, 300);
     throw new Error("This member is suspended and cannot borrow books");
@@ -359,6 +398,8 @@ export async function issueBook(values: IssueBookFormValues): Promise<BookLoan> 
 
   const loan: BookLoan = {
     id: genId("loan"),
+    tenantId: book.tenantId,
+    branchId: book.branchId,
     bookId: values.bookId,
     memberId: values.memberId,
     issuedOn: new Date().toISOString(),
@@ -372,13 +413,13 @@ export async function issueBook(values: IssueBookFormValues): Promise<BookLoan> 
 
 export async function returnBook(loanId: string): Promise<BookLoan> {
   await seedPromise;
-  const loan = requireEntity(deriveAndPersistAllLoans(), loanId, "Loan");
+  const loan = requireBranchEntity(deriveAndPersistAllLoans(), loanId, "Loan");
   if (loan.status === "returned") {
     await mockDelay(null, 300);
     throw new Error("This loan has already been returned");
   }
 
-  const book = books.find((b) => b.id === loan.bookId);
+  const book = books.find((b) => b.id === loan.bookId && b.tenantId === loan.tenantId && b.branchId === loan.branchId);
   if (book) {
     books = books.map((b) => (b.id === book.id ? { ...b, availableCopies: Math.min(b.totalCopies, b.availableCopies + 1) } : b));
     persistBooks();
@@ -402,7 +443,7 @@ export async function returnBook(loanId: string): Promise<BookLoan> {
 
 export async function markFinePaid(loanId: string): Promise<BookLoan> {
   await seedPromise;
-  const loan = requireEntity(loans, loanId, "Loan");
+  const loan = requireBranchEntity(loans, loanId, "Loan");
   if (!loan.fineAmount) {
     await mockDelay(null, 300);
     throw new Error("This loan has no outstanding fine");
@@ -417,28 +458,41 @@ export async function markFinePaid(loanId: string): Promise<BookLoan> {
 
 export async function listReservations(): Promise<BookReservation[]> {
   await seedPromise;
-  return mockDelay([...reservations], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(reservations), 300);
 }
 
 export async function reserveBook(values: ReserveBookFormValues): Promise<BookReservation> {
   await seedPromise;
-  const book = requireEntity(books, values.bookId, "Book");
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const book = requireBranchEntity(books, values.bookId, "Book");
   if (book.availableCopies > 0) {
     await mockDelay(null, 300);
     throw new Error("Copies are available — issue the book directly instead of reserving it");
   }
-  const member = requireEntity(members, values.memberId, "Member");
+  const member = requireBranchEntity(members, values.memberId, "Member");
   if (member.status !== "active") {
     await mockDelay(null, 300);
     throw new Error("This member is suspended and cannot place reservations");
   }
-  if (reservations.some((r) => r.bookId === values.bookId && r.memberId === values.memberId && r.status === "pending")) {
+  if (
+    reservations.some(
+      (r) =>
+        r.tenantId === tenantId &&
+        r.branchId === branchId &&
+        r.bookId === values.bookId &&
+        r.memberId === values.memberId &&
+        r.status === "pending",
+    )
+  ) {
     await mockDelay(null, 300);
     throw new Error("This member already has a pending reservation for this book");
   }
 
   const reservation: BookReservation = {
     id: genId("resv"),
+    tenantId,
+    branchId,
     bookId: values.bookId,
     memberId: values.memberId,
     reservedOn: new Date().toISOString(),
@@ -451,7 +505,7 @@ export async function reserveBook(values: ReserveBookFormValues): Promise<BookRe
 
 export async function cancelReservation(id: string): Promise<BookReservation> {
   await seedPromise;
-  const reservation = requireEntity(reservations, id, "Reservation");
+  const reservation = requireBranchEntity(reservations, id, "Reservation");
   const updated: BookReservation = { ...reservation, status: "cancelled" };
   reservations = reservations.map((r) => (r.id === id ? updated : r));
   persistReservations();
@@ -460,12 +514,12 @@ export async function cancelReservation(id: string): Promise<BookReservation> {
 
 export async function fulfillReservation(id: string, dueDate: string): Promise<{ reservation: BookReservation; loan: BookLoan }> {
   await seedPromise;
-  const reservation = requireEntity(reservations, id, "Reservation");
+  const reservation = requireBranchEntity(reservations, id, "Reservation");
   if (reservation.status !== "pending") {
     await mockDelay(null, 300);
     throw new Error("Only pending reservations can be fulfilled");
   }
-  const book = requireEntity(books, reservation.bookId, "Book");
+  const book = requireBranchEntity(books, reservation.bookId, "Book");
   if (book.availableCopies <= 0) {
     await mockDelay(null, 300);
     throw new Error("No copies are available yet — wait for a copy to be returned first");

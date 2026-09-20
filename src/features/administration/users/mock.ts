@@ -1,5 +1,8 @@
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
 import type { DeviceRecord, SessionRecord } from "@/features/authentication/types";
 import type { LoginHistoryEntry, LoginOutcome, SystemUser } from "./types";
+
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
@@ -11,9 +14,10 @@ const DEFAULT_PREFERENCES = {
   smsNotifications: false,
 };
 
-export const SEED_USERS: SystemUser[] = [
+export const SEED_USERS: Omit<SystemUser, "tenantId">[] = [
   {
     id: "usr-1001",
+    branchId: null,
     name: "Ava Whitfield",
     email: "admin@educore.dev",
     phone: "+91 98450 11223",
@@ -28,6 +32,7 @@ export const SEED_USERS: SystemUser[] = [
   },
   {
     id: "usr-1002",
+    branchId: DEFAULT_BRANCH_ID,
     name: "Daniel Reyes",
     email: "teacher@educore.dev",
     phone: "+91 98450 22334",
@@ -42,6 +47,7 @@ export const SEED_USERS: SystemUser[] = [
   },
   {
     id: "usr-1003",
+    branchId: DEFAULT_BRANCH_ID,
     name: "Priya Nair",
     email: "parent@educore.dev",
     phone: "+91 98450 33445",
@@ -56,6 +62,7 @@ export const SEED_USERS: SystemUser[] = [
   },
   {
     id: "usr-1004",
+    branchId: DEFAULT_BRANCH_ID,
     name: "Meera Iyer",
     email: "meera.iyer@educore.dev",
     phone: "+91 98450 44556",
@@ -70,6 +77,7 @@ export const SEED_USERS: SystemUser[] = [
   },
   {
     id: "usr-1005",
+    branchId: DEFAULT_BRANCH_ID,
     name: "Rohan Kulkarni",
     email: "rohan.kulkarni@educore.dev",
     phone: "+91 98450 55667",
@@ -84,6 +92,7 @@ export const SEED_USERS: SystemUser[] = [
   },
   {
     id: "usr-1006",
+    branchId: DEFAULT_BRANCH_ID,
     name: "Fatima Sheikh",
     email: "fatima.sheikh@educore.dev",
     phone: "+91 98450 66778",
@@ -98,6 +107,7 @@ export const SEED_USERS: SystemUser[] = [
   },
   {
     id: "usr-1007",
+    branchId: DEFAULT_BRANCH_ID,
     name: "James Carter",
     email: "james.carter@educore.dev",
     phone: "+91 98450 77889",
@@ -112,6 +122,7 @@ export const SEED_USERS: SystemUser[] = [
   },
   {
     id: "usr-1008",
+    branchId: DEFAULT_BRANCH_ID,
     name: "Neha Gupta",
     email: "neha.gupta@educore.dev",
     phone: "+91 98450 88990",

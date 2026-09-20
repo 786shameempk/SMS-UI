@@ -2,6 +2,7 @@ export type ItemUnit = "piece" | "box" | "packet" | "kg" | "litre" | "ream" | "s
 
 export interface ItemCategory {
   id: string;
+  tenantId: string;
   name: string;
   description?: string;
 }
@@ -13,6 +14,7 @@ export interface ItemCategoryFormValues {
 
 export interface Vendor {
   id: string;
+  tenantId: string;
   name: string;
   contactPerson?: string;
   phone?: string;
@@ -30,6 +32,8 @@ export interface VendorFormValues {
 
 export interface InventoryItem {
   id: string;
+  tenantId: string;
+  branchId: string;
   code: string;
   name: string;
   categoryId: string;
@@ -54,6 +58,8 @@ export type StockTransactionType = "purchase" | "issue" | "adjustment";
 
 export interface StockTransaction {
   id: string;
+  tenantId: string;
+  branchId: string;
   itemId: string;
   type: StockTransactionType;
   quantityDelta: number;

@@ -1,4 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { listClasses, listSections } from "@/features/academics/api";
 import { SEED_ADMISSIONS, SEED_STUDENTS } from "./mock";
 import { ADMISSION_FEE_AMOUNT, ADMISSION_STAGE_CONFIG, CLASS_OPTIONS, FINAL_CLASS } from "./constants";
@@ -44,7 +54,11 @@ function saveJson(key: string, value: unknown) {
   }
 }
 
-let students = loadJson<Student[]>(STUDENTS_KEY, SEED_STUDENTS.map((s) => ({ ...s })));
+let students = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(
+    loadJson<Student[]>(STUDENTS_KEY, SEED_STUDENTS.map((s) => ({ ...s, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }))),
+  ),
+);
 
 /**
  * Guards against admissions data cached in localStorage from before the flat
@@ -56,7 +70,14 @@ function normalizeAdmissionStage(stage: AdmissionStage): AdmissionStage {
   return stage in ADMISSION_STAGE_CONFIG ? stage : "inquiry";
 }
 
-let admissions = loadJson<AdmissionApplication[]>(ADMISSIONS_KEY, SEED_ADMISSIONS.map((a) => ({ ...a }))).map((a) => ({
+let admissions = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(
+    loadJson<AdmissionApplication[]>(
+      ADMISSIONS_KEY,
+      SEED_ADMISSIONS.map((a) => ({ ...a, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) })),
+    ),
+  ),
+).map((a) => ({
   ...a,
   stage: normalizeAdmissionStage(a.stage),
 }));
@@ -70,7 +91,7 @@ function persistAdmissions() {
 
 function nextAdmissionNumber(): string {
   const year = new Date().getFullYear();
-  const max = students.reduce((acc, s) => {
+  const max = scopedToCurrentTenant(students).reduce((acc, s) => {
     const match = s.admissionNumber.match(/(\d+)$/);
     return match ? Math.max(acc, Number(match[1])) : acc;
   }, 0);
@@ -78,20 +99,20 @@ function nextAdmissionNumber(): string {
 }
 
 function requireStudent(id: string): Student {
-  const student = students.find((s) => s.id === id);
+  const student = students.find((s) => s.id === id && s.tenantId === getCurrentTenantId() && s.branchId === getCurrentBranchId());
   if (!student) throw new Error("Student not found");
   return student;
 }
 
 function requireAdmission(id: string): AdmissionApplication {
-  const application = admissions.find((a) => a.id === id);
+  const application = admissions.find((a) => a.id === id && a.tenantId === getCurrentTenantId() && a.branchId === getCurrentBranchId());
   if (!application) throw new Error("Application not found");
   return application;
 }
 
 function nextApplicationNumber(): string {
   const year = new Date().getFullYear();
-  const max = admissions.reduce((acc, a) => {
+  const max = scopedToCurrentTenant(admissions).reduce((acc, a) => {
     const match = a.applicationNumber.match(/(\d+)$/);
     return match ? Math.max(acc, Number(match[1])) : acc;
   }, 0);
@@ -101,6 +122,8 @@ function nextApplicationNumber(): string {
 function buildStudentFromValues(values: StudentFormValues): Student {
   return {
     id: `stu-${Math.random().toString(36).slice(2, 9)}`,
+    tenantId: getCurrentTenantId(),
+    branchId: values.branchId,
     admissionNumber: nextAdmissionNumber(),
     firstName: values.firstName.trim(),
     lastName: values.lastName.trim(),
@@ -132,7 +155,7 @@ function buildStudentFromValues(values: StudentFormValues): Student {
 // ── Students ─────────────────────────────────────────────────────────────
 
 export async function listStudents(): Promise<Student[]> {
-  return mockDelay([...students], 400);
+  return mockDelay(scopedToCurrentTenantAndBranch(students), 400);
 }
 
 export async function getStudent(id: string): Promise<Student> {
@@ -234,8 +257,10 @@ export async function promoteStudents(params: {
   toSection: string;
 }): Promise<PromotionResult> {
   let count = 0;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   students = students.map((s) => {
-    if (s.status === "active" && s.className === params.fromClass && s.section === params.fromSection) {
+    if (s.tenantId === tenantId && s.branchId === branchId && s.status === "active" && s.className === params.fromClass && s.section === params.fromSection) {
       count++;
       return { ...s, className: params.toClass, section: params.toSection };
     }
@@ -251,8 +276,10 @@ export interface GraduationResult {
 
 export async function graduateStudents(className: string = FINAL_CLASS): Promise<GraduationResult> {
   let count = 0;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   students = students.map((s) => {
-    if (s.status === "active" && s.className === className) {
+    if (s.tenantId === tenantId && s.branchId === branchId && s.status === "active" && s.className === className) {
       count++;
       return { ...s, status: "graduated" as const };
     }
@@ -266,13 +293,14 @@ export async function graduateStudents(className: string = FINAL_CLASS): Promise
 // ── Selection → Fee Collection → Student Creation, plus seat availability ─
 
 export async function listAdmissions(): Promise<AdmissionApplication[]> {
-  return mockDelay([...admissions], 400);
+  return mockDelay(scopedToCurrentTenantAndBranch(admissions), 400);
 }
 
 /** Step 1 — Inquiry: a lightweight first submission, before any review has happened. */
 export async function createAdmission(values: AdmissionFormValues): Promise<AdmissionApplication> {
   const application: AdmissionApplication = {
     id: `adm-${Math.random().toString(36).slice(2, 8)}`,
+    tenantId: getCurrentTenantId(),
     applicationNumber: nextApplicationNumber(),
     ...values,
     stage: "inquiry",
@@ -354,7 +382,7 @@ export async function recordAdmissionFeePayment(id: string, values: AdmissionFee
     await mockDelay(null, 300);
     throw new Error("This application isn't at the fee collection stage");
   }
-  const receiptNumber = `RCT-ADM-${String(admissions.filter((a) => a.admissionFeeReceiptNumber).length + 1).padStart(4, "0")}`;
+  const receiptNumber = `RCT-ADM-${String(scopedToCurrentTenant(admissions).filter((a) => a.admissionFeeReceiptNumber).length + 1).padStart(4, "0")}`;
   const updated: AdmissionApplication = {
     ...existing,
     admissionFeeAmount: values.amount,
@@ -391,6 +419,7 @@ export async function enrollAdmission(id: string): Promise<{ application: Admiss
     throw new Error("The admission fee must be paid before enrolling this applicant");
   }
   const student = buildStudentFromValues({
+    branchId: application.branchId,
     firstName: application.applicantFirstName,
     lastName: application.applicantLastName,
     dateOfBirth: application.dateOfBirth,

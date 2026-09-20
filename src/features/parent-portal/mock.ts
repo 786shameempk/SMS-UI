@@ -126,7 +126,7 @@ export function buildLeaveRequests(studentId: string): LeaveRequest[] {
   ];
 }
 
-export function buildNotifications(): ParentNotification[] {
+export function buildNotifications(): Omit<ParentNotification, "tenantId">[] {
   return [
     { id: "pn-1", title: "Fee reminder", body: "Term 2 fee is due in 5 days.", createdAt: daysAgo(0), read: false },
     { id: "pn-2", title: "PTM scheduled", body: "Parent-teacher meeting on Aug 12, 4 PM onwards.", createdAt: daysAgo(1), read: false },

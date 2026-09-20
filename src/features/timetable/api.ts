@@ -3,6 +3,15 @@ import type { SchoolClass, Section, Subject } from "@/features/academics/types";
 import { listSubjectAssignments } from "@/features/teachers/api";
 import type { TeacherSubjectAssignment } from "@/features/teachers/types";
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { DAY_DEFINITIONS, TEACHING_PERIODS, dateToDayOfWeek } from "./constants";
 import { SEED_ROOMS, SEED_TIMETABLE_SECTION_IDS } from "./mock";
 import type {
@@ -42,16 +51,18 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let rooms = loadJson<Room[]>(ROOMS_KEY, []);
-let slots = loadJson<TimetableSlot[]>(SLOTS_KEY, []);
-let substitutions = loadJson<TimetableSubstitution[]>(SUBSTITUTIONS_KEY, []);
+let rooms = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Room[]>(ROOMS_KEY, [])));
+let slots = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<TimetableSlot[]>(SLOTS_KEY, [])));
+let substitutions = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(loadJson<TimetableSubstitution[]>(SUBSTITUTIONS_KEY, [])),
+);
 
 const persistRooms = () => saveJson(ROOMS_KEY, rooms);
 const persistSlots = () => saveJson(SLOTS_KEY, slots);
 const persistSubstitutions = () => saveJson(SUBSTITUTIONS_KEY, substitutions);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
@@ -69,6 +80,8 @@ function buildDraftSlots(
   eligibleSubjects: Subject[],
   assignments: TeacherSubjectAssignment[],
   existingSlots: TimetableSlot[],
+  tenantId: string,
+  branchId: string,
 ): TimetableSlot[] {
   const created: TimetableSlot[] = [];
   for (const day of DAY_DEFINITIONS) {
@@ -87,6 +100,8 @@ function buildDraftSlots(
       const assignment = assignments.find((a) => a.subjectId === subject.id && a.classId === schoolClass.id);
       created.push({
         id: genId("slot"),
+        tenantId,
+        branchId,
         sectionId: section.id,
         dayOfWeek: day.value,
         periodNumber: period.periodNumber,
@@ -108,7 +123,7 @@ async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
 
   if (rooms.length === 0) {
-    rooms = SEED_ROOMS.map((r) => ({ ...r }));
+    rooms = SEED_ROOMS.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }));
     persistRooms();
   }
 
@@ -124,7 +139,7 @@ async function performSeed(): Promise<void> {
     const schoolClass = section && classes.find((c) => c.id === section.classId);
     if (!section || !schoolClass) continue;
     const eligibleSubjects = subjects.filter((s) => s.classIds.includes(schoolClass.id));
-    const created = buildDraftSlots(section, schoolClass, eligibleSubjects, assignments, slots);
+    const created = buildDraftSlots(section, schoolClass, eligibleSubjects, assignments, slots, DEFAULT_TENANT_ID, defaultBranchIdForTenant(DEFAULT_TENANT_ID));
     slots = [...slots, ...created];
   }
   persistSlots();
@@ -138,6 +153,8 @@ async function performSeed(): Promise<void> {
     if (primarySlot && otherTeacherId) {
       seededSubs.push({
         id: genId("sub"),
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
         date: new Date().toISOString().slice(0, 10),
         sectionId: primarySlot.sectionId,
         dayOfWeek: primarySlot.dayOfWeek,
@@ -151,6 +168,8 @@ async function performSeed(): Promise<void> {
     if (secondSlot && otherTeacherId && otherTeacherId !== secondSlot.staffId) {
       seededSubs.push({
         id: genId("sub"),
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
         date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
         sectionId: secondSlot.sectionId,
         dayOfWeek: secondSlot.dayOfWeek,
@@ -177,12 +196,12 @@ const seedPromise: Promise<void> = performSeed().catch((err) => {
 
 export async function listRooms(): Promise<Room[]> {
   await seedPromise;
-  return mockDelay([...rooms], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(rooms), 300);
 }
 
 export async function createRoom(values: RoomFormValues): Promise<Room> {
   await seedPromise;
-  const room: Room = { id: genId("room"), ...values };
+  const room: Room = { id: genId("room"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   rooms = [room, ...rooms];
   persistRooms();
   return mockDelay(room, 350);
@@ -198,8 +217,10 @@ export async function updateRoom(id: string, values: RoomFormValues): Promise<Ro
 
 export async function deleteRoom(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(rooms, id, "Room");
-  rooms = rooms.filter((r) => r.id !== id);
+  rooms = rooms.filter((r) => !(r.id === id && r.tenantId === tenantId && r.branchId === branchId));
   persistRooms();
   return mockDelay(undefined, 300);
 }
@@ -208,7 +229,7 @@ export async function deleteRoom(id: string): Promise<void> {
 
 export async function listSlots(filter?: { sectionId?: string; staffId?: string }): Promise<TimetableSlot[]> {
   await seedPromise;
-  let result = [...slots];
+  let result = scopedToCurrentTenantAndBranch(slots);
   if (filter?.sectionId) result = result.filter((s) => s.sectionId === filter.sectionId);
   if (filter?.staffId) result = result.filter((s) => s.staffId === filter.staffId);
   return mockDelay(result, 300);
@@ -216,15 +237,22 @@ export async function listSlots(filter?: { sectionId?: string; staffId?: string 
 
 export async function assignSlot(values: SlotAssignmentValues): Promise<TimetableSlot> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const existing = slots.find(
-    (s) => s.sectionId === values.sectionId && s.dayOfWeek === values.dayOfWeek && s.periodNumber === values.periodNumber,
+    (s) =>
+      s.tenantId === tenantId &&
+      s.branchId === branchId &&
+      s.sectionId === values.sectionId &&
+      s.dayOfWeek === values.dayOfWeek &&
+      s.periodNumber === values.periodNumber,
   );
   let saved: TimetableSlot;
   if (existing) {
     saved = { ...existing, subjectId: values.subjectId, staffId: values.staffId, room: values.room };
     slots = slots.map((s) => (s.id === existing.id ? saved : s));
   } else {
-    saved = { id: genId("slot"), ...values };
+    saved = { id: genId("slot"), tenantId, branchId, ...values };
     slots = [...slots, saved];
   }
   persistSlots();
@@ -233,7 +261,11 @@ export async function assignSlot(values: SlotAssignmentValues): Promise<Timetabl
 
 export async function clearSlot(sectionId: string, dayOfWeek: DayOfWeek, periodNumber: number): Promise<void> {
   await seedPromise;
-  slots = slots.filter((s) => !(s.sectionId === sectionId && s.dayOfWeek === dayOfWeek && s.periodNumber === periodNumber));
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  slots = slots.filter(
+    (s) => !(s.tenantId === tenantId && s.branchId === branchId && s.sectionId === sectionId && s.dayOfWeek === dayOfWeek && s.periodNumber === periodNumber),
+  );
   persistSlots();
   return mockDelay(undefined, 300);
 }
@@ -264,32 +296,43 @@ export async function autoGenerateSectionTimetable(sectionId: string): Promise<T
   const section = requireEntity(sections, sectionId, "Section");
   const schoolClass = classes.find((c) => c.id === section.classId);
   if (!schoolClass) throw new Error("Class not found for section");
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const eligibleSubjects = subjects.filter((s) => s.classIds.includes(schoolClass.id));
-  const created = buildDraftSlots(section, schoolClass, eligibleSubjects, assignments, slots);
+  const created = buildDraftSlots(section, schoolClass, eligibleSubjects, assignments, slots, tenantId, branchId);
   slots = [...slots, ...created];
   persistSlots();
-  return mockDelay(slots.filter((s) => s.sectionId === sectionId), 500);
+  return mockDelay(slots.filter((s) => s.tenantId === tenantId && s.branchId === branchId && s.sectionId === sectionId), 500);
 }
 
 // ── Substitutions ────────────────────────────────────────────────────────
 
 export async function listSubstitutions(): Promise<TimetableSubstitution[]> {
   await seedPromise;
-  return mockDelay([...substitutions], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(substitutions), 300);
 }
 
 export async function createSubstitution(values: SubstitutionFormValues): Promise<TimetableSubstitution> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const dayOfWeek = dateToDayOfWeek(values.date);
   if (dayOfWeek === null) {
     await mockDelay(null, 300);
     throw new Error("Selected date falls on a Sunday; there are no periods to substitute.");
   }
   const originalSlot = slots.find(
-    (s) => s.sectionId === values.sectionId && s.dayOfWeek === dayOfWeek && s.periodNumber === values.periodNumber,
+    (s) =>
+      s.tenantId === tenantId &&
+      s.branchId === branchId &&
+      s.sectionId === values.sectionId &&
+      s.dayOfWeek === dayOfWeek &&
+      s.periodNumber === values.periodNumber,
   );
   const substitution: TimetableSubstitution = {
     id: genId("sub"),
+    tenantId,
+    branchId,
     date: values.date,
     sectionId: values.sectionId,
     dayOfWeek,
@@ -305,7 +348,9 @@ export async function createSubstitution(values: SubstitutionFormValues): Promis
 
 export async function deleteSubstitution(id: string): Promise<void> {
   await seedPromise;
-  substitutions = substitutions.filter((s) => s.id !== id);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  substitutions = substitutions.filter((s) => !(s.id === id && s.tenantId === tenantId && s.branchId === branchId));
   persistSubstitutions();
   return mockDelay(undefined, 300);
 }

@@ -1,4 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { createStaff, listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
@@ -44,12 +54,12 @@ function genId(prefix: string): string {
 }
 
 function requireTicket(id: string): Ticket {
-  const found = tickets.find((t) => t.id === id);
+  const found = tickets.find((t) => t.id === id && t.tenantId === getCurrentTenantId() && t.branchId === getCurrentBranchId());
   if (!found) throw new Error("Ticket not found");
   return found;
 }
 
-let tickets = loadJson<Ticket[]>(TICKETS_KEY, []);
+let tickets = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Ticket[]>(TICKETS_KEY, [])));
 
 function persistTickets() {
   saveJson(TICKETS_KEY, tickets);
@@ -71,7 +81,7 @@ async function performSeed(): Promise<void> {
 
   if (tickets.length === 0) {
     const [students, staff] = await Promise.all([listStudents(), listStaff()]);
-    tickets = buildSeedTickets(students, staff);
+    tickets = buildSeedTickets(students, staff).map((t) => ({ ...t, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }));
     persistTickets();
   }
 
@@ -121,7 +131,7 @@ function toRow(ticket: Ticket, studentById: Map<string, Student>, staffById: Map
 export async function listTickets(filters?: { status?: TicketStatus; category?: TicketCategory; priority?: TicketPriority }): Promise<TicketRow[]> {
   await seedPromise;
   const { studentById, staffById } = await joinContext();
-  const rows = tickets
+  const rows = scopedToCurrentTenantAndBranch(tickets)
     .filter((t) => !filters?.status || t.status === filters.status)
     .filter((t) => !filters?.category || t.category === filters.category)
     .filter((t) => !filters?.priority || t.priority === filters.priority)
@@ -141,7 +151,9 @@ export async function raiseTicket(values: RaiseTicketFormValues): Promise<Ticket
   const now = new Date().toISOString();
   const ticket: Ticket = {
     id: genId("ticket"),
-    ticketNumber: nextTicketNumber(tickets.map((t) => t.ticketNumber)),
+    tenantId: getCurrentTenantId(),
+    branchId: getCurrentBranchId(),
+    ticketNumber: nextTicketNumber(scopedToCurrentTenant(tickets).map((t) => t.ticketNumber)),
     category: values.category,
     priority: values.priority,
     status: "open",
@@ -226,23 +238,26 @@ export async function addComment(id: string, values: AddCommentFormValues): Prom
 
 export async function deleteTicket(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireTicket(id);
-  tickets = tickets.filter((t) => t.id !== id);
+  tickets = tickets.filter((t) => !(t.id === id && t.tenantId === tenantId && t.branchId === branchId));
   persistTickets();
   return mockDelay(undefined, 300);
 }
 
 export async function getHelpDeskReportsSummary(): Promise<HelpDeskReportsSummary> {
   await seedPromise;
-  const openCount = tickets.filter((t) => t.status === "open").length;
-  const inProgressCount = tickets.filter((t) => t.status === "in_progress" || t.status === "reopened").length;
+  const scopedTickets = scopedToCurrentTenantAndBranch(tickets);
+  const openCount = scopedTickets.filter((t) => t.status === "open").length;
+  const inProgressCount = scopedTickets.filter((t) => t.status === "in_progress" || t.status === "reopened").length;
 
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
-  const resolvedThisMonth = tickets.filter((t) => t.resolvedAt && new Date(t.resolvedAt).getTime() >= monthStart.getTime()).length;
+  const resolvedThisMonth = scopedTickets.filter((t) => t.resolvedAt && new Date(t.resolvedAt).getTime() >= monthStart.getTime()).length;
 
-  const resolvedTickets = tickets.filter((t) => t.resolvedAt);
+  const resolvedTickets = scopedTickets.filter((t) => t.resolvedAt);
   const avgResolutionHours =
     resolvedTickets.length === 0
       ? null
@@ -251,17 +266,17 @@ export async function getHelpDeskReportsSummary(): Promise<HelpDeskReportsSummar
         );
 
   const categoryCounts = new Map<string, number>();
-  for (const t of tickets) categoryCounts.set(t.category, (categoryCounts.get(t.category) ?? 0) + 1);
+  for (const t of scopedTickets) categoryCounts.set(t.category, (categoryCounts.get(t.category) ?? 0) + 1);
   const byCategory = Array.from(categoryCounts.entries())
     .map(([category, count]) => ({ category: category as TicketCategory, count }))
     .sort((a, b) => b.count - a.count);
 
   const priorityCounts = new Map<string, number>();
-  for (const t of tickets) priorityCounts.set(t.priority, (priorityCounts.get(t.priority) ?? 0) + 1);
+  for (const t of scopedTickets) priorityCounts.set(t.priority, (priorityCounts.get(t.priority) ?? 0) + 1);
   const byPriority = Array.from(priorityCounts.entries()).map(([priority, count]) => ({ priority: priority as TicketPriority, count }));
 
   const { studentById, staffById } = await joinContext();
-  const overdueTickets = tickets.filter((t) => isOverdue(t)).map((t) => toRow(t, studentById, staffById));
+  const overdueTickets = scopedTickets.filter((t) => isOverdue(t)).map((t) => toRow(t, studentById, staffById));
 
   return mockDelay({ openCount, inProgressCount, resolvedThisMonth, avgResolutionHours, byCategory, byPriority, overdueTickets }, 350);
 }

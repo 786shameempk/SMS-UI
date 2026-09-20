@@ -3,7 +3,7 @@ import type { InventoryItem, ItemCategory, StockTransaction, Vendor } from "./ty
 const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
 
-export const SEED_CATEGORIES: ItemCategory[] = [
+export const SEED_CATEGORIES: Omit<ItemCategory, "tenantId">[] = [
   { id: "cat-1", name: "Stationery", description: "Paper, pens, and classroom writing supplies." },
   { id: "cat-2", name: "Sports Equipment", description: "Equipment for PE classes and school teams." },
   { id: "cat-3", name: "Lab Equipment", description: "Science lab apparatus and consumables." },
@@ -12,7 +12,7 @@ export const SEED_CATEGORIES: ItemCategory[] = [
   { id: "cat-6", name: "Cleaning Supplies", description: "Janitorial and housekeeping consumables." },
 ];
 
-export const SEED_VENDORS: Vendor[] = [
+export const SEED_VENDORS: Omit<Vendor, "tenantId">[] = [
   { id: "ven-1", name: "Bengaluru Office Supplies Co.", contactPerson: "Suresh Rao", phone: "+91 80 4012 3456", email: "sales@bosc.example.com", address: "45 Commercial Street, Bengaluru" },
   { id: "ven-2", name: "SportsFit Equipment Traders", contactPerson: "Ravi Nayak", phone: "+91 80 2233 4455", email: "orders@sportsfit.example.com", address: "12 Sports Complex Road, Bengaluru" },
   { id: "ven-3", name: "TechZone Electronics", contactPerson: "Divya Menon", phone: "+91 80 3344 5566", email: "b2b@techzone.example.com", address: "88 Electronics City, Bengaluru" },
@@ -68,9 +68,12 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function buildSeedInventory(): { items: InventoryItem[]; transactions: StockTransaction[] } {
-  const items: InventoryItem[] = [];
-  const transactions: StockTransaction[] = [];
+export function buildSeedInventory(): {
+  items: Omit<InventoryItem, "tenantId" | "branchId">[];
+  transactions: Omit<StockTransaction, "tenantId" | "branchId">[];
+} {
+  const items: Omit<InventoryItem, "tenantId" | "branchId">[] = [];
+  const transactions: Omit<StockTransaction, "tenantId" | "branchId">[] = [];
 
   for (const spec of ITEM_SPECS) {
     const finalQuantity = spec.openingQuantity - (spec.issuedQuantity ?? 0);

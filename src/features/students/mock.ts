@@ -13,7 +13,7 @@ function baseGuardian(name: string, relation: "father" | "mother", phone: string
   return { id: `g-${Math.random().toString(36).slice(2, 8)}`, name, relation, phone };
 }
 
-export const SEED_STUDENTS: Student[] = [
+export const SEED_STUDENTS: Omit<Student, "tenantId" | "branchId">[] = [
   {
     id: "stu-1",
     admissionNumber: admissionNumber(),
@@ -142,7 +142,7 @@ export const SEED_STUDENTS: Student[] = [
   },
 ];
 
-export const SEED_ADMISSIONS: AdmissionApplication[] = [
+export const SEED_ADMISSIONS: Omit<AdmissionApplication, "tenantId" | "branchId">[] = [
   {
     id: "adm-1",
     applicationNumber: "ADM-2026-0001",

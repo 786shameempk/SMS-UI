@@ -28,7 +28,11 @@ function findStaffByDesignation(staff: StaffMember[], designation: string): Staf
 export function buildSeedVisitorData(
   students: Student[],
   staff: StaffMember[],
-): { entries: VisitorEntry[]; preApprovals: PreApprovedVisit[]; watchlist: WatchlistEntry[] } {
+): {
+  entries: Omit<VisitorEntry, "tenantId" | "branchId">[];
+  preApprovals: Omit<PreApprovedVisit, "tenantId" | "branchId">[];
+  watchlist: Omit<WatchlistEntry, "tenantId">[];
+} {
   const activeStudents = students.filter((s) => s.status === "active");
   const principal = findStaffByDesignation(staff, "Principal") ?? staff[0];
   const accountant = findStaffByDesignation(staff, "Accountant") ?? staff[0];
@@ -38,7 +42,7 @@ export function buildSeedVisitorData(
   const vicePrincipal = findStaffByDesignation(staff, "Vice Principal") ?? principal;
   const teacher = findStaffByDesignation(staff, "Teacher") ?? staff[0];
 
-  const entries: VisitorEntry[] = [];
+  const entries: Omit<VisitorEntry, "tenantId" | "branchId">[] = [];
   const badgeSeq: string[] = [];
   const addEntry = (
     daysBack: number,
@@ -78,7 +82,7 @@ export function buildSeedVisitorData(
   addEntry(10, 9, 2, "Rotary Club Volunteers", "+91 98450 91009", "event", { hostType: "other", hostOtherLabel: "School Auditorium" }, { purposeNotes: "Annual day rehearsal coordination" });
   addEntry(12, 12, 1, "Sanjay Verma", "+91 98450 91010", "meeting", { hostType: "staff", hostStaffId: principal?.id }, { idProofType: "Aadhaar", purposeNotes: "Transfer certificate discussion" });
 
-  const preApprovals: PreApprovedVisit[] = [
+  const preApprovals: Omit<PreApprovedVisit, "tenantId" | "branchId">[] = [
     {
       id: genId("preapp"),
       visitorName: "Meera Krishnan",
@@ -126,7 +130,7 @@ export function buildSeedVisitorData(
     },
   ];
 
-  const watchlist: WatchlistEntry[] = [
+  const watchlist: Omit<WatchlistEntry, "tenantId">[] = [
     { id: genId("watch"), name: "Vikas Oberoi", reason: "Repeated unauthorized entry attempts without checking in at front desk.", addedAt: daysAgo(45) },
     { id: genId("watch"), name: "Amanpreet Sandhu", phone: "+91 98450 00099", reason: "Restraining order on file — do not permit entry, notify administration immediately.", addedAt: daysAgo(90) },
   ];

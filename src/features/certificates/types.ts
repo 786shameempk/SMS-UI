@@ -12,6 +12,8 @@ export interface CertificateTypeConfig {
 
 export interface IssuedCertificate {
   id: string;
+  tenantId: string;
+  branchId: string;
   certificateNumber: string;
   type: CertificateType;
   recipientType: RecipientType;

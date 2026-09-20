@@ -10,7 +10,7 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export const SEED_TEMPLATES: MessageTemplate[] = [
+export const SEED_TEMPLATES: Omit<MessageTemplate, "tenantId">[] = [
   {
     id: "tpl-1",
     name: "Fee due reminder",
@@ -58,12 +58,12 @@ export const SEED_TEMPLATES: MessageTemplate[] = [
  * convention as library's buildSeedLibraryData: a couple of grade-level parent/student
  * groups plus an all-teaching-staff group.
  */
-export function buildSeedGroups(students: Student[], staff: StaffMember[]): ContactGroup[] {
+export function buildSeedGroups(students: Student[], staff: StaffMember[]): Omit<ContactGroup, "tenantId">[] {
   const grade10Students = students.filter((s) => s.className === "Grade 10").map((s) => s.id);
   const grade12Students = students.filter((s) => s.className === "Grade 12").map((s) => s.id);
   const teachingStaff = staff.filter((s) => s.designation === "Teacher").map((s) => s.id);
 
-  const groups: ContactGroup[] = [
+  const groups: Omit<ContactGroup, "tenantId">[] = [
     {
       id: "grp-1",
       name: "Grade 10 Parents",

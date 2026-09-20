@@ -1,4 +1,5 @@
 import { mockDelay } from "@/utils/mockDelay";
+import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
 import { listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
@@ -45,8 +46,8 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let surveys = loadJson<Survey[]>(SURVEYS_KEY, []);
-let responses = loadJson<SurveyResponse[]>(RESPONSES_KEY, []);
+let surveys = migrateLegacyRecordsToDefaultTenant(loadJson<Survey[]>(SURVEYS_KEY, []));
+let responses = migrateLegacyRecordsToDefaultTenant(loadJson<SurveyResponse[]>(RESPONSES_KEY, []));
 
 function persistSurveys() {
   saveJson(SURVEYS_KEY, surveys);
@@ -56,7 +57,7 @@ function persistResponses() {
 }
 
 function requireSurvey(id: string): Survey {
-  const found = surveys.find((s) => s.id === id);
+  const found = surveys.find((s) => s.id === id && s.tenantId === getCurrentTenantId());
   if (!found) throw new Error("Survey not found");
   return found;
 }
@@ -73,8 +74,8 @@ async function performSeed(): Promise<void> {
   if (surveys.length === 0 && responses.length === 0) {
     const [students, staff] = await Promise.all([listStudents(), listStaff()]);
     const seeded = buildSeedSurveyData(students, staff);
-    surveys = seeded.surveys;
-    responses = seeded.responses;
+    surveys = seeded.surveys.map((s) => ({ ...s, tenantId: DEFAULT_TENANT_ID }));
+    responses = seeded.responses.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID }));
     persistSurveys();
     persistResponses();
   }
@@ -116,11 +117,11 @@ function respondentLabel(response: SurveyResponse, studentById: Map<string, Stud
 export async function listSurveys(status?: SurveyStatus): Promise<SurveyRow[]> {
   await seedPromise;
   const { staffById } = await joinContext();
-  const rows = surveys
+  const rows = scopedToCurrentTenant(surveys)
     .filter((s) => !status || s.status === status)
     .map((s): SurveyRow => ({
       ...s,
-      responseCount: responses.filter((r) => r.surveyId === s.id).length,
+      responseCount: responses.filter((r) => r.tenantId === s.tenantId && r.surveyId === s.id).length,
       createdBy: s.createdByStaffId ? staffById.get(s.createdByStaffId) : undefined,
     }))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -137,6 +138,7 @@ export async function createSurvey(values: SurveyFormValues): Promise<Survey> {
   const questions: SurveyQuestion[] = values.questions.map((q) => ({ id: genId("q"), ...q }));
   const survey: Survey = {
     id: genId("survey"),
+    tenantId: getCurrentTenantId(),
     title: values.title,
     description: values.description,
     audience: values.audience,
@@ -175,9 +177,10 @@ export async function closeSurvey(id: string): Promise<Survey> {
 
 export async function deleteSurvey(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireSurvey(id);
-  surveys = surveys.filter((s) => s.id !== id);
-  responses = responses.filter((r) => r.surveyId !== id);
+  surveys = surveys.filter((s) => !(s.id === id && s.tenantId === tenantId));
+  responses = responses.filter((r) => !(r.tenantId === tenantId && r.surveyId === id));
   persistSurveys();
   persistResponses();
   return mockDelay(undefined, 300);
@@ -188,7 +191,7 @@ export async function deleteSurvey(id: string): Promise<void> {
 export async function listResponses(surveyId: string): Promise<RespondentRow[]> {
   await seedPromise;
   const { studentById, staffById } = await joinContext();
-  const rows = responses
+  const rows = scopedToCurrentTenant(responses)
     .filter((r) => r.surveyId === surveyId)
     .map(
       (r): RespondentRow => ({
@@ -213,6 +216,7 @@ export async function recordResponse(values: RecordResponseFormValues): Promise<
 
   const response: SurveyResponse = {
     id: genId("resp"),
+    tenantId: survey.tenantId,
     surveyId: values.surveyId,
     respondentType: values.respondentType,
     respondentStudentId: values.respondentType === "student" || values.respondentType === "parent" ? values.respondentStudentId : undefined,
@@ -228,9 +232,10 @@ export async function recordResponse(values: RecordResponseFormValues): Promise<
 
 export async function deleteResponse(id: string): Promise<void> {
   await seedPromise;
-  const found = responses.find((r) => r.id === id);
+  const tenantId = getCurrentTenantId();
+  const found = responses.find((r) => r.id === id && r.tenantId === tenantId);
   if (!found) throw new Error("Response not found");
-  responses = responses.filter((r) => r.id !== id);
+  responses = responses.filter((r) => !(r.id === id && r.tenantId === tenantId));
   persistResponses();
   return mockDelay(undefined, 300);
 }
@@ -240,7 +245,7 @@ export async function deleteResponse(id: string): Promise<void> {
 export async function getSurveyResults(surveyId: string): Promise<SurveyResultsSummary> {
   await seedPromise;
   const survey = requireSurvey(surveyId);
-  const surveyResponses = responses.filter((r) => r.surveyId === surveyId);
+  const surveyResponses = responses.filter((r) => r.tenantId === survey.tenantId && r.surveyId === surveyId);
 
   const questionResults: QuestionResult[] = survey.questions.map((question) => {
     const answersForQuestion = surveyResponses
@@ -274,14 +279,16 @@ export async function getSurveyResults(surveyId: string): Promise<SurveyResultsS
 
 export async function getSurveysReportsSummary(): Promise<SurveysReportsSummary> {
   await seedPromise;
-  const totalSurveys = surveys.length;
-  const publishedSurveys = surveys.filter((s) => s.status === "published").length;
-  const totalResponses = responses.length;
+  const scopedSurveys = scopedToCurrentTenant(surveys);
+  const scopedResponses = scopedToCurrentTenant(responses);
+  const totalSurveys = scopedSurveys.length;
+  const publishedSurveys = scopedSurveys.filter((s) => s.status === "published").length;
+  const totalResponses = scopedResponses.length;
   const avgResponsesPerSurvey = totalSurveys === 0 ? 0 : Math.round((totalResponses / totalSurveys) * 10) / 10;
 
   const audienceCounts = new Map<string, number>();
-  for (const response of responses) {
-    const survey = surveys.find((s) => s.id === response.surveyId);
+  for (const response of scopedResponses) {
+    const survey = scopedSurveys.find((s) => s.id === response.surveyId);
     if (!survey) continue;
     audienceCounts.set(survey.audience, (audienceCounts.get(survey.audience) ?? 0) + 1);
   }

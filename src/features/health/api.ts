@@ -1,4 +1,13 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { createStaff, listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
@@ -47,15 +56,15 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
 
-let checkups = loadJson<HealthCheckup[]>(CHECKUPS_KEY, []);
-let vaccinations = loadJson<VaccinationRecord[]>(VACCINATIONS_KEY, []);
-let visits = loadJson<InfirmaryVisit[]>(VISITS_KEY, []);
+let checkups = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<HealthCheckup[]>(CHECKUPS_KEY, [])));
+let vaccinations = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<VaccinationRecord[]>(VACCINATIONS_KEY, [])));
+let visits = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<InfirmaryVisit[]>(VISITS_KEY, [])));
 
 function persistCheckups() {
   saveJson(CHECKUPS_KEY, checkups);
@@ -85,11 +94,12 @@ async function performSeed(): Promise<void> {
   const nurseStaffId = staffIdByEmail.get(EXTRA_NURSE_SEEDS[0].email.toLowerCase());
 
   if (checkups.length === 0 && vaccinations.length === 0 && visits.length === 0) {
+    const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
     const students = await listStudents();
     const seeded = buildSeedHealthData(students, nurseStaffId);
-    checkups = seeded.checkups;
-    vaccinations = seeded.vaccinations;
-    visits = seeded.visits;
+    checkups = seeded.checkups.map((c) => ({ ...c, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    vaccinations = seeded.vaccinations.map((v) => ({ ...v, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    visits = seeded.visits.map((v) => ({ ...v, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
     persistCheckups();
     persistVaccinations();
     persistVisits();
@@ -115,7 +125,7 @@ async function joinContext(): Promise<{ studentById: Map<string, Student>; staff
 export async function listHealthCheckups(studentId?: string): Promise<HealthCheckupRow[]> {
   await seedPromise;
   const { studentById, staffById } = await joinContext();
-  const rows = checkups
+  const rows = scopedToCurrentTenantAndBranch(checkups)
     .filter((c) => !studentId || c.studentId === studentId)
     .map((c): HealthCheckupRow | null => {
       const student = studentById.get(c.studentId);
@@ -136,7 +146,7 @@ export async function listHealthCheckups(studentId?: string): Promise<HealthChec
 
 export async function createHealthCheckup(values: HealthCheckupFormValues): Promise<HealthCheckup> {
   await seedPromise;
-  const checkup: HealthCheckup = { id: genId("checkup"), ...values };
+  const checkup: HealthCheckup = { id: genId("checkup"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   checkups = [checkup, ...checkups];
   persistCheckups();
   return mockDelay(checkup, 400);
@@ -144,8 +154,10 @@ export async function createHealthCheckup(values: HealthCheckupFormValues): Prom
 
 export async function deleteHealthCheckup(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(checkups, id, "Checkup");
-  checkups = checkups.filter((c) => c.id !== id);
+  checkups = checkups.filter((c) => !(c.id === id && c.tenantId === tenantId && c.branchId === branchId));
   persistCheckups();
   return mockDelay(undefined, 300);
 }
@@ -155,7 +167,7 @@ export async function deleteHealthCheckup(id: string): Promise<void> {
 export async function listVaccinations(studentId?: string): Promise<VaccinationRow[]> {
   await seedPromise;
   const { studentById, staffById } = await joinContext();
-  const rows = vaccinations
+  const rows = scopedToCurrentTenantAndBranch(vaccinations)
     .filter((v) => !studentId || v.studentId === studentId)
     .map((v): VaccinationRow | null => {
       const student = studentById.get(v.studentId);
@@ -174,7 +186,7 @@ export async function listVaccinations(studentId?: string): Promise<VaccinationR
 
 export async function createVaccination(values: VaccinationFormValues): Promise<VaccinationRecord> {
   await seedPromise;
-  const record: VaccinationRecord = { id: genId("vax"), ...values };
+  const record: VaccinationRecord = { id: genId("vax"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   vaccinations = [record, ...vaccinations];
   persistVaccinations();
   return mockDelay(record, 400);
@@ -191,8 +203,10 @@ export async function markVaccinationAdministered(id: string, values: MarkVaccin
 
 export async function deleteVaccination(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(vaccinations, id, "Vaccination record");
-  vaccinations = vaccinations.filter((v) => v.id !== id);
+  vaccinations = vaccinations.filter((v) => !(v.id === id && v.tenantId === tenantId && v.branchId === branchId));
   persistVaccinations();
   return mockDelay(undefined, 300);
 }
@@ -202,7 +216,7 @@ export async function deleteVaccination(id: string): Promise<void> {
 export async function listInfirmaryVisits(studentId?: string): Promise<InfirmaryVisitRow[]> {
   await seedPromise;
   const { studentById, staffById } = await joinContext();
-  const rows = visits
+  const rows = scopedToCurrentTenantAndBranch(visits)
     .filter((v) => !studentId || v.studentId === studentId)
     .map((v): InfirmaryVisitRow | null => {
       const student = studentById.get(v.studentId);
@@ -216,7 +230,7 @@ export async function listInfirmaryVisits(studentId?: string): Promise<Infirmary
 
 export async function createInfirmaryVisit(values: InfirmaryVisitFormValues): Promise<InfirmaryVisit> {
   await seedPromise;
-  const visit: InfirmaryVisit = { id: genId("visit"), ...values };
+  const visit: InfirmaryVisit = { id: genId("visit"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   visits = [visit, ...visits];
   persistVisits();
   return mockDelay(visit, 400);
@@ -224,8 +238,10 @@ export async function createInfirmaryVisit(values: InfirmaryVisitFormValues): Pr
 
 export async function deleteInfirmaryVisit(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(visits, id, "Infirmary visit");
-  visits = visits.filter((v) => v.id !== id);
+  visits = visits.filter((v) => !(v.id === id && v.tenantId === tenantId && v.branchId === branchId));
   persistVisits();
   return mockDelay(undefined, 300);
 }
@@ -235,17 +251,20 @@ export async function deleteInfirmaryVisit(id: string): Promise<void> {
 export async function listHealthRecords(): Promise<HealthRecordRow[]> {
   await seedPromise;
   const students = await listStudents();
+  const scopedCheckups = scopedToCurrentTenantAndBranch(checkups);
+  const scopedVaccinations = scopedToCurrentTenantAndBranch(vaccinations);
+  const scopedVisits = scopedToCurrentTenantAndBranch(visits);
   const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
 
   const rows: HealthRecordRow[] = students
     .filter((s) => s.status === "active")
     .map((student) => {
-      const studentCheckups = checkups.filter((c) => c.studentId === student.id);
+      const studentCheckups = scopedCheckups.filter((c) => c.studentId === student.id);
       const lastCheckupDate = studentCheckups
         .map((c) => c.checkupDate)
         .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
-      const overdueVaccinations = vaccinations.filter((v) => v.studentId === student.id && vaccinationStatus(v) === "overdue").length;
-      const visitCountThisYear = visits.filter((v) => v.studentId === student.id && new Date(v.visitedAt).getTime() >= yearStart).length;
+      const overdueVaccinations = scopedVaccinations.filter((v) => v.studentId === student.id && vaccinationStatus(v) === "overdue").length;
+      const visitCountThisYear = scopedVisits.filter((v) => v.studentId === student.id && new Date(v.visitedAt).getTime() >= yearStart).length;
       return { student, lastCheckupDate, overdueVaccinations, visitCountThisYear };
     });
 
@@ -266,11 +285,12 @@ export async function getHealthReportsSummary(): Promise<HealthReportsSummary> {
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 8);
 
+  const scopedVisits = scopedToCurrentTenantAndBranch(visits);
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const visitsLast30Days = visits.filter((v) => new Date(v.visitedAt).getTime() >= thirtyDaysAgo).length;
+  const visitsLast30Days = scopedVisits.filter((v) => new Date(v.visitedAt).getTime() >= thirtyDaysAgo).length;
 
   const outcomeCounts = new Map<string, number>();
-  for (const v of visits) outcomeCounts.set(v.outcome, (outcomeCounts.get(v.outcome) ?? 0) + 1);
+  for (const v of scopedVisits) outcomeCounts.set(v.outcome, (outcomeCounts.get(v.outcome) ?? 0) + 1);
   const visitsByOutcome = Array.from(outcomeCounts.entries()).map(([outcome, count]) => ({ outcome: outcome as InfirmaryVisit["outcome"], count }));
 
   const bmiCounts = new Map<string, number>();

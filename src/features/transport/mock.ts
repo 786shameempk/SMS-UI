@@ -1,9 +1,11 @@
+import { DEFAULT_TENANT_ID, defaultBranchIdForTenant } from "@/utils/tenant";
 import type { StaffFormValues } from "@/features/staff/types";
 import type { Bus, RouteStatus } from "./types";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const yearsAgo = (n: number) => new Date(Date.now() - n * DAY_MS * 365).toISOString();
 const yearsFromNow = (n: number) => new Date(Date.now() + n * DAY_MS * 365).toISOString();
+const DEFAULT_BRANCH_ID = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
 /**
  * The generic staff seed only ships one "Driver" designated record (Suresh Patil / stf-6).
@@ -11,7 +13,7 @@ const yearsFromNow = (n: number) => new Date(Date.now() + n * DAY_MS * 365).toIS
  * api.ts) rather than by editing staff/mock.ts, so the staff module stays untouched — same
  * convention the teachers module uses for EXTRA_TEACHER_SEEDS.
  */
-export const EXTRA_DRIVER_SEEDS: StaffFormValues[] = [
+const EXTRA_DRIVER_SEED_BASE: Omit<StaffFormValues, "branchId">[] = [
   {
     firstName: "Manoj",
     lastName: "Kumar",
@@ -58,6 +60,8 @@ export const EXTRA_DRIVER_SEEDS: StaffFormValues[] = [
   },
 ];
 
+export const EXTRA_DRIVER_SEEDS: StaffFormValues[] = EXTRA_DRIVER_SEED_BASE.map((s) => ({ ...s, branchId: DEFAULT_BRANCH_ID }));
+
 interface DriverLicenseSeed {
   driverEmail: string;
   licenseNumber: string;
@@ -74,7 +78,7 @@ export const DRIVER_LICENSE_PLAN: DriverLicenseSeed[] = [
   { driverEmail: "basavaraj.h@educore.dev", licenseNumber: "KA-02-2014-0005574", licenseExpiryDate: yearsFromNow(1), experienceYears: 21 },
 ];
 
-export const SEED_BUSES: Bus[] = [
+export const SEED_BUSES: Omit<Bus, "tenantId" | "branchId">[] = [
   { id: "bus-1", regNumber: "KA-05-AB-1234", model: "Tata Starbus 40-seater", capacity: 40, manufactureYear: 2021, gpsDeviceId: "GPS-TRK-1001", status: "active" },
   { id: "bus-2", regNumber: "KA-05-AB-5678", model: "Ashok Leyland 32-seater", capacity: 32, manufactureYear: 2019, gpsDeviceId: "GPS-TRK-1002", status: "active" },
   { id: "bus-3", regNumber: "KA-05-AC-2468", model: "Force Traveller 26-seater", capacity: 26, manufactureYear: 2022, gpsDeviceId: "GPS-TRK-1003", status: "active" },

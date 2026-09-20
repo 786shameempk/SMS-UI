@@ -1,4 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { buildSeedInventory, SEED_CATEGORIES, SEED_VENDORS } from "./mock";
 import type {
   InventoryItem,
@@ -44,37 +54,44 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let categories = loadJson<ItemCategory[]>(CATEGORIES_KEY, []);
-let vendors = loadJson<Vendor[]>(VENDORS_KEY, []);
-let items = loadJson<InventoryItem[]>(ITEMS_KEY, []);
-let transactions = loadJson<StockTransaction[]>(TRANSACTIONS_KEY, []);
+let categories = migrateLegacyRecordsToDefaultTenant(loadJson<ItemCategory[]>(CATEGORIES_KEY, []));
+let vendors = migrateLegacyRecordsToDefaultTenant(loadJson<Vendor[]>(VENDORS_KEY, []));
+let items = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<InventoryItem[]>(ITEMS_KEY, [])));
+let transactions = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<StockTransaction[]>(TRANSACTIONS_KEY, [])));
 
 const persistCategories = () => saveJson(CATEGORIES_KEY, categories);
 const persistVendors = () => saveJson(VENDORS_KEY, vendors);
 const persistItems = () => saveJson(ITEMS_KEY, items);
 const persistTransactions = () => saveJson(TRANSACTIONS_KEY, transactions);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId());
+  if (!found) throw new Error(`${label} not found`);
+  return found;
+}
+
+function requireBranchEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
 
 function performSeed(): void {
   if (loadJson(SEEDED_KEY, false)) return;
+  const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
   if (categories.length === 0) {
-    categories = SEED_CATEGORIES.map((c) => ({ ...c }));
+    categories = SEED_CATEGORIES.map((c) => ({ ...c, tenantId: DEFAULT_TENANT_ID }));
     persistCategories();
   }
   if (vendors.length === 0) {
-    vendors = SEED_VENDORS.map((v) => ({ ...v }));
+    vendors = SEED_VENDORS.map((v) => ({ ...v, tenantId: DEFAULT_TENANT_ID }));
     persistVendors();
   }
   if (items.length === 0 && transactions.length === 0) {
     const seeded = buildSeedInventory();
-    items = seeded.items;
-    transactions = seeded.transactions;
+    items = seeded.items.map((i) => ({ ...i, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    transactions = seeded.transactions.map((t) => ({ ...t, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
     persistItems();
     persistTransactions();
   }
@@ -87,11 +104,11 @@ performSeed();
 // ── Categories ───────────────────────────────────────────────────────────
 
 export async function listCategories(): Promise<ItemCategory[]> {
-  return mockDelay([...categories], 300);
+  return mockDelay(scopedToCurrentTenant(categories), 300);
 }
 
 export async function createCategory(values: ItemCategoryFormValues): Promise<ItemCategory> {
-  const category: ItemCategory = { id: genId("cat"), ...values };
+  const category: ItemCategory = { id: genId("cat"), tenantId: getCurrentTenantId(), ...values };
   categories = [...categories, category];
   persistCategories();
   return mockDelay(category, 350);
@@ -105,12 +122,13 @@ export async function updateCategory(id: string, values: ItemCategoryFormValues)
 }
 
 export async function deleteCategory(id: string): Promise<void> {
+  const tenantId = getCurrentTenantId();
   requireEntity(categories, id, "Category");
-  if (items.some((i) => i.categoryId === id)) {
+  if (items.some((i) => i.tenantId === tenantId && i.categoryId === id)) {
     await mockDelay(null, 300);
     throw new Error("This category has items assigned to it and can't be deleted");
   }
-  categories = categories.filter((c) => c.id !== id);
+  categories = categories.filter((c) => !(c.id === id && c.tenantId === tenantId));
   persistCategories();
   return mockDelay(undefined, 350);
 }
@@ -118,11 +136,11 @@ export async function deleteCategory(id: string): Promise<void> {
 // ── Vendors ──────────────────────────────────────────────────────────────
 
 export async function listVendors(): Promise<Vendor[]> {
-  return mockDelay([...vendors], 300);
+  return mockDelay(scopedToCurrentTenant(vendors), 300);
 }
 
 export async function createVendor(values: VendorFormValues): Promise<Vendor> {
-  const vendor: Vendor = { id: genId("ven"), ...values };
+  const vendor: Vendor = { id: genId("ven"), tenantId: getCurrentTenantId(), ...values };
   vendors = [...vendors, vendor];
   persistVendors();
   return mockDelay(vendor, 350);
@@ -136,12 +154,13 @@ export async function updateVendor(id: string, values: VendorFormValues): Promis
 }
 
 export async function deleteVendor(id: string): Promise<void> {
+  const tenantId = getCurrentTenantId();
   requireEntity(vendors, id, "Vendor");
-  if (transactions.some((t) => t.vendorId === id)) {
+  if (transactions.some((t) => t.tenantId === tenantId && t.vendorId === id)) {
     await mockDelay(null, 300);
     throw new Error("This vendor has purchase history and can't be deleted");
   }
-  vendors = vendors.filter((v) => v.id !== id);
+  vendors = vendors.filter((v) => !(v.id === id && v.tenantId === tenantId));
   persistVendors();
   return mockDelay(undefined, 350);
 }
@@ -149,38 +168,56 @@ export async function deleteVendor(id: string): Promise<void> {
 // ── Items ────────────────────────────────────────────────────────────────
 
 export async function listItems(): Promise<InventoryItem[]> {
-  return mockDelay([...items].sort((a, b) => a.code.localeCompare(b.code)), 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(items).sort((a, b) => a.code.localeCompare(b.code)), 350);
 }
 
 export async function createItem(values: InventoryItemFormValues): Promise<InventoryItem> {
-  if (items.some((i) => i.code.trim().toLowerCase() === values.code.trim().toLowerCase())) {
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  if (
+    items.some(
+      (i) => i.tenantId === tenantId && i.branchId === branchId && i.code.trim().toLowerCase() === values.code.trim().toLowerCase(),
+    )
+  ) {
     await mockDelay(null, 300);
     throw new Error("An item with this code already exists");
   }
-  const item: InventoryItem = { id: genId("item"), ...values, quantityInStock: 0 };
+  const item: InventoryItem = { id: genId("item"), tenantId, branchId, ...values, quantityInStock: 0 };
   items = [...items, item];
   persistItems();
   return mockDelay(item, 400);
 }
 
 export async function updateItem(id: string, values: InventoryItemFormValues): Promise<InventoryItem> {
-  requireEntity(items, id, "Item");
-  if (items.some((i) => i.id !== id && i.code.trim().toLowerCase() === values.code.trim().toLowerCase())) {
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  requireBranchEntity(items, id, "Item");
+  if (
+    items.some(
+      (i) =>
+        i.tenantId === tenantId &&
+        i.branchId === branchId &&
+        i.id !== id &&
+        i.code.trim().toLowerCase() === values.code.trim().toLowerCase(),
+    )
+  ) {
     await mockDelay(null, 300);
     throw new Error("An item with this code already exists");
   }
   items = items.map((i) => (i.id === id ? { ...i, ...values } : i));
   persistItems();
-  return mockDelay(requireEntity(items, id, "Item"), 400);
+  return mockDelay(requireBranchEntity(items, id, "Item"), 400);
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  const item = requireEntity(items, id, "Item");
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const item = requireBranchEntity(items, id, "Item");
   if (item.quantityInStock > 0) {
     await mockDelay(null, 300);
     throw new Error("This item still has stock on hand — issue or adjust it to zero before deleting");
   }
-  items = items.filter((i) => i.id !== id);
+  items = items.filter((i) => !(i.id === id && i.tenantId === tenantId && i.branchId === branchId));
   persistItems();
   return mockDelay(undefined, 350);
 }
@@ -190,7 +227,8 @@ export async function deleteItem(id: string): Promise<void> {
 export async function listTransactions(itemId?: string): Promise<StockTransactionRow[]> {
   const vendorById = new Map(vendors.map((v) => [v.id, v] as const));
   const itemById = new Map(items.map((i) => [i.id, i] as const));
-  const filtered = itemId ? transactions.filter((t) => t.itemId === itemId) : transactions;
+  const scopedTransactions = scopedToCurrentTenantAndBranch(transactions);
+  const filtered = itemId ? scopedTransactions.filter((t) => t.itemId === itemId) : scopedTransactions;
   const rows = filtered
     .map((t): StockTransactionRow | null => {
       const item = itemById.get(t.itemId);
@@ -204,13 +242,15 @@ export async function listTransactions(itemId?: string): Promise<StockTransactio
 }
 
 export async function recordPurchase(values: StockInFormValues): Promise<StockTransaction> {
-  const item = requireEntity(items, values.itemId, "Item");
+  const item = requireBranchEntity(items, values.itemId, "Item");
   if (values.quantity <= 0) {
     await mockDelay(null, 300);
     throw new Error("Quantity must be greater than zero");
   }
   const transaction: StockTransaction = {
     id: genId("txn"),
+    tenantId: item.tenantId,
+    branchId: item.branchId,
     itemId: values.itemId,
     type: "purchase",
     quantityDelta: values.quantity,
@@ -228,7 +268,7 @@ export async function recordPurchase(values: StockInFormValues): Promise<StockTr
 }
 
 export async function recordIssue(values: StockOutFormValues): Promise<StockTransaction> {
-  const item = requireEntity(items, values.itemId, "Item");
+  const item = requireBranchEntity(items, values.itemId, "Item");
   if (values.quantity <= 0) {
     await mockDelay(null, 300);
     throw new Error("Quantity must be greater than zero");
@@ -239,6 +279,8 @@ export async function recordIssue(values: StockOutFormValues): Promise<StockTran
   }
   const transaction: StockTransaction = {
     id: genId("txn"),
+    tenantId: item.tenantId,
+    branchId: item.branchId,
     itemId: values.itemId,
     type: "issue",
     quantityDelta: -values.quantity,
@@ -255,7 +297,7 @@ export async function recordIssue(values: StockOutFormValues): Promise<StockTran
 }
 
 export async function recordAdjustment(values: StockAdjustmentFormValues): Promise<StockTransaction> {
-  const item = requireEntity(items, values.itemId, "Item");
+  const item = requireBranchEntity(items, values.itemId, "Item");
   if (values.newQuantity < 0) {
     await mockDelay(null, 300);
     throw new Error("Quantity can't be negative");
@@ -267,6 +309,8 @@ export async function recordAdjustment(values: StockAdjustmentFormValues): Promi
   }
   const transaction: StockTransaction = {
     id: genId("txn"),
+    tenantId: item.tenantId,
+    branchId: item.branchId,
     itemId: values.itemId,
     type: "adjustment",
     quantityDelta: delta,
@@ -284,7 +328,7 @@ export async function recordAdjustment(values: StockAdjustmentFormValues): Promi
 // ── Reports ──────────────────────────────────────────────────────────────
 
 export async function getLowStockItems(): Promise<LowStockItem[]> {
-  const rows = items
+  const rows = scopedToCurrentTenantAndBranch(items)
     .filter((i) => i.quantityInStock <= i.reorderLevel)
     .map((i) => ({ ...i, shortBy: Math.max(0, i.reorderLevel - i.quantityInStock) }))
     .sort((a, b) => b.shortBy - a.shortBy);
@@ -294,8 +338,9 @@ export async function getLowStockItems(): Promise<LowStockItem[]> {
 export async function getInventoryValuation(): Promise<InventoryValuation> {
   const categoryById = new Map(categories.map((c) => [c.id, c] as const));
   const byCategory = new Map<string, { itemCount: number; totalQuantity: number; totalValue: number }>();
+  const scopedItems = scopedToCurrentTenantAndBranch(items);
 
-  for (const item of items) {
+  for (const item of scopedItems) {
     const bucket = byCategory.get(item.categoryId) ?? { itemCount: 0, totalQuantity: 0, totalValue: 0 };
     bucket.itemCount += 1;
     bucket.totalQuantity += item.quantityInStock;
@@ -308,7 +353,7 @@ export async function getInventoryValuation(): Promise<InventoryValuation> {
     .sort((a, b) => b.totalValue - a.totalValue);
 
   return mockDelay(
-    { rows, totalValue: rows.reduce((sum, r) => sum + r.totalValue, 0), totalItems: items.length },
+    { rows, totalValue: rows.reduce((sum, r) => sum + r.totalValue, 0), totalItems: scopedItems.length },
     400,
   );
 }

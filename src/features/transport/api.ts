@@ -1,4 +1,13 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { createStaff, listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
@@ -51,18 +60,18 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
 
-let buses = loadJson<Bus[]>(BUSES_KEY, []);
-let driverProfiles = loadJson<DriverProfile[]>(DRIVER_PROFILES_KEY, []);
-let routes = loadJson<TransportRoute[]>(ROUTES_KEY, []);
-let stops = loadJson<RouteStop[]>(STOPS_KEY, []);
-let assignments = loadJson<StudentTransportAssignment[]>(ASSIGNMENTS_KEY, []);
-let liveStatuses = loadJson<BusLiveStatus[]>(LIVE_STATUS_KEY, []);
+let buses = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Bus[]>(BUSES_KEY, [])));
+let driverProfiles = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<DriverProfile[]>(DRIVER_PROFILES_KEY, [])));
+let routes = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<TransportRoute[]>(ROUTES_KEY, [])));
+let stops = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<RouteStop[]>(STOPS_KEY, [])));
+let assignments = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<StudentTransportAssignment[]>(ASSIGNMENTS_KEY, [])));
+let liveStatuses = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<BusLiveStatus[]>(LIVE_STATUS_KEY, [])));
 
 const persistBuses = () => saveJson(BUSES_KEY, buses);
 const persistDriverProfiles = () => saveJson(DRIVER_PROFILES_KEY, driverProfiles);
@@ -78,6 +87,7 @@ const persistLiveStatuses = () => saveJson(LIVE_STATUS_KEY, liveStatuses);
  */
 async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
+  const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
   const existingStaff = await listStaff();
   const staffIdByEmail = new Map(existingStaff.map((s) => [s.email.toLowerCase(), s.id] as const));
@@ -93,6 +103,8 @@ async function performSeed(): Promise<void> {
       if (!staffId) continue;
       newProfiles.push({
         id: genId("drv"),
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchId,
         staffId,
         licenseNumber: plan.licenseNumber,
         licenseExpiryDate: plan.licenseExpiryDate,
@@ -112,7 +124,7 @@ async function performSeed(): Promise<void> {
   );
 
   if (buses.length === 0) {
-    buses = SEED_BUSES.map((b) => ({ ...b }));
+    buses = SEED_BUSES.map((b) => ({ ...b, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
     persistBuses();
   }
 
@@ -122,6 +134,8 @@ async function performSeed(): Promise<void> {
     for (const plan of ROUTE_PLAN) {
       newRoutes.push({
         id: plan.id,
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchId,
         name: plan.name,
         busId: plan.busId,
         driverId: driverProfileIdByEmail.get(plan.driverEmail.toLowerCase()),
@@ -132,6 +146,8 @@ async function performSeed(): Promise<void> {
       plan.stops.forEach((stop, index) => {
         newStops.push({
           id: genId("stop"),
+          tenantId: DEFAULT_TENANT_ID,
+          branchId: defaultBranchId,
           routeId: plan.id,
           name: stop.name,
           sequence: index + 1,
@@ -161,6 +177,8 @@ async function performSeed(): Promise<void> {
       if (!student || !route || !stop) continue;
       newAssignments.push({
         id: genId("tra"),
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchId,
         studentId: student.id,
         routeId: route.id,
         stopId: stop.id,
@@ -203,16 +221,22 @@ function toAssignmentRow(
 
 export async function listBuses(): Promise<Bus[]> {
   await seedPromise;
-  return mockDelay([...buses], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(buses), 300);
 }
 
 export async function createBus(values: BusFormValues): Promise<Bus> {
   await seedPromise;
-  if (buses.some((b) => b.regNumber.toLowerCase() === values.regNumber.trim().toLowerCase())) {
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  if (
+    buses.some(
+      (b) => b.tenantId === tenantId && b.branchId === branchId && b.regNumber.toLowerCase() === values.regNumber.trim().toLowerCase(),
+    )
+  ) {
     await mockDelay(null, 300);
     throw new Error("A bus with this registration number already exists");
   }
-  const bus: Bus = { id: genId("bus"), ...values, regNumber: values.regNumber.trim() };
+  const bus: Bus = { id: genId("bus"), tenantId, branchId, ...values, regNumber: values.regNumber.trim() };
   buses = [bus, ...buses];
   persistBuses();
   return mockDelay(bus, 350);
@@ -229,13 +253,15 @@ export async function updateBus(id: string, values: BusFormValues): Promise<Bus>
 
 export async function deleteBus(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(buses, id, "Bus");
-  if (routes.some((r) => r.busId === id)) {
+  if (routes.some((r) => r.tenantId === tenantId && r.branchId === branchId && r.busId === id)) {
     await mockDelay(null, 300);
     throw new Error("Unassign this bus from its route before deleting it");
   }
-  buses = buses.filter((b) => b.id !== id);
-  liveStatuses = liveStatuses.filter((l) => l.busId !== id);
+  buses = buses.filter((b) => !(b.id === id && b.tenantId === tenantId && b.branchId === branchId));
+  liveStatuses = liveStatuses.filter((l) => !(l.tenantId === tenantId && l.branchId === branchId && l.busId === id));
   persistBuses();
   persistLiveStatuses();
   return mockDelay(undefined, 300);
@@ -247,7 +273,7 @@ export async function listDrivers(): Promise<Driver[]> {
   await seedPromise;
   const staff = await listStaff();
   const staffById = new Map(staff.map((s) => [s.id, s] as const));
-  const result = driverProfiles.map((p) => toDriver(p, staffById)).filter((d): d is Driver => d !== null);
+  const result = scopedToCurrentTenantAndBranch(driverProfiles).map((p) => toDriver(p, staffById)).filter((d): d is Driver => d !== null);
   return mockDelay(result, 350);
 }
 
@@ -255,14 +281,15 @@ export async function listDrivers(): Promise<Driver[]> {
 export async function listEligibleDriverStaff(): Promise<StaffMember[]> {
   await seedPromise;
   const staff = await listStaff();
-  const profiledStaffIds = new Set(driverProfiles.map((p) => p.staffId));
+  const profiledStaffIds = new Set(scopedToCurrentTenantAndBranch(driverProfiles).map((p) => p.staffId));
   const result = staff.filter((s) => s.designation === "Driver" && !profiledStaffIds.has(s.id));
   return mockDelay(result, 300);
 }
 
 export async function createDriver(values: DriverFormValues): Promise<Driver> {
   await seedPromise;
-  if (driverProfiles.some((p) => p.staffId === values.staffId)) {
+  const tenantId = getCurrentTenantId();
+  if (driverProfiles.some((p) => p.tenantId === tenantId && p.staffId === values.staffId)) {
     await mockDelay(null, 300);
     throw new Error("This staff member already has a driver profile");
   }
@@ -272,7 +299,7 @@ export async function createDriver(values: DriverFormValues): Promise<Driver> {
     await mockDelay(null, 300);
     throw new Error("Staff member not found");
   }
-  const profile: DriverProfile = { id: genId("drv"), ...values };
+  const profile: DriverProfile = { id: genId("drv"), tenantId, branchId: staffMember.branchId, ...values };
   driverProfiles = [profile, ...driverProfiles];
   persistDriverProfiles();
   return mockDelay({ ...profile, staff: staffMember }, 400);
@@ -295,12 +322,13 @@ export async function updateDriver(id: string, values: DriverFormValues): Promis
 
 export async function deleteDriver(id: string): Promise<void> {
   await seedPromise;
-  requireEntity(driverProfiles, id, "Driver");
-  if (routes.some((r) => r.driverId === id)) {
+  const tenantId = getCurrentTenantId();
+  const existing = requireEntity(driverProfiles, id, "Driver");
+  if (routes.some((r) => r.tenantId === tenantId && r.branchId === existing.branchId && r.driverId === id)) {
     await mockDelay(null, 300);
     throw new Error("Unassign this driver from their route before deleting the profile");
   }
-  driverProfiles = driverProfiles.filter((p) => p.id !== id);
+  driverProfiles = driverProfiles.filter((p) => !(p.id === id && p.tenantId === tenantId));
   persistDriverProfiles();
   return mockDelay(undefined, 300);
 }
@@ -309,12 +337,12 @@ export async function deleteDriver(id: string): Promise<void> {
 
 export async function listRoutes(): Promise<TransportRoute[]> {
   await seedPromise;
-  return mockDelay([...routes], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(routes), 300);
 }
 
 export async function createRoute(values: TransportRouteFormValues): Promise<TransportRoute> {
   await seedPromise;
-  const route: TransportRoute = { id: genId("rt"), ...values };
+  const route: TransportRoute = { id: genId("rt"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   routes = [route, ...routes];
   persistRoutes();
   return mockDelay(route, 350);
@@ -322,12 +350,14 @@ export async function createRoute(values: TransportRouteFormValues): Promise<Tra
 
 export async function updateRoute(id: string, values: TransportRouteFormValues): Promise<TransportRoute> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(routes, id, "Route");
   const updated: TransportRoute = { ...requireEntity(routes, id, "Route"), ...values };
   routes = routes.map((r) => (r.id === id ? updated : r));
   persistRoutes();
   if (updated.status === "inactive") {
-    liveStatuses = liveStatuses.filter((l) => l.routeId !== id);
+    liveStatuses = liveStatuses.filter((l) => !(l.tenantId === tenantId && l.branchId === branchId && l.routeId === id));
     persistLiveStatuses();
   }
   return mockDelay(updated, 350);
@@ -335,14 +365,16 @@ export async function updateRoute(id: string, values: TransportRouteFormValues):
 
 export async function deleteRoute(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(routes, id, "Route");
-  if (assignments.some((a) => a.routeId === id && a.status === "active")) {
+  if (assignments.some((a) => a.tenantId === tenantId && a.branchId === branchId && a.routeId === id && a.status === "active")) {
     await mockDelay(null, 300);
     throw new Error("Reassign or remove students on this route before deleting it");
   }
-  routes = routes.filter((r) => r.id !== id);
-  stops = stops.filter((s) => s.routeId !== id);
-  liveStatuses = liveStatuses.filter((l) => l.routeId !== id);
+  routes = routes.filter((r) => !(r.id === id && r.tenantId === tenantId && r.branchId === branchId));
+  stops = stops.filter((s) => !(s.tenantId === tenantId && s.branchId === branchId && s.routeId === id));
+  liveStatuses = liveStatuses.filter((l) => !(l.tenantId === tenantId && l.branchId === branchId && l.routeId === id));
   persistRoutes();
   persistStops();
   persistLiveStatuses();
@@ -353,15 +385,19 @@ export async function deleteRoute(id: string): Promise<void> {
 
 export async function listStops(routeId?: string): Promise<RouteStop[]> {
   await seedPromise;
-  const result = (routeId ? stops.filter((s) => s.routeId === routeId) : [...stops]).sort((a, b) => a.sequence - b.sequence);
+  const scoped = scopedToCurrentTenantAndBranch(stops);
+  const result = (routeId ? scoped.filter((s) => s.routeId === routeId) : scoped).sort((a, b) => a.sequence - b.sequence);
   return mockDelay(result, 300);
 }
 
 export async function addStop(routeId: string, values: RouteStopFormValues): Promise<RouteStop> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(routes, routeId, "Route");
-  const nextSequence = stops.filter((s) => s.routeId === routeId).reduce((max, s) => Math.max(max, s.sequence), 0) + 1;
-  const stop: RouteStop = { id: genId("stop"), routeId, sequence: nextSequence, ...values };
+  const nextSequence =
+    stops.filter((s) => s.tenantId === tenantId && s.branchId === branchId && s.routeId === routeId).reduce((max, s) => Math.max(max, s.sequence), 0) + 1;
+  const stop: RouteStop = { id: genId("stop"), tenantId, branchId, routeId, sequence: nextSequence, ...values };
   stops = [...stops, stop];
   persistStops();
   return mockDelay(stop, 350);
@@ -378,12 +414,14 @@ export async function updateStop(id: string, values: RouteStopFormValues): Promi
 
 export async function deleteStop(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(stops, id, "Stop");
-  if (assignments.some((a) => a.stopId === id && a.status === "active")) {
+  if (assignments.some((a) => a.tenantId === tenantId && a.branchId === branchId && a.stopId === id && a.status === "active")) {
     await mockDelay(null, 300);
     throw new Error("Reassign students at this stop before deleting it");
   }
-  stops = stops.filter((s) => s.id !== id);
+  stops = stops.filter((s) => !(s.id === id && s.tenantId === tenantId && s.branchId === branchId));
   persistStops();
   return mockDelay(undefined, 300);
 }
@@ -391,7 +429,9 @@ export async function deleteStop(id: string): Promise<void> {
 export async function moveStop(id: string, direction: "up" | "down"): Promise<RouteStop[]> {
   await seedPromise;
   const stop = requireEntity(stops, id, "Stop");
-  const siblings = stops.filter((s) => s.routeId === stop.routeId).sort((a, b) => a.sequence - b.sequence);
+  const siblings = stops
+    .filter((s) => s.tenantId === stop.tenantId && s.branchId === stop.branchId && s.routeId === stop.routeId)
+    .sort((a, b) => a.sequence - b.sequence);
   const index = siblings.findIndex((s) => s.id === id);
   const swapIndex = direction === "up" ? index - 1 : index + 1;
   if (swapIndex < 0 || swapIndex >= siblings.length) {
@@ -408,7 +448,10 @@ export async function moveStop(id: string, direction: "up" | "down"): Promise<Ro
     return s;
   });
   persistStops();
-  return mockDelay(stops.filter((s) => s.routeId === stop.routeId).sort((a, b) => a.sequence - b.sequence), 250);
+  return mockDelay(
+    stops.filter((s) => s.tenantId === stop.tenantId && s.branchId === stop.branchId && s.routeId === stop.routeId).sort((a, b) => a.sequence - b.sequence),
+    250,
+  );
 }
 
 // ── Student assignments ─────────────────────────────────────────────────
@@ -419,7 +462,7 @@ export async function listAssignments(): Promise<StudentTransportAssignmentRow[]
   const studentById = new Map(students.map((s) => [s.id, s] as const));
   const routeById = new Map(routes.map((r) => [r.id, r] as const));
   const stopById = new Map(stops.map((s) => [s.id, s] as const));
-  const rows = assignments
+  const rows = scopedToCurrentTenantAndBranch(assignments)
     .map((a) => toAssignmentRow(a, studentById, routeById, stopById))
     .filter((r): r is StudentTransportAssignmentRow => r !== null);
   return mockDelay(rows, 350);
@@ -427,17 +470,21 @@ export async function listAssignments(): Promise<StudentTransportAssignmentRow[]
 
 export async function createAssignment(values: StudentTransportAssignmentFormValues): Promise<StudentTransportAssignment> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const stop = requireEntity(stops, values.stopId, "Stop");
   if (stop.routeId !== values.routeId) {
     await mockDelay(null, 300);
     throw new Error("The selected stop does not belong to the selected route");
   }
-  if (assignments.some((a) => a.studentId === values.studentId && a.status === "active")) {
+  if (assignments.some((a) => a.tenantId === tenantId && a.branchId === branchId && a.studentId === values.studentId && a.status === "active")) {
     await mockDelay(null, 300);
     throw new Error("This student already has an active transport assignment");
   }
   const assignment: StudentTransportAssignment = {
     id: genId("tra"),
+    tenantId,
+    branchId,
     ...values,
     assignedOn: new Date().toISOString(),
     status: "active",
@@ -464,7 +511,17 @@ export async function updateAssignment(id: string, values: StudentTransportAssig
 export async function setAssignmentStatus(id: string, status: "active" | "inactive"): Promise<StudentTransportAssignment> {
   await seedPromise;
   const existing = requireEntity(assignments, id, "Assignment");
-  if (status === "active" && assignments.some((a) => a.studentId === existing.studentId && a.status === "active" && a.id !== id)) {
+  if (
+    status === "active" &&
+    assignments.some(
+      (a) =>
+        a.tenantId === existing.tenantId &&
+        a.branchId === existing.branchId &&
+        a.studentId === existing.studentId &&
+        a.status === "active" &&
+        a.id !== id,
+    )
+  ) {
     await mockDelay(null, 300);
     throw new Error("This student already has another active transport assignment");
   }
@@ -476,8 +533,10 @@ export async function setAssignmentStatus(id: string, status: "active" | "inacti
 
 export async function deleteAssignment(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(assignments, id, "Assignment");
-  assignments = assignments.filter((a) => a.id !== id);
+  assignments = assignments.filter((a) => !(a.id === id && a.tenantId === tenantId && a.branchId === branchId));
   persistAssignments();
   return mockDelay(undefined, 300);
 }
@@ -486,19 +545,30 @@ export async function deleteAssignment(id: string): Promise<void> {
 
 export async function listLiveStatuses(): Promise<BusLiveStatusRow[]> {
   await seedPromise;
-  const trackableRoutes = routes.filter((r) => r.status === "active" && r.busId);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const trackableRoutes = routes.filter((r) => r.tenantId === tenantId && r.branchId === branchId && r.status === "active" && r.busId);
   const busById = new Map(buses.map((b) => [b.id, b] as const));
 
   let changed = false;
   for (const route of trackableRoutes) {
-    if (!liveStatuses.some((l) => l.busId === route.busId)) {
-      liveStatuses.push({ busId: route.busId!, routeId: route.id, status: "idle", currentStopIndex: -1, speedKmph: 0, lastUpdated: new Date().toISOString() });
+    if (!liveStatuses.some((l) => l.tenantId === tenantId && l.branchId === branchId && l.busId === route.busId)) {
+      liveStatuses.push({
+        tenantId,
+        branchId,
+        busId: route.busId!,
+        routeId: route.id,
+        status: "idle",
+        currentStopIndex: -1,
+        speedKmph: 0,
+        lastUpdated: new Date().toISOString(),
+      });
       changed = true;
     }
   }
   if (changed) persistLiveStatuses();
 
-  const rows: BusLiveStatusRow[] = liveStatuses
+  const rows: BusLiveStatusRow[] = scopedToCurrentTenantAndBranch(liveStatuses)
     .map((status) => {
       const route = routes.find((r) => r.id === status.routeId);
       const bus = busById.get(status.busId);
@@ -513,7 +583,9 @@ export async function listLiveStatuses(): Promise<BusLiveStatusRow[]> {
 
 export async function simulateGpsPing(busId: string): Promise<BusLiveStatus> {
   await seedPromise;
-  const current = liveStatuses.find((l) => l.busId === busId);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const current = liveStatuses.find((l) => l.tenantId === tenantId && l.branchId === branchId && l.busId === busId);
   if (!current) {
     await mockDelay(null, 300);
     throw new Error("This bus is not currently on a trackable route");
@@ -544,7 +616,9 @@ export async function simulateGpsPing(busId: string): Promise<BusLiveStatus> {
 
 export async function resetLiveStatus(busId: string): Promise<BusLiveStatus> {
   await seedPromise;
-  const current = liveStatuses.find((l) => l.busId === busId);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const current = liveStatuses.find((l) => l.tenantId === tenantId && l.branchId === branchId && l.busId === busId);
   if (!current) {
     await mockDelay(null, 300);
     throw new Error("This bus is not currently on a trackable route");

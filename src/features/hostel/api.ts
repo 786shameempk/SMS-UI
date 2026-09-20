@@ -1,4 +1,13 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { createStaff, listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
@@ -56,19 +65,19 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
 
-let hostels = loadJson<Hostel[]>(HOSTELS_KEY, []);
-let rooms = loadJson<Room[]>(ROOMS_KEY, []);
-let allocations = loadJson<HostelAllocation[]>(ALLOCATIONS_KEY, []);
-let visitorLogs = loadJson<VisitorLog[]>(VISITORS_KEY, []);
-let attendanceRecords = loadJson<HostelAttendanceRecord[]>(ATTENDANCE_KEY, []);
-let feePayments = loadJson<HostelFeePayment[]>(FEE_PAYMENTS_KEY, []);
-let messMenu = loadJson<MessMenuEntry[]>(MESS_MENU_KEY, []);
+let hostels = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Hostel[]>(HOSTELS_KEY, [])));
+let rooms = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<Room[]>(ROOMS_KEY, [])));
+let allocations = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<HostelAllocation[]>(ALLOCATIONS_KEY, [])));
+let visitorLogs = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<VisitorLog[]>(VISITORS_KEY, [])));
+let attendanceRecords = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<HostelAttendanceRecord[]>(ATTENDANCE_KEY, [])));
+let feePayments = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<HostelFeePayment[]>(FEE_PAYMENTS_KEY, [])));
+let messMenu = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<MessMenuEntry[]>(MESS_MENU_KEY, [])));
 
 const persistHostels = () => saveJson(HOSTELS_KEY, hostels);
 const persistRooms = () => saveJson(ROOMS_KEY, rooms);
@@ -87,6 +96,7 @@ const ROOM_TYPE_FEE: Record<Room["roomType"], number> = { single: 6000, double: 
  */
 async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
+  const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
 
   const existingStaff = await listStaff();
   const staffIdByEmail = new Map(existingStaff.map((s) => [s.email.toLowerCase(), s.id] as const));
@@ -101,6 +111,8 @@ async function performSeed(): Promise<void> {
     for (const plan of HOSTEL_PLAN) {
       newHostels.push({
         id: plan.id,
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchId,
         name: plan.name,
         type: plan.type,
         wardenStaffId: plan.wardenEmail ? staffIdByEmail.get(plan.wardenEmail.toLowerCase()) : undefined,
@@ -108,10 +120,10 @@ async function performSeed(): Promise<void> {
         status: plan.status,
       });
       for (const room of plan.rooms) {
-        newRooms.push({ id: genId("room"), hostelId: plan.id, ...room });
+        newRooms.push({ id: genId("room"), tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId, hostelId: plan.id, ...room });
       }
       for (const entry of buildDefaultMessMenu(plan.id)) {
-        newMenu.push({ id: genId("menu"), ...entry });
+        newMenu.push({ id: genId("menu"), tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId, ...entry });
       }
     }
     hostels = newHostels;
@@ -139,6 +151,8 @@ async function performSeed(): Promise<void> {
         const allocatedOn = new Date(Date.now() - (60 + (studentIndex % 30)) * 24 * 60 * 60 * 1000).toISOString();
         newAllocations.push({
           id: genId("hall"),
+          tenantId: DEFAULT_TENANT_ID,
+          branchId: defaultBranchId,
           studentId: student.id,
           hostelId: room.hostelId,
           roomId: room.id,
@@ -161,6 +175,8 @@ async function performSeed(): Promise<void> {
       const checkedOut = index % 2 === 0;
       return {
         id: genId("visit"),
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchId,
         hostelId: a.hostelId,
         studentId: a.studentId,
         visitorName: index % 2 === 0 ? "Rajesh Kumar" : "Lakshmi Iyer",
@@ -184,7 +200,7 @@ async function performSeed(): Promise<void> {
       activeAllocations.forEach((a, index) => {
         const roll = (index + dayOffset) % 12;
         const status = roll === 0 ? "absent" : roll === 6 ? "on-leave" : "present";
-        newRecords.push({ id: genId("hatt"), studentId: a.studentId, date, status });
+        newRecords.push({ id: genId("hatt"), tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId, studentId: a.studentId, date, status });
       });
     }
     attendanceRecords = newRecords;
@@ -202,6 +218,8 @@ async function performSeed(): Promise<void> {
     activeAllocations.forEach((a, index) => {
       newPayments.push({
         id: genId("hfee"),
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchId,
         allocationId: a.id,
         month: prevMonth,
         amount: a.monthlyFee!,
@@ -210,6 +228,8 @@ async function performSeed(): Promise<void> {
       });
       newPayments.push({
         id: genId("hfee"),
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchId,
         allocationId: a.id,
         month: currentMonth,
         amount: a.monthlyFee!,
@@ -234,9 +254,11 @@ export async function listHostels(): Promise<HostelRow[]> {
   await seedPromise;
   const staff = await listStaff();
   const staffById = new Map(staff.map((s) => [s.id, s] as const));
-  const rows: HostelRow[] = hostels.map((h) => {
-    const hostelRooms = rooms.filter((r) => r.hostelId === h.id);
-    const hostelAllocations = allocations.filter((a) => a.hostelId === h.id && a.status === "active");
+  const scopedRooms = scopedToCurrentTenantAndBranch(rooms);
+  const scopedAllocations = scopedToCurrentTenantAndBranch(allocations);
+  const rows: HostelRow[] = scopedToCurrentTenantAndBranch(hostels).map((h) => {
+    const hostelRooms = scopedRooms.filter((r) => r.hostelId === h.id);
+    const hostelAllocations = scopedAllocations.filter((a) => a.hostelId === h.id && a.status === "active");
     return {
       ...h,
       warden: h.wardenStaffId ? staffById.get(h.wardenStaffId) : undefined,
@@ -252,16 +274,20 @@ export async function listHostels(): Promise<HostelRow[]> {
 export async function listEligibleWardenStaff(currentHostelId?: string): Promise<StaffMember[]> {
   await seedPromise;
   const staff = await listStaff();
-  const assignedIds = new Set(hostels.filter((h) => h.id !== currentHostelId && h.wardenStaffId).map((h) => h.wardenStaffId));
+  const assignedIds = new Set(
+    scopedToCurrentTenantAndBranch(hostels).filter((h) => h.id !== currentHostelId && h.wardenStaffId).map((h) => h.wardenStaffId),
+  );
   return mockDelay(staff.filter((s) => s.designation === "Warden" && !assignedIds.has(s.id)), 300);
 }
 
 export async function createHostel(values: HostelFormValues): Promise<Hostel> {
   await seedPromise;
-  const hostel: Hostel = { id: genId("hostel"), ...values };
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const hostel: Hostel = { id: genId("hostel"), tenantId, branchId, ...values };
   hostels = [hostel, ...hostels];
   persistHostels();
-  messMenu = [...messMenu, ...buildDefaultMessMenu(hostel.id).map((entry) => ({ id: genId("menu"), ...entry }))];
+  messMenu = [...messMenu, ...buildDefaultMessMenu(hostel.id).map((entry) => ({ id: genId("menu"), tenantId, branchId, ...entry }))];
   persistMessMenu();
   return mockDelay(hostel, 350);
 }
@@ -277,14 +303,16 @@ export async function updateHostel(id: string, values: HostelFormValues): Promis
 
 export async function deleteHostel(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(hostels, id, "Hostel");
-  if (allocations.some((a) => a.hostelId === id && a.status === "active")) {
+  if (allocations.some((a) => a.tenantId === tenantId && a.branchId === branchId && a.hostelId === id && a.status === "active")) {
     await mockDelay(null, 300);
     throw new Error("Vacate every student allocated to this hostel before deleting it");
   }
-  hostels = hostels.filter((h) => h.id !== id);
-  rooms = rooms.filter((r) => r.hostelId !== id);
-  messMenu = messMenu.filter((m) => m.hostelId !== id);
+  hostels = hostels.filter((h) => !(h.id === id && h.tenantId === tenantId && h.branchId === branchId));
+  rooms = rooms.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.hostelId === id));
+  messMenu = messMenu.filter((m) => !(m.tenantId === tenantId && m.branchId === branchId && m.hostelId === id));
   persistHostels();
   persistRooms();
   persistMessMenu();
@@ -294,12 +322,15 @@ export async function deleteHostel(id: string): Promise<void> {
 // ── Rooms ────────────────────────────────────────────────────────────────
 
 function occupiedBedsFor(roomId: string): number {
-  return allocations.filter((a) => a.roomId === roomId && a.status === "active").length;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  return allocations.filter((a) => a.tenantId === tenantId && a.branchId === branchId && a.roomId === roomId && a.status === "active").length;
 }
 
 export async function listRooms(hostelId?: string): Promise<RoomRow[]> {
   await seedPromise;
-  const result = (hostelId ? rooms.filter((r) => r.hostelId === hostelId) : [...rooms]).map((r) => ({
+  const scoped = scopedToCurrentTenantAndBranch(rooms);
+  const result = (hostelId ? scoped.filter((r) => r.hostelId === hostelId) : scoped).map((r) => ({
     ...r,
     occupiedBeds: occupiedBedsFor(r.id),
   }));
@@ -308,12 +339,22 @@ export async function listRooms(hostelId?: string): Promise<RoomRow[]> {
 
 export async function addRoom(hostelId: string, values: RoomFormValues): Promise<Room> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(hostels, hostelId, "Hostel");
-  if (rooms.some((r) => r.hostelId === hostelId && r.roomNumber.toLowerCase() === values.roomNumber.trim().toLowerCase())) {
+  if (
+    rooms.some(
+      (r) =>
+        r.tenantId === tenantId &&
+        r.branchId === branchId &&
+        r.hostelId === hostelId &&
+        r.roomNumber.toLowerCase() === values.roomNumber.trim().toLowerCase(),
+    )
+  ) {
     await mockDelay(null, 300);
     throw new Error("A room with this number already exists in this hostel");
   }
-  const room: Room = { id: genId("room"), hostelId, ...values, roomNumber: values.roomNumber.trim() };
+  const room: Room = { id: genId("room"), tenantId, branchId, hostelId, ...values, roomNumber: values.roomNumber.trim() };
   rooms = [...rooms, room];
   persistRooms();
   return mockDelay(room, 350);
@@ -334,12 +375,14 @@ export async function updateRoom(id: string, values: RoomFormValues): Promise<Ro
 
 export async function deleteRoom(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(rooms, id, "Room");
   if (occupiedBedsFor(id) > 0) {
     await mockDelay(null, 300);
     throw new Error("Vacate every student in this room before deleting it");
   }
-  rooms = rooms.filter((r) => r.id !== id);
+  rooms = rooms.filter((r) => !(r.id === id && r.tenantId === tenantId && r.branchId === branchId));
   persistRooms();
   return mockDelay(undefined, 300);
 }
@@ -365,7 +408,7 @@ export async function listAllocations(): Promise<HostelAllocationRow[]> {
   const studentById = new Map(students.map((s) => [s.id, s] as const));
   const hostelById = new Map(hostels.map((h) => [h.id, h] as const));
   const roomById = new Map(rooms.map((r) => [r.id, r] as const));
-  const rowsResult = allocations
+  const rowsResult = scopedToCurrentTenantAndBranch(allocations)
     .map((a) => toAllocationRow(a, studentById, hostelById, roomById))
     .filter((r): r is HostelAllocationRow => r !== null);
   return mockDelay(rowsResult, 350);
@@ -373,6 +416,8 @@ export async function listAllocations(): Promise<HostelAllocationRow[]> {
 
 export async function allocateStudent(values: AllocateStudentFormValues): Promise<HostelAllocation> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const hostel = requireEntity(hostels, values.hostelId, "Hostel");
   if (hostel.status !== "active") {
     await mockDelay(null, 300);
@@ -387,11 +432,13 @@ export async function allocateStudent(values: AllocateStudentFormValues): Promis
     await mockDelay(null, 300);
     throw new Error("This room is under maintenance");
   }
-  if (allocations.some((a) => a.studentId === values.studentId && a.status === "active")) {
+  if (allocations.some((a) => a.tenantId === tenantId && a.branchId === branchId && a.studentId === values.studentId && a.status === "active")) {
     await mockDelay(null, 300);
     throw new Error("This student already has an active hostel allocation");
   }
-  const occupiedBedNumbers = new Set(allocations.filter((a) => a.roomId === room.id && a.status === "active").map((a) => a.bedNumber));
+  const occupiedBedNumbers = new Set(
+    allocations.filter((a) => a.tenantId === tenantId && a.branchId === branchId && a.roomId === room.id && a.status === "active").map((a) => a.bedNumber),
+  );
   if (occupiedBedNumbers.size >= room.capacity) {
     await mockDelay(null, 300);
     throw new Error("This room has no free beds");
@@ -401,6 +448,8 @@ export async function allocateStudent(values: AllocateStudentFormValues): Promis
 
   const allocation: HostelAllocation = {
     id: genId("hall"),
+    tenantId,
+    branchId,
     studentId: values.studentId,
     hostelId: values.hostelId,
     roomId: values.roomId,
@@ -442,7 +491,7 @@ export async function listVisitorLogs(): Promise<VisitorLogRow[]> {
   const students = await listStudents();
   const studentById = new Map(students.map((s) => [s.id, s] as const));
   const hostelById = new Map(hostels.map((h) => [h.id, h] as const));
-  const rowsResult = visitorLogs
+  const rowsResult = scopedToCurrentTenantAndBranch(visitorLogs)
     .map((v) => {
       const student = studentById.get(v.studentId);
       const hostel = hostelById.get(v.hostelId);
@@ -456,7 +505,14 @@ export async function listVisitorLogs(): Promise<VisitorLogRow[]> {
 export async function checkInVisitor(values: VisitorCheckInFormValues): Promise<VisitorLog> {
   await seedPromise;
   requireEntity(hostels, values.hostelId, "Hostel");
-  const log: VisitorLog = { id: genId("visit"), ...values, checkInAt: new Date().toISOString(), status: "checked-in" };
+  const log: VisitorLog = {
+    id: genId("visit"),
+    tenantId: getCurrentTenantId(),
+    branchId: getCurrentBranchId(),
+    ...values,
+    checkInAt: new Date().toISOString(),
+    status: "checked-in",
+  };
   visitorLogs = [log, ...visitorLogs];
   persistVisitorLogs();
   return mockDelay(log, 400);
@@ -484,13 +540,24 @@ export async function listActiveResidents(): Promise<HostelAllocationRow[]> {
 
 export async function getHostelAttendanceForDate(date: string): Promise<HostelAttendanceRecord[]> {
   await seedPromise;
-  return mockDelay(attendanceRecords.filter((r) => r.date === date), 300);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  return mockDelay(attendanceRecords.filter((r) => r.tenantId === tenantId && r.branchId === branchId && r.date === date), 300);
 }
 
 export async function saveHostelAttendance(date: string, entries: MarkHostelAttendanceEntry[]): Promise<void> {
   await seedPromise;
-  const others = attendanceRecords.filter((r) => r.date !== date);
-  const dayRecords: HostelAttendanceRecord[] = entries.map((e) => ({ id: genId("hatt"), date, studentId: e.studentId, status: e.status }));
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const others = attendanceRecords.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.date === date));
+  const dayRecords: HostelAttendanceRecord[] = entries.map((e) => ({
+    id: genId("hatt"),
+    tenantId,
+    branchId,
+    date,
+    studentId: e.studentId,
+    status: e.status,
+  }));
   attendanceRecords = [...others, ...dayRecords];
   persistAttendance();
   return mockDelay(undefined, 400);
@@ -504,7 +571,7 @@ export async function listFeePayments(): Promise<HostelFeePaymentRow[]> {
   const studentById = new Map(students.map((s) => [s.id, s] as const));
   const hostelById = new Map(hostels.map((h) => [h.id, h] as const));
   const allocationById = new Map(allocations.map((a) => [a.id, a] as const));
-  const rowsResult = feePayments
+  const rowsResult = scopedToCurrentTenantAndBranch(feePayments)
     .map((p) => {
       const allocation = allocationById.get(p.allocationId);
       const student = allocation ? studentById.get(allocation.studentId) : undefined;
@@ -518,11 +585,15 @@ export async function listFeePayments(): Promise<HostelFeePaymentRow[]> {
 
 export async function generateFeePaymentsForMonth(month: string): Promise<number> {
   await seedPromise;
-  const activeAllocations = allocations.filter((a) => a.status === "active" && a.monthlyFee);
-  const existingKeys = new Set(feePayments.filter((p) => p.month === month).map((p) => p.allocationId));
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const activeAllocations = allocations.filter((a) => a.tenantId === tenantId && a.branchId === branchId && a.status === "active" && a.monthlyFee);
+  const existingKeys = new Set(
+    feePayments.filter((p) => p.tenantId === tenantId && p.branchId === branchId && p.month === month).map((p) => p.allocationId),
+  );
   const newPayments: HostelFeePayment[] = activeAllocations
     .filter((a) => !existingKeys.has(a.id))
-    .map((a) => ({ id: genId("hfee"), allocationId: a.id, month, amount: a.monthlyFee!, status: "pending" }));
+    .map((a) => ({ id: genId("hfee"), tenantId, branchId, allocationId: a.id, month, amount: a.monthlyFee!, status: "pending" }));
   if (newPayments.length) {
     feePayments = [...newPayments, ...feePayments];
     persistFeePayments();
@@ -547,7 +618,7 @@ export async function markFeePaymentPaid(id: string): Promise<HostelFeePayment> 
 
 export async function listMessMenu(hostelId: string): Promise<MessMenuEntry[]> {
   await seedPromise;
-  return mockDelay(messMenu.filter((m) => m.hostelId === hostelId), 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(messMenu).filter((m) => m.hostelId === hostelId), 300);
 }
 
 export async function updateMessMenuEntry(id: string, items: string): Promise<MessMenuEntry> {

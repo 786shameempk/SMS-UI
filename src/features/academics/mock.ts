@@ -1,20 +1,20 @@
 import type { AcademicYear, CalendarEvent, Department, SchoolClass, Section, Subject, Term } from "./types";
 
-export const SEED_ACADEMIC_YEARS: AcademicYear[] = [
+export const SEED_ACADEMIC_YEARS: Omit<AcademicYear, "tenantId" | "branchId">[] = [
   { id: "ay-1", name: "2023-2024", startDate: "2023-06-01", endDate: "2024-04-30", isCurrent: false, status: "closed" },
   { id: "ay-2", name: "2024-2025", startDate: "2024-06-01", endDate: "2025-04-30", isCurrent: false, status: "closed" },
   { id: "ay-3", name: "2025-2026", startDate: "2025-06-01", endDate: "2026-04-30", isCurrent: true, status: "active" },
   { id: "ay-4", name: "2026-2027", startDate: "2026-06-01", endDate: "2027-04-30", isCurrent: false, status: "upcoming" },
 ];
 
-export const SEED_TERMS: Term[] = [
+export const SEED_TERMS: Omit<Term, "tenantId" | "branchId">[] = [
   { id: "term-1", name: "Term 1", academicYearId: "ay-3", startDate: "2025-06-01", endDate: "2025-09-15", status: "completed" },
   { id: "term-2", name: "Term 2", academicYearId: "ay-3", startDate: "2025-09-16", endDate: "2026-01-10", status: "ongoing" },
   { id: "term-3", name: "Term 3", academicYearId: "ay-3", startDate: "2026-01-11", endDate: "2026-04-30", status: "upcoming" },
   { id: "term-4", name: "Term 1", academicYearId: "ay-2", startDate: "2024-06-01", endDate: "2024-09-15", status: "completed" },
 ];
 
-export const SEED_DEPARTMENTS: Department[] = [
+export const SEED_DEPARTMENTS: Omit<Department, "tenantId" | "branchId">[] = [
   { id: "dept-1", name: "Primary", description: "Grades 1 through 5" },
   { id: "dept-2", name: "Secondary", description: "Grades 6 through 10" },
   { id: "dept-3", name: "Science", description: "Senior secondary science stream" },
@@ -22,7 +22,7 @@ export const SEED_DEPARTMENTS: Department[] = [
   { id: "dept-5", name: "Arts", description: "Senior secondary arts/humanities stream" },
 ];
 
-export const SEED_CLASSES: SchoolClass[] = [
+export const SEED_CLASSES: Omit<SchoolClass, "tenantId" | "branchId">[] = [
   { id: "class-1", name: "Grade 1", departmentId: "dept-1", academicYearId: "ay-3" },
   { id: "class-2", name: "Grade 2", departmentId: "dept-1", academicYearId: "ay-3" },
   { id: "class-3", name: "Grade 3", departmentId: "dept-1", academicYearId: "ay-3" },
@@ -35,7 +35,7 @@ export const SEED_CLASSES: SchoolClass[] = [
   { id: "class-10", name: "Grade 10", departmentId: "dept-2", academicYearId: "ay-3" },
 ];
 
-export const SEED_SECTIONS: Section[] = [
+export const SEED_SECTIONS: Omit<Section, "tenantId" | "branchId">[] = [
   { id: "sec-1-a", name: "Section A", classId: "class-1", classTeacherName: "Meera Pillai", capacity: 40, currentStrength: 36 },
   { id: "sec-1-b", name: "Section B", classId: "class-1", classTeacherName: "Divya Nair", capacity: 40, currentStrength: 32 },
   { id: "sec-2-a", name: "Section A", classId: "class-2", classTeacherName: "Anjali Rao", capacity: 40, currentStrength: 38 },
@@ -59,7 +59,7 @@ export const SEED_SECTIONS: Section[] = [
   { id: "sec-10-b", name: "Section B", classId: "class-10", classTeacherName: "Geeta Reddy", capacity: 34, currentStrength: 31 },
 ];
 
-export const SEED_SUBJECTS: Subject[] = [
+export const SEED_SUBJECTS: Omit<Subject, "tenantId" | "branchId">[] = [
   {
     id: "subj-1",
     name: "English",
@@ -132,7 +132,7 @@ export const SEED_SUBJECTS: Subject[] = [
   },
 ];
 
-export const SEED_CALENDAR_EVENTS: CalendarEvent[] = [
+export const SEED_CALENDAR_EVENTS: Omit<CalendarEvent, "tenantId" | "branchId">[] = [
   { id: "cal-1", title: "Term 1 begins", type: "term_start", startDate: "2025-06-01", academicYearId: "ay-3" },
   { id: "cal-2", title: "Term 1 ends", type: "term_end", startDate: "2025-09-15", academicYearId: "ay-3" },
   { id: "cal-3", title: "Term 2 begins", type: "term_start", startDate: "2025-09-16", academicYearId: "ay-3" },

@@ -18,7 +18,7 @@ function q(text: string, type: SurveyQuestion["type"], required: boolean, option
   return { id: genId("q"), text, type, options, required };
 }
 
-export function buildSeedSurveyData(students: Student[], staff: StaffMember[]): { surveys: Survey[]; responses: SurveyResponse[] } {
+export function buildSeedSurveyData(students: Student[], staff: StaffMember[]): { surveys: Omit<Survey, "tenantId">[]; responses: Omit<SurveyResponse, "tenantId">[] } {
   const activeStudents = students.filter((s) => s.status === "active");
   const principal = findStaffByDesignation(staff, "Principal") ?? staff[0];
 
@@ -48,7 +48,7 @@ export function buildSeedSurveyData(students: Student[], staff: StaffMember[]): 
     q("Suggestions for the cafeteria", "text", false),
   ];
 
-  const parentSurvey: Survey = {
+  const parentSurvey: Omit<Survey, "tenantId"> = {
     id: genId("survey"),
     title: "Annual Parent Satisfaction Survey",
     description: "Help us understand what's working well and what we can do better for your family.",
@@ -62,7 +62,7 @@ export function buildSeedSurveyData(students: Student[], staff: StaffMember[]): 
     questions: parentSurveyQuestions,
   };
 
-  const staffSurvey: Survey = {
+  const staffSurvey: Omit<Survey, "tenantId"> = {
     id: genId("survey"),
     title: "Teacher Wellness Check-in",
     description: "A confidential check-in on workload and support — your honest feedback helps leadership prioritize.",
@@ -75,7 +75,7 @@ export function buildSeedSurveyData(students: Student[], staff: StaffMember[]): 
     questions: staffSurveyQuestions,
   };
 
-  const studentSurvey: Survey = {
+  const studentSurvey: Omit<Survey, "tenantId"> = {
     id: genId("survey"),
     title: "Student Experience Survey — Grades 9 & 10",
     description: "Tell us about your experience this term so we can make school better for you.",
@@ -89,7 +89,7 @@ export function buildSeedSurveyData(students: Student[], staff: StaffMember[]): 
     questions: studentSurveyQuestions,
   };
 
-  const cafeteriaSurvey: Survey = {
+  const cafeteriaSurvey: Omit<Survey, "tenantId"> = {
     id: genId("survey"),
     title: "New Cafeteria Menu Feedback",
     description: "We just refreshed the menu — let us know what you think before we publish this survey school-wide.",
@@ -108,7 +108,7 @@ export function buildSeedSurveyData(students: Student[], staff: StaffMember[]): 
     return { questionId, value };
   }
 
-  const responses: SurveyResponse[] = [];
+  const responses: Omit<SurveyResponse, "tenantId">[] = [];
 
   const [pq1, pq2, pq3, pq4] = parentSurveyQuestions;
   const parentSeeds: Array<{ name?: string; studentIndex?: number; anonymous?: boolean; rating: string; area: string; recommend: string; comment?: string; daysBack: number }> = [

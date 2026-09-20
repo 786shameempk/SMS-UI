@@ -4,6 +4,15 @@ import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { mockDelay } from "@/utils/mockDelay";
 import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
+import {
   DISCUSSION_SEED_PLAN,
   HOMEWORK_SEED_PLAN,
   QUIZ_ATTEMPT_SEED_PLAN,
@@ -58,12 +67,18 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let homework = loadJson<Homework[]>(HOMEWORK_KEY, []);
-let submissions = loadJson<HomeworkSubmission[]>(SUBMISSIONS_KEY, []);
-let learningResources = loadJson<LearningResource[]>(RESOURCES_KEY, []);
-let quizzes = loadJson<Quiz[]>(QUIZZES_KEY, []);
-let quizAttempts = loadJson<QuizAttempt[]>(QUIZ_ATTEMPTS_KEY, []);
-let discussionComments = loadJson<DiscussionComment[]>(DISCUSSION_KEY, []);
+const migrate = <T extends { tenantId: string; branchId?: string }>(records: T[]) =>
+  migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(records));
+
+let homework = migrate(loadJson<Homework[]>(HOMEWORK_KEY, []));
+let submissions = migrate(loadJson<HomeworkSubmission[]>(SUBMISSIONS_KEY, []));
+let learningResources = migrate(loadJson<LearningResource[]>(RESOURCES_KEY, []));
+let quizzes = migrate(loadJson<Quiz[]>(QUIZZES_KEY, []));
+let quizAttempts = migrate(loadJson<QuizAttempt[]>(QUIZ_ATTEMPTS_KEY, []));
+let discussionComments = migrate(loadJson<DiscussionComment[]>(DISCUSSION_KEY, []));
+// resourceViewsByStudent is keyed by studentId, not tagged with tenantId directly — like
+// RolePermissionMap in administration/roles, it's only ever reached via a studentId that
+// already passed through a tenant-scoped lookup, so an opaque key keeps it safe.
 let resourceViewsByStudent = loadJson<Record<string, string[]>>(RESOURCE_VIEWS_KEY, {});
 
 const persistHomework = () => saveJson(HOMEWORK_KEY, homework);
@@ -74,8 +89,8 @@ const persistQuizAttempts = () => saveJson(QUIZ_ATTEMPTS_KEY, quizAttempts);
 const persistDiscussion = () => saveJson(DISCUSSION_KEY, discussionComments);
 const persistResourceViews = () => saveJson(RESOURCE_VIEWS_KEY, resourceViewsByStudent);
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
@@ -98,6 +113,8 @@ async function performSeed(): Promise<void> {
       if (!staffId) continue;
       seeded.push({
         id: plan.id,
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
         title: plan.title,
         description: plan.description,
         subjectId: plan.subjectId,
@@ -118,6 +135,8 @@ async function performSeed(): Promise<void> {
   if (submissions.length === 0 && SUBMISSION_SEED_PLAN.length) {
     submissions = SUBMISSION_SEED_PLAN.map((plan) => ({
       id: genId("sub"),
+      tenantId: DEFAULT_TENANT_ID,
+      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
       homeworkId: plan.homeworkId,
       studentId: plan.studentId,
       status: plan.status,
@@ -136,6 +155,8 @@ async function performSeed(): Promise<void> {
       if (!staffId) continue;
       seeded.push({
         id: plan.id,
+        tenantId: DEFAULT_TENANT_ID,
+        branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
         subjectId: plan.subjectId,
         classId: plan.classId,
         title: plan.title,
@@ -156,6 +177,8 @@ async function performSeed(): Promise<void> {
   if (quizzes.length === 0 && QUIZ_SEED_PLAN.length) {
     quizzes = QUIZ_SEED_PLAN.map((plan) => ({
       id: plan.id,
+      tenantId: DEFAULT_TENANT_ID,
+      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
       subjectId: plan.subjectId,
       classId: plan.classId,
       title: plan.title,
@@ -167,6 +190,8 @@ async function performSeed(): Promise<void> {
   if (discussionComments.length === 0 && DISCUSSION_SEED_PLAN.length) {
     discussionComments = DISCUSSION_SEED_PLAN.map((plan) => ({
       id: genId("disc"),
+      tenantId: DEFAULT_TENANT_ID,
+      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
       resourceId: plan.resourceId,
       authorName: plan.authorName,
       authorRole: plan.authorRole,
@@ -179,6 +204,8 @@ async function performSeed(): Promise<void> {
   if (quizAttempts.length === 0 && QUIZ_ATTEMPT_SEED_PLAN.length) {
     quizAttempts = QUIZ_ATTEMPT_SEED_PLAN.map((plan) => ({
       id: genId("qa"),
+      tenantId: DEFAULT_TENANT_ID,
+      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
       quizId: plan.quizId,
       studentId: plan.studentId,
       score: plan.score,
@@ -227,9 +254,14 @@ async function ensureSubmissionsForHomework(hw: Homework): Promise<void> {
   const eligible = await eligibleStudentsFor(hw);
   let changed = false;
   for (const student of eligible) {
-    const exists = submissions.some((s) => s.homeworkId === hw.id && s.studentId === student.id);
+    const exists = submissions.some(
+      (s) => s.tenantId === hw.tenantId && s.branchId === hw.branchId && s.homeworkId === hw.id && s.studentId === student.id,
+    );
     if (!exists) {
-      submissions = [...submissions, { id: genId("sub"), homeworkId: hw.id, studentId: student.id, content: "", status: "not_submitted" }];
+      submissions = [
+        ...submissions,
+        { id: genId("sub"), tenantId: hw.tenantId, branchId: hw.branchId, homeworkId: hw.id, studentId: student.id, content: "", status: "not_submitted" },
+      ];
       changed = true;
     }
   }
@@ -240,7 +272,7 @@ async function ensureSubmissionsForHomework(hw: Homework): Promise<void> {
 
 export async function listHomework(): Promise<Homework[]> {
   await seedPromise;
-  return mockDelay([...homework], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(homework), 350);
 }
 
 export async function getHomework(id: string): Promise<Homework> {
@@ -250,7 +282,7 @@ export async function getHomework(id: string): Promise<Homework> {
 
 export async function createHomework(values: HomeworkFormValues): Promise<Homework> {
   await seedPromise;
-  const item: Homework = { id: genId("hw"), ...values };
+  const item: Homework = { id: genId("hw"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
   homework = [item, ...homework];
   persistHomework();
   return mockDelay(item, 400);
@@ -266,9 +298,11 @@ export async function updateHomework(id: string, values: HomeworkFormValues): Pr
 
 export async function deleteHomework(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(homework, id, "Homework");
-  homework = homework.filter((h) => h.id !== id);
-  submissions = submissions.filter((s) => s.homeworkId !== id);
+  homework = homework.filter((h) => !(h.id === id && h.tenantId === tenantId && h.branchId === branchId));
+  submissions = submissions.filter((s) => !(s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === id));
   persistHomework();
   persistSubmissions();
   return mockDelay(undefined, 350);
@@ -278,24 +312,30 @@ export async function deleteHomework(id: string): Promise<void> {
 
 export async function listSubmissionsForHomework(homeworkId: string): Promise<HomeworkSubmission[]> {
   await seedPromise;
-  const hw = homework.find((h) => h.id === homeworkId);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const hw = homework.find((h) => h.id === homeworkId && h.tenantId === tenantId && h.branchId === branchId);
   if (hw) await ensureSubmissionsForHomework(hw);
-  return mockDelay(submissions.filter((s) => s.homeworkId === homeworkId), 350);
+  return mockDelay(submissions.filter((s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === homeworkId), 350);
 }
 
 export async function listAssignedHomework(studentId: string): Promise<AssignedHomeworkRow[]> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const [students, classes] = await Promise.all([listStudents(), listClasses()]);
   const student = students.find((s) => s.id === studentId);
   if (!student) return mockDelay([], 300);
 
   const schoolClass = classes.find((c) => c.name === student.className);
-  const relevant = schoolClass ? homework.filter((h) => h.status === "published" && h.classId === schoolClass.id) : [];
+  const relevant = schoolClass
+    ? homework.filter((h) => h.tenantId === tenantId && h.branchId === branchId && h.status === "published" && h.classId === schoolClass.id)
+    : [];
   for (const hw of relevant) await ensureSubmissionsForHomework(hw);
 
   const rows: AssignedHomeworkRow[] = [];
   for (const hw of relevant) {
-    const submission = submissions.find((s) => s.homeworkId === hw.id && s.studentId === studentId);
+    const submission = submissions.find((s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === hw.id && s.studentId === studentId);
     if (submission) rows.push({ homework: hw, submission });
   }
   return mockDelay(rows, 400);
@@ -303,13 +343,15 @@ export async function listAssignedHomework(studentId: string): Promise<AssignedH
 
 export async function submitHomework(homeworkId: string, studentId: string, content: string): Promise<HomeworkSubmission> {
   await seedPromise;
-  const hw = homework.find((h) => h.id === homeworkId);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const hw = homework.find((h) => h.id === homeworkId && h.tenantId === tenantId && h.branchId === branchId);
   if (!hw) {
     await mockDelay(null, 300);
     throw new Error("Homework not found");
   }
   await ensureSubmissionsForHomework(hw);
-  const existing = submissions.find((s) => s.homeworkId === homeworkId && s.studentId === studentId);
+  const existing = submissions.find((s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === homeworkId && s.studentId === studentId);
   if (!existing) {
     await mockDelay(null, 300);
     throw new Error("Student is not eligible for this homework");
@@ -348,12 +390,18 @@ export async function requestResubmission(submissionId: string, feedback: string
 
 export async function listLearningResources(): Promise<LearningResource[]> {
   await seedPromise;
-  return mockDelay([...learningResources], 350);
+  return mockDelay(scopedToCurrentTenantAndBranch(learningResources), 350);
 }
 
 export async function createLearningResource(values: LearningResourceFormValues): Promise<LearningResource> {
   await seedPromise;
-  const resource: LearningResource = { id: genId("res"), ...values, createdAt: new Date().toISOString() };
+  const resource: LearningResource = {
+    id: genId("res"),
+    tenantId: getCurrentTenantId(),
+    branchId: getCurrentBranchId(),
+    ...values,
+    createdAt: new Date().toISOString(),
+  };
   learningResources = [resource, ...learningResources];
   persistResources();
   return mockDelay(resource, 400);
@@ -369,9 +417,11 @@ export async function updateLearningResource(id: string, values: LearningResourc
 
 export async function deleteLearningResource(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(learningResources, id, "Learning resource");
-  learningResources = learningResources.filter((r) => r.id !== id);
-  discussionComments = discussionComments.filter((c) => c.resourceId !== id);
+  learningResources = learningResources.filter((r) => !(r.id === id && r.tenantId === tenantId && r.branchId === branchId));
+  discussionComments = discussionComments.filter((c) => !(c.tenantId === tenantId && c.branchId === branchId && c.resourceId === id));
   persistResources();
   persistDiscussion();
   return mockDelay(undefined, 350);
@@ -381,7 +431,7 @@ export async function deleteLearningResource(id: string): Promise<void> {
 
 export async function listQuizzes(): Promise<Quiz[]> {
   await seedPromise;
-  return mockDelay([...quizzes], 300);
+  return mockDelay(scopedToCurrentTenantAndBranch(quizzes), 300);
 }
 
 export async function getQuiz(id: string): Promise<Quiz> {
@@ -391,8 +441,12 @@ export async function getQuiz(id: string): Promise<Quiz> {
 
 export async function createQuiz(values: QuizFormValues, createdByStaffId: string): Promise<Quiz> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const quiz: Quiz = {
     id: genId("quiz"),
+    tenantId,
+    branchId,
     subjectId: values.subjectId,
     classId: values.classId,
     title: values.title,
@@ -403,6 +457,8 @@ export async function createQuiz(values: QuizFormValues, createdByStaffId: strin
 
   const resource: LearningResource = {
     id: genId("res"),
+    tenantId,
+    branchId,
     subjectId: values.subjectId,
     classId: values.classId,
     title: values.title,
@@ -420,10 +476,12 @@ export async function createQuiz(values: QuizFormValues, createdByStaffId: strin
 
 export async function deleteQuiz(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   requireEntity(quizzes, id, "Quiz");
-  quizzes = quizzes.filter((q) => q.id !== id);
-  learningResources = learningResources.filter((r) => r.quizId !== id);
-  quizAttempts = quizAttempts.filter((a) => a.quizId !== id);
+  quizzes = quizzes.filter((q) => !(q.id === id && q.tenantId === tenantId && q.branchId === branchId));
+  learningResources = learningResources.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.quizId === id));
+  quizAttempts = quizAttempts.filter((a) => !(a.tenantId === tenantId && a.branchId === branchId && a.quizId === id));
   persistQuizzes();
   persistResources();
   persistQuizAttempts();
@@ -432,7 +490,8 @@ export async function deleteQuiz(id: string): Promise<void> {
 
 export async function listQuizAttempts(quizId?: string): Promise<QuizAttempt[]> {
   await seedPromise;
-  const result = quizId ? quizAttempts.filter((a) => a.quizId === quizId) : [...quizAttempts];
+  const scoped = scopedToCurrentTenantAndBranch(quizAttempts);
+  const result = quizId ? scoped.filter((a) => a.quizId === quizId) : scoped;
   return mockDelay(result, 300);
 }
 
@@ -441,7 +500,15 @@ export async function submitQuizAttempt(quizId: string, studentId: string, answe
   const quiz = requireEntity(quizzes, quizId, "Quiz");
   const correct = quiz.questions.reduce((count, q, i) => (answers[i] === q.correctIndex ? count + 1 : count), 0);
   const score = quiz.questions.length ? Math.round((correct / quiz.questions.length) * 100) : 0;
-  const attempt: QuizAttempt = { id: genId("qa"), quizId, studentId, score, submittedAt: new Date().toISOString() };
+  const attempt: QuizAttempt = {
+    id: genId("qa"),
+    tenantId: quiz.tenantId,
+    branchId: quiz.branchId,
+    quizId,
+    studentId,
+    score,
+    submittedAt: new Date().toISOString(),
+  };
   quizAttempts = [attempt, ...quizAttempts];
   persistQuizAttempts();
   return mockDelay(attempt, 400);
@@ -451,12 +518,21 @@ export async function submitQuizAttempt(quizId: string, studentId: string, answe
 
 export async function listDiscussionComments(resourceId: string): Promise<DiscussionComment[]> {
   await seedPromise;
-  return mockDelay(discussionComments.filter((c) => c.resourceId === resourceId), 300);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  return mockDelay(discussionComments.filter((c) => c.tenantId === tenantId && c.branchId === branchId && c.resourceId === resourceId), 300);
 }
 
 export async function addDiscussionComment(resourceId: string, values: DiscussionCommentFormValues): Promise<DiscussionComment> {
   await seedPromise;
-  const comment: DiscussionComment = { id: genId("disc"), resourceId, ...values, postedAt: new Date().toISOString() };
+  const comment: DiscussionComment = {
+    id: genId("disc"),
+    tenantId: getCurrentTenantId(),
+    branchId: getCurrentBranchId(),
+    resourceId,
+    ...values,
+    postedAt: new Date().toISOString(),
+  };
   discussionComments = [...discussionComments, comment];
   persistDiscussion();
   return mockDelay(comment, 350);
@@ -483,24 +559,32 @@ export async function markResourceViewed(studentId: string, resourceId: string):
 
 export async function getLearningProgress(): Promise<LearningProgressRow[]> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
   const [students, classes] = await Promise.all([listStudents(), listClasses()]);
   const active = students.filter((s) => s.status === "active");
 
   const rows: LearningProgressRow[] = [];
   for (const student of active) {
     const schoolClass = classes.find((c) => c.name === student.className);
-    const studentHomework = schoolClass ? homework.filter((h) => h.status === "published" && h.classId === schoolClass.id) : [];
+    const studentHomework = schoolClass
+      ? homework.filter((h) => h.tenantId === tenantId && h.branchId === branchId && h.status === "published" && h.classId === schoolClass.id)
+      : [];
     for (const hw of studentHomework) await ensureSubmissionsForHomework(hw);
 
     let onTime = 0;
     for (const hw of studentHomework) {
-      const submission = submissions.find((s) => s.homeworkId === hw.id && s.studentId === student.id);
+      const submission = submissions.find(
+        (s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === hw.id && s.studentId === student.id,
+      );
       if (submission?.submittedAt && submission.status !== "not_submitted" && new Date(submission.submittedAt) <= new Date(hw.dueDate)) {
         onTime++;
       }
     }
 
-    const resourcesForClass = schoolClass ? learningResources.filter((r) => r.classId === schoolClass.id) : [];
+    const resourcesForClass = schoolClass
+      ? learningResources.filter((r) => r.tenantId === tenantId && r.branchId === branchId && r.classId === schoolClass.id)
+      : [];
     const viewed = new Set(resourceViewsByStudent[student.id] ?? []);
     const viewedCount = resourcesForClass.filter((r) => viewed.has(r.id)).length;
 

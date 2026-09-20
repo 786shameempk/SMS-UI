@@ -25,6 +25,7 @@ export type TemplateChannel = "email" | "sms";
 
 export interface SystemTemplate {
   id: string;
+  tenantId: string;
   key: string;
   name: string;
   channel: TemplateChannel;
@@ -42,6 +43,7 @@ export type AuditCategory = "settings" | "security" | "data" | "user" | "system"
 
 export interface AuditLogEntry {
   id: string;
+  tenantId: string;
   actor: string;
   action: string;
   category: AuditCategory;
@@ -53,6 +55,7 @@ export type BackupEventType = "export" | "restore" | "reset";
 
 export interface BackupEvent {
   id: string;
+  tenantId: string;
   type: BackupEventType;
   filename?: string;
   sizeBytes?: number;

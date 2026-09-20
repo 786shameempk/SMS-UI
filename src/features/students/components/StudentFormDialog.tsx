@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCurrentBranchId } from "@/utils/tenant";
+import { listBranches } from "@/features/administration/branches/api";
 import { CLASS_OPTIONS, GUARDIAN_RELATIONS, SECTION_OPTIONS } from "../constants";
 import type { Student, StudentFormValues } from "../types";
 
 const studentFormSchema = z.object({
+  branchId: z.string().min(1, "Select a branch"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
@@ -45,6 +49,7 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
   } = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
+      branchId: getCurrentBranchId(),
       firstName: "",
       lastName: "",
       dateOfBirth: "",
@@ -59,12 +64,15 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
     },
   });
 
+  const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
+
   useEffect(() => {
     if (open) {
       const primaryGuardian = student?.guardians[0];
       reset(
         student
           ? {
+              branchId: student.branchId,
               firstName: student.firstName,
               lastName: student.lastName,
               dateOfBirth: student.dateOfBirth.slice(0, 10),
@@ -78,6 +86,7 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
               guardianPhone: primaryGuardian?.phone ?? "",
             }
           : {
+              branchId: getCurrentBranchId(),
               firstName: "",
               lastName: "",
               dateOfBirth: "",
@@ -104,6 +113,29 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="branchId">Branch</Label>
+            <Controller
+              control={control}
+              name="branchId"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="branchId">
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.branchId && <p className="text-xs text-red-600">{errors.branchId.message}</p>}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="firstName">First name</Label>

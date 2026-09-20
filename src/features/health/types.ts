@@ -7,6 +7,8 @@ export type BmiCategory = "underweight" | "normal" | "overweight" | "obese";
 
 export interface HealthCheckup {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   checkupDate: string;
   heightCm: number;
@@ -39,6 +41,8 @@ export interface HealthCheckupRow extends HealthCheckup {
 
 export interface VaccinationRecord {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   vaccineName: string;
   doseNumber: number;
@@ -69,6 +73,8 @@ export interface VaccinationRow extends VaccinationRecord {
 
 export interface InfirmaryVisit {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   visitedAt: string;
   symptoms: string;

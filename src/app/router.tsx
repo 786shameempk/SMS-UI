@@ -8,6 +8,7 @@ import SecuritySettingsPage from "@/features/authentication/pages/SecuritySettin
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import UserManagementPage from "@/features/administration/users/pages/UserManagementPage";
 import RolePermissionManagementPage from "@/features/administration/roles/pages/RolePermissionManagementPage";
+import BranchManagementPage from "@/features/administration/branches/pages/BranchManagementPage";
 import StudentManagementPage from "@/features/students/pages/StudentManagementPage";
 import StudentProfilePage from "@/features/students/pages/StudentProfilePage";
 import AcademicManagementPage from "@/features/academics/pages/AcademicManagementPage";
@@ -31,6 +32,7 @@ import VisitorManagementPage from "@/features/visitors/pages/VisitorManagementPa
 import HelpDeskPage from "@/features/helpdesk/pages/HelpDeskPage";
 import SurveysFeedbackPage from "@/features/surveys/pages/SurveysFeedbackPage";
 import PlatformConsolePage from "@/features/platform/pages/PlatformConsolePage";
+import AIFeaturesPage from "@/features/ai/pages/AIFeaturesPage";
 import LibraryManagementPage from "@/features/library/pages/LibraryManagementPage";
 import TransportManagementPage from "@/features/transport/pages/TransportManagementPage";
 import HostelManagementPage from "@/features/hostel/pages/HostelManagementPage";
@@ -57,6 +59,7 @@ export const router = createBrowserRouter([
       { path: "account/security", element: <SecuritySettingsPage /> },
       { path: "admin/users", element: <UserManagementPage /> },
       { path: "admin/roles", element: <RolePermissionManagementPage /> },
+      { path: "admin/branches", element: <BranchManagementPage /> },
       { path: "admin/settings", element: <SettingsPage /> },
       { path: "students", element: <StudentManagementPage /> },
       { path: "students/:studentId", element: <StudentProfilePage /> },
@@ -81,6 +84,7 @@ export const router = createBrowserRouter([
       { path: "helpdesk", element: <HelpDeskPage /> },
       { path: "surveys", element: <SurveysFeedbackPage /> },
       { path: "platform", element: <PlatformConsolePage /> },
+      { path: "ai", element: <AIFeaturesPage /> },
       { path: "library", element: <LibraryManagementPage /> },
       { path: "transport", element: <TransportManagementPage /> },
       { path: "hostel", element: <HostelManagementPage /> },

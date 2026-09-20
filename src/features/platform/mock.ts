@@ -1,3 +1,4 @@
+import { DEFAULT_TENANT_ID } from "@/utils/tenant";
 import { AVAILABLE_MODULE_LABELS } from "./constants";
 import type { Announcement, Plan, Tenant } from "./types";
 
@@ -57,7 +58,7 @@ export function buildSeedPlans(): Plan[] {
 export function buildSeedTenants(): Tenant[] {
   return [
     {
-      id: genId("tenant"),
+      id: DEFAULT_TENANT_ID,
       schoolName: "EduCore School",
       subdomain: "educore",
       status: "active",
@@ -68,7 +69,7 @@ export function buildSeedTenants(): Tenant[] {
       isCurrentEnvironment: true,
     },
     {
-      id: genId("tenant"),
+      id: "tenant-riverside",
       schoolName: "Riverside International School",
       subdomain: "riverside-intl",
       status: "active",
@@ -82,7 +83,7 @@ export function buildSeedTenants(): Tenant[] {
       seedStorageUsedGb: 118,
     },
     {
-      id: genId("tenant"),
+      id: "tenant-greenfield",
       schoolName: "Greenfield Academy",
       subdomain: "greenfield-academy",
       status: "trial",
@@ -96,7 +97,7 @@ export function buildSeedTenants(): Tenant[] {
       seedStorageUsedGb: 1,
     },
     {
-      id: genId("tenant"),
+      id: "tenant-sunrise",
       schoolName: "Sunrise Public School",
       subdomain: "sunrise-public",
       status: "active",
@@ -110,7 +111,7 @@ export function buildSeedTenants(): Tenant[] {
       seedStorageUsedGb: 6,
     },
     {
-      id: genId("tenant"),
+      id: "tenant-oakwood",
       schoolName: "Oakwood Grammar School",
       subdomain: "oakwood-grammar",
       status: "suspended",
@@ -124,7 +125,7 @@ export function buildSeedTenants(): Tenant[] {
       seedStorageUsedGb: 22,
     },
     {
-      id: genId("tenant"),
+      id: "tenant-bluebell",
       schoolName: "Bluebell Elementary",
       subdomain: "bluebell-elementary",
       status: "active",

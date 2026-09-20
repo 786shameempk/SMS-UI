@@ -83,6 +83,8 @@ export interface TransferRecord {
 
 export interface Student {
   id: string;
+  tenantId: string;
+  branchId: string;
   admissionNumber: string;
   firstName: string;
   lastName: string;
@@ -105,6 +107,7 @@ export interface Student {
 }
 
 export interface StudentFormValues {
+  branchId: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -120,6 +123,8 @@ export interface StudentFormValues {
 
 export interface AdmissionApplication {
   id: string;
+  tenantId: string;
+  branchId: string;
   applicationNumber: string;
   applicantFirstName: string;
   applicantLastName: string;
@@ -166,6 +171,7 @@ export interface AdmissionApplication {
 }
 
 export interface AdmissionFormValues {
+  branchId: string;
   applicantFirstName: string;
   applicantLastName: string;
   dateOfBirth: string;

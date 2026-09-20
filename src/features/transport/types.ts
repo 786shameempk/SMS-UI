@@ -5,6 +5,8 @@ export type BusStatus = "active" | "maintenance" | "inactive";
 
 export interface Bus {
   id: string;
+  tenantId: string;
+  branchId: string;
   regNumber: string;
   model: string;
   capacity: number;
@@ -27,6 +29,8 @@ export type DriverStatus = "active" | "on-leave" | "inactive";
 /** License/experience data layered over a staff member whose designation is "Driver". */
 export interface DriverProfile {
   id: string;
+  tenantId: string;
+  branchId: string;
   staffId: string;
   licenseNumber: string;
   licenseExpiryDate: string;
@@ -50,6 +54,8 @@ export type RouteStatus = "active" | "inactive";
 
 export interface TransportRoute {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   busId?: string;
   driverId?: string;
@@ -69,6 +75,8 @@ export interface TransportRouteFormValues {
 
 export interface RouteStop {
   id: string;
+  tenantId: string;
+  branchId: string;
   routeId: string;
   name: string;
   sequence: number;
@@ -86,6 +94,8 @@ export type TransportAssignmentStatus = "active" | "inactive";
 
 export interface StudentTransportAssignment {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   routeId: string;
   stopId: string;
@@ -111,6 +121,8 @@ export type BusTrackingStatus = "idle" | "on-route" | "at-stop" | "completed";
 
 /** Simulated GPS status for a bus currently running an active route. */
 export interface BusLiveStatus {
+  tenantId: string;
+  branchId: string;
   busId: string;
   routeId: string;
   status: BusTrackingStatus;

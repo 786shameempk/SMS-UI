@@ -1,5 +1,6 @@
 import { mockDelay } from "@/utils/mockDelay";
 import { useAuthStore } from "@/store/authStore";
+import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
 import { SEED_NOTIFICATIONS } from "./mock";
 import type { AnnouncementFormValues, Notification } from "./types";
 
@@ -27,7 +28,9 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let notifications = loadJson<Notification[]>(NOTIFICATIONS_KEY, SEED_NOTIFICATIONS.map((n) => ({ ...n })));
+let notifications = migrateLegacyRecordsToDefaultTenant(
+  loadJson<Notification[]>(NOTIFICATIONS_KEY, SEED_NOTIFICATIONS.map((n) => ({ ...n, tenantId: DEFAULT_TENANT_ID }))),
+);
 
 const persist = () => saveJson(NOTIFICATIONS_KEY, notifications);
 
@@ -36,13 +39,13 @@ function currentUserRole() {
 }
 
 function visibleToCurrentUser(n: Notification): boolean {
-  return !n.recipientRole || n.recipientRole === currentUserRole();
+  return (!n.recipientRole || n.recipientRole === currentUserRole()) && n.tenantId === getCurrentTenantId();
 }
 
 /** Everything, regardless of audience — used by the admin-facing announcement history. */
 export async function listNotifications(): Promise<Notification[]> {
   return mockDelay(
-    [...notifications].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    scopedToCurrentTenant(notifications).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     300,
   );
 }
@@ -63,6 +66,7 @@ export async function getUnreadCountForCurrentUser(): Promise<number> {
 export async function postAnnouncement(values: AnnouncementFormValues): Promise<Notification> {
   const notification: Notification = {
     id: genId("ntf"),
+    tenantId: getCurrentTenantId(),
     title: values.title,
     body: values.body,
     category: values.category,
@@ -89,6 +93,7 @@ export async function postFromCommunication(params: {
 }): Promise<Notification> {
   const notification: Notification = {
     id: genId("ntf"),
+    tenantId: getCurrentTenantId(),
     title: params.title,
     body: params.body,
     category: "announcement",
@@ -104,7 +109,7 @@ export async function postFromCommunication(params: {
 }
 
 export async function markRead(id: string): Promise<Notification> {
-  const existing = notifications.find((n) => n.id === id);
+  const existing = notifications.find((n) => n.id === id && n.tenantId === getCurrentTenantId());
   if (!existing) {
     await mockDelay(null, 200);
     throw new Error("Notification not found");
@@ -122,7 +127,8 @@ export async function markAllReadForCurrentUser(): Promise<void> {
 }
 
 export async function deleteNotification(id: string): Promise<void> {
-  notifications = notifications.filter((n) => n.id !== id);
+  const tenantId = getCurrentTenantId();
+  notifications = notifications.filter((n) => !(n.id === id && n.tenantId === tenantId));
   persist();
   return mockDelay(undefined, 250);
 }

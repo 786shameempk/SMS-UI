@@ -1,4 +1,14 @@
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentBranchId,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
@@ -46,15 +56,21 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
+function requireEntity<T extends { id: string; tenantId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId());
   if (!found) throw new Error(`${label} not found`);
   return found;
 }
 
-let entries = loadJson<VisitorEntry[]>(ENTRIES_KEY, []);
-let preApprovals = loadJson<PreApprovedVisit[]>(PREAPPROVALS_KEY, []);
-let watchlist = loadJson<WatchlistEntry[]>(WATCHLIST_KEY, []);
+function requireBranchEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
+  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
+  if (!found) throw new Error(`${label} not found`);
+  return found;
+}
+
+let entries = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<VisitorEntry[]>(ENTRIES_KEY, [])));
+let preApprovals = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<PreApprovedVisit[]>(PREAPPROVALS_KEY, [])));
+let watchlist = migrateLegacyRecordsToDefaultTenant(loadJson<WatchlistEntry[]>(WATCHLIST_KEY, []));
 
 function persistEntries() {
   saveJson(ENTRIES_KEY, entries);
@@ -76,11 +92,12 @@ async function performSeed(): Promise<void> {
   if (loadJson(SEEDED_KEY, false)) return;
 
   if (entries.length === 0 && preApprovals.length === 0 && watchlist.length === 0) {
+    const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
     const [students, staff] = await Promise.all([listStudents(), listStaff()]);
     const seeded = buildSeedVisitorData(students, staff);
-    entries = seeded.entries;
-    preApprovals = seeded.preApprovals;
-    watchlist = seeded.watchlist;
+    entries = seeded.entries.map((e) => ({ ...e, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    preApprovals = seeded.preApprovals.map((p) => ({ ...p, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
+    watchlist = seeded.watchlist.map((w) => ({ ...w, tenantId: DEFAULT_TENANT_ID }));
     persistEntries();
     persistPreApprovals();
     persistWatchlist();
@@ -115,7 +132,8 @@ function hostLabel(host: HostDetails, studentById: Map<string, Student>, staffBy
 
 function isOnWatchlist(visitorName: string): boolean {
   const normalized = visitorName.trim().toLowerCase();
-  return watchlist.some((w) => w.name.trim().toLowerCase() === normalized);
+  const tenantId = getCurrentTenantId();
+  return watchlist.some((w) => w.tenantId === tenantId && w.name.trim().toLowerCase() === normalized);
 }
 
 // ── Watchlist (checked first so check-in flows can flag matches) ──────────
@@ -123,7 +141,7 @@ function isOnWatchlist(visitorName: string): boolean {
 export async function listWatchlist(): Promise<WatchlistEntry[]> {
   await seedPromise;
   return mockDelay(
-    [...watchlist].sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()),
+    scopedToCurrentTenant(watchlist).sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()),
     300,
   );
 }
@@ -131,15 +149,16 @@ export async function listWatchlist(): Promise<WatchlistEntry[]> {
 export async function getWatchlistMatch(visitorName: string): Promise<WatchlistEntry | undefined> {
   await seedPromise;
   const normalized = visitorName.trim().toLowerCase();
+  const tenantId = getCurrentTenantId();
   return mockDelay(
-    watchlist.find((w) => w.name.trim().toLowerCase() === normalized),
+    watchlist.find((w) => w.tenantId === tenantId && w.name.trim().toLowerCase() === normalized),
     150,
   );
 }
 
 export async function addWatchlistEntry(values: WatchlistEntryFormValues): Promise<WatchlistEntry> {
   await seedPromise;
-  const entry: WatchlistEntry = { id: genId("watch"), addedAt: new Date().toISOString(), ...values };
+  const entry: WatchlistEntry = { id: genId("watch"), tenantId: getCurrentTenantId(), addedAt: new Date().toISOString(), ...values };
   watchlist = [entry, ...watchlist];
   persistWatchlist();
   return mockDelay(entry, 350);
@@ -147,8 +166,9 @@ export async function addWatchlistEntry(values: WatchlistEntryFormValues): Promi
 
 export async function deleteWatchlistEntry(id: string): Promise<void> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
   requireEntity(watchlist, id, "Watchlist entry");
-  watchlist = watchlist.filter((w) => w.id !== id);
+  watchlist = watchlist.filter((w) => !(w.id === id && w.tenantId === tenantId));
   persistWatchlist();
   return mockDelay(undefined, 300);
 }
@@ -158,7 +178,7 @@ export async function deleteWatchlistEntry(id: string): Promise<void> {
 export async function listVisitorEntries(status?: VisitorEntry["status"]): Promise<VisitorEntryRow[]> {
   await seedPromise;
   const { studentById, staffById } = await joinContext();
-  const rows = entries
+  const rows = scopedToCurrentTenantAndBranch(entries)
     .filter((e) => !status || e.status === status)
     .map((e): VisitorEntryRow => {
       const durationMinutes = e.checkOutAt ? Math.round((new Date(e.checkOutAt).getTime() - new Date(e.checkInAt).getTime()) / 60000) : undefined;
@@ -176,9 +196,13 @@ export async function listVisitorEntries(status?: VisitorEntry["status"]): Promi
 }
 
 function createEntryRecord(values: VisitorCheckInFormValues): VisitorEntry {
-  const badgeNumber = nextBadgeNumber(entries.map((e) => e.badgeNumber));
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  const badgeNumber = nextBadgeNumber(scopedToCurrentTenant(entries).map((e) => e.badgeNumber));
   const entry: VisitorEntry = {
     id: genId("visit"),
+    tenantId,
+    branchId,
     visitorName: values.visitorName,
     phone: values.phone,
     idProofType: values.idProofType,
@@ -203,7 +227,7 @@ export async function checkInVisitor(values: VisitorCheckInFormValues): Promise<
   await seedPromise;
   const entry = createEntryRecord(values);
   if (values.preApprovalId) {
-    const preApproval = preApprovals.find((p) => p.id === values.preApprovalId);
+    const preApproval = preApprovals.find((p) => p.id === values.preApprovalId && p.tenantId === entry.tenantId && p.branchId === entry.branchId);
     if (preApproval) {
       preApprovals = preApprovals.map((p) => (p.id === preApproval.id ? { ...p, status: "arrived", visitorEntryId: entry.id } : p));
       persistPreApprovals();
@@ -214,7 +238,7 @@ export async function checkInVisitor(values: VisitorCheckInFormValues): Promise<
 
 export async function checkInFromPreApproval(preApprovalId: string): Promise<VisitorEntry> {
   await seedPromise;
-  const preApproval = requireEntity(preApprovals, preApprovalId, "Pre-approved visit");
+  const preApproval = requireBranchEntity(preApprovals, preApprovalId, "Pre-approved visit");
   if (preApproval.status !== "scheduled") throw new Error("This visit has already been actioned");
   const entry = createEntryRecord({
     visitorName: preApproval.visitorName,
@@ -234,7 +258,7 @@ export async function checkInFromPreApproval(preApprovalId: string): Promise<Vis
 
 export async function checkOutVisitor(id: string): Promise<VisitorEntry> {
   await seedPromise;
-  const entry = requireEntity(entries, id, "Visitor entry");
+  const entry = requireBranchEntity(entries, id, "Visitor entry");
   if (entry.status === "checked-out") throw new Error("This visitor has already checked out");
   const updated: VisitorEntry = { ...entry, checkOutAt: new Date().toISOString(), status: "checked-out" };
   entries = entries.map((e) => (e.id === id ? updated : e));
@@ -244,8 +268,10 @@ export async function checkOutVisitor(id: string): Promise<VisitorEntry> {
 
 export async function deleteVisitorEntry(id: string): Promise<void> {
   await seedPromise;
-  requireEntity(entries, id, "Visitor entry");
-  entries = entries.filter((e) => e.id !== id);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  requireBranchEntity(entries, id, "Visitor entry");
+  entries = entries.filter((e) => !(e.id === id && e.tenantId === tenantId && e.branchId === branchId));
   persistEntries();
   return mockDelay(undefined, 300);
 }
@@ -255,7 +281,7 @@ export async function deleteVisitorEntry(id: string): Promise<void> {
 export async function listPreApprovedVisits(status?: PreApprovedVisit["status"]): Promise<PreApprovedVisitRow[]> {
   await seedPromise;
   const { studentById, staffById } = await joinContext();
-  const rows = preApprovals
+  const rows = scopedToCurrentTenantAndBranch(preApprovals)
     .filter((p) => !status || p.status === status)
     .map(
       (p): PreApprovedVisitRow => ({
@@ -271,7 +297,13 @@ export async function listPreApprovedVisits(status?: PreApprovedVisit["status"])
 
 export async function createPreApprovedVisit(values: PreApprovedVisitFormValues): Promise<PreApprovedVisit> {
   await seedPromise;
-  const record: PreApprovedVisit = { id: genId("preapp"), status: "scheduled", ...values };
+  const record: PreApprovedVisit = {
+    id: genId("preapp"),
+    tenantId: getCurrentTenantId(),
+    branchId: getCurrentBranchId(),
+    status: "scheduled",
+    ...values,
+  };
   preApprovals = [record, ...preApprovals];
   persistPreApprovals();
   return mockDelay(record, 400);
@@ -279,7 +311,7 @@ export async function createPreApprovedVisit(values: PreApprovedVisitFormValues)
 
 export async function cancelPreApprovedVisit(id: string): Promise<PreApprovedVisit> {
   await seedPromise;
-  const record = requireEntity(preApprovals, id, "Pre-approved visit");
+  const record = requireBranchEntity(preApprovals, id, "Pre-approved visit");
   if (record.status !== "scheduled") throw new Error("Only a scheduled visit can be cancelled");
   const updated: PreApprovedVisit = { ...record, status: "cancelled" };
   preApprovals = preApprovals.map((p) => (p.id === id ? updated : p));
@@ -289,8 +321,10 @@ export async function cancelPreApprovedVisit(id: string): Promise<PreApprovedVis
 
 export async function deletePreApprovedVisit(id: string): Promise<void> {
   await seedPromise;
-  requireEntity(preApprovals, id, "Pre-approved visit");
-  preApprovals = preApprovals.filter((p) => p.id !== id);
+  const tenantId = getCurrentTenantId();
+  const branchId = getCurrentBranchId();
+  requireBranchEntity(preApprovals, id, "Pre-approved visit");
+  preApprovals = preApprovals.filter((p) => !(p.id === id && p.tenantId === tenantId && p.branchId === branchId));
   persistPreApprovals();
   return mockDelay(undefined, 300);
 }
@@ -299,21 +333,22 @@ export async function deletePreApprovedVisit(id: string): Promise<void> {
 
 export async function getVisitorReportsSummary(): Promise<VisitorReportsSummary> {
   await seedPromise;
+  const scopedEntries = scopedToCurrentTenantAndBranch(entries);
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-  const currentlyOnPremises = entries.filter((e) => e.status === "checked-in").length;
-  const visitsToday = entries.filter((e) => new Date(e.checkInAt).getTime() >= todayStart.getTime()).length;
-  const visitsLast30Days = entries.filter((e) => new Date(e.checkInAt).getTime() >= thirtyDaysAgo).length;
+  const currentlyOnPremises = scopedEntries.filter((e) => e.status === "checked-in").length;
+  const visitsToday = scopedEntries.filter((e) => new Date(e.checkInAt).getTime() >= todayStart.getTime()).length;
+  const visitsLast30Days = scopedEntries.filter((e) => new Date(e.checkInAt).getTime() >= thirtyDaysAgo).length;
 
   const purposeCounts = new Map<string, number>();
-  for (const e of entries) purposeCounts.set(e.purpose, (purposeCounts.get(e.purpose) ?? 0) + 1);
+  for (const e of scopedEntries) purposeCounts.set(e.purpose, (purposeCounts.get(e.purpose) ?? 0) + 1);
   const visitsByPurpose = Array.from(purposeCounts.entries())
     .map(([purpose, count]) => ({ purpose: purpose as VisitPurpose, count }))
     .sort((a, b) => b.count - a.count);
 
-  const completedVisits = entries.filter((e) => e.checkOutAt);
+  const completedVisits = scopedEntries.filter((e) => e.checkOutAt);
   const avgVisitDurationMinutes =
     completedVisits.length === 0
       ? null
@@ -323,7 +358,7 @@ export async function getVisitorReportsSummary(): Promise<VisitorReportsSummary>
 
   const { studentById, staffById } = await joinContext();
   const hostCounts = new Map<string, number>();
-  for (const e of entries) {
+  for (const e of scopedEntries) {
     const label = hostLabel(e, studentById, staffById);
     hostCounts.set(label, (hostCounts.get(label) ?? 0) + 1);
   }

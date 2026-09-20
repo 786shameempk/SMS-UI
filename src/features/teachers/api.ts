@@ -1,9 +1,17 @@
 import { listSections, listClasses, listSubjects, updateSection } from "@/features/academics/api";
 import type { Section } from "@/features/academics/types";
-import { createStaff, listStaff } from "@/features/staff/api";
+import { createStaff, getStaffMember, listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
 import { mockDelay } from "@/utils/mockDelay";
+import {
+  DEFAULT_TENANT_ID,
+  defaultBranchIdForTenant,
+  getCurrentTenantId,
+  migrateLegacyRecordsToDefaultBranch,
+  migrateLegacyRecordsToDefaultTenant,
+  scopedToCurrentTenantAndBranch,
+} from "@/utils/tenant";
 import { CLASS_TEACHER_PLAN, EXTRA_TEACHER_SEEDS, LESSON_PLAN_PLAN, SUBJECT_ASSIGNMENT_PLAN } from "./mock";
 import type {
   LessonPlan,
@@ -40,8 +48,10 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let subjectAssignments = loadJson<TeacherSubjectAssignment[]>(SUBJECT_ASSIGNMENTS_KEY, []);
-let lessonPlans = loadJson<LessonPlan[]>(LESSON_PLANS_KEY, []);
+let subjectAssignments = migrateLegacyRecordsToDefaultBranch(
+  migrateLegacyRecordsToDefaultTenant(loadJson<TeacherSubjectAssignment[]>(SUBJECT_ASSIGNMENTS_KEY, [])),
+);
+let lessonPlans = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<LessonPlan[]>(LESSON_PLANS_KEY, [])));
 
 const persistSubjectAssignments = () => saveJson(SUBJECT_ASSIGNMENTS_KEY, subjectAssignments);
 const persistLessonPlans = () => saveJson(LESSON_PLANS_KEY, lessonPlans);
@@ -67,7 +77,14 @@ async function performSeed(): Promise<void> {
     const staffId = idByEmail.get(plan.teacherEmail.toLowerCase());
     if (!staffId) continue;
     if (subjectAssignments.some((a) => a.staffId === staffId && a.subjectId === plan.subjectId && a.classId === plan.classId)) continue;
-    newAssignments.push({ id: genId("tsa"), staffId, subjectId: plan.subjectId, classId: plan.classId });
+    newAssignments.push({
+      id: genId("tsa"),
+      tenantId: DEFAULT_TENANT_ID,
+      branchId: staffById.get(staffId)?.branchId ?? defaultBranchIdForTenant(DEFAULT_TENANT_ID),
+      staffId,
+      subjectId: plan.subjectId,
+      classId: plan.classId,
+    });
   }
   if (newAssignments.length) {
     subjectAssignments = [...subjectAssignments, ...newAssignments];
@@ -82,6 +99,8 @@ async function performSeed(): Promise<void> {
     const now = new Date().toISOString();
     newLessonPlans.push({
       id: genId("lp"),
+      tenantId: DEFAULT_TENANT_ID,
+      branchId: staffById.get(staffId)?.branchId ?? defaultBranchIdForTenant(DEFAULT_TENANT_ID),
       staffId,
       subjectId: plan.subjectId,
       classId: plan.classId,
@@ -135,20 +154,28 @@ export async function listTeachers(): Promise<StaffMember[]> {
 
 export async function listSubjectAssignments(staffId?: string): Promise<TeacherSubjectAssignment[]> {
   await seedPromise;
-  const result = staffId ? subjectAssignments.filter((a) => a.staffId === staffId) : [...subjectAssignments];
+  const scoped = scopedToCurrentTenantAndBranch(subjectAssignments);
+  const result = staffId ? scoped.filter((a) => a.staffId === staffId) : scoped;
   return mockDelay(result, 300);
 }
 
 export async function assignSubject(values: TeacherSubjectAssignmentFormValues): Promise<TeacherSubjectAssignment> {
   await seedPromise;
+  const tenantId = getCurrentTenantId();
+  const teacher = await getStaffMember(values.staffId);
   const exists = subjectAssignments.some(
-    (a) => a.staffId === values.staffId && a.subjectId === values.subjectId && a.classId === values.classId,
+    (a) =>
+      a.tenantId === tenantId &&
+      a.branchId === teacher.branchId &&
+      a.staffId === values.staffId &&
+      a.subjectId === values.subjectId &&
+      a.classId === values.classId,
   );
   if (exists) {
     await mockDelay(null, 300);
     throw new Error("This subject is already assigned to that class for this teacher.");
   }
-  const assignment: TeacherSubjectAssignment = { id: genId("tsa"), ...values };
+  const assignment: TeacherSubjectAssignment = { id: genId("tsa"), tenantId, branchId: teacher.branchId, ...values };
   subjectAssignments = [assignment, ...subjectAssignments];
   persistSubjectAssignments();
   return mockDelay(assignment, 400);
@@ -156,7 +183,8 @@ export async function assignSubject(values: TeacherSubjectAssignmentFormValues):
 
 export async function removeSubjectAssignment(id: string): Promise<void> {
   await seedPromise;
-  subjectAssignments = subjectAssignments.filter((a) => a.id !== id);
+  const tenantId = getCurrentTenantId();
+  subjectAssignments = subjectAssignments.filter((a) => !(a.id === id && a.tenantId === tenantId));
   persistSubjectAssignments();
   return mockDelay(undefined, 300);
 }
@@ -204,14 +232,16 @@ export async function unassignClassTeacher(sectionId: string): Promise<Section> 
 
 export async function listLessonPlans(staffId?: string): Promise<LessonPlan[]> {
   await seedPromise;
-  const result = staffId ? lessonPlans.filter((p) => p.staffId === staffId) : [...lessonPlans];
+  const scoped = scopedToCurrentTenantAndBranch(lessonPlans);
+  const result = staffId ? scoped.filter((p) => p.staffId === staffId) : scoped;
   return mockDelay(result, 350);
 }
 
 export async function createLessonPlan(values: LessonPlanFormValues): Promise<LessonPlan> {
   await seedPromise;
+  const teacher = await getStaffMember(values.staffId);
   const now = new Date().toISOString();
-  const plan: LessonPlan = { id: genId("lp"), ...values, createdAt: now, updatedAt: now };
+  const plan: LessonPlan = { id: genId("lp"), tenantId: getCurrentTenantId(), branchId: teacher.branchId, ...values, createdAt: now, updatedAt: now };
   lessonPlans = [plan, ...lessonPlans];
   persistLessonPlans();
   return mockDelay(plan, 400);
@@ -219,12 +249,14 @@ export async function createLessonPlan(values: LessonPlanFormValues): Promise<Le
 
 export async function updateLessonPlan(id: string, values: LessonPlanFormValues): Promise<LessonPlan> {
   await seedPromise;
-  const existing = lessonPlans.find((p) => p.id === id);
+  const tenantId = getCurrentTenantId();
+  const existing = lessonPlans.find((p) => p.id === id && p.tenantId === tenantId);
   if (!existing) {
     await mockDelay(null, 300);
     throw new Error("Lesson plan not found");
   }
-  const updated: LessonPlan = { ...existing, ...values, updatedAt: new Date().toISOString() };
+  const teacher = await getStaffMember(values.staffId);
+  const updated: LessonPlan = { ...existing, ...values, branchId: teacher.branchId, updatedAt: new Date().toISOString() };
   lessonPlans = lessonPlans.map((p) => (p.id === id ? updated : p));
   persistLessonPlans();
   return mockDelay(updated, 400);
@@ -232,7 +264,8 @@ export async function updateLessonPlan(id: string, values: LessonPlanFormValues)
 
 export async function deleteLessonPlan(id: string): Promise<void> {
   await seedPromise;
-  lessonPlans = lessonPlans.filter((p) => p.id !== id);
+  const tenantId = getCurrentTenantId();
+  lessonPlans = lessonPlans.filter((p) => !(p.id === id && p.tenantId === tenantId));
   persistLessonPlans();
   return mockDelay(undefined, 300);
 }

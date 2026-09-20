@@ -1,6 +1,6 @@
 import type { Room } from "./types";
 
-export const SEED_ROOMS: Room[] = [
+export const SEED_ROOMS: Omit<Room, "tenantId" | "branchId">[] = [
   { id: "room-1", name: "Room 101", capacity: 40 },
   { id: "room-2", name: "Room 102", capacity: 40 },
   { id: "room-3", name: "Room 103", capacity: 38 },

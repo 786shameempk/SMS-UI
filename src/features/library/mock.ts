@@ -7,7 +7,7 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS).toISOString();
 const daysFromNow = (n: number) => new Date(Date.now() + n * DAY_MS).toISOString();
 
-export const SEED_AUTHORS: Author[] = [
+export const SEED_AUTHORS: Omit<Author, "tenantId">[] = [
   { id: "auth-1", name: "R.K. Narayan", bio: "Celebrated Indian author known for the fictional town of Malgudi." },
   { id: "auth-2", name: "Stephen Hawking", bio: "Theoretical physicist and author of popular-science works." },
   { id: "auth-3", name: "Ruskin Bond", bio: "Prolific Indian author of stories set in the Himalayan foothills." },
@@ -18,7 +18,7 @@ export const SEED_AUTHORS: Author[] = [
   { id: "auth-8", name: "APJ Abdul Kalam", bio: "Aerospace scientist, former President of India, and author." },
 ];
 
-export const SEED_PUBLISHERS: Publisher[] = [
+export const SEED_PUBLISHERS: Omit<Publisher, "tenantId">[] = [
   { id: "pub-1", name: "Penguin Random House India", address: "7th Floor, Infinity Tower C, Gurugram" },
   { id: "pub-2", name: "HarperCollins Publishers India", address: "A-75, Sector 57, Noida" },
   { id: "pub-3", name: "Scholastic India", address: "A-27, Ground Floor, Sector 16, Noida" },
@@ -26,7 +26,7 @@ export const SEED_PUBLISHERS: Publisher[] = [
   { id: "pub-5", name: "National Book Trust", address: "Nehru Bhavan, 5 Institutional Area, New Delhi" },
 ];
 
-export const SEED_CATEGORIES: BookCategory[] = [
+export const SEED_CATEGORIES: Omit<BookCategory, "tenantId">[] = [
   { id: "cat-fiction", name: "Fiction" },
   { id: "cat-science", name: "Science" },
   { id: "cat-mathematics", name: "Mathematics" },
@@ -35,7 +35,7 @@ export const SEED_CATEGORIES: BookCategory[] = [
   { id: "cat-reference", name: "Reference" },
 ];
 
-export const SEED_BOOKS: Book[] = [
+export const SEED_BOOKS: Omit<Book, "tenantId" | "branchId">[] = [
   { id: "bk-1", title: "Malgudi Days", isbn: "9780143039655", authorId: "auth-1", publisherId: "pub-1", categoryId: "cat-fiction", totalCopies: 5, availableCopies: 3, shelfLocation: "F-12" },
   { id: "bk-2", title: "Swami and Friends", isbn: "9780143031507", authorId: "auth-1", publisherId: "pub-1", categoryId: "cat-fiction", totalCopies: 3, availableCopies: 3, shelfLocation: "F-12" },
   { id: "bk-3", title: "A Brief History of Time", isbn: "9780553380163", authorId: "auth-2", publisherId: "pub-2", categoryId: "cat-science", totalCopies: 4, availableCopies: 2, shelfLocation: "S-04" },
@@ -71,8 +71,8 @@ export function buildSeedLibraryData(
   students: Student[],
   staff: StaffMember[],
   books: Book[],
-): { members: LibraryMember[]; loans: BookLoan[]; reservations: BookReservation[] } {
-  const members: LibraryMember[] = [
+): { members: Omit<LibraryMember, "tenantId" | "branchId">[]; loans: Omit<BookLoan, "tenantId" | "branchId">[]; reservations: Omit<BookReservation, "tenantId" | "branchId">[] } {
+  const members: Omit<LibraryMember, "tenantId" | "branchId">[] = [
     ...students.map((student, index) => ({
       id: `libmem-stu-${index + 1}`,
       personType: "student" as const,
@@ -92,9 +92,9 @@ export function buildSeedLibraryData(
   ];
 
   const bookById = new Map(books.map((b) => [b.id, b] as const));
-  const loans: BookLoan[] = [];
+  const loans: Omit<BookLoan, "tenantId" | "branchId">[] = [];
 
-  const addLoan = (loan: Omit<BookLoan, "id">) => {
+  const addLoan = (loan: Omit<BookLoan, "id" | "tenantId" | "branchId">) => {
     loans.push({ id: genId("loan"), ...loan });
   };
 
@@ -147,7 +147,7 @@ export function buildSeedLibraryData(
 
   const reservationTarget = books.find((b) => b.availableCopies === 0) ?? books[0];
   const reservationMembers = members.filter((m) => m.status === "active").slice(0, 2);
-  const reservations: BookReservation[] = reservationMembers.map((member, index) => ({
+  const reservations: Omit<BookReservation, "tenantId" | "branchId">[] = reservationMembers.map((member, index) => ({
     id: genId("resv"),
     bookId: reservationTarget?.id ?? bookById.values().next().value!.id,
     memberId: member.id,

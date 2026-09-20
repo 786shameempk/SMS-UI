@@ -16,6 +16,7 @@ export interface SurveyQuestion {
 
 export interface Survey {
   id: string;
+  tenantId: string;
   title: string;
   description?: string;
   audience: SurveyAudience;
@@ -47,6 +48,7 @@ export interface SurveyAnswer {
 
 export interface SurveyResponse {
   id: string;
+  tenantId: string;
   surveyId: string;
   respondentType: RespondentType;
   respondentStudentId?: string;
