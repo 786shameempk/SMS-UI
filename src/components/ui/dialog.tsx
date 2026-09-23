@@ -24,6 +24,15 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+/**
+ * Renders as a full-height panel sliding in from the right edge rather than a centred popup — every
+ * dialog in the app (forms, add/edit flows, confirmations) shares this one layout. Callers' width
+ * classes (max-w-sm … max-w-2xl) still size the panel; their old popup-era height caps
+ * (max-h-[85vh], overflow-y-auto) are dropped because the panel is always viewport-tall and scrolls
+ * its own body, with DialogHeader pinned to the top and DialogFooter pinned to the bottom.
+ */
+const POPUP_ONLY_CLASS = /^(max-h-\S+|overflow-y-auto|overflow-auto)$/;
+
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
@@ -33,14 +42,22 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-border bg-card p-6 shadow-xl",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        className,
+        "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-lg flex-col border-l border-border bg-card shadow-2xl",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
+        "data-[state=open]:duration-300 data-[state=closed]:duration-200 ease-out",
+        className
+          ?.split(/\s+/)
+          .filter((c) => !POPUP_ONLY_CLASS.test(c))
+          .join(" "),
       )}
       {...props}
     >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring disabled:pointer-events-none cursor-pointer">
+      {/* A direct <form> child is stretched to fill the body so its DialogFooter's mt-auto can reach the
+          bottom edge even when the form is short. */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-6 flex flex-col gap-4 [&>form]:flex [&>form]:flex-1 [&>form]:flex-col">
+        {children}
+      </div>
+      <DialogPrimitive.Close className="absolute right-4 top-5 z-20 rounded-md p-1 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring disabled:pointer-events-none cursor-pointer">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -49,13 +66,29 @@ const DialogContent = React.forwardRef<
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
+/** Pinned to the top of the panel's scroll area, full-bleed under the close button. */
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col gap-1.5 text-left", className)} {...props} />
+  <div
+    className={cn(
+      "sticky top-0 z-10 -mx-6 flex flex-col gap-1.5 border-b border-border bg-card px-6 pt-5 pb-4 pr-12 text-left",
+      className,
+    )}
+    {...props}
+  />
 );
 DialogHeader.displayName = "DialogHeader";
 
+/** Pinned to the bottom of the panel: mt-auto pushes it down when the content is short, sticky keeps it
+ *  there when the content scrolls. Sticky offsets are measured inside the scroll body's padding, so
+ *  -bottom-6/-mb-6 cancel its pb-6 to sit flush with the panel's bottom edge. */
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)} {...props} />
+  <div
+    className={cn(
+      "sticky -bottom-6 z-10 -mx-6 -mb-6 mt-auto flex flex-col-reverse gap-2 border-t border-border bg-card px-6 py-4 sm:flex-row sm:justify-end",
+      className,
+    )}
+    {...props}
+  />
 );
 DialogFooter.displayName = "DialogFooter";
 
