@@ -1,15 +1,142 @@
-version: "3.9"
+# Full SMS stack: SMS UI + every backend service + SQL Server + Redis.
+# Backend build contexts are the sibling repos under E:\Personal (see AuthService/docs/MICROSERVICES_PLAN.md).
+#
+#   cp .env.docker.example .env.docker   # then set real values
+#   docker compose --env-file .env.docker up --build
+#
+# UI: http://localhost:8080. Host ports for the services match the local `dotnet run --launch-profile http`
+# ports, so stop any locally running services first. The browser calls every service directly, which is
+# why the UI's build args use localhost URLs rather than Docker service names.
+
+x-dotnet-service: &dotnet-service
+  restart: unless-stopped
+  depends_on:
+    sqlserver:
+      condition: service_healthy
+
+x-dotnet-env: &dotnet-env
+  ASPNETCORE_ENVIRONMENT: Development
+  Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
+  Cors__AllowedOrigins__0: http://localhost:8080
 
 services:
-
   ui:
     build:
       context: .
       dockerfile: Dockerfile
-
+      args:
+        VITE_AUTH_API_URL: http://localhost:5118/
+        VITE_ACADEMIC_API_URL: http://localhost:5136/
+        VITE_FINANCE_API_URL: http://localhost:5137/
+        VITE_CAMPUS_API_URL: http://localhost:5139/
+        VITE_ENGAGEMENT_API_URL: http://localhost:5140/
     container_name: school-ui
-
     ports:
       - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      - authservice
+      - academicservice
+      - financeservice
+      - campusservice
+      - engagementservice
 
-    restart: always
+  authservice:
+    <<: *dotnet-service
+    build:
+      context: ../AuthService
+    ports:
+      - "5118:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AuthServiceDb;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True;"
+      ConnectionStrings__Redis: "redis:6379"
+      ClientApp__BaseUrl: http://localhost:8080
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  academicservice:
+    <<: *dotnet-service
+    build:
+      context: ../AcademicService
+    ports:
+      - "5136:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+
+  financeservice:
+    <<: *dotnet-service
+    build:
+      context: ../FinanceService
+    ports:
+      - "5137:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinanceServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+
+  campusservice:
+    <<: *dotnet-service
+    build:
+      context: ../CampusService
+    ports:
+      - "5139:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CampusServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+
+  engagementservice:
+    <<: *dotnet-service
+    build:
+      context: ../EngagementService
+    ports:
+      - "5140:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=EngagementServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+
+  apigateway:
+    build:
+      context: ../ApiGateway
+    restart: unless-stopped
+    ports:
+      - "5138:8080"
+    environment:
+      <<: *dotnet-env
+      Services__FinanceServiceUrl: http://financeservice:8080/
+      ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address: http://authservice:8080/
+      ReverseProxy__Clusters__academic-cluster__Destinations__destination1__Address: http://academicservice:8080/
+      ReverseProxy__Clusters__finance-cluster__Destinations__destination1__Address: http://financeservice:8080/
+    depends_on:
+      - authservice
+      - academicservice
+      - financeservice
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?SA_PASSWORD is required}
+    ports:
+      # 14330 rather than 1433, so it doesn't clash with a local SQL Server instance.
+      - "14330:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+
+volumes:
+  sqlserver-data:
+  redis-data:

@@ -34,3 +34,6 @@ node_modules
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+
+# Docker Compose secrets (see .env.docker.example)
+.env.docker
