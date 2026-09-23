@@ -3,14 +3,14 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { GraduationCap, Eye, EyeOff, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuthStore } from "@/store/authStore";
-import { login, verifyMfaCode } from "../api";
+import { login } from "../api";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
@@ -20,7 +20,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-function CredentialsForm({ onMfaRequired }: { onMfaRequired: (email: string, rememberMe: boolean) => void }) {
+function CredentialsForm() {
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,13 +40,9 @@ function CredentialsForm({ onMfaRequired }: { onMfaRequired: (email: string, rem
   const onSubmit = async (values: LoginFormValues) => {
     setSubmitting(true);
     try {
-      const outcome = await login(values);
-      if (outcome.status === "mfa_required") {
-        onMfaRequired(outcome.email, Boolean(values.rememberMe));
-        return;
-      }
-      setSession(outcome.user, outcome.token, outcome.permissions, values.rememberMe);
-      toast.success(`Welcome back, ${outcome.user.name.split(" ")[0]}`);
+      const result = await login(values);
+      setSession(result.user, result.token, result.permissions, values.rememberMe);
+      toast.success(`Welcome back, ${result.user.name.split(" ")[0]}`);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
@@ -122,70 +118,7 @@ function CredentialsForm({ onMfaRequired }: { onMfaRequired: (email: string, rem
   );
 }
 
-function MfaForm({ email, rememberMe, onBack }: { email: string; rememberMe: boolean; onBack: () => void }) {
-  const navigate = useNavigate();
-  const setSession = useAuthStore((s) => s.setSession);
-  const [code, setCode] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const result = await verifyMfaCode(email, code);
-      setSession(result.user, result.token, result.permissions, rememberMe);
-      toast.success(`Welcome back, ${result.user.name.split(" ")[0]}`);
-      navigate("/dashboard", { replace: true });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Verification failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-      <div className="flex flex-col items-center text-center gap-2 pb-1">
-        <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
-          <ShieldCheck className="w-5 h-5 text-brand-600" />
-        </div>
-        <p className="text-sm font-semibold text-slate-800">Two-factor verification</p>
-        <p className="text-xs text-slate-500">
-          Enter the 6-digit code sent to <span className="font-medium text-slate-700">{email}</span>
-        </p>
-      </div>
-
-      <Input
-        value={code}
-        onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-        placeholder="123456"
-        inputMode="numeric"
-        className="text-center tracking-[0.5em] text-lg font-semibold"
-        maxLength={6}
-        autoFocus
-      />
-      <p className="text-[11px] text-slate-400 text-center">Demo code: 123456</p>
-
-      <Button type="submit" className="w-full" disabled={submitting || code.length !== 6}>
-        {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-        Verify &amp; sign in
-      </Button>
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 cursor-pointer"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        Back to sign in
-      </button>
-    </form>
-  );
-}
-
 export default function LoginPage() {
-  const [mfa, setMfa] = useState<{ email: string; rememberMe: boolean } | null>(null);
-
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm">
@@ -200,16 +133,11 @@ export default function LoginPage() {
           <p className="text-sm text-slate-400 mt-1">Sign in to your school management account</p>
         </div>
 
-        {mfa ? (
-          <MfaForm email={mfa.email} rememberMe={mfa.rememberMe} onBack={() => setMfa(null)} />
-        ) : (
-          <CredentialsForm onMfaRequired={(email, rememberMe) => setMfa({ email, rememberMe })} />
-        )}
+        <CredentialsForm />
 
         <p className="text-center text-xs text-slate-400 mt-5">
-          Demo accounts: superadmin@educore.dev / superadmin123 (MFA code 123456) &middot; admin@educore.dev / admin123 (MFA
-          code 123456) &middot; teacher@educore.dev / teacher123 &middot; parent@educore.dev / parent123 &middot;
-          riverside-admin@educore.dev / riverside123 (a second, empty tenant)
+          Demo accounts: superadmin@educore.dev / SuperAdmin@123 &middot; admin@educore.dev / Admin@12345 &middot;
+          teacher@educore.dev / Teacher@123 &middot; parent@educore.dev / Parent@123
         </p>
       </div>
     </div>

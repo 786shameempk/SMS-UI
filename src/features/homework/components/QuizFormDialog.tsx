@@ -16,7 +16,7 @@ import type { QuizFormValues } from "../types";
 const questionSchema = z.object({
   text: z.string().min(1, "Question text is required"),
   options: z.array(z.string().min(1, "Option can't be empty")).length(QUIZ_OPTION_COUNT),
-  correctIndex: z.number().min(0).max(QUIZ_OPTION_COUNT - 1),
+  correctIndex: z.coerce.number().min(0).max(QUIZ_OPTION_COUNT - 1),
 });
 
 const quizSchema = z.object({

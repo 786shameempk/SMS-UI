@@ -1,69 +1,86 @@
-import { mockDelay } from "@/utils/mockDelay";
-import {
-  getCurrentBranchId,
-  getCurrentTenantId,
-  migrateLegacyRecordsToDefaultBranch,
-  migrateLegacyRecordsToDefaultTenant,
-  scopedToCurrentTenant,
-  scopedToCurrentTenantAndBranch,
-} from "@/utils/tenant";
+import { campusHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
-import { CERTIFICATE_TYPE_CONFIG } from "./constants";
 import type {
   AchievementCertificateFormValues,
   BonafideFormValues,
   CertificateType,
   CharacterCertificateFormValues,
   IssuedCertificate,
+  RecipientType,
   StaffServiceCertificateFormValues,
   StudyCertificateFormValues,
   TransferCertificateFormValues,
 } from "./types";
 
-const CERTIFICATES_KEY = "sms-mock-certificates-issued";
+// ── Enum translation ────────────────────────────────────────────────────────
+// CampusService's enums serialize as PascalCase (C# convention); SMS UI's types use
+// lowercase/snake_case unions - see docs/MICROSERVICES_PLAN.md's enum-translation note.
 
-function loadJson<T>(key: string, fallback: T): T {
+const TYPE_TO_API: Record<CertificateType, string> = {
+  bonafide: "Bonafide",
+  transfer: "Transfer",
+  character: "Character",
+  study: "Study",
+  achievement: "Achievement",
+  staff_service: "StaffService",
+};
+const TYPE_FROM_API: Record<string, CertificateType> = {
+  Bonafide: "bonafide",
+  Transfer: "transfer",
+  Character: "character",
+  Study: "study",
+  Achievement: "achievement",
+  StaffService: "staff_service",
+};
+
+const RECIPIENT_TO_API: Record<RecipientType, string> = { student: "Student", staff: "Staff" };
+const RECIPIENT_FROM_API: Record<string, RecipientType> = { Student: "student", Staff: "staff" };
+
+interface ApiIssuedCertificate {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  certificateNumber: string;
+  type: string;
+  recipientType: string;
+  recipientId: string;
+  recipientName: string;
+  recipientSubtitle: string;
+  issuedOn: string;
+  bodyLines: string[];
+  meta: Array<{ label: string; value: string }>;
+}
+
+function mapCertificate(dto: ApiIssuedCertificate): IssuedCertificate {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    certificateNumber: dto.certificateNumber,
+    type: TYPE_FROM_API[dto.type] ?? "bonafide",
+    recipientType: RECIPIENT_FROM_API[dto.recipientType] ?? "student",
+    recipientId: dto.recipientId,
+    recipientName: dto.recipientName,
+    recipientSubtitle: dto.recipientSubtitle,
+    issuedOn: dto.issuedOn,
+    bodyLines: dto.bodyLines,
+    meta: dto.meta,
+  };
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-let certificates = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<IssuedCertificate[]>(CERTIFICATES_KEY, [])));
-const persistCertificates = () => saveJson(CERTIFICATES_KEY, certificates);
 
 function formalDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
-}
-
-function nextCertificateNumber(type: CertificateType): string {
-  const prefix = CERTIFICATE_TYPE_CONFIG[type].prefix;
-  const year = new Date().getFullYear();
-  const max = scopedToCurrentTenant(certificates)
-    .filter((c) => c.type === type)
-    .reduce((acc, c) => {
-      const match = c.certificateNumber.match(/(\d+)$/);
-      return match ? Math.max(acc, Number(match[1])) : acc;
-    }, 0);
-  return `${prefix}-${year}-${String(max + 1).padStart(4, "0")}`;
 }
 
 function requireStudent(students: Student[], id: string): Student {
@@ -78,42 +95,62 @@ function requireStaffMember(staff: StaffMember[], id: string): StaffMember {
   return member;
 }
 
-function issue(certificate: IssuedCertificate): IssuedCertificate {
-  certificates = [certificate, ...certificates];
-  persistCertificates();
-  return certificate;
+interface CertificateSnapshot {
+  type: CertificateType;
+  recipientType: RecipientType;
+  recipientId: string;
+  recipientName: string;
+  recipientSubtitle: string;
+  bodyLines: string[];
+  meta: Array<{ label: string; value: string }>;
+  certificateNumberOverride?: string;
 }
 
-// ── Issued certificates ─────────────────────────────────────────────────
+/**
+ * Certificates are frozen snapshots: the wording is composed here from AcademicService's student/staff
+ * data (which CampusService can't read), and CampusService stores it and assigns the sequential number.
+ */
+async function issue(snapshot: CertificateSnapshot): Promise<IssuedCertificate> {
+  const dto = await unwrap(
+    campusHttpClient.post<ApiIssuedCertificate>("/api/issuedcertificates", {
+      ...snapshot,
+      type: TYPE_TO_API[snapshot.type],
+      recipientType: RECIPIENT_TO_API[snapshot.recipientType],
+      certificateNumberOverride: snapshot.certificateNumberOverride || null,
+    }),
+  );
+  return mapCertificate(dto);
+}
+
+function studentRecipient(student: Student) {
+  return {
+    recipientType: "student" as const,
+    recipientId: student.id,
+    recipientName: `${student.firstName} ${student.lastName}`,
+    recipientSubtitle: `${student.className} - ${student.section} · ${student.admissionNumber}`,
+  };
+}
+
+// ── Issued log ───────────────────────────────────────────────────────────
 
 export async function listIssuedCertificates(): Promise<IssuedCertificate[]> {
-  return mockDelay(
-    scopedToCurrentTenantAndBranch(certificates).sort((a, b) => b.issuedOn.localeCompare(a.issuedOn)),
-    350,
-  );
+  const certificates = await unwrap(campusHttpClient.get<ApiIssuedCertificate[]>("/api/issuedcertificates"));
+  return certificates.map(mapCertificate);
 }
 
 export async function getIssuedCertificate(id: string): Promise<IssuedCertificate> {
-  const found = certificates.find((c) => c.id === id && c.tenantId === getCurrentTenantId() && c.branchId === getCurrentBranchId());
-  if (!found) throw new Error("Certificate not found");
-  return mockDelay(found, 250);
+  const dto = await unwrap(campusHttpClient.get<ApiIssuedCertificate>(`/api/issuedcertificates/${id}`));
+  return mapCertificate(dto);
 }
 
 export async function deleteIssuedCertificate(id: string): Promise<void> {
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  if (!certificates.some((c) => c.id === id && c.tenantId === tenantId && c.branchId === branchId)) throw new Error("Certificate not found");
-  certificates = certificates.filter((c) => !(c.id === id && c.tenantId === tenantId && c.branchId === branchId));
-  persistCertificates();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/issuedcertificates/${id}`));
 }
 
 // ── Generators ───────────────────────────────────────────────────────────
 
 export async function generateBonafide(values: BonafideFormValues): Promise<IssuedCertificate> {
-  const students = await listStudents();
-  const student = requireStudent(students, values.studentId);
-  const now = new Date().toISOString();
+  const student = requireStudent(await listStudents(), values.studentId);
 
   const bodyLines = [
     `This is to certify that ${student.firstName} ${student.lastName}, admission number ${student.admissionNumber}, is a bonafide student of this institution, currently studying in ${student.className} - ${student.section}.`,
@@ -121,31 +158,19 @@ export async function generateBonafide(values: BonafideFormValues): Promise<Issu
   ];
   if (values.purpose?.trim()) bodyLines.push(`This certificate is issued for the purpose of ${values.purpose.trim()}.`);
 
-  const certificate: IssuedCertificate = {
-    id: genId("cert"),
-    tenantId: getCurrentTenantId(),
-    branchId: student.branchId,
-    certificateNumber: nextCertificateNumber("bonafide"),
+  return issue({
     type: "bonafide",
-    recipientType: "student",
-    recipientId: student.id,
-    recipientName: `${student.firstName} ${student.lastName}`,
-    recipientSubtitle: `${student.className} - ${student.section} · ${student.admissionNumber}`,
-    issuedOn: now,
+    ...studentRecipient(student),
     bodyLines,
     meta: [{ label: "Purpose", value: values.purpose?.trim() || "General" }],
-  };
-  return mockDelay(issue(certificate), 500);
+  });
 }
 
 export async function generateTransferCertificate(values: TransferCertificateFormValues): Promise<IssuedCertificate> {
-  const students = await listStudents();
-  const student = requireStudent(students, values.studentId);
+  const student = requireStudent(await listStudents(), values.studentId);
   if (!student.transferRecord) {
-    await mockDelay(null, 300);
     throw new Error("This student has no transfer record yet — transfer them out from Student Management first");
   }
-  const now = new Date().toISOString();
   const record = student.transferRecord;
 
   const bodyLines = [
@@ -154,122 +179,78 @@ export async function generateTransferCertificate(values: TransferCertificateFor
     `Reason for transfer: ${record.reason}.`,
   ];
 
-  const certificate: IssuedCertificate = {
-    id: genId("cert"),
-    tenantId: getCurrentTenantId(),
-    branchId: student.branchId,
-    certificateNumber: record.transferCertificateNumber || nextCertificateNumber("transfer"),
+  return issue({
     type: "transfer",
-    recipientType: "student",
-    recipientId: student.id,
-    recipientName: `${student.firstName} ${student.lastName}`,
-    recipientSubtitle: `${student.className} - ${student.section} · ${student.admissionNumber}`,
-    issuedOn: now,
+    ...studentRecipient(student),
     bodyLines,
     meta: [
       { label: "Transferring to", value: record.toSchool },
       { label: "Reason", value: record.reason },
     ],
-  };
-  return mockDelay(issue(certificate), 500);
+    certificateNumberOverride: record.transferCertificateNumber,
+  });
 }
 
 export async function generateCharacterCertificate(values: CharacterCertificateFormValues): Promise<IssuedCertificate> {
-  const students = await listStudents();
-  const student = requireStudent(students, values.studentId);
-  const now = new Date().toISOString();
+  const student = requireStudent(await listStudents(), values.studentId);
 
   const bodyLines = [
     `This is to certify that ${student.firstName} ${student.lastName}, admission number ${student.admissionNumber}, a student of ${student.className} - ${student.section}, has been a student of this institution and, to the best of our knowledge, bears a good moral character.`,
   ];
   if (values.purpose?.trim()) bodyLines.push(`This certificate is issued for the purpose of ${values.purpose.trim()}.`);
 
-  const certificate: IssuedCertificate = {
-    id: genId("cert"),
-    tenantId: getCurrentTenantId(),
-    branchId: student.branchId,
-    certificateNumber: nextCertificateNumber("character"),
+  return issue({
     type: "character",
-    recipientType: "student",
-    recipientId: student.id,
-    recipientName: `${student.firstName} ${student.lastName}`,
-    recipientSubtitle: `${student.className} - ${student.section} · ${student.admissionNumber}`,
-    issuedOn: now,
+    ...studentRecipient(student),
     bodyLines,
     meta: [{ label: "Purpose", value: values.purpose?.trim() || "General" }],
-  };
-  return mockDelay(issue(certificate), 500);
+  });
 }
 
 export async function generateStudyCertificate(values: StudyCertificateFormValues): Promise<IssuedCertificate> {
-  const students = await listStudents();
-  const student = requireStudent(students, values.studentId);
+  const student = requireStudent(await listStudents(), values.studentId);
   if (new Date(values.toDate) < new Date(values.fromDate)) {
-    await mockDelay(null, 300);
     throw new Error("End date can't be before the start date");
   }
-  const now = new Date().toISOString();
 
   const bodyLines = [
     `This is to certify that ${student.firstName} ${student.lastName}, admission number ${student.admissionNumber}, studied at this institution from ${formalDate(values.fromDate)} to ${formalDate(values.toDate)}, in ${student.className} - ${student.section}.`,
   ];
   if (values.purpose?.trim()) bodyLines.push(`This certificate is issued for the purpose of ${values.purpose.trim()}.`);
 
-  const certificate: IssuedCertificate = {
-    id: genId("cert"),
-    tenantId: getCurrentTenantId(),
-    branchId: student.branchId,
-    certificateNumber: nextCertificateNumber("study"),
+  return issue({
     type: "study",
-    recipientType: "student",
-    recipientId: student.id,
-    recipientName: `${student.firstName} ${student.lastName}`,
-    recipientSubtitle: `${student.className} - ${student.section} · ${student.admissionNumber}`,
-    issuedOn: now,
+    ...studentRecipient(student),
     bodyLines,
     meta: [
       { label: "Period", value: `${formalDate(values.fromDate)} – ${formalDate(values.toDate)}` },
       { label: "Purpose", value: values.purpose?.trim() || "General" },
     ],
-  };
-  return mockDelay(issue(certificate), 500);
+  });
 }
 
 export async function generateAchievementCertificate(values: AchievementCertificateFormValues): Promise<IssuedCertificate> {
-  const students = await listStudents();
-  const student = requireStudent(students, values.studentId);
-  const now = new Date().toISOString();
+  const student = requireStudent(await listStudents(), values.studentId);
 
   const bodyLines = [
     `This is to certify that ${student.firstName} ${student.lastName}, a student of ${student.className} - ${student.section}, has successfully participated in ${values.event.trim()} held on ${formalDate(values.eventDate)}.`,
     `In recognition of this, the student is awarded: ${values.achievement.trim()}.`,
   ];
 
-  const certificate: IssuedCertificate = {
-    id: genId("cert"),
-    tenantId: getCurrentTenantId(),
-    branchId: student.branchId,
-    certificateNumber: nextCertificateNumber("achievement"),
+  return issue({
     type: "achievement",
-    recipientType: "student",
-    recipientId: student.id,
-    recipientName: `${student.firstName} ${student.lastName}`,
-    recipientSubtitle: `${student.className} - ${student.section} · ${student.admissionNumber}`,
-    issuedOn: now,
+    ...studentRecipient(student),
     bodyLines,
     meta: [
       { label: "Event", value: values.event.trim() },
       { label: "Achievement", value: values.achievement.trim() },
       { label: "Event date", value: formalDate(values.eventDate) },
     ],
-  };
-  return mockDelay(issue(certificate), 500);
+  });
 }
 
 export async function generateStaffServiceCertificate(values: StaffServiceCertificateFormValues): Promise<IssuedCertificate> {
-  const staff = await listStaff();
-  const member = requireStaffMember(staff, values.staffId);
-  const now = new Date().toISOString();
+  const member = requireStaffMember(await listStaff(), values.staffId);
 
   const servicePeriod = member.resignation
     ? `from ${formalDate(member.joiningDate)} to ${formalDate(member.resignation.lastWorkingDate)}`
@@ -280,19 +261,13 @@ export async function generateStaffServiceCertificate(values: StaffServiceCertif
   ];
   if (values.purpose?.trim()) bodyLines.push(`This certificate is issued for the purpose of ${values.purpose.trim()}.`);
 
-  const certificate: IssuedCertificate = {
-    id: genId("cert"),
-    tenantId: getCurrentTenantId(),
-    branchId: member.branchId,
-    certificateNumber: nextCertificateNumber("staff_service"),
+  return issue({
     type: "staff_service",
     recipientType: "staff",
     recipientId: member.id,
     recipientName: `${member.firstName} ${member.lastName}`,
     recipientSubtitle: `${member.designation} · ${member.employeeId}`,
-    issuedOn: now,
     bodyLines,
     meta: [{ label: "Purpose", value: values.purpose?.trim() || "General" }],
-  };
-  return mockDelay(issue(certificate), 500);
+  });
 }

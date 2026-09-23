@@ -25,6 +25,7 @@ type FormValues = z.infer<typeof schema>;
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  const email = searchParams.get("email") ?? "";
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,7 +38,7 @@ export default function ResetPasswordPage() {
   const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
     try {
-      await resetPassword(token, values.password);
+      await resetPassword(email, token, values.password);
       toast.success("Password reset — please sign in");
       navigate("/login", { replace: true });
     } catch (err) {
@@ -61,9 +62,9 @@ export default function ResetPasswordPage() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          {!token ? (
+          {!token || !email ? (
             <p className="text-sm text-slate-500 text-center">
-              This link is missing a reset token. Please request a new one from the{" "}
+              This link is invalid or incomplete. Please request a new one from the{" "}
               <Link to="/forgot-password" className="text-brand-600 font-medium">
                 forgot password
               </Link>{" "}

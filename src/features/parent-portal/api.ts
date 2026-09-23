@@ -1,18 +1,13 @@
 import { mockDelay } from "@/utils/mockDelay";
-import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
+import { engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { listInvoicesForStudent, payInvoiceOnline } from "@/features/fees/api";
 import type { FeeInvoice as FeesInvoice } from "@/features/fees/types";
+import { listMyNotifications, markRead } from "@/features/notifications/api";
+import type { Notification } from "@/features/notifications/types";
 import { PARENT_CHILDREN_MAP } from "./constants";
-import {
-  buildAttendanceSummary,
-  buildExamResults,
-  buildHomework,
-  buildLeaveRequests,
-  buildMessageThreads,
-  buildNotifications,
-} from "./mock";
+import { buildAttendanceSummary, buildExamResults, buildHomework } from "./mock";
 import type {
   AttendanceSummary,
   ExamResult,
@@ -20,41 +15,62 @@ import type {
   HomeworkItem,
   LeaveRequest,
   LeaveRequestFormValues,
+  LeaveRequestStatus,
   MessageThread,
   ParentNotification,
+  ThreadMessage,
 } from "./types";
 
-const THREADS_KEY = "sms-mock-parent-threads";
-const LEAVE_KEY = "sms-mock-parent-leave";
-const NOTIFICATIONS_KEY = "sms-mock-parent-notifications";
+// ── Owned slice (EngagementService) ─────────────────────────────────────────
+// Message threads and leave requests are Parent Portal's own data, served by EngagementService.
+// Its notifications are the real inbox (features/notifications), not a separate mock list.
 
-function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
+const SENDER_FROM_API: Record<string, ThreadMessage["sender"]> = { Parent: "parent", Teacher: "teacher" };
+const LEAVE_STATUS_FROM_API: Record<string, LeaveRequestStatus> = { Pending: "pending", Approved: "approved", Rejected: "rejected" };
+
+interface ApiThread {
+  id: string;
+  studentId: string;
+  teacherName: string;
+  subject: string;
+  messages: Array<{ id: string; sender: string; body: string; sentAt: string }>;
 }
 
-function saveJson(key: string, value: unknown) {
+interface ApiLeaveRequest {
+  id: string;
+  studentId: string;
+  fromDate: string;
+  toDate: string;
+  reason: string;
+  status: string;
+  requestedAt: string;
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
 
-// threadsByStudent/leaveByStudent are keyed by studentId, not tagged with tenantId directly —
-// like RolePermissionMap in administration/roles, they're only ever reached via a studentId
-// that already passed through a tenant-scoped lookup (getMyChildren -> listStudents), so an
-// opaque, tenant-unreachable key keeps them safe without a parallel tenantId field.
-let threadsByStudent = loadJson<Record<string, MessageThread[]>>(THREADS_KEY, {});
-let leaveByStudent = loadJson<Record<string, LeaveRequest[]>>(LEAVE_KEY, {});
-let notifications = migrateLegacyRecordsToDefaultTenant(
-  loadJson<ParentNotification[]>(NOTIFICATIONS_KEY, buildNotifications().map((n) => ({ ...n, tenantId: DEFAULT_TENANT_ID }))),
-);
+function mapThread(t: ApiThread): MessageThread {
+  return {
+    id: t.id,
+    studentId: t.studentId,
+    teacherName: t.teacherName,
+    subject: t.subject,
+    messages: t.messages.map((m) => ({ id: m.id, sender: SENDER_FROM_API[m.sender], body: m.body, sentAt: m.sentAt })),
+  };
+}
+
+function mapLeaveRequest(r: ApiLeaveRequest): LeaveRequest {
+  return { ...r, status: LEAVE_STATUS_FROM_API[r.status] };
+}
+
+function toParentNotification(n: Notification): ParentNotification {
+  return { id: n.id, tenantId: n.tenantId, title: n.title, body: n.body, createdAt: n.createdAt, read: n.read };
+}
 
 function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
   return {
@@ -67,22 +83,6 @@ function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
     paidOn: invoice.paidOn,
     paidAmount: invoice.paidAmount,
   };
-}
-
-function ensureThreads(studentId: string, teacherName: string): MessageThread[] {
-  if (!threadsByStudent[studentId]) {
-    threadsByStudent = { ...threadsByStudent, [studentId]: buildMessageThreads(studentId, teacherName) };
-    saveJson(THREADS_KEY, threadsByStudent);
-  }
-  return threadsByStudent[studentId];
-}
-
-function ensureLeave(studentId: string): LeaveRequest[] {
-  if (!leaveByStudent[studentId]) {
-    leaveByStudent = { ...leaveByStudent, [studentId]: buildLeaveRequests(studentId) };
-    saveJson(LEAVE_KEY, leaveByStudent);
-  }
-  return leaveByStudent[studentId];
 }
 
 export async function getMyChildren(parentEmail: string): Promise<Student[]> {
@@ -114,56 +114,43 @@ export async function payFeeInvoice(studentId: string, invoiceId: string): Promi
   return toParentFeeInvoice(invoice);
 }
 
+/**
+ * The mock seeded a demo "Progress check-in" thread with made-up teacher messages per child.
+ * With real data, a child with no thread yet gets one empty "General" thread with their class
+ * teacher instead, so the parent always has somewhere to write (MessagesTab has no "new thread").
+ */
 export async function listMessageThreads(studentId: string, teacherName: string): Promise<MessageThread[]> {
-  return mockDelay([...ensureThreads(studentId, teacherName)], 350);
+  const threads = await unwrap(engagementHttpClient.get<ApiThread[]>("api/ParentMessageThreads", { params: { studentId } }));
+  if (threads.length > 0) return threads.map(mapThread);
+  const started = await unwrap(
+    engagementHttpClient.post<ApiThread>("api/ParentMessageThreads", { studentId, teacherName, subject: "General" }),
+  );
+  return [mapThread(started)];
 }
 
 export async function sendMessage(studentId: string, threadId: string, body: string): Promise<MessageThread> {
-  const threads = ensureThreads(studentId, "Teacher");
-  const idx = threads.findIndex((t) => t.id === threadId);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Thread not found");
-  }
-  const updated: MessageThread = {
-    ...threads[idx],
-    messages: [
-      ...threads[idx].messages,
-      { id: `msg-${Math.random().toString(36).slice(2, 8)}`, sender: "parent", body, sentAt: new Date().toISOString() },
-    ],
-  };
-  const nextList = threads.map((t) => (t.id === threadId ? updated : t));
-  threadsByStudent = { ...threadsByStudent, [studentId]: nextList };
-  saveJson(THREADS_KEY, threadsByStudent);
-  return mockDelay(updated, 400);
+  void studentId;
+  return mapThread(
+    await unwrap(engagementHttpClient.post<ApiThread>(`api/ParentMessageThreads/${threadId}/messages`, { sender: "Parent", body })),
+  );
 }
 
 export async function listLeaveRequests(studentId: string): Promise<LeaveRequest[]> {
-  return mockDelay([...ensureLeave(studentId)], 350);
+  const requests = await unwrap(engagementHttpClient.get<ApiLeaveRequest[]>("api/StudentLeaveRequests", { params: { studentId } }));
+  return requests.map(mapLeaveRequest);
 }
 
 export async function createLeaveRequest(studentId: string, values: LeaveRequestFormValues): Promise<LeaveRequest> {
-  const requests = ensureLeave(studentId);
-  const request: LeaveRequest = {
-    id: `${studentId}-leave-${Math.random().toString(36).slice(2, 8)}`,
-    studentId,
-    ...values,
-    status: "pending",
-    requestedAt: new Date().toISOString(),
-  };
-  const nextList = [request, ...requests];
-  leaveByStudent = { ...leaveByStudent, [studentId]: nextList };
-  saveJson(LEAVE_KEY, leaveByStudent);
-  return mockDelay(request, 450);
+  return mapLeaveRequest(
+    await unwrap(engagementHttpClient.post<ApiLeaveRequest>("api/StudentLeaveRequests", { studentId, ...values })),
+  );
 }
 
 export async function listNotifications(): Promise<ParentNotification[]> {
-  return mockDelay(scopedToCurrentTenant(notifications), 300);
+  return (await listMyNotifications()).map(toParentNotification);
 }
 
 export async function markNotificationRead(id: string): Promise<ParentNotification[]> {
-  const tenantId = getCurrentTenantId();
-  notifications = notifications.map((n) => (n.id === id && n.tenantId === tenantId ? { ...n, read: true } : n));
-  saveJson(NOTIFICATIONS_KEY, notifications);
-  return mockDelay(scopedToCurrentTenant(notifications), 150);
+  await markRead(id);
+  return listNotifications();
 }

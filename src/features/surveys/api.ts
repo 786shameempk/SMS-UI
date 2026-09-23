@@ -1,18 +1,17 @@
-import { mockDelay } from "@/utils/mockDelay";
-import { DEFAULT_TENANT_ID, getCurrentTenantId, migrateLegacyRecordsToDefaultTenant, scopedToCurrentTenant } from "@/utils/tenant";
+import { engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
-import { buildSeedSurveyData } from "./mock";
 import type {
   QuestionResult,
+  QuestionType,
   RecordResponseFormValues,
   RespondentRow,
+  RespondentType,
   Survey,
   SurveyAudience,
   SurveyFormValues,
-  SurveyQuestion,
   SurveyResponse,
   SurveyResultsSummary,
   SurveyRow,
@@ -20,72 +19,144 @@ import type {
   SurveyStatus,
 } from "./types";
 
-const SURVEYS_KEY = "sms-mock-surveys";
-const RESPONSES_KEY = "sms-mock-surveys-responses";
-const SEEDED_KEY = "sms-mock-surveys-seeded";
+// ── Enum translation ────────────────────────────────────────────────────────
+// EngagementService's enums serialize as PascalCase; see docs/MICROSERVICES_PLAN.md.
 
-function loadJson<T>(key: string, fallback: T): T {
+const QUESTION_TYPE_TO_API: Record<QuestionType, string> = { rating: "Rating", multiple_choice: "MultipleChoice", yes_no: "YesNo", text: "Text" };
+const QUESTION_TYPE_FROM_API: Record<string, QuestionType> = { Rating: "rating", MultipleChoice: "multiple_choice", YesNo: "yes_no", Text: "text" };
+
+const STATUS_TO_API: Record<SurveyStatus, string> = { draft: "Draft", published: "Published", closed: "Closed" };
+const STATUS_FROM_API: Record<string, SurveyStatus> = { Draft: "draft", Published: "published", Closed: "closed" };
+
+const AUDIENCE_TO_API: Record<SurveyAudience, string> = { students: "Students", parents: "Parents", staff: "Staff", all: "All" };
+const AUDIENCE_FROM_API: Record<string, SurveyAudience> = { Students: "students", Parents: "parents", Staff: "staff", All: "all" };
+
+const RESPONDENT_TO_API: Record<RespondentType, string> = { student: "Student", staff: "Staff", parent: "Parent", anonymous: "Anonymous" };
+const RESPONDENT_FROM_API: Record<string, RespondentType> = { Student: "student", Staff: "staff", Parent: "parent", Anonymous: "anonymous" };
+
+// ── API response shapes (EngagementService DTOs) ────────────────────────────
+
+interface ApiQuestion {
+  id: string;
+  text: string;
+  type: string;
+  options: string[];
+  required: boolean;
+}
+
+interface ApiSurvey {
+  id: string;
+  tenantId: string;
+  title: string;
+  description: string | null;
+  audience: string;
+  status: string;
+  anonymousAllowed: boolean;
+  opensAt: string;
+  closesAt: string | null;
+  createdByStaffId: string | null;
+  createdAt: string;
+  questions: ApiQuestion[];
+  responseCount: number;
+}
+
+interface ApiResponse {
+  id: string;
+  tenantId: string;
+  surveyId: string;
+  respondentType: string;
+  respondentStudentId: string | null;
+  respondentStaffId: string | null;
+  respondentName: string | null;
+  submittedAt: string;
+  answers: Array<{ questionId: string; value: string }>;
+}
+
+interface ApiQuestionResult {
+  questionId: string;
+  questionText: string;
+  type: string;
+  required: boolean;
+  answeredCount: number;
+  ratingAverage: number | null;
+  ratingDistribution: Array<{ value: number; count: number }> | null;
+  choiceCounts: Array<{ option: string; count: number }> | null;
+  yesCount: number | null;
+  noCount: number | null;
+  textResponses: string[] | null;
+}
+
+interface ApiResults {
+  survey: ApiSurvey;
+  responseCount: number;
+  questionResults: ApiQuestionResult[];
+}
+
+interface ApiReportsSummary {
+  totalSurveys: number;
+  publishedSurveys: number;
+  totalResponses: number;
+  avgResponsesPerSurvey: number;
+  responsesByAudience: Array<{ audience: string; count: number }>;
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
 
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+function mapSurvey(s: ApiSurvey): Survey {
+  return {
+    id: s.id,
+    tenantId: s.tenantId,
+    title: s.title,
+    description: s.description ?? undefined,
+    audience: AUDIENCE_FROM_API[s.audience],
+    status: STATUS_FROM_API[s.status],
+    anonymousAllowed: s.anonymousAllowed,
+    opensAt: s.opensAt,
+    closesAt: s.closesAt ?? undefined,
+    createdByStaffId: s.createdByStaffId ?? undefined,
+    createdAt: s.createdAt,
+    questions: s.questions.map((q) => {
+      const type = QUESTION_TYPE_FROM_API[q.type];
+      return { id: q.id, text: q.text, type, options: type === "multiple_choice" ? q.options : undefined, required: q.required };
+    }),
+  };
 }
 
-let surveys = migrateLegacyRecordsToDefaultTenant(loadJson<Survey[]>(SURVEYS_KEY, []));
-let responses = migrateLegacyRecordsToDefaultTenant(loadJson<SurveyResponse[]>(RESPONSES_KEY, []));
-
-function persistSurveys() {
-  saveJson(SURVEYS_KEY, surveys);
-}
-function persistResponses() {
-  saveJson(RESPONSES_KEY, responses);
-}
-
-function requireSurvey(id: string): Survey {
-  const found = surveys.find((s) => s.id === id && s.tenantId === getCurrentTenantId());
-  if (!found) throw new Error("Survey not found");
-  return found;
+function mapResponse(r: ApiResponse): SurveyResponse {
+  return {
+    id: r.id,
+    tenantId: r.tenantId,
+    surveyId: r.surveyId,
+    respondentType: RESPONDENT_FROM_API[r.respondentType],
+    respondentStudentId: r.respondentStudentId ?? undefined,
+    respondentStaffId: r.respondentStaffId ?? undefined,
+    respondentName: r.respondentName ?? undefined,
+    submittedAt: r.submittedAt,
+    answers: r.answers,
+  };
 }
 
-/**
- * Surveys/questions/responses are entirely this module's own data — it only reads real
- * students/staff to resolve who a response belongs to (or who created a survey), same
- * read-only join convention as every other module this session. No new staff designation or
- * cross-module write is needed here.
- */
-async function performSeed(): Promise<void> {
-  if (loadJson(SEEDED_KEY, false)) return;
-
-  if (surveys.length === 0 && responses.length === 0) {
-    const [students, staff] = await Promise.all([listStudents(), listStaff()]);
-    const seeded = buildSeedSurveyData(students, staff);
-    surveys = seeded.surveys.map((s) => ({ ...s, tenantId: DEFAULT_TENANT_ID }));
-    responses = seeded.responses.map((r) => ({ ...r, tenantId: DEFAULT_TENANT_ID }));
-    persistSurveys();
-    persistResponses();
-  }
-
-  saveJson(SEEDED_KEY, true);
+function mapQuestionResult(q: ApiQuestionResult): QuestionResult {
+  return {
+    questionId: q.questionId,
+    questionText: q.questionText,
+    type: QUESTION_TYPE_FROM_API[q.type],
+    required: q.required,
+    answeredCount: q.answeredCount,
+    ratingAverage: q.ratingAverage ?? undefined,
+    ratingDistribution: q.ratingDistribution ?? undefined,
+    choiceCounts: q.choiceCounts ?? undefined,
+    yesCount: q.yesCount ?? undefined,
+    noCount: q.noCount ?? undefined,
+    textResponses: q.textResponses ?? undefined,
+  };
 }
-
-const seedPromise: Promise<void> = performSeed().catch((err) => {
-  console.error("Surveys & Feedback seed failed", err);
-});
 
 async function joinContext(): Promise<{ studentById: Map<string, Student>; staffById: Map<string, StaffMember> }> {
   const [students, staff] = await Promise.all([listStudents(), listStaff()]);
@@ -115,184 +186,107 @@ function respondentLabel(response: SurveyResponse, studentById: Map<string, Stud
 // ── Surveys ──────────────────────────────────────────────────────────────
 
 export async function listSurveys(status?: SurveyStatus): Promise<SurveyRow[]> {
-  await seedPromise;
-  const { staffById } = await joinContext();
-  const rows = scopedToCurrentTenant(surveys)
-    .filter((s) => !status || s.status === status)
-    .map((s): SurveyRow => ({
-      ...s,
-      responseCount: responses.filter((r) => r.tenantId === s.tenantId && r.surveyId === s.id).length,
-      createdBy: s.createdByStaffId ? staffById.get(s.createdByStaffId) : undefined,
-    }))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  return mockDelay(rows, 350);
+  const [surveys, { staffById }] = await Promise.all([
+    unwrap(engagementHttpClient.get<ApiSurvey[]>("api/Surveys", { params: status ? { status: STATUS_TO_API[status] } : undefined })),
+    joinContext(),
+  ]);
+  return surveys.map((s): SurveyRow => ({
+    ...mapSurvey(s),
+    responseCount: s.responseCount,
+    createdBy: s.createdByStaffId ? staffById.get(s.createdByStaffId) : undefined,
+  }));
 }
 
 export async function getSurvey(id: string): Promise<Survey> {
-  await seedPromise;
-  return mockDelay(requireSurvey(id), 250);
+  return mapSurvey(await unwrap(engagementHttpClient.get<ApiSurvey>(`api/Surveys/${id}`)));
 }
 
 export async function createSurvey(values: SurveyFormValues): Promise<Survey> {
-  await seedPromise;
-  const questions: SurveyQuestion[] = values.questions.map((q) => ({ id: genId("q"), ...q }));
-  const survey: Survey = {
-    id: genId("survey"),
-    tenantId: getCurrentTenantId(),
-    title: values.title,
-    description: values.description,
-    audience: values.audience,
-    status: "draft",
-    anonymousAllowed: values.anonymousAllowed,
-    opensAt: values.opensAt,
-    closesAt: values.closesAt,
-    createdByStaffId: values.createdByStaffId,
-    createdAt: new Date().toISOString(),
-    questions,
-  };
-  surveys = [survey, ...surveys];
-  persistSurveys();
-  return mockDelay(survey, 400);
+  return mapSurvey(
+    await unwrap(
+      engagementHttpClient.post<ApiSurvey>("api/Surveys", {
+        title: values.title,
+        description: values.description?.trim() || null,
+        audience: AUDIENCE_TO_API[values.audience],
+        anonymousAllowed: values.anonymousAllowed,
+        opensAt: values.opensAt,
+        closesAt: values.closesAt || null,
+        createdByStaffId: values.createdByStaffId || null,
+        questions: values.questions.map((q) => ({
+          text: q.text,
+          type: QUESTION_TYPE_TO_API[q.type],
+          options: q.options ?? null,
+          required: q.required,
+        })),
+      }),
+    ),
+  );
 }
 
 export async function publishSurvey(id: string): Promise<Survey> {
-  await seedPromise;
-  const survey = requireSurvey(id);
-  if (survey.status !== "draft") throw new Error("Only a draft survey can be published");
-  const updated: Survey = { ...survey, status: "published" };
-  surveys = surveys.map((s) => (s.id === id ? updated : s));
-  persistSurveys();
-  return mockDelay(updated, 300);
+  return mapSurvey(await unwrap(engagementHttpClient.post<ApiSurvey>(`api/Surveys/${id}/publish`)));
 }
 
 export async function closeSurvey(id: string): Promise<Survey> {
-  await seedPromise;
-  const survey = requireSurvey(id);
-  if (survey.status !== "published") throw new Error("Only a published survey can be closed");
-  const updated: Survey = { ...survey, status: "closed" };
-  surveys = surveys.map((s) => (s.id === id ? updated : s));
-  persistSurveys();
-  return mockDelay(updated, 300);
+  return mapSurvey(await unwrap(engagementHttpClient.post<ApiSurvey>(`api/Surveys/${id}/close`)));
 }
 
+/** Its questions and responses are deleted with it. */
 export async function deleteSurvey(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  requireSurvey(id);
-  surveys = surveys.filter((s) => !(s.id === id && s.tenantId === tenantId));
-  responses = responses.filter((r) => !(r.tenantId === tenantId && r.surveyId === id));
-  persistSurveys();
-  persistResponses();
-  return mockDelay(undefined, 300);
+  await unwrap(engagementHttpClient.delete(`api/Surveys/${id}`));
 }
 
 // ── Responses ────────────────────────────────────────────────────────────
 
 export async function listResponses(surveyId: string): Promise<RespondentRow[]> {
-  await seedPromise;
-  const { studentById, staffById } = await joinContext();
-  const rows = scopedToCurrentTenant(responses)
-    .filter((r) => r.surveyId === surveyId)
-    .map(
-      (r): RespondentRow => ({
-        ...r,
-        respondentStudent: r.respondentStudentId ? studentById.get(r.respondentStudentId) : undefined,
-        respondentStaff: r.respondentStaffId ? staffById.get(r.respondentStaffId) : undefined,
-        respondentLabel: respondentLabel(r, studentById, staffById),
-      }),
-    )
-    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-  return mockDelay(rows, 350);
+  const [responses, { studentById, staffById }] = await Promise.all([
+    unwrap(engagementHttpClient.get<ApiResponse[]>(`api/Surveys/${surveyId}/responses`)),
+    joinContext(),
+  ]);
+  return responses.map(mapResponse).map(
+    (r): RespondentRow => ({
+      ...r,
+      respondentStudent: r.respondentStudentId ? studentById.get(r.respondentStudentId) : undefined,
+      respondentStaff: r.respondentStaffId ? staffById.get(r.respondentStaffId) : undefined,
+      respondentLabel: respondentLabel(r, studentById, staffById),
+    }),
+  );
 }
 
 export async function recordResponse(values: RecordResponseFormValues): Promise<SurveyResponse> {
-  await seedPromise;
-  const survey = requireSurvey(values.surveyId);
-  if (survey.status !== "published") throw new Error("This survey isn't open for responses right now");
-  if (values.respondentType === "anonymous" && !survey.anonymousAllowed) throw new Error("This survey doesn't accept anonymous responses");
-
-  const missingRequired = survey.questions.some((q) => q.required && !values.answers.find((a) => a.questionId === q.id)?.value.trim());
-  if (missingRequired) throw new Error("Please answer all required questions");
-
-  const response: SurveyResponse = {
-    id: genId("resp"),
-    tenantId: survey.tenantId,
-    surveyId: values.surveyId,
-    respondentType: values.respondentType,
-    respondentStudentId: values.respondentType === "student" || values.respondentType === "parent" ? values.respondentStudentId : undefined,
-    respondentStaffId: values.respondentType === "staff" ? values.respondentStaffId : undefined,
-    respondentName: values.respondentType === "parent" ? values.respondentName?.trim() : undefined,
-    submittedAt: new Date().toISOString(),
-    answers: values.answers.filter((a) => a.value.trim().length > 0),
-  };
-  responses = [response, ...responses];
-  persistResponses();
-  return mockDelay(response, 400);
+  return mapResponse(
+    await unwrap(
+      engagementHttpClient.post<ApiResponse>("api/SurveyResponses", {
+        surveyId: values.surveyId,
+        respondentType: RESPONDENT_TO_API[values.respondentType],
+        respondentStudentId: values.respondentStudentId || null,
+        respondentStaffId: values.respondentStaffId || null,
+        respondentName: values.respondentName || null,
+        answers: values.answers,
+      }),
+    ),
+  );
 }
 
 export async function deleteResponse(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const found = responses.find((r) => r.id === id && r.tenantId === tenantId);
-  if (!found) throw new Error("Response not found");
-  responses = responses.filter((r) => !(r.id === id && r.tenantId === tenantId));
-  persistResponses();
-  return mockDelay(undefined, 300);
+  await unwrap(engagementHttpClient.delete(`api/SurveyResponses/${id}`));
 }
 
 // ── Results & reports ────────────────────────────────────────────────────
 
 export async function getSurveyResults(surveyId: string): Promise<SurveyResultsSummary> {
-  await seedPromise;
-  const survey = requireSurvey(surveyId);
-  const surveyResponses = responses.filter((r) => r.tenantId === survey.tenantId && r.surveyId === surveyId);
-
-  const questionResults: QuestionResult[] = survey.questions.map((question) => {
-    const answersForQuestion = surveyResponses
-      .map((r) => r.answers.find((a) => a.questionId === question.id))
-      .filter((a): a is NonNullable<typeof a> => Boolean(a));
-
-    const base = { questionId: question.id, questionText: question.text, type: question.type, required: question.required, answeredCount: answersForQuestion.length };
-
-    if (question.type === "rating") {
-      const values = answersForQuestion.map((a) => Number(a.value)).filter((n) => !Number.isNaN(n));
-      const distribution = [1, 2, 3, 4, 5].map((value) => ({ value, count: values.filter((v) => v === value).length }));
-      const average = values.length === 0 ? 0 : Math.round((values.reduce((sum, v) => sum + v, 0) / values.length) * 10) / 10;
-      return { ...base, ratingAverage: average, ratingDistribution: distribution };
-    }
-    if (question.type === "multiple_choice") {
-      const counts = (question.options ?? []).map((option) => ({ option, count: answersForQuestion.filter((a) => a.value === option).length }));
-      return { ...base, choiceCounts: counts };
-    }
-    if (question.type === "yes_no") {
-      return {
-        ...base,
-        yesCount: answersForQuestion.filter((a) => a.value === "yes").length,
-        noCount: answersForQuestion.filter((a) => a.value === "no").length,
-      };
-    }
-    return { ...base, textResponses: answersForQuestion.map((a) => a.value) };
-  });
-
-  return mockDelay({ survey, responseCount: surveyResponses.length, questionResults }, 350);
+  const results = await unwrap(engagementHttpClient.get<ApiResults>(`api/Surveys/${surveyId}/results`));
+  return {
+    survey: mapSurvey(results.survey),
+    responseCount: results.responseCount,
+    questionResults: results.questionResults.map(mapQuestionResult),
+  };
 }
 
 export async function getSurveysReportsSummary(): Promise<SurveysReportsSummary> {
-  await seedPromise;
-  const scopedSurveys = scopedToCurrentTenant(surveys);
-  const scopedResponses = scopedToCurrentTenant(responses);
-  const totalSurveys = scopedSurveys.length;
-  const publishedSurveys = scopedSurveys.filter((s) => s.status === "published").length;
-  const totalResponses = scopedResponses.length;
-  const avgResponsesPerSurvey = totalSurveys === 0 ? 0 : Math.round((totalResponses / totalSurveys) * 10) / 10;
-
-  const audienceCounts = new Map<string, number>();
-  for (const response of scopedResponses) {
-    const survey = scopedSurveys.find((s) => s.id === response.surveyId);
-    if (!survey) continue;
-    audienceCounts.set(survey.audience, (audienceCounts.get(survey.audience) ?? 0) + 1);
-  }
-  const responsesByAudience = Array.from(audienceCounts.entries()).map(([audience, count]) => ({ audience: audience as SurveyAudience, count }));
-
-  return mockDelay({ totalSurveys, publishedSurveys, totalResponses, avgResponsesPerSurvey, responsesByAudience }, 300);
+  const summary = await unwrap(engagementHttpClient.get<ApiReportsSummary>("api/Surveys/reports-summary"));
+  return {
+    ...summary,
+    responsesByAudience: summary.responsesByAudience.map((a) => ({ audience: AUDIENCE_FROM_API[a.audience], count: a.count })),
+  };
 }

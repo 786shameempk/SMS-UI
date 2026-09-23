@@ -1,6 +1,7 @@
-import type { AuthUser, LoginCredentials, ModulePermissions } from "@/types/auth";
+import type { AuthUser, LoginCredentials, ModulePermissions, UserRole } from "@/types/auth";
 import { mockDelay } from "@/utils/mockDelay";
-import { findAccount, findAccountByEmail, permissionsFor, setAccountPassword } from "./mockUsers";
+import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { findAccount, setAccountPassword } from "./mockUsers";
 import { buildMockDevices, buildMockSessions } from "./mockSecurity";
 import type { DeviceRecord, SessionRecord } from "./types";
 
@@ -10,94 +11,134 @@ export interface LoginResult {
   permissions: ModulePermissions;
 }
 
-export type LoginOutcome = { status: "mfa_required"; email: string } | ({ status: "success" } & LoginResult);
+/** Shape of AuthService's UserDto (see AuthService.Application/DTO/UserDto.cs). */
+interface ApiUserDto {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  tenantId: string | null;
+  branchId: string | null;
+  roles: string[];
+  permissions: string[];
+}
 
-const MOCK_MFA_CODE = "123456";
+/** Shape of AuthService's AuthResponseDto (see AuthService.Application/DTO/AuthResponseDto.cs). */
+interface ApiAuthResponseDto {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: string;
+  user: ApiUserDto;
+}
 
-/** Mirrored to localStorage since a reset link is always opened via a fresh page load. */
-const RESET_TOKENS_KEY = "sms-mock-reset-tokens";
+const VALID_ROLES: UserRole[] = [
+  "superAdmin",
+  "admin",
+  "principal",
+  "teacher",
+  "accountant",
+  "librarian",
+  "receptionist",
+  "parent",
+  "student",
+];
 
-function loadResetTokens(): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(RESET_TOKENS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
+/** AuthService's Identity role names are meant to match UserRole exactly (see AuthService's
+ *  Domain/Constants/Roles.cs), matched case-insensitively to tolerate any legacy/manually-cased
+ *  role rows in the database. Falls back to the least-privileged role if nothing recognizable. */
+function mapRole(roles: string[]): UserRole {
+  for (const role of roles) {
+    const match = VALID_ROLES.find((v) => v.toLowerCase() === role.toLowerCase());
+    if (match) return match;
   }
+  return "student";
 }
 
-function saveResetTokens(tokens: Record<string, string>) {
-  try {
-    localStorage.setItem(RESET_TOKENS_KEY, JSON.stringify(tokens));
-  } catch {
-    // best-effort only
+const MODULE_PERMISSION_PREFIX = "module.";
+
+/** AuthService issues one "module.<key>" permission per ModulePermissions key (see Domain/Constants
+ *  Permissions.Modules), so the key is recovered by stripping the prefix - no translation table. */
+function mapModulePermissions(permissions: string[]): ModulePermissions {
+  const result: ModulePermissions = {
+    dashboard: false,
+    students: false,
+    academics: false,
+    attendance: false,
+    staff: false,
+    teachers: false,
+    payroll: false,
+    fees: false,
+    accounting: false,
+    inventory: false,
+    certificates: false,
+    health: false,
+    visitors: false,
+    helpdesk: false,
+    surveys: false,
+    library: false,
+    transport: false,
+    hostel: false,
+    communication: false,
+    reports: false,
+    administration: false,
+    platformConsole: false,
+    aiFeatures: false,
+    timetable: false,
+    examinations: false,
+    homework: false,
+  };
+  for (const permission of permissions) {
+    if (permission.startsWith(MODULE_PERMISSION_PREFIX)) {
+      result[permission.slice(MODULE_PERMISSION_PREFIX.length)] = true;
+    }
   }
+  return result;
 }
 
-const resetTokens = loadResetTokens();
-
-function makeMockToken(user: AuthUser): string {
-  const payload = { sub: user.id, role: user.role, iat: Date.now() };
-  return `mock.${btoa(JSON.stringify(payload))}.token`;
-}
-
-function buildLoginResult(account: NonNullable<ReturnType<typeof findAccount>>): LoginResult {
+function mapAuthUser(dto: ApiUserDto): AuthUser {
   return {
-    user: account.user,
-    token: makeMockToken(account.user),
-    permissions: permissionsFor(account.user.role),
+    id: dto.id,
+    name: `${dto.firstName} ${dto.lastName}`.trim(),
+    email: dto.email,
+    role: mapRole(dto.roles),
+    avatarUrl: null,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
   };
 }
 
-export async function login(credentials: LoginCredentials): Promise<LoginOutcome> {
-  const account = findAccount(credentials.email, credentials.password);
-  if (!account) {
-    await mockDelay(null, 500);
-    throw new Error("Invalid email or password");
+export async function login(credentials: LoginCredentials): Promise<LoginResult> {
+  try {
+    const { data } = await authHttpClient.post<ApiAuthResponseDto>("/api/auth/login", {
+      email: credentials.email,
+      password: credentials.password,
+    });
+    return {
+      user: mapAuthUser(data.user),
+      token: data.accessToken,
+      permissions: mapModulePermissions(data.user.permissions),
+    };
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err, "Invalid email or password"));
   }
-  if (account.mfaEnabled) {
-    await mockDelay(null, 400);
-    return { status: "mfa_required", email: account.user.email };
-  }
-  const result = await mockDelay(buildLoginResult(account), 500);
-  return { status: "success", ...result };
-}
-
-export async function verifyMfaCode(email: string, code: string): Promise<LoginResult> {
-  const account = findAccountByEmail(email);
-  if (!account) {
-    await mockDelay(null, 400);
-    throw new Error("Session expired, please sign in again");
-  }
-  if (code.trim() !== MOCK_MFA_CODE) {
-    await mockDelay(null, 500);
-    throw new Error("Incorrect verification code");
-  }
-  return mockDelay(buildLoginResult(account), 500);
 }
 
 export async function requestPasswordReset(email: string): Promise<{ message: string }> {
-  const account = findAccountByEmail(email);
-  if (account) {
-    const token = Math.random().toString(36).slice(2, 10);
-    resetTokens[token] = account.user.email;
-    saveResetTokens(resetTokens);
-    // In a real backend this token would be emailed to the user, not returned to the client.
-    console.info(`[mock] Password reset link: /reset-password?token=${token}`);
+  try {
+    await authHttpClient.post("/api/auth/forgot-password", { email });
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
-  return mockDelay({ message: "If that email is registered, a reset link has been sent." }, 600);
+  return { message: "If that email is registered, a reset link has been sent." };
 }
 
-export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-  const email = resetTokens[token];
-  if (!email) {
-    await mockDelay(null, 400);
-    throw new Error("This reset link is invalid or has expired");
+export async function resetPassword(email: string, token: string, newPassword: string): Promise<{ message: string }> {
+  try {
+    await authHttpClient.post("/api/auth/reset-password", { email, token, newPassword });
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err, "This reset link is invalid or has expired"));
   }
-  setAccountPassword(email, newPassword);
-  delete resetTokens[token];
-  saveResetTokens(resetTokens);
-  return mockDelay({ message: "Your password has been reset" }, 500);
+  return { message: "Your password has been reset" };
 }
 
 export async function changePassword(

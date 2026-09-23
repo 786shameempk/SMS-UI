@@ -1,5 +1,6 @@
 import { listSections, listClasses, listSubjects, updateSection } from "@/features/academics/api";
 import type { Section } from "@/features/academics/types";
+import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { createStaff, getStaffMember, listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
@@ -12,7 +13,7 @@ import {
   migrateLegacyRecordsToDefaultTenant,
   scopedToCurrentTenantAndBranch,
 } from "@/utils/tenant";
-import { CLASS_TEACHER_PLAN, EXTRA_TEACHER_SEEDS, LESSON_PLAN_PLAN, SUBJECT_ASSIGNMENT_PLAN } from "./mock";
+import { CLASS_TEACHER_PLAN, EXTRA_TEACHER_SEEDS, LESSON_PLAN_PLAN } from "./mock";
 import type {
   LessonPlan,
   LessonPlanFormValues,
@@ -22,7 +23,6 @@ import type {
   TeacherSubjectAssignmentFormValues,
 } from "./types";
 
-const SUBJECT_ASSIGNMENTS_KEY = "sms-mock-teacher-subject-assignments";
 const LESSON_PLANS_KEY = "sms-mock-lesson-plans";
 const SEEDED_KEY = "sms-mock-teachers-seeded";
 
@@ -48,13 +48,37 @@ function genId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-let subjectAssignments = migrateLegacyRecordsToDefaultBranch(
-  migrateLegacyRecordsToDefaultTenant(loadJson<TeacherSubjectAssignment[]>(SUBJECT_ASSIGNMENTS_KEY, [])),
-);
 let lessonPlans = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<LessonPlan[]>(LESSON_PLANS_KEY, [])));
 
-const persistSubjectAssignments = () => saveJson(SUBJECT_ASSIGNMENTS_KEY, subjectAssignments);
 const persistLessonPlans = () => saveJson(LESSON_PLANS_KEY, lessonPlans);
+
+// ── Teacher subject assignments (AcademicService) ───────────────────────
+
+interface ApiTeacherSubjectAssignment {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  staffId: string;
+  subjectId: string;
+  classId: string;
+}
+
+const mapAssignment = (dto: ApiTeacherSubjectAssignment): TeacherSubjectAssignment => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  staffId: dto.staffId,
+  subjectId: dto.subjectId,
+  classId: dto.classId,
+});
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
+  try {
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
+  }
+}
 
 /**
  * One-time seed that layers teacher-specific demo data on top of the generic staff
@@ -71,25 +95,6 @@ async function performSeed(): Promise<void> {
   const createdTeachers = await Promise.all(toCreate.map((values) => createStaff(values)));
   for (const member of createdTeachers) idByEmail.set(member.email.toLowerCase(), member.id);
   const staffById = new Map([...existingStaff, ...createdTeachers].map((s) => [s.id, s] as const));
-
-  const newAssignments: TeacherSubjectAssignment[] = [];
-  for (const plan of SUBJECT_ASSIGNMENT_PLAN) {
-    const staffId = idByEmail.get(plan.teacherEmail.toLowerCase());
-    if (!staffId) continue;
-    if (subjectAssignments.some((a) => a.staffId === staffId && a.subjectId === plan.subjectId && a.classId === plan.classId)) continue;
-    newAssignments.push({
-      id: genId("tsa"),
-      tenantId: DEFAULT_TENANT_ID,
-      branchId: staffById.get(staffId)?.branchId ?? defaultBranchIdForTenant(DEFAULT_TENANT_ID),
-      staffId,
-      subjectId: plan.subjectId,
-      classId: plan.classId,
-    });
-  }
-  if (newAssignments.length) {
-    subjectAssignments = [...subjectAssignments, ...newAssignments];
-    persistSubjectAssignments();
-  }
 
   const newLessonPlans: LessonPlan[] = [];
   for (const plan of LESSON_PLAN_PLAN) {
@@ -154,39 +159,21 @@ export async function listTeachers(): Promise<StaffMember[]> {
 
 export async function listSubjectAssignments(staffId?: string): Promise<TeacherSubjectAssignment[]> {
   await seedPromise;
-  const scoped = scopedToCurrentTenantAndBranch(subjectAssignments);
-  const result = staffId ? scoped.filter((a) => a.staffId === staffId) : scoped;
-  return mockDelay(result, 300);
+  const assignments = await unwrap(
+    academicHttpClient.get<ApiTeacherSubjectAssignment[]>("/api/teacher-assignments", { params: { staffId } }),
+  );
+  return assignments.map(mapAssignment);
 }
 
 export async function assignSubject(values: TeacherSubjectAssignmentFormValues): Promise<TeacherSubjectAssignment> {
   await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const teacher = await getStaffMember(values.staffId);
-  const exists = subjectAssignments.some(
-    (a) =>
-      a.tenantId === tenantId &&
-      a.branchId === teacher.branchId &&
-      a.staffId === values.staffId &&
-      a.subjectId === values.subjectId &&
-      a.classId === values.classId,
-  );
-  if (exists) {
-    await mockDelay(null, 300);
-    throw new Error("This subject is already assigned to that class for this teacher.");
-  }
-  const assignment: TeacherSubjectAssignment = { id: genId("tsa"), tenantId, branchId: teacher.branchId, ...values };
-  subjectAssignments = [assignment, ...subjectAssignments];
-  persistSubjectAssignments();
-  return mockDelay(assignment, 400);
+  const assignment = await unwrap(academicHttpClient.post<ApiTeacherSubjectAssignment>("/api/teacher-assignments", values));
+  return mapAssignment(assignment);
 }
 
 export async function removeSubjectAssignment(id: string): Promise<void> {
   await seedPromise;
-  const tenantId = getCurrentTenantId();
-  subjectAssignments = subjectAssignments.filter((a) => !(a.id === id && a.tenantId === tenantId));
-  persistSubjectAssignments();
-  return mockDelay(undefined, 300);
+  await unwrap(academicHttpClient.delete<void>(`/api/teacher-assignments/${id}`));
 }
 
 // ── Class teacher assignment (persisted onto academics' Section) ───────

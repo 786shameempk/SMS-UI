@@ -1,114 +1,183 @@
-import { mockDelay } from "@/utils/mockDelay";
-import {
-  DEFAULT_TENANT_ID,
-  defaultBranchIdForTenant,
-  getCurrentBranchId,
-  getCurrentTenantId,
-  migrateLegacyRecordsToDefaultBranch,
-  migrateLegacyRecordsToDefaultTenant,
-  scopedToCurrentTenant,
-  scopedToCurrentTenantAndBranch,
-} from "@/utils/tenant";
+import { campusHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
-import { nextBadgeNumber } from "./constants";
-import { buildSeedVisitorData } from "./mock";
 import type {
   HostDetails,
+  PreApprovalStatus,
   PreApprovedVisit,
   PreApprovedVisitFormValues,
   PreApprovedVisitRow,
   VisitorCheckInFormValues,
   VisitorEntry,
   VisitorEntryRow,
+  VisitorHostType,
   VisitorReportsSummary,
+  VisitorStatus,
   VisitPurpose,
   WatchlistEntry,
   WatchlistEntryFormValues,
 } from "./types";
 
-const ENTRIES_KEY = "sms-mock-visitors-entries";
-const PREAPPROVALS_KEY = "sms-mock-visitors-preapprovals";
-const WATCHLIST_KEY = "sms-mock-visitors-watchlist";
-const SEEDED_KEY = "sms-mock-visitors-seeded";
+// ── Enum translation ────────────────────────────────────────────────────────
+// CampusService's enums serialize as PascalCase (C# convention); SMS UI's types use
+// lowercase/kebab-case unions - see docs/MICROSERVICES_PLAN.md's enum-translation note.
 
-function loadJson<T>(key: string, fallback: T): T {
+const STATUS_TO_API: Record<VisitorStatus, string> = { "checked-in": "CheckedIn", "checked-out": "CheckedOut" };
+const STATUS_FROM_API: Record<string, VisitorStatus> = { CheckedIn: "checked-in", CheckedOut: "checked-out" };
+
+const HOST_TYPE_TO_API: Record<VisitorHostType, string> = { student: "Student", staff: "Staff", other: "Other" };
+const HOST_TYPE_FROM_API: Record<string, VisitorHostType> = { Student: "student", Staff: "staff", Other: "other" };
+
+const PURPOSE_TO_API: Record<VisitPurpose, string> = {
+  meeting: "Meeting",
+  pickup: "Pickup",
+  delivery: "Delivery",
+  maintenance: "Maintenance",
+  interview: "Interview",
+  event: "Event",
+  other: "Other",
+};
+const PURPOSE_FROM_API: Record<string, VisitPurpose> = {
+  Meeting: "meeting",
+  Pickup: "pickup",
+  Delivery: "delivery",
+  Maintenance: "maintenance",
+  Interview: "interview",
+  Event: "event",
+  Other: "other",
+};
+
+const PRE_APPROVAL_STATUS_TO_API: Record<PreApprovalStatus, string> = {
+  scheduled: "Scheduled",
+  arrived: "Arrived",
+  cancelled: "Cancelled",
+  "no-show": "NoShow",
+};
+const PRE_APPROVAL_STATUS_FROM_API: Record<string, PreApprovalStatus> = {
+  Scheduled: "scheduled",
+  Arrived: "arrived",
+  Cancelled: "cancelled",
+  NoShow: "no-show",
+};
+
+// ── API response shapes (CampusService DTOs) ────────────────────────────────
+
+interface ApiHostFields {
+  visitorName: string;
+  phone: string;
+  purpose: string;
+  purposeNotes: string | null;
+  hostType: string;
+  hostStudentId: string | null;
+  hostStaffId: string | null;
+  hostOtherLabel: string | null;
+}
+
+interface ApiVisitorEntry extends ApiHostFields {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  idProofType: string | null;
+  idProofNumber: string | null;
+  badgeNumber: string;
+  checkInAt: string;
+  checkOutAt: string | null;
+  status: string;
+  preApprovalId: string | null;
+}
+
+interface ApiPreApprovedVisit extends ApiHostFields {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  scheduledAt: string;
+  status: string;
+  visitorEntryId: string | null;
+}
+
+interface ApiWatchlistEntry {
+  id: string;
+  tenantId: string;
+  name: string;
+  phone: string | null;
+  reason: string;
+  addedAt: string;
+}
+
+// ── Mappers ──────────────────────────────────────────────────────────────────
+
+function mapHost(dto: ApiHostFields): HostDetails & { visitorName: string; phone: string; purpose: VisitPurpose; purposeNotes?: string } {
+  return {
+    visitorName: dto.visitorName,
+    phone: dto.phone,
+    purpose: PURPOSE_FROM_API[dto.purpose] ?? "other",
+    purposeNotes: dto.purposeNotes ?? undefined,
+    hostType: HOST_TYPE_FROM_API[dto.hostType] ?? "other",
+    hostStudentId: dto.hostStudentId ?? undefined,
+    hostStaffId: dto.hostStaffId ?? undefined,
+    hostOtherLabel: dto.hostOtherLabel ?? undefined,
+  };
+}
+
+function mapEntry(dto: ApiVisitorEntry): VisitorEntry {
+  return {
+    ...mapHost(dto),
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    idProofType: dto.idProofType ?? undefined,
+    idProofNumber: dto.idProofNumber ?? undefined,
+    badgeNumber: dto.badgeNumber,
+    checkInAt: dto.checkInAt,
+    checkOutAt: dto.checkOutAt ?? undefined,
+    status: STATUS_FROM_API[dto.status] ?? "checked-in",
+    preApprovalId: dto.preApprovalId ?? undefined,
+  };
+}
+
+function mapPreApproval(dto: ApiPreApprovedVisit): PreApprovedVisit {
+  return {
+    ...mapHost(dto),
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    scheduledAt: dto.scheduledAt,
+    status: PRE_APPROVAL_STATUS_FROM_API[dto.status] ?? "scheduled",
+    visitorEntryId: dto.visitorEntryId ?? undefined,
+  };
+}
+
+function mapWatchlist(dto: ApiWatchlistEntry): WatchlistEntry {
+  return { id: dto.id, tenantId: dto.tenantId, name: dto.name, phone: dto.phone ?? undefined, reason: dto.reason, addedAt: dto.addedAt };
+}
+
+function blankToNull(value?: string): string | null {
+  return value?.trim() ? value.trim() : null;
+}
+
+/** Only the host id matching hostType is sent, so a stale id from a previously-picked host type never leaks through. */
+function hostPayload(values: HostDetails & { visitorName: string; phone: string; purpose: VisitPurpose; purposeNotes?: string }) {
+  return {
+    visitorName: values.visitorName,
+    phone: values.phone,
+    purpose: PURPOSE_TO_API[values.purpose],
+    purposeNotes: blankToNull(values.purposeNotes),
+    hostType: HOST_TYPE_TO_API[values.hostType],
+    hostStudentId: values.hostType === "student" ? values.hostStudentId || null : null,
+    hostStaffId: values.hostType === "staff" ? values.hostStaffId || null : null,
+    hostOtherLabel: values.hostType === "other" ? blankToNull(values.hostOtherLabel) : null,
+  };
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function requireEntity<T extends { id: string; tenantId: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId());
-  if (!found) throw new Error(`${label} not found`);
-  return found;
-}
-
-function requireBranchEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
-  if (!found) throw new Error(`${label} not found`);
-  return found;
-}
-
-let entries = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<VisitorEntry[]>(ENTRIES_KEY, [])));
-let preApprovals = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<PreApprovedVisit[]>(PREAPPROVALS_KEY, [])));
-let watchlist = migrateLegacyRecordsToDefaultTenant(loadJson<WatchlistEntry[]>(WATCHLIST_KEY, []));
-
-function persistEntries() {
-  saveJson(ENTRIES_KEY, entries);
-}
-function persistPreApprovals() {
-  saveJson(PREAPPROVALS_KEY, preApprovals);
-}
-function persistWatchlist() {
-  saveJson(WATCHLIST_KEY, watchlist);
-}
-
-/**
- * Visitors are their own entities (not staff/students) — this module only reads real
- * students/staff to resolve who a visitor is here to see, same read-only join convention as
- * Reports and Calendar. No new staff designation is needed here (unlike Hostel's Warden or
- * Health's Nurse), so seeding is just this module's own data, no cross-module writes.
- */
-async function performSeed(): Promise<void> {
-  if (loadJson(SEEDED_KEY, false)) return;
-
-  if (entries.length === 0 && preApprovals.length === 0 && watchlist.length === 0) {
-    const defaultBranchId = defaultBranchIdForTenant(DEFAULT_TENANT_ID);
-    const [students, staff] = await Promise.all([listStudents(), listStaff()]);
-    const seeded = buildSeedVisitorData(students, staff);
-    entries = seeded.entries.map((e) => ({ ...e, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
-    preApprovals = seeded.preApprovals.map((p) => ({ ...p, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchId }));
-    watchlist = seeded.watchlist.map((w) => ({ ...w, tenantId: DEFAULT_TENANT_ID }));
-    persistEntries();
-    persistPreApprovals();
-    persistWatchlist();
-  }
-
-  saveJson(SEEDED_KEY, true);
-}
-
-const seedPromise: Promise<void> = performSeed().catch((err) => {
-  console.error("Visitor Management seed failed", err);
-});
 
 async function joinContext(): Promise<{ studentById: Map<string, Student>; staffById: Map<string, StaffMember> }> {
   const [students, staff] = await Promise.all([listStudents(), listStaff()]);
@@ -130,242 +199,153 @@ function hostLabel(host: HostDetails, studentById: Map<string, Student>, staffBy
   return host.hostOtherLabel?.trim() || "Other";
 }
 
-function isOnWatchlist(visitorName: string): boolean {
-  const normalized = visitorName.trim().toLowerCase();
-  const tenantId = getCurrentTenantId();
-  return watchlist.some((w) => w.tenantId === tenantId && w.name.trim().toLowerCase() === normalized);
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase();
 }
 
 // ── Watchlist (checked first so check-in flows can flag matches) ──────────
 
 export async function listWatchlist(): Promise<WatchlistEntry[]> {
-  await seedPromise;
-  return mockDelay(
-    scopedToCurrentTenant(watchlist).sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()),
-    300,
-  );
+  const entries = await unwrap(campusHttpClient.get<ApiWatchlistEntry[]>("/api/watchlist"));
+  return entries.map(mapWatchlist);
 }
 
+/** Advisory match by case-insensitive trimmed name, same rule as the mock - never blocks a check-in. */
 export async function getWatchlistMatch(visitorName: string): Promise<WatchlistEntry | undefined> {
-  await seedPromise;
-  const normalized = visitorName.trim().toLowerCase();
-  const tenantId = getCurrentTenantId();
-  return mockDelay(
-    watchlist.find((w) => w.tenantId === tenantId && w.name.trim().toLowerCase() === normalized),
-    150,
-  );
+  const normalized = normalizeName(visitorName);
+  return (await listWatchlist()).find((w) => normalizeName(w.name) === normalized);
 }
 
 export async function addWatchlistEntry(values: WatchlistEntryFormValues): Promise<WatchlistEntry> {
-  await seedPromise;
-  const entry: WatchlistEntry = { id: genId("watch"), tenantId: getCurrentTenantId(), addedAt: new Date().toISOString(), ...values };
-  watchlist = [entry, ...watchlist];
-  persistWatchlist();
-  return mockDelay(entry, 350);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiWatchlistEntry>("/api/watchlist", { name: values.name, phone: blankToNull(values.phone), reason: values.reason }),
+  );
+  return mapWatchlist(dto);
 }
 
 export async function deleteWatchlistEntry(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  requireEntity(watchlist, id, "Watchlist entry");
-  watchlist = watchlist.filter((w) => !(w.id === id && w.tenantId === tenantId));
-  persistWatchlist();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/watchlist/${id}`));
 }
 
 // ── Visitor log (check-in / check-out) ─────────────────────────────────
 
 export async function listVisitorEntries(status?: VisitorEntry["status"]): Promise<VisitorEntryRow[]> {
-  await seedPromise;
-  const { studentById, staffById } = await joinContext();
-  const rows = scopedToCurrentTenantAndBranch(entries)
-    .filter((e) => !status || e.status === status)
-    .map((e): VisitorEntryRow => {
-      const durationMinutes = e.checkOutAt ? Math.round((new Date(e.checkOutAt).getTime() - new Date(e.checkInAt).getTime()) / 60000) : undefined;
-      return {
-        ...e,
-        hostStudent: e.hostStudentId ? studentById.get(e.hostStudentId) : undefined,
-        hostStaff: e.hostStaffId ? staffById.get(e.hostStaffId) : undefined,
-        hostLabel: hostLabel(e, studentById, staffById),
-        durationMinutes,
-        onWatchlist: isOnWatchlist(e.visitorName),
-      };
-    })
-    .sort((a, b) => new Date(b.checkInAt).getTime() - new Date(a.checkInAt).getTime());
-  return mockDelay(rows, 350);
-}
-
-function createEntryRecord(values: VisitorCheckInFormValues): VisitorEntry {
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  const badgeNumber = nextBadgeNumber(scopedToCurrentTenant(entries).map((e) => e.badgeNumber));
-  const entry: VisitorEntry = {
-    id: genId("visit"),
-    tenantId,
-    branchId,
-    visitorName: values.visitorName,
-    phone: values.phone,
-    idProofType: values.idProofType,
-    idProofNumber: values.idProofNumber,
-    purpose: values.purpose,
-    purposeNotes: values.purposeNotes,
-    hostType: values.hostType,
-    hostStudentId: values.hostStudentId,
-    hostStaffId: values.hostStaffId,
-    hostOtherLabel: values.hostOtherLabel,
-    badgeNumber,
-    checkInAt: new Date().toISOString(),
-    status: "checked-in",
-    preApprovalId: values.preApprovalId,
-  };
-  entries = [entry, ...entries];
-  persistEntries();
-  return entry;
+  const [entries, watchlist, { studentById, staffById }] = await Promise.all([
+    unwrap(campusHttpClient.get<ApiVisitorEntry[]>("/api/visitorentries", { params: status ? { status: STATUS_TO_API[status] } : undefined })),
+    listWatchlist(),
+    joinContext(),
+  ]);
+  const watchNames = new Set(watchlist.map((w) => normalizeName(w.name)));
+  return entries.map(mapEntry).map(
+    (e): VisitorEntryRow => ({
+      ...e,
+      hostStudent: e.hostStudentId ? studentById.get(e.hostStudentId) : undefined,
+      hostStaff: e.hostStaffId ? staffById.get(e.hostStaffId) : undefined,
+      hostLabel: hostLabel(e, studentById, staffById),
+      durationMinutes: e.checkOutAt ? Math.round((new Date(e.checkOutAt).getTime() - new Date(e.checkInAt).getTime()) / 60000) : undefined,
+      onWatchlist: watchNames.has(normalizeName(e.visitorName)),
+    }),
+  );
 }
 
 export async function checkInVisitor(values: VisitorCheckInFormValues): Promise<VisitorEntry> {
-  await seedPromise;
-  const entry = createEntryRecord(values);
-  if (values.preApprovalId) {
-    const preApproval = preApprovals.find((p) => p.id === values.preApprovalId && p.tenantId === entry.tenantId && p.branchId === entry.branchId);
-    if (preApproval) {
-      preApprovals = preApprovals.map((p) => (p.id === preApproval.id ? { ...p, status: "arrived", visitorEntryId: entry.id } : p));
-      persistPreApprovals();
-    }
-  }
-  return mockDelay(entry, 400);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiVisitorEntry>("/api/visitorentries", {
+      ...hostPayload(values),
+      idProofType: blankToNull(values.idProofType),
+      idProofNumber: blankToNull(values.idProofNumber),
+      preApprovalId: values.preApprovalId || null,
+    }),
+  );
+  return mapEntry(dto);
 }
 
 export async function checkInFromPreApproval(preApprovalId: string): Promise<VisitorEntry> {
-  await seedPromise;
-  const preApproval = requireBranchEntity(preApprovals, preApprovalId, "Pre-approved visit");
-  if (preApproval.status !== "scheduled") throw new Error("This visit has already been actioned");
-  const entry = createEntryRecord({
-    visitorName: preApproval.visitorName,
-    phone: preApproval.phone,
-    purpose: preApproval.purpose,
-    purposeNotes: preApproval.purposeNotes,
-    hostType: preApproval.hostType,
-    hostStudentId: preApproval.hostStudentId,
-    hostStaffId: preApproval.hostStaffId,
-    hostOtherLabel: preApproval.hostOtherLabel,
-    preApprovalId: preApproval.id,
-  });
-  preApprovals = preApprovals.map((p) => (p.id === preApprovalId ? { ...p, status: "arrived", visitorEntryId: entry.id } : p));
-  persistPreApprovals();
-  return mockDelay(entry, 400);
+  const dto = await unwrap(campusHttpClient.post<ApiVisitorEntry>(`/api/visitorentries/from-pre-approval/${preApprovalId}`));
+  return mapEntry(dto);
 }
 
 export async function checkOutVisitor(id: string): Promise<VisitorEntry> {
-  await seedPromise;
-  const entry = requireBranchEntity(entries, id, "Visitor entry");
-  if (entry.status === "checked-out") throw new Error("This visitor has already checked out");
-  const updated: VisitorEntry = { ...entry, checkOutAt: new Date().toISOString(), status: "checked-out" };
-  entries = entries.map((e) => (e.id === id ? updated : e));
-  persistEntries();
-  return mockDelay(updated, 350);
+  const dto = await unwrap(campusHttpClient.post<ApiVisitorEntry>(`/api/visitorentries/${id}/check-out`));
+  return mapEntry(dto);
 }
 
 export async function deleteVisitorEntry(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  requireBranchEntity(entries, id, "Visitor entry");
-  entries = entries.filter((e) => !(e.id === id && e.tenantId === tenantId && e.branchId === branchId));
-  persistEntries();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/visitorentries/${id}`));
 }
 
 // ── Pre-approved visits ──────────────────────────────────────────────────
 
 export async function listPreApprovedVisits(status?: PreApprovedVisit["status"]): Promise<PreApprovedVisitRow[]> {
-  await seedPromise;
-  const { studentById, staffById } = await joinContext();
-  const rows = scopedToCurrentTenantAndBranch(preApprovals)
-    .filter((p) => !status || p.status === status)
-    .map(
-      (p): PreApprovedVisitRow => ({
-        ...p,
-        hostStudent: p.hostStudentId ? studentById.get(p.hostStudentId) : undefined,
-        hostStaff: p.hostStaffId ? staffById.get(p.hostStaffId) : undefined,
-        hostLabel: hostLabel(p, studentById, staffById),
+  const [visits, { studentById, staffById }] = await Promise.all([
+    unwrap(
+      campusHttpClient.get<ApiPreApprovedVisit[]>("/api/preapprovedvisits", {
+        params: status ? { status: PRE_APPROVAL_STATUS_TO_API[status] } : undefined,
       }),
-    )
-    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
-  return mockDelay(rows, 350);
+    ),
+    joinContext(),
+  ]);
+  return visits.map(mapPreApproval).map(
+    (p): PreApprovedVisitRow => ({
+      ...p,
+      hostStudent: p.hostStudentId ? studentById.get(p.hostStudentId) : undefined,
+      hostStaff: p.hostStaffId ? staffById.get(p.hostStaffId) : undefined,
+      hostLabel: hostLabel(p, studentById, staffById),
+    }),
+  );
 }
 
 export async function createPreApprovedVisit(values: PreApprovedVisitFormValues): Promise<PreApprovedVisit> {
-  await seedPromise;
-  const record: PreApprovedVisit = {
-    id: genId("preapp"),
-    tenantId: getCurrentTenantId(),
-    branchId: getCurrentBranchId(),
-    status: "scheduled",
-    ...values,
-  };
-  preApprovals = [record, ...preApprovals];
-  persistPreApprovals();
-  return mockDelay(record, 400);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiPreApprovedVisit>("/api/preapprovedvisits", {
+      ...hostPayload(values),
+      // The form's datetime-local value is local wall-clock time; CampusService stores UTC.
+      scheduledAt: new Date(values.scheduledAt).toISOString(),
+    }),
+  );
+  return mapPreApproval(dto);
 }
 
 export async function cancelPreApprovedVisit(id: string): Promise<PreApprovedVisit> {
-  await seedPromise;
-  const record = requireBranchEntity(preApprovals, id, "Pre-approved visit");
-  if (record.status !== "scheduled") throw new Error("Only a scheduled visit can be cancelled");
-  const updated: PreApprovedVisit = { ...record, status: "cancelled" };
-  preApprovals = preApprovals.map((p) => (p.id === id ? updated : p));
-  persistPreApprovals();
-  return mockDelay(updated, 300);
+  const dto = await unwrap(campusHttpClient.post<ApiPreApprovedVisit>(`/api/preapprovedvisits/${id}/cancel`));
+  return mapPreApproval(dto);
 }
 
 export async function deletePreApprovedVisit(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  requireBranchEntity(preApprovals, id, "Pre-approved visit");
-  preApprovals = preApprovals.filter((p) => !(p.id === id && p.tenantId === tenantId && p.branchId === branchId));
-  persistPreApprovals();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/preapprovedvisits/${id}`));
 }
 
 // ── Reports ────────────────────────────────────────────────────────────
 
+/**
+ * Composed client-side from listVisitorEntries: "today" is the viewer's local day and the top-hosts
+ * labels need AcademicService student/staff names, neither of which CampusService can know.
+ */
 export async function getVisitorReportsSummary(): Promise<VisitorReportsSummary> {
-  await seedPromise;
-  const scopedEntries = scopedToCurrentTenantAndBranch(entries);
+  const entries = await listVisitorEntries();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-  const currentlyOnPremises = scopedEntries.filter((e) => e.status === "checked-in").length;
-  const visitsToday = scopedEntries.filter((e) => new Date(e.checkInAt).getTime() >= todayStart.getTime()).length;
-  const visitsLast30Days = scopedEntries.filter((e) => new Date(e.checkInAt).getTime() >= thirtyDaysAgo).length;
+  const currentlyOnPremises = entries.filter((e) => e.status === "checked-in").length;
+  const visitsToday = entries.filter((e) => new Date(e.checkInAt).getTime() >= todayStart.getTime()).length;
+  const visitsLast30Days = entries.filter((e) => new Date(e.checkInAt).getTime() >= thirtyDaysAgo).length;
 
-  const purposeCounts = new Map<string, number>();
-  for (const e of scopedEntries) purposeCounts.set(e.purpose, (purposeCounts.get(e.purpose) ?? 0) + 1);
+  const purposeCounts = new Map<VisitPurpose, number>();
+  for (const e of entries) purposeCounts.set(e.purpose, (purposeCounts.get(e.purpose) ?? 0) + 1);
   const visitsByPurpose = Array.from(purposeCounts.entries())
-    .map(([purpose, count]) => ({ purpose: purpose as VisitPurpose, count }))
+    .map(([purpose, count]) => ({ purpose, count }))
     .sort((a, b) => b.count - a.count);
 
-  const completedVisits = scopedEntries.filter((e) => e.checkOutAt);
-  const avgVisitDurationMinutes =
-    completedVisits.length === 0
-      ? null
-      : Math.round(
-          completedVisits.reduce((sum, e) => sum + (new Date(e.checkOutAt!).getTime() - new Date(e.checkInAt).getTime()) / 60000, 0) / completedVisits.length,
-        );
+  const durations = entries.map((e) => e.durationMinutes).filter((d): d is number => d !== undefined);
+  const avgVisitDurationMinutes = durations.length === 0 ? null : Math.round(durations.reduce((sum, d) => sum + d, 0) / durations.length);
 
-  const { studentById, staffById } = await joinContext();
   const hostCounts = new Map<string, number>();
-  for (const e of scopedEntries) {
-    const label = hostLabel(e, studentById, staffById);
-    hostCounts.set(label, (hostCounts.get(label) ?? 0) + 1);
-  }
+  for (const e of entries) hostCounts.set(e.hostLabel, (hostCounts.get(e.hostLabel) ?? 0) + 1);
   const topHosts = Array.from(hostCounts.entries())
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  return mockDelay({ currentlyOnPremises, visitsToday, visitsLast30Days, visitsByPurpose, avgVisitDurationMinutes, topHosts }, 350);
+  return { currentlyOnPremises, visitsToday, visitsLast30Days, visitsByPurpose, avgVisitDurationMinutes, topHosts };
 }

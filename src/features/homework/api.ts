@@ -1,32 +1,11 @@
-import { listClasses, listSections } from "@/features/academics/api";
-import { listTeachers } from "@/features/teachers/api";
-import { listStudents } from "@/features/students/api";
-import type { Student } from "@/features/students/types";
-import { mockDelay } from "@/utils/mockDelay";
-import {
-  DEFAULT_TENANT_ID,
-  defaultBranchIdForTenant,
-  getCurrentBranchId,
-  getCurrentTenantId,
-  migrateLegacyRecordsToDefaultBranch,
-  migrateLegacyRecordsToDefaultTenant,
-  scopedToCurrentTenantAndBranch,
-} from "@/utils/tenant";
-import {
-  DISCUSSION_SEED_PLAN,
-  HOMEWORK_SEED_PLAN,
-  QUIZ_ATTEMPT_SEED_PLAN,
-  QUIZ_SEED_PLAN,
-  RESOURCE_SEED_PLAN,
-  RESOURCE_VIEW_SEED_PLAN,
-  SUBMISSION_SEED_PLAN,
-} from "./mock";
+import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import type {
   AssignedHomeworkRow,
   DiscussionComment,
   DiscussionCommentFormValues,
   Homework,
   HomeworkFormValues,
+  HomeworkStatus,
   HomeworkSubmission,
   LearningProgressRow,
   LearningResource,
@@ -34,573 +13,427 @@ import type {
   Quiz,
   QuizAttempt,
   QuizFormValues,
+  ResourceType,
+  SubmissionStatus,
 } from "./types";
 
-const HOMEWORK_KEY = "sms-mock-homework";
-const SUBMISSIONS_KEY = "sms-mock-homework-submissions";
-const RESOURCES_KEY = "sms-mock-learning-resources";
-const QUIZZES_KEY = "sms-mock-quizzes";
-const QUIZ_ATTEMPTS_KEY = "sms-mock-quiz-attempts";
-const DISCUSSION_KEY = "sms-mock-discussion-comments";
-const RESOURCE_VIEWS_KEY = "sms-mock-resource-views";
-const SEEDED_KEY = "sms-mock-homework-seeded";
+// ── Enum translation ────────────────────────────────────────────────────────
+// AcademicService's enums serialize as PascalCase; SMS UI's types use lowercase/snake_case unions.
 
-function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
+const HOMEWORK_STATUS_TO_API: Record<HomeworkStatus, string> = { draft: "Draft", published: "Published" };
+const HOMEWORK_STATUS_FROM_API: Record<string, HomeworkStatus> = { Draft: "draft", Published: "published" };
+
+const SUBMISSION_STATUS_FROM_API: Record<string, SubmissionStatus> = {
+  NotSubmitted: "not_submitted",
+  Submitted: "submitted",
+  Graded: "graded",
+  ResubmitRequested: "resubmit_requested",
+};
+
+const RESOURCE_TYPE_TO_API: Record<ResourceType, string> = {
+  video: "Video",
+  notes: "Notes",
+  pdf: "Pdf",
+  ppt: "Ppt",
+  quiz: "Quiz",
+  discussion: "Discussion",
+};
+const RESOURCE_TYPE_FROM_API: Record<string, ResourceType> = {
+  Video: "video",
+  Notes: "notes",
+  Pdf: "pdf",
+  Ppt: "ppt",
+  Quiz: "quiz",
+  Discussion: "discussion",
+};
+
+// ── API response shapes (AcademicService DTOs) ──────────────────────────────
+
+interface ApiHomework {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  title: string;
+  description: string;
+  subjectId: string;
+  classId: string;
+  sectionId: string | null;
+  staffId: string;
+  assignedDate: string;
+  dueDate: string;
+  attachmentNote: string | null;
+  status: string;
 }
 
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
+interface ApiHomeworkSubmission {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  homeworkId: string;
+  studentId: string;
+  submittedAt: string | null;
+  content: string;
+  status: string;
+  grade: string | null;
+  feedback: string | null;
 }
 
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+interface ApiAssignedHomeworkRow {
+  homework: ApiHomework;
+  submission: ApiHomeworkSubmission;
 }
 
-const migrate = <T extends { tenantId: string; branchId?: string }>(records: T[]) =>
-  migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(records));
-
-let homework = migrate(loadJson<Homework[]>(HOMEWORK_KEY, []));
-let submissions = migrate(loadJson<HomeworkSubmission[]>(SUBMISSIONS_KEY, []));
-let learningResources = migrate(loadJson<LearningResource[]>(RESOURCES_KEY, []));
-let quizzes = migrate(loadJson<Quiz[]>(QUIZZES_KEY, []));
-let quizAttempts = migrate(loadJson<QuizAttempt[]>(QUIZ_ATTEMPTS_KEY, []));
-let discussionComments = migrate(loadJson<DiscussionComment[]>(DISCUSSION_KEY, []));
-// resourceViewsByStudent is keyed by studentId, not tagged with tenantId directly — like
-// RolePermissionMap in administration/roles, it's only ever reached via a studentId that
-// already passed through a tenant-scoped lookup, so an opaque key keeps it safe.
-let resourceViewsByStudent = loadJson<Record<string, string[]>>(RESOURCE_VIEWS_KEY, {});
-
-const persistHomework = () => saveJson(HOMEWORK_KEY, homework);
-const persistSubmissions = () => saveJson(SUBMISSIONS_KEY, submissions);
-const persistResources = () => saveJson(RESOURCES_KEY, learningResources);
-const persistQuizzes = () => saveJson(QUIZZES_KEY, quizzes);
-const persistQuizAttempts = () => saveJson(QUIZ_ATTEMPTS_KEY, quizAttempts);
-const persistDiscussion = () => saveJson(DISCUSSION_KEY, discussionComments);
-const persistResourceViews = () => saveJson(RESOURCE_VIEWS_KEY, resourceViewsByStudent);
-
-function requireEntity<T extends { id: string; tenantId: string; branchId: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id && item.tenantId === getCurrentTenantId() && item.branchId === getCurrentBranchId());
-  if (!found) throw new Error(`${label} not found`);
-  return found;
+interface ApiLearningResource {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  subjectId: string;
+  classId: string;
+  title: string;
+  type: string;
+  url: string | null;
+  description: string | null;
+  createdByStaffId: string;
+  quizId: string | null;
+  createdAt: string;
 }
 
-/**
- * One-time seed layered on top of academics/teachers/students via their public APIs only,
- * mirroring the pattern in features/teachers/api.ts. staffId is resolved by email since
- * staff records are created dynamically and don't have stable ids to hardcode.
- */
-async function performSeed(): Promise<void> {
-  if (loadJson(SEEDED_KEY, false)) return;
-
-  const teachers = await listTeachers();
-  const staffIdByEmail = new Map(teachers.map((t) => [t.email.toLowerCase(), t.id] as const));
-
-  if (homework.length === 0) {
-    const seeded: Homework[] = [];
-    for (const plan of HOMEWORK_SEED_PLAN) {
-      const staffId = staffIdByEmail.get(plan.teacherEmail.toLowerCase());
-      if (!staffId) continue;
-      seeded.push({
-        id: plan.id,
-        tenantId: DEFAULT_TENANT_ID,
-        branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
-        title: plan.title,
-        description: plan.description,
-        subjectId: plan.subjectId,
-        classId: plan.classId,
-        staffId,
-        assignedDate: plan.assignedDate,
-        dueDate: plan.dueDate,
-        attachmentNote: plan.attachmentNote,
-        status: plan.status,
-      });
-    }
-    if (seeded.length) {
-      homework = seeded;
-      persistHomework();
-    }
-  }
-
-  if (submissions.length === 0 && SUBMISSION_SEED_PLAN.length) {
-    submissions = SUBMISSION_SEED_PLAN.map((plan) => ({
-      id: genId("sub"),
-      tenantId: DEFAULT_TENANT_ID,
-      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
-      homeworkId: plan.homeworkId,
-      studentId: plan.studentId,
-      status: plan.status,
-      content: plan.content ?? "",
-      submittedAt: plan.submittedDaysAgo !== undefined ? new Date(Date.now() - plan.submittedDaysAgo * 86400000).toISOString() : undefined,
-      grade: plan.grade,
-      feedback: plan.feedback,
-    }));
-    persistSubmissions();
-  }
-
-  if (learningResources.length === 0) {
-    const seeded: LearningResource[] = [];
-    for (const plan of RESOURCE_SEED_PLAN) {
-      const staffId = staffIdByEmail.get(plan.teacherEmail.toLowerCase());
-      if (!staffId) continue;
-      seeded.push({
-        id: plan.id,
-        tenantId: DEFAULT_TENANT_ID,
-        branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
-        subjectId: plan.subjectId,
-        classId: plan.classId,
-        title: plan.title,
-        type: plan.type,
-        url: plan.url,
-        description: plan.description,
-        createdByStaffId: staffId,
-        quizId: plan.quizId,
-        createdAt: new Date().toISOString(),
-      });
-    }
-    if (seeded.length) {
-      learningResources = seeded;
-      persistResources();
-    }
-  }
-
-  if (quizzes.length === 0 && QUIZ_SEED_PLAN.length) {
-    quizzes = QUIZ_SEED_PLAN.map((plan) => ({
-      id: plan.id,
-      tenantId: DEFAULT_TENANT_ID,
-      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
-      subjectId: plan.subjectId,
-      classId: plan.classId,
-      title: plan.title,
-      questions: plan.questions,
-    }));
-    persistQuizzes();
-  }
-
-  if (discussionComments.length === 0 && DISCUSSION_SEED_PLAN.length) {
-    discussionComments = DISCUSSION_SEED_PLAN.map((plan) => ({
-      id: genId("disc"),
-      tenantId: DEFAULT_TENANT_ID,
-      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
-      resourceId: plan.resourceId,
-      authorName: plan.authorName,
-      authorRole: plan.authorRole,
-      text: plan.text,
-      postedAt: new Date(Date.now() - plan.postedDaysAgo * 86400000).toISOString(),
-    }));
-    persistDiscussion();
-  }
-
-  if (quizAttempts.length === 0 && QUIZ_ATTEMPT_SEED_PLAN.length) {
-    quizAttempts = QUIZ_ATTEMPT_SEED_PLAN.map((plan) => ({
-      id: genId("qa"),
-      tenantId: DEFAULT_TENANT_ID,
-      branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID),
-      quizId: plan.quizId,
-      studentId: plan.studentId,
-      score: plan.score,
-      submittedAt: new Date(Date.now() - plan.submittedDaysAgo * 86400000).toISOString(),
-    }));
-    persistQuizAttempts();
-  }
-
-  if (Object.keys(resourceViewsByStudent).length === 0 && RESOURCE_VIEW_SEED_PLAN.length) {
-    const next: Record<string, string[]> = {};
-    for (const plan of RESOURCE_VIEW_SEED_PLAN) {
-      next[plan.studentId] = [...(next[plan.studentId] ?? []), plan.resourceId];
-    }
-    resourceViewsByStudent = next;
-    persistResourceViews();
-  }
-
-  saveJson(SEEDED_KEY, true);
+interface ApiQuizQuestion {
+  id: string;
+  text: string;
+  options: string[];
+  correctIndex: number;
 }
 
-const seedPromise: Promise<void> = performSeed().catch((err) => {
-  console.error("Failed to seed homework mock data", err);
+interface ApiQuiz {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  subjectId: string;
+  classId: string;
+  title: string;
+  questions: ApiQuizQuestion[];
+}
+
+interface ApiQuizAttempt {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  quizId: string;
+  studentId: string;
+  score: number;
+  submittedAt: string;
+}
+
+interface ApiDiscussionComment {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  resourceId: string;
+  authorName: string;
+  authorRole: string;
+  text: string;
+  postedAt: string;
+}
+
+interface ApiLearningProgressRow {
+  studentId: string;
+  studentName: string;
+  className: string;
+  section: string;
+  homeworkAssignedCount: number;
+  homeworkSubmittedOnTimeCount: number;
+  homeworkSubmittedOnTimePct: number;
+  resourceCount: number;
+  resourceViewedCount: number;
+  resourceViewedPct: number;
+}
+
+// ── Mappers ──────────────────────────────────────────────────────────────────
+
+const mapHomework = (dto: ApiHomework): Homework => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  title: dto.title,
+  description: dto.description,
+  subjectId: dto.subjectId,
+  classId: dto.classId,
+  sectionId: dto.sectionId ?? undefined,
+  staffId: dto.staffId,
+  assignedDate: dto.assignedDate,
+  dueDate: dto.dueDate,
+  attachmentNote: dto.attachmentNote ?? undefined,
+  status: HOMEWORK_STATUS_FROM_API[dto.status] ?? "draft",
 });
 
-function sectionLetterOf(name: string): string {
-  return name.replace(/^section\s*/i, "").trim();
-}
+const mapSubmission = (dto: ApiHomeworkSubmission): HomeworkSubmission => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  homeworkId: dto.homeworkId,
+  studentId: dto.studentId,
+  submittedAt: dto.submittedAt ?? undefined,
+  content: dto.content,
+  status: SUBMISSION_STATUS_FROM_API[dto.status] ?? "not_submitted",
+  grade: dto.grade ?? undefined,
+  feedback: dto.feedback ?? undefined,
+});
 
-async function eligibleStudentsFor(hw: Homework): Promise<Student[]> {
-  const [students, classes] = await Promise.all([listStudents(), listClasses()]);
-  const schoolClass = classes.find((c) => c.id === hw.classId);
-  if (!schoolClass) return [];
-  let pool = students.filter((s) => s.status === "active" && s.className === schoolClass.name);
-  if (hw.sectionId) {
-    const sections = await listSections();
-    const section = sections.find((s) => s.id === hw.sectionId);
-    if (section) {
-      const letter = sectionLetterOf(section.name);
-      pool = pool.filter((s) => s.section === letter);
-    }
-  }
-  return pool;
-}
+const mapResource = (dto: ApiLearningResource): LearningResource => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  subjectId: dto.subjectId,
+  classId: dto.classId,
+  title: dto.title,
+  type: RESOURCE_TYPE_FROM_API[dto.type] ?? "notes",
+  url: dto.url ?? undefined,
+  description: dto.description ?? undefined,
+  createdByStaffId: dto.createdByStaffId,
+  quizId: dto.quizId ?? undefined,
+  createdAt: dto.createdAt,
+});
 
-async function ensureSubmissionsForHomework(hw: Homework): Promise<void> {
-  const eligible = await eligibleStudentsFor(hw);
-  let changed = false;
-  for (const student of eligible) {
-    const exists = submissions.some(
-      (s) => s.tenantId === hw.tenantId && s.branchId === hw.branchId && s.homeworkId === hw.id && s.studentId === student.id,
-    );
-    if (!exists) {
-      submissions = [
-        ...submissions,
-        { id: genId("sub"), tenantId: hw.tenantId, branchId: hw.branchId, homeworkId: hw.id, studentId: student.id, content: "", status: "not_submitted" },
-      ];
-      changed = true;
-    }
+const mapQuiz = (dto: ApiQuiz): Quiz => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  subjectId: dto.subjectId,
+  classId: dto.classId,
+  title: dto.title,
+  questions: dto.questions.map((q) => ({ id: q.id, text: q.text, options: q.options, correctIndex: q.correctIndex })),
+});
+
+const mapAttempt = (dto: ApiQuizAttempt): QuizAttempt => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  quizId: dto.quizId,
+  studentId: dto.studentId,
+  score: dto.score,
+  submittedAt: dto.submittedAt,
+});
+
+const mapComment = (dto: ApiDiscussionComment): DiscussionComment => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  resourceId: dto.resourceId,
+  authorName: dto.authorName,
+  authorRole: dto.authorRole,
+  text: dto.text,
+  postedAt: dto.postedAt,
+});
+
+const mapProgressRow = (dto: ApiLearningProgressRow): LearningProgressRow => ({
+  studentId: dto.studentId,
+  studentName: dto.studentName,
+  className: dto.className,
+  section: dto.section,
+  homeworkAssignedCount: dto.homeworkAssignedCount,
+  homeworkSubmittedOnTimeCount: dto.homeworkSubmittedOnTimeCount,
+  homeworkSubmittedOnTimePct: dto.homeworkSubmittedOnTimePct,
+  resourceCount: dto.resourceCount,
+  resourceViewedCount: dto.resourceViewedCount,
+  resourceViewedPct: dto.resourceViewedPct,
+});
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
+  try {
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
-  if (changed) persistSubmissions();
 }
 
 // ── Homework ─────────────────────────────────────────────────────────────
 
 export async function listHomework(): Promise<Homework[]> {
-  await seedPromise;
-  return mockDelay(scopedToCurrentTenantAndBranch(homework), 350);
+  const homework = await unwrap(academicHttpClient.get<ApiHomework[]>("/api/homework"));
+  return homework.map(mapHomework);
 }
 
+/** Not used by any current screen (kept for API parity with the mock); composed from listHomework()
+ *  rather than a dedicated backend endpoint since nothing calls it yet. */
 export async function getHomework(id: string): Promise<Homework> {
-  await seedPromise;
-  return mockDelay(requireEntity(homework, id, "Homework"), 300);
+  const all = await listHomework();
+  const found = all.find((h) => h.id === id);
+  if (!found) throw new Error("Homework not found");
+  return found;
 }
 
 export async function createHomework(values: HomeworkFormValues): Promise<Homework> {
-  await seedPromise;
-  const item: Homework = { id: genId("hw"), tenantId: getCurrentTenantId(), branchId: getCurrentBranchId(), ...values };
-  homework = [item, ...homework];
-  persistHomework();
-  return mockDelay(item, 400);
+  const homework = await unwrap(
+    academicHttpClient.post<ApiHomework>("/api/homework", {
+      ...values,
+      sectionId: values.sectionId ?? null,
+      attachmentNote: values.attachmentNote ?? null,
+      status: HOMEWORK_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapHomework(homework);
 }
 
 export async function updateHomework(id: string, values: HomeworkFormValues): Promise<Homework> {
-  await seedPromise;
-  requireEntity(homework, id, "Homework");
-  homework = homework.map((h) => (h.id === id ? { ...h, ...values } : h));
-  persistHomework();
-  return mockDelay(requireEntity(homework, id, "Homework"), 400);
+  const homework = await unwrap(
+    academicHttpClient.put<ApiHomework>(`/api/homework/${id}`, {
+      ...values,
+      sectionId: values.sectionId ?? null,
+      attachmentNote: values.attachmentNote ?? null,
+      status: HOMEWORK_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapHomework(homework);
 }
 
 export async function deleteHomework(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  requireEntity(homework, id, "Homework");
-  homework = homework.filter((h) => !(h.id === id && h.tenantId === tenantId && h.branchId === branchId));
-  submissions = submissions.filter((s) => !(s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === id));
-  persistHomework();
-  persistSubmissions();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete<void>(`/api/homework/${id}`));
 }
 
 // ── Submissions ──────────────────────────────────────────────────────────
 
 export async function listSubmissionsForHomework(homeworkId: string): Promise<HomeworkSubmission[]> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  const hw = homework.find((h) => h.id === homeworkId && h.tenantId === tenantId && h.branchId === branchId);
-  if (hw) await ensureSubmissionsForHomework(hw);
-  return mockDelay(submissions.filter((s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === homeworkId), 350);
+  const submissions = await unwrap(academicHttpClient.get<ApiHomeworkSubmission[]>(`/api/homework/${homeworkId}/submissions`));
+  return submissions.map(mapSubmission);
 }
 
 export async function listAssignedHomework(studentId: string): Promise<AssignedHomeworkRow[]> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  const [students, classes] = await Promise.all([listStudents(), listClasses()]);
-  const student = students.find((s) => s.id === studentId);
-  if (!student) return mockDelay([], 300);
-
-  const schoolClass = classes.find((c) => c.name === student.className);
-  const relevant = schoolClass
-    ? homework.filter((h) => h.tenantId === tenantId && h.branchId === branchId && h.status === "published" && h.classId === schoolClass.id)
-    : [];
-  for (const hw of relevant) await ensureSubmissionsForHomework(hw);
-
-  const rows: AssignedHomeworkRow[] = [];
-  for (const hw of relevant) {
-    const submission = submissions.find((s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === hw.id && s.studentId === studentId);
-    if (submission) rows.push({ homework: hw, submission });
-  }
-  return mockDelay(rows, 400);
+  const rows = await unwrap(academicHttpClient.get<ApiAssignedHomeworkRow[]>(`/api/homework/assigned/${studentId}`));
+  return rows.map((r) => ({ homework: mapHomework(r.homework), submission: mapSubmission(r.submission) }));
 }
 
 export async function submitHomework(homeworkId: string, studentId: string, content: string): Promise<HomeworkSubmission> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  const hw = homework.find((h) => h.id === homeworkId && h.tenantId === tenantId && h.branchId === branchId);
-  if (!hw) {
-    await mockDelay(null, 300);
-    throw new Error("Homework not found");
-  }
-  await ensureSubmissionsForHomework(hw);
-  const existing = submissions.find((s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === homeworkId && s.studentId === studentId);
-  if (!existing) {
-    await mockDelay(null, 300);
-    throw new Error("Student is not eligible for this homework");
-  }
-  const updated: HomeworkSubmission = {
-    ...existing,
-    content,
-    submittedAt: new Date().toISOString(),
-    status: "submitted",
-    grade: undefined,
-  };
-  submissions = submissions.map((s) => (s.id === existing.id ? updated : s));
-  persistSubmissions();
-  return mockDelay(updated, 450);
+  const submission = await unwrap(
+    academicHttpClient.post<ApiHomeworkSubmission>(`/api/homework/${homeworkId}/submit`, { studentId, content }),
+  );
+  return mapSubmission(submission);
 }
 
 export async function gradeSubmission(submissionId: string, grade: string | number, feedback?: string): Promise<HomeworkSubmission> {
-  await seedPromise;
-  const existing = requireEntity(submissions, submissionId, "Submission");
-  const updated: HomeworkSubmission = { ...existing, grade, feedback, status: "graded" };
-  submissions = submissions.map((s) => (s.id === submissionId ? updated : s));
-  persistSubmissions();
-  return mockDelay(updated, 400);
+  const submission = await unwrap(
+    academicHttpClient.post<ApiHomeworkSubmission>(`/api/homework/submissions/${submissionId}/grade`, {
+      grade: String(grade),
+      feedback: feedback ?? null,
+    }),
+  );
+  return mapSubmission(submission);
 }
 
 export async function requestResubmission(submissionId: string, feedback: string): Promise<HomeworkSubmission> {
-  await seedPromise;
-  const existing = requireEntity(submissions, submissionId, "Submission");
-  const updated: HomeworkSubmission = { ...existing, feedback, status: "resubmit_requested", grade: undefined };
-  submissions = submissions.map((s) => (s.id === submissionId ? updated : s));
-  persistSubmissions();
-  return mockDelay(updated, 400);
+  const submission = await unwrap(
+    academicHttpClient.post<ApiHomeworkSubmission>(`/api/homework/submissions/${submissionId}/request-resubmission`, { feedback }),
+  );
+  return mapSubmission(submission);
 }
 
 // ── Learning resources ───────────────────────────────────────────────────
 
 export async function listLearningResources(): Promise<LearningResource[]> {
-  await seedPromise;
-  return mockDelay(scopedToCurrentTenantAndBranch(learningResources), 350);
+  const resources = await unwrap(academicHttpClient.get<ApiLearningResource[]>("/api/learning/resources"));
+  return resources.map(mapResource);
 }
 
 export async function createLearningResource(values: LearningResourceFormValues): Promise<LearningResource> {
-  await seedPromise;
-  const resource: LearningResource = {
-    id: genId("res"),
-    tenantId: getCurrentTenantId(),
-    branchId: getCurrentBranchId(),
-    ...values,
-    createdAt: new Date().toISOString(),
-  };
-  learningResources = [resource, ...learningResources];
-  persistResources();
-  return mockDelay(resource, 400);
+  const resource = await unwrap(
+    academicHttpClient.post<ApiLearningResource>("/api/learning/resources", {
+      ...values,
+      type: RESOURCE_TYPE_TO_API[values.type],
+      url: values.url ?? null,
+      description: values.description ?? null,
+    }),
+  );
+  return mapResource(resource);
 }
 
 export async function updateLearningResource(id: string, values: LearningResourceFormValues): Promise<LearningResource> {
-  await seedPromise;
-  requireEntity(learningResources, id, "Learning resource");
-  learningResources = learningResources.map((r) => (r.id === id ? { ...r, ...values } : r));
-  persistResources();
-  return mockDelay(requireEntity(learningResources, id, "Learning resource"), 400);
+  const resource = await unwrap(
+    academicHttpClient.put<ApiLearningResource>(`/api/learning/resources/${id}`, {
+      ...values,
+      type: RESOURCE_TYPE_TO_API[values.type],
+      url: values.url ?? null,
+      description: values.description ?? null,
+    }),
+  );
+  return mapResource(resource);
 }
 
 export async function deleteLearningResource(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  requireEntity(learningResources, id, "Learning resource");
-  learningResources = learningResources.filter((r) => !(r.id === id && r.tenantId === tenantId && r.branchId === branchId));
-  discussionComments = discussionComments.filter((c) => !(c.tenantId === tenantId && c.branchId === branchId && c.resourceId === id));
-  persistResources();
-  persistDiscussion();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete<void>(`/api/learning/resources/${id}`));
 }
 
 // ── Quizzes ──────────────────────────────────────────────────────────────
 
 export async function listQuizzes(): Promise<Quiz[]> {
-  await seedPromise;
-  return mockDelay(scopedToCurrentTenantAndBranch(quizzes), 300);
+  const quizzes = await unwrap(academicHttpClient.get<ApiQuiz[]>("/api/learning/quizzes"));
+  return quizzes.map(mapQuiz);
 }
 
+/** Not used by any current screen (kept for API parity with the mock); composed from listQuizzes()
+ *  rather than a dedicated backend endpoint since nothing calls it yet. */
 export async function getQuiz(id: string): Promise<Quiz> {
-  await seedPromise;
-  return mockDelay(requireEntity(quizzes, id, "Quiz"), 300);
+  const all = await listQuizzes();
+  const found = all.find((q) => q.id === id);
+  if (!found) throw new Error("Quiz not found");
+  return found;
 }
 
 export async function createQuiz(values: QuizFormValues, createdByStaffId: string): Promise<Quiz> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  const quiz: Quiz = {
-    id: genId("quiz"),
-    tenantId,
-    branchId,
-    subjectId: values.subjectId,
-    classId: values.classId,
-    title: values.title,
-    questions: values.questions.map((q) => ({ id: genId("q"), ...q })),
-  };
-  quizzes = [quiz, ...quizzes];
-  persistQuizzes();
-
-  const resource: LearningResource = {
-    id: genId("res"),
-    tenantId,
-    branchId,
-    subjectId: values.subjectId,
-    classId: values.classId,
-    title: values.title,
-    type: "quiz",
-    quizId: quiz.id,
-    description: `Quiz with ${quiz.questions.length} question${quiz.questions.length === 1 ? "" : "s"}.`,
-    createdByStaffId,
-    createdAt: new Date().toISOString(),
-  };
-  learningResources = [resource, ...learningResources];
-  persistResources();
-
-  return mockDelay(quiz, 450);
+  const quiz = await unwrap(
+    academicHttpClient.post<ApiQuiz>("/api/learning/quizzes", {
+      subjectId: values.subjectId,
+      classId: values.classId,
+      title: values.title,
+      questions: values.questions.map((q) => ({ text: q.text, options: q.options, correctIndex: q.correctIndex })),
+      createdByStaffId,
+    }),
+  );
+  return mapQuiz(quiz);
 }
 
 export async function deleteQuiz(id: string): Promise<void> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  requireEntity(quizzes, id, "Quiz");
-  quizzes = quizzes.filter((q) => !(q.id === id && q.tenantId === tenantId && q.branchId === branchId));
-  learningResources = learningResources.filter((r) => !(r.tenantId === tenantId && r.branchId === branchId && r.quizId === id));
-  quizAttempts = quizAttempts.filter((a) => !(a.tenantId === tenantId && a.branchId === branchId && a.quizId === id));
-  persistQuizzes();
-  persistResources();
-  persistQuizAttempts();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete<void>(`/api/learning/quizzes/${id}`));
 }
 
 export async function listQuizAttempts(quizId?: string): Promise<QuizAttempt[]> {
-  await seedPromise;
-  const scoped = scopedToCurrentTenantAndBranch(quizAttempts);
-  const result = quizId ? scoped.filter((a) => a.quizId === quizId) : scoped;
-  return mockDelay(result, 300);
+  const attempts = await unwrap(academicHttpClient.get<ApiQuizAttempt[]>("/api/learning/quizzes/attempts", { params: { quizId } }));
+  return attempts.map(mapAttempt);
 }
 
 export async function submitQuizAttempt(quizId: string, studentId: string, answers: number[]): Promise<QuizAttempt> {
-  await seedPromise;
-  const quiz = requireEntity(quizzes, quizId, "Quiz");
-  const correct = quiz.questions.reduce((count, q, i) => (answers[i] === q.correctIndex ? count + 1 : count), 0);
-  const score = quiz.questions.length ? Math.round((correct / quiz.questions.length) * 100) : 0;
-  const attempt: QuizAttempt = {
-    id: genId("qa"),
-    tenantId: quiz.tenantId,
-    branchId: quiz.branchId,
-    quizId,
-    studentId,
-    score,
-    submittedAt: new Date().toISOString(),
-  };
-  quizAttempts = [attempt, ...quizAttempts];
-  persistQuizAttempts();
-  return mockDelay(attempt, 400);
+  const attempt = await unwrap(
+    academicHttpClient.post<ApiQuizAttempt>(`/api/learning/quizzes/${quizId}/attempts`, { studentId, answers }),
+  );
+  return mapAttempt(attempt);
 }
 
 // ── Discussion comments ──────────────────────────────────────────────────
 
 export async function listDiscussionComments(resourceId: string): Promise<DiscussionComment[]> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  return mockDelay(discussionComments.filter((c) => c.tenantId === tenantId && c.branchId === branchId && c.resourceId === resourceId), 300);
+  const comments = await unwrap(academicHttpClient.get<ApiDiscussionComment[]>(`/api/learning/resources/${resourceId}/comments`));
+  return comments.map(mapComment);
 }
 
 export async function addDiscussionComment(resourceId: string, values: DiscussionCommentFormValues): Promise<DiscussionComment> {
-  await seedPromise;
-  const comment: DiscussionComment = {
-    id: genId("disc"),
-    tenantId: getCurrentTenantId(),
-    branchId: getCurrentBranchId(),
-    resourceId,
-    ...values,
-    postedAt: new Date().toISOString(),
-  };
-  discussionComments = [...discussionComments, comment];
-  persistDiscussion();
-  return mockDelay(comment, 350);
+  const comment = await unwrap(
+    academicHttpClient.post<ApiDiscussionComment>(`/api/learning/resources/${resourceId}/comments`, values),
+  );
+  return mapComment(comment);
 }
 
 // ── Resource views ───────────────────────────────────────────────────────
 
 export async function getViewedResourceIds(studentId: string): Promise<string[]> {
-  await seedPromise;
-  return mockDelay(resourceViewsByStudent[studentId] ?? [], 200);
+  return unwrap(academicHttpClient.get<string[]>(`/api/learning/views/${studentId}`));
 }
 
 export async function markResourceViewed(studentId: string, resourceId: string): Promise<void> {
-  await seedPromise;
-  const existing = resourceViewsByStudent[studentId] ?? [];
-  if (!existing.includes(resourceId)) {
-    resourceViewsByStudent = { ...resourceViewsByStudent, [studentId]: [...existing, resourceId] };
-    persistResourceViews();
-  }
-  return mockDelay(undefined, 150);
+  await unwrap(academicHttpClient.post<void>("/api/learning/views", { studentId, resourceId }));
 }
 
 // ── Progress overview ────────────────────────────────────────────────────
 
 export async function getLearningProgress(): Promise<LearningProgressRow[]> {
-  await seedPromise;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  const [students, classes] = await Promise.all([listStudents(), listClasses()]);
-  const active = students.filter((s) => s.status === "active");
-
-  const rows: LearningProgressRow[] = [];
-  for (const student of active) {
-    const schoolClass = classes.find((c) => c.name === student.className);
-    const studentHomework = schoolClass
-      ? homework.filter((h) => h.tenantId === tenantId && h.branchId === branchId && h.status === "published" && h.classId === schoolClass.id)
-      : [];
-    for (const hw of studentHomework) await ensureSubmissionsForHomework(hw);
-
-    let onTime = 0;
-    for (const hw of studentHomework) {
-      const submission = submissions.find(
-        (s) => s.tenantId === tenantId && s.branchId === branchId && s.homeworkId === hw.id && s.studentId === student.id,
-      );
-      if (submission?.submittedAt && submission.status !== "not_submitted" && new Date(submission.submittedAt) <= new Date(hw.dueDate)) {
-        onTime++;
-      }
-    }
-
-    const resourcesForClass = schoolClass
-      ? learningResources.filter((r) => r.tenantId === tenantId && r.branchId === branchId && r.classId === schoolClass.id)
-      : [];
-    const viewed = new Set(resourceViewsByStudent[student.id] ?? []);
-    const viewedCount = resourcesForClass.filter((r) => viewed.has(r.id)).length;
-
-    rows.push({
-      studentId: student.id,
-      studentName: `${student.firstName} ${student.lastName}`,
-      className: student.className,
-      section: student.section,
-      homeworkAssignedCount: studentHomework.length,
-      homeworkSubmittedOnTimeCount: onTime,
-      homeworkSubmittedOnTimePct: studentHomework.length ? Math.round((onTime / studentHomework.length) * 100) : 0,
-      resourceCount: resourcesForClass.length,
-      resourceViewedCount: viewedCount,
-      resourceViewedPct: resourcesForClass.length ? Math.round((viewedCount / resourcesForClass.length) * 100) : 0,
-    });
-  }
-
-  return mockDelay(rows, 450);
+  const rows = await unwrap(academicHttpClient.get<ApiLearningProgressRow[]>("/api/learning/progress"));
+  return rows.map(mapProgressRow);
 }
