@@ -81,7 +81,7 @@ function TenantSwitcher() {
         applyDensityPreset(density);
       }}
     >
-      <SelectTrigger className="w-56 h-9">
+      <SelectTrigger className="w-64 h-9">
         <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <SelectValue placeholder="Select a tenant" />
       </SelectTrigger>

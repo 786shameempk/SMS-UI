@@ -170,3 +170,35 @@ export interface DashboardData {
   performanceTrend: PerformanceTrendPoint[];
   revenueTrend: RevenueTrendPoint[];
 }
+
+// ── Dashboard controls ──────────────────────────────────────────────────
+
+/** Aggregated = every branch of the active school added together; segregated = only the branch
+ *  currently picked in the header's branch switcher. Same meaning for Admin and Super Admin. */
+export type DashboardScopeView = "aggregated" | "segregated";
+
+export type DateRangePreset = "thisYear" | "last3Months" | "last6Months" | "custom";
+
+export interface DashboardDateRange {
+  preset: DateRangePreset;
+  /** yyyy-mm-dd, only meaningful for "custom". */
+  from?: string;
+  to?: string;
+}
+
+export interface ScopeMetrics {
+  students: number;
+  staff: number;
+  feesCollected: number;
+  feesPending: number;
+  overdueInvoices: number;
+  /** True when at least one request failed, so the numbers are incomplete. */
+  failed: boolean;
+}
+
+export interface ScopeSummary {
+  view: DashboardScopeView;
+  /** The branches that were summed — every active branch, or just the selected one. */
+  branches: Array<{ id: string; name: string }>;
+  metrics: ScopeMetrics;
+}

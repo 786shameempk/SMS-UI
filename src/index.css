@@ -13,49 +13,49 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  /* Brand palette — indigo/blue, enterprise-education tone */
-  --color-brand-50: oklch(97% 0.014 264);
-  --color-brand-100: oklch(93% 0.032 264);
-  --color-brand-200: oklch(86% 0.06 264);
-  --color-brand-300: oklch(77% 0.1 264);
-  --color-brand-400: oklch(68% 0.14 264);
-  --color-brand-500: oklch(58% 0.18 264);
-  --color-brand-600: oklch(50% 0.19 264);
-  --color-brand-700: oklch(43% 0.17 264);
-  --color-brand-800: oklch(36% 0.14 264);
-  --color-brand-900: oklch(29% 0.11 264);
+  /* Brand palette — yellow, built around #ECA427 */
+  --color-brand-50: #FDF9EE;
+  --color-brand-100: #FBF1D5;
+  --color-brand-200: #F6E0A6;
+  --color-brand-300: #F0CA6E;
+  --color-brand-400: #EDB445;
+  --color-brand-500: #ECA427;
+  --color-brand-600: #D18818;
+  --color-brand-700: #A06212;
+  --color-brand-800: #724212;
+  --color-brand-900: #492911;
 
-  /* Semantic tokens */
-  --color-background: oklch(99% 0.002 247.8);
-  --color-foreground: oklch(15% 0.012 256);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(15% 0.012 256);
-  --color-primary: oklch(50% 0.19 264);
-  --color-primary-foreground: oklch(100% 0 0);
-  --color-secondary: oklch(96.8% 0.007 247.9);
-  --color-secondary-foreground: oklch(44.7% 0.018 256);
-  --color-muted: oklch(98.2% 0.004 247.9);
-  --color-muted-foreground: oklch(57.9% 0.02 254.1);
-  --color-accent: oklch(93% 0.032 264);
-  --color-accent-foreground: oklch(43% 0.17 264);
-  --color-destructive: oklch(63.7% 0.237 25.3);
-  --color-destructive-foreground: oklch(100% 0 0);
+  /* Semantic tokens — slate neutrals + yellow brand */
+  --color-background: #f8fafc;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-primary: #ECA427;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #475569;
+  --color-muted: #f8fafc;
+  --color-muted-foreground: #64748b;
+  --color-accent: #FDF9EE;
+  --color-accent-foreground: #A06212;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
   --color-success: oklch(64% 0.15 152);
   --color-success-foreground: oklch(100% 0 0);
   --color-warning: oklch(75% 0.16 80);
   --color-warning-foreground: oklch(20% 0.02 80);
-  --color-border: oklch(91.9% 0.013 248.6);
-  --color-input: oklch(91.9% 0.013 248.6);
-  --color-ring: oklch(58% 0.18 264);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(15% 0.012 256);
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #ECA427;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
 
   /* Sidebar */
-  --color-sidebar: oklch(100% 0 0);
-  --color-sidebar-foreground: oklch(44.7% 0.018 256);
-  --color-sidebar-border: oklch(91.9% 0.013 248.6);
-  --color-sidebar-accent: oklch(93% 0.032 264);
-  --color-sidebar-accent-foreground: oklch(43% 0.17 264);
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #475569;
+  --color-sidebar-border: #e2e8f0;
+  --color-sidebar-accent: #FDF9EE;
+  --color-sidebar-accent-foreground: #A06212;
 
   /* Border radius */
   --radius: 0.625rem;
@@ -73,8 +73,8 @@
 
 /*
  * Dark palette — overrides only the neutral surface/text/border tokens. The brand-* ramp and its
- * preset-swap mechanism (settings/theme.ts) are untouched: an indigo brand color is still the
- * same indigo, just --color-primary/--color-ring below pick a lighter shade index for contrast
+ * preset-swap mechanism (settings/theme.ts) are untouched: the yellow brand color is still the
+ * same yellow, just --color-primary/--color-ring below pick a lighter shade index for contrast
  * against a dark background (applyBrandPreset already recomputes these on every preset change,
  * dark or light, so this only sets the *initial* values before a preset has been applied).
  */
@@ -89,14 +89,14 @@
   --color-foreground: oklch(93% 0.006 256);
   --color-card: oklch(27% 0.013 256);
   --color-card-foreground: oklch(93% 0.006 256);
-  --color-primary: oklch(68% 0.14 264);
+  --color-primary: #ECA427;
   --color-primary-foreground: oklch(15% 0.012 256);
   --color-secondary: oklch(32% 0.014 256);
   --color-secondary-foreground: oklch(85% 0.008 256);
   --color-muted: oklch(29% 0.013 256);
   --color-muted-foreground: oklch(68% 0.014 256);
-  --color-accent: oklch(30% 0.05 264);
-  --color-accent-foreground: oklch(86% 0.06 264);
+  --color-accent: #724212;
+  --color-accent-foreground: #F6E0A6;
   --color-destructive: oklch(58% 0.2 25.3);
   --color-destructive-foreground: oklch(95% 0.006 256);
   --color-success: oklch(58% 0.13 152);
@@ -105,15 +105,15 @@
   --color-warning-foreground: oklch(18% 0.02 80);
   --color-border: oklch(34% 0.014 256);
   --color-input: oklch(34% 0.014 256);
-  --color-ring: oklch(68% 0.14 264);
+  --color-ring: #ECA427;
   --color-popover: oklch(27% 0.013 256);
   --color-popover-foreground: oklch(93% 0.006 256);
 
   --color-sidebar: oklch(17% 0.011 256);
   --color-sidebar-foreground: oklch(78% 0.01 256);
   --color-sidebar-border: oklch(28% 0.013 256);
-  --color-sidebar-accent: oklch(30% 0.05 264);
-  --color-sidebar-accent-foreground: oklch(86% 0.06 264);
+  --color-sidebar-accent: #724212;
+  --color-sidebar-accent-foreground: #F6E0A6;
 }
 
 @layer base {

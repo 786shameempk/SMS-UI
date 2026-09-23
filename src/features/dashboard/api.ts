@@ -24,8 +24,10 @@ import {
   buildStats,
   buildTodayClasses,
 } from "./mock";
+import { monthsInRange, resolveDateRange } from "./dateRange";
 import type {
   BusStatusSummary,
+  DashboardDateRange,
   DashboardData,
   FeeDueItem,
   FeeDueSummary,
@@ -332,7 +334,8 @@ async function buildHostelOccupancySchoolwide(): Promise<HostelOccupancySummary>
 
 // ── Assembler ───────────────────────────────────────────────────────────
 
-export async function fetchDashboardData(role: UserRole, email?: string): Promise<DashboardData> {
+export async function fetchDashboardData(role: UserRole, email: string | undefined, range: DashboardDateRange): Promise<DashboardData> {
+  const months = monthsInRange(resolveDateRange(range));
   const children = await getParentChildren(role, email);
   const isParentScoped = role === "parent" && children.length > 0;
 
@@ -367,8 +370,8 @@ export async function fetchDashboardData(role: UserRole, email?: string): Promis
     holidays: buildHolidays(),
     calendarEvents: buildCalendarEvents(),
     recentActivity: buildRecentActivity(role),
-    performanceTrend: buildPerformanceTrend(),
-    revenueTrend: buildRevenueTrend(),
+    performanceTrend: buildPerformanceTrend(months),
+    revenueTrend: buildRevenueTrend(months),
   };
 
   return mockDelay(data, 500);

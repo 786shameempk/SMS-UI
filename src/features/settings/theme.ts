@@ -8,7 +8,7 @@
  * flash the default theme in first.
  */
 
-export type BrandPresetKey = "blue" | "emerald" | "violet" | "amber" | "rose";
+export type BrandPresetKey = "blue" | "emerald" | "violet" | "amber" | "yellow" | "rose";
 
 type ShadeKey = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
 type Shades = Record<ShadeKey, string>;
@@ -27,18 +27,58 @@ const LC: Array<[ShadeKey, number, number]> = [
   [900, 29, 0.11],
 ];
 
+/**
+ * Yellow palette built around #ECA427, kept as exact hex values rather than an oklch approximation.
+ * #ECA427 sits on 500 — the primary/ring shade — not on 600 like the generated ramps.
+ */
+const YELLOW: Shades = {
+  50: "#FDF9EE",
+  100: "#FBF1D5",
+  200: "#F6E0A6",
+  300: "#F0CA6E",
+  400: "#EDB445",
+  500: "#ECA427",
+  600: "#D18818",
+  700: "#A06212",
+  800: "#724212",
+  900: "#492911",
+};
+
 function shadesFor(hue: number): Shades {
   const result = {} as Shades;
   for (const [key, l, c] of LC) result[key] = `oklch(${l}% ${c} ${hue})`;
   return result;
 }
 
-export const BRAND_PRESETS: Record<BrandPresetKey, { label: string; hue: number; shades: Shades }> = {
-  blue: { label: "Blue (default)", hue: 264, shades: shadesFor(264) },
-  emerald: { label: "Emerald", hue: 160, shades: shadesFor(160) },
-  violet: { label: "Violet", hue: 300, shades: shadesFor(300) },
-  amber: { label: "Amber", hue: 80, shades: shadesFor(80) },
-  rose: { label: "Rose", hue: 20, shades: shadesFor(20) },
+/** Which shade each semantic token takes, per mode. */
+interface BrandRoles {
+  primary: ShadeKey;
+  ring: ShadeKey;
+  accent: ShadeKey;
+  accentForeground: ShadeKey;
+}
+
+const DEFAULT_ROLES: Record<"light" | "dark", BrandRoles> = {
+  light: { primary: 600, ring: 500, accent: 100, accentForeground: 700 },
+  // A dark background needs a lighter, more saturated-looking shade to read as "primary" —
+  // the same 600/500/100/700 indices used in light mode would look muddy and low-contrast here.
+  dark: { primary: 400, ring: 400, accent: 800, accentForeground: 200 },
+};
+
+/** Yellow's combination: primary and ring are #ECA427 itself in both modes, with a
+ *  barely-tinted 50 accent and 700 amber-brown text for active nav/menu items in light mode. */
+const YELLOW_ROLES: Record<"light" | "dark", BrandRoles> = {
+  light: { primary: 500, ring: 500, accent: 50, accentForeground: 700 },
+  dark: { primary: 500, ring: 500, accent: 800, accentForeground: 200 },
+};
+
+export const BRAND_PRESETS: Record<BrandPresetKey, { label: string; shades: Shades; roles: Record<"light" | "dark", BrandRoles> }> = {
+  yellow: { label: "Yellow (default)", shades: YELLOW, roles: YELLOW_ROLES },
+  blue: { label: "Blue", shades: shadesFor(264), roles: DEFAULT_ROLES },
+  emerald: { label: "Emerald", shades: shadesFor(160), roles: DEFAULT_ROLES },
+  violet: { label: "Violet", shades: shadesFor(300), roles: DEFAULT_ROLES },
+  amber: { label: "Amber", shades: shadesFor(80), roles: DEFAULT_ROLES },
+  rose: { label: "Rose", shades: shadesFor(20), roles: DEFAULT_ROLES },
 };
 
 const STORAGE_KEY = "sms-settings-brand-preset";
@@ -50,7 +90,7 @@ export function getStoredBrandPreset(): BrandPresetKey {
   } catch {
     // fall through to default
   }
-  return "blue";
+  return "yellow";
 }
 
 function isDarkActive(): boolean {
@@ -58,20 +98,18 @@ function isDarkActive(): boolean {
 }
 
 export function applyBrandPreset(preset: BrandPresetKey): void {
-  const { shades } = BRAND_PRESETS[preset];
+  const { shades, roles } = BRAND_PRESETS[preset];
   const root = document.documentElement.style;
   (Object.keys(shades) as unknown as ShadeKey[]).forEach((key) => {
     root.setProperty(`--color-brand-${key}`, shades[key]);
   });
-  // A dark background needs a lighter, more saturated-looking shade to read as "primary" —
-  // the same 600/500/100/700 indices used in light mode would look muddy and low-contrast here.
-  const dark = isDarkActive();
-  root.setProperty("--color-primary", shades[dark ? 400 : 600]);
-  root.setProperty("--color-ring", shades[dark ? 400 : 500]);
-  root.setProperty("--color-accent", dark ? shades[800] : shades[100]);
-  root.setProperty("--color-accent-foreground", dark ? shades[200] : shades[700]);
-  root.setProperty("--color-sidebar-accent", dark ? shades[800] : shades[100]);
-  root.setProperty("--color-sidebar-accent-foreground", dark ? shades[200] : shades[700]);
+  const r = roles[isDarkActive() ? "dark" : "light"];
+  root.setProperty("--color-primary", shades[r.primary]);
+  root.setProperty("--color-ring", shades[r.ring]);
+  root.setProperty("--color-accent", shades[r.accent]);
+  root.setProperty("--color-accent-foreground", shades[r.accentForeground]);
+  root.setProperty("--color-sidebar-accent", shades[r.accent]);
+  root.setProperty("--color-sidebar-accent-foreground", shades[r.accentForeground]);
 
   try {
     localStorage.setItem(STORAGE_KEY, preset);
@@ -160,6 +198,8 @@ export function applyThemeMode(mode: ThemeMode): void {
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const resolveDark = () => (mode === "system" ? media.matches : mode === "dark");
   document.documentElement.dataset.theme = resolveDark() ? "dark" : "light";
+  // Brand roles are mode-specific inline properties, so they must be re-picked on every mode flip.
+  applyBrandPreset(getStoredBrandPreset());
 
   if (mode === "system" && !systemThemeListenerAttached) {
     systemThemeListenerAttached = true;
@@ -168,6 +208,7 @@ export function applyThemeMode(mode: ThemeMode): void {
       // useUiStore's persisted value is the source of truth for "am I still in system mode".
       if (getStoredThemeMode() === "system") {
         document.documentElement.dataset.theme = media.matches ? "dark" : "light";
+        applyBrandPreset(getStoredBrandPreset());
       }
     });
   }

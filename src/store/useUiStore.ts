@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { applyThemeMode, type ThemeMode } from "@/features/settings/theme";
+import { DEFAULT_DATE_RANGE } from "@/features/dashboard/dateRange";
+import type { DashboardDateRange, DashboardScopeView } from "@/features/dashboard/types";
+import type { DashboardWidgetId } from "@/features/dashboard/widgets";
 
 interface UiState {
   isSidebarCollapsed: boolean;
@@ -12,6 +15,14 @@ interface UiState {
   /** Per-user preference, not per-tenant — see the doc comment on applyThemeMode in settings/theme.ts. */
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+  /** Dashboard controls — per-user preferences, remembered across visits. */
+  dashboardScopeView: DashboardScopeView;
+  setDashboardScopeView: (view: DashboardScopeView) => void;
+  dashboardDateRange: DashboardDateRange;
+  setDashboardDateRange: (range: DashboardDateRange) => void;
+  /** Stored as the *hidden* set so widgets added in future releases show up by default. */
+  hiddenDashboardWidgets: DashboardWidgetId[];
+  setHiddenDashboardWidgets: (ids: DashboardWidgetId[]) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -33,6 +44,12 @@ export const useUiStore = create<UiState>()(
         applyThemeMode(mode);
         set({ themeMode: mode });
       },
+      dashboardScopeView: "aggregated",
+      setDashboardScopeView: (view) => set({ dashboardScopeView: view }),
+      dashboardDateRange: DEFAULT_DATE_RANGE,
+      setDashboardDateRange: (range) => set({ dashboardDateRange: range }),
+      hiddenDashboardWidgets: [],
+      setHiddenDashboardWidgets: (ids) => set({ hiddenDashboardWidgets: ids }),
     }),
     { name: "sms-ui" },
   ),

@@ -31,8 +31,10 @@ function createServiceHttpClient(baseURL: string): AxiosInstance {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    config.headers["X-Tenant-Id"] = activeTenantId;
-    config.headers["X-Branch-Id"] = activeBranchId;
+    // A request may pin its own scope (the dashboard's per-school/per-branch breakdown fetches
+    // every branch, not just the active one) — only fall back to the switcher's selection.
+    if (!config.headers.has("X-Tenant-Id")) config.headers["X-Tenant-Id"] = activeTenantId;
+    if (!config.headers.has("X-Branch-Id")) config.headers["X-Branch-Id"] = activeBranchId;
     return config;
   });
 

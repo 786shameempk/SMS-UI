@@ -47,6 +47,7 @@ export const DATE_FORMAT_OPTIONS: Array<{ value: string; label: string }> = [
 ];
 
 export const BRAND_PRESET_OPTIONS: Array<{ value: BrandPresetKey; label: string }> = [
+  { value: "yellow", label: "Yellow" },
   { value: "blue", label: "Blue" },
   { value: "emerald", label: "Emerald" },
   { value: "violet", label: "Violet" },

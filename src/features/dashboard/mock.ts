@@ -15,18 +15,28 @@ import type {
 const DAY_MS = 1000 * 60 * 60 * 24;
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * DAY_MS).toISOString();
 
-const MONTHS = ["Mar", "Apr", "May", "Jun", "Jul", "Aug"];
+type MonthBucket = { key: string; label: string };
 
-function buildPerformanceTrend(): PerformanceTrendPoint[] {
-  const base = [72, 74, 73, 77, 79, 81];
-  const pass = [88, 89, 87, 91, 92, 94];
-  return MONTHS.map((month, i) => ({ month, averageScore: base[i], passRate: pass[i] }));
+/** Stable pseudo-random 0..1 per month key, so a month keeps its value when the range changes. */
+function wobble(key: string, salt: number): number {
+  let h = salt;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return (h % 1000) / 1000;
 }
 
-function buildRevenueTrend(): RevenueTrendPoint[] {
-  const collected = [412000, 438000, 401000, 452000, 467000, 481000];
-  const expected = [450000, 450000, 460000, 460000, 470000, 490000];
-  return MONTHS.map((month, i) => ({ month, collected: collected[i], expected: expected[i] }));
+function buildPerformanceTrend(months: MonthBucket[]): PerformanceTrendPoint[] {
+  return months.map((m, i) => ({
+    month: m.label,
+    averageScore: Math.round(70 + i * 0.8 + wobble(m.key, 7) * 5),
+    passRate: Math.min(99, Math.round(86 + i * 0.6 + wobble(m.key, 13) * 4)),
+  }));
+}
+
+function buildRevenueTrend(months: MonthBucket[]): RevenueTrendPoint[] {
+  return months.map((m) => {
+    const expected = 450000 + Math.round(wobble(m.key, 3) * 4) * 10000;
+    return { month: m.label, expected, collected: Math.round(expected * (0.86 + wobble(m.key, 5) * 0.12)) };
+  });
 }
 
 function buildAttendance(role: UserRole): AttendanceSummary {

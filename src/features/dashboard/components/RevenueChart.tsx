@@ -3,12 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { formatCurrency } from "@/utils/format";
 import type { RevenueTrendPoint } from "../types";
 
-export default function RevenueChart({ data }: { data: RevenueTrendPoint[] }) {
+export default function RevenueChart({ data, rangeLabel }: { data: RevenueTrendPoint[]; rangeLabel: string }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Fee revenue</CardTitle>
-        <CardDescription>Collected vs. expected fees over the last 6 months.</CardDescription>
+        <CardDescription>{`Collected vs. expected fees · ${rangeLabel}`}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-64 w-full">
