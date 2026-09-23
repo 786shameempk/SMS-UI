@@ -54,9 +54,10 @@ export default function UserManagementPage() {
 
   const createMutation = useMutation({
     mutationFn: createUser,
-    onSuccess: () => {
+    onSuccess: ({ user, tempPassword }) => {
       invalidate();
-      toast.success("User created");
+      // Also emailed when email delivery is configured; shown here so the admin can hand it over.
+      toast.success(`${user.name} created. Temporary password: ${tempPassword}`, { duration: 30000 });
       setFormOpen(false);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create user"),
@@ -79,6 +80,7 @@ export default function UserManagementPage() {
       invalidate();
       toast.success(`${user.name} is now ${user.status}`);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not change status"),
   });
 
   const deleteMutation = useMutation({
@@ -88,14 +90,16 @@ export default function UserManagementPage() {
       toast.success(`${deleteTarget?.name} removed`);
       setDeleteTarget(null);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove user"),
   });
 
   const resetMutation = useMutation({
     mutationFn: (id: string) => resetUserPassword(id),
-    onSuccess: () => {
-      toast.success(`Temporary password sent to ${resetTarget?.email}`);
+    onSuccess: ({ tempPassword }) => {
+      toast.success(`Password reset for ${resetTarget?.email}. Temporary password: ${tempPassword}`, { duration: 30000 });
       setResetTarget(null);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not reset password"),
   });
 
   const filteredUsers = useMemo(() => {

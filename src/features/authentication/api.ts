@@ -1,8 +1,6 @@
 import type { AuthUser, LoginCredentials, ModulePermissions, UserRole } from "@/types/auth";
-import { mockDelay } from "@/utils/mockDelay";
 import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
-import { findAccount, setAccountPassword } from "./mockUsers";
-import { buildMockDevices, buildMockSessions } from "./mockSecurity";
+import { mapDevice, mapSession, type ApiDevice, type ApiUserSession } from "@/features/administration/users/api";
 import type { DeviceRecord, SessionRecord } from "./types";
 
 export interface LoginResult {
@@ -141,32 +139,42 @@ export async function resetPassword(email: string, token: string, newPassword: s
   return { message: "Your password has been reset" };
 }
 
+/** The signed-in user's own password (the server identifies them from the token, so `_email` is unused). */
 export async function changePassword(
-  email: string,
+  _email: string,
   currentPassword: string,
   newPassword: string,
 ): Promise<{ message: string }> {
-  const account = findAccount(email, currentPassword);
-  if (!account) {
-    await mockDelay(null, 400);
-    throw new Error("Current password is incorrect");
+  try {
+    await authHttpClient.post("/api/auth/change-password", { currentPassword, newPassword });
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err, "Current password is incorrect"));
   }
-  setAccountPassword(email, newPassword);
-  return mockDelay({ message: "Password updated successfully" }, 500);
+  return { message: "Password updated successfully" };
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
+  try {
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
+  }
 }
 
 export async function listSessions(): Promise<SessionRecord[]> {
-  return mockDelay(buildMockSessions(), 400);
+  return (await unwrap(authHttpClient.get<ApiUserSession[]>("/api/account/sessions"))).map(mapSession);
 }
 
-export async function revokeSession(_sessionId: string): Promise<{ message: string }> {
-  return mockDelay({ message: "Session signed out" }, 400);
+export async function revokeSession(sessionId: string): Promise<{ message: string }> {
+  await unwrap(authHttpClient.delete<void>(`/api/account/sessions/${sessionId}`));
+  return { message: "Session signed out" };
 }
 
 export async function listDevices(): Promise<DeviceRecord[]> {
-  return mockDelay(buildMockDevices(), 400);
+  return (await unwrap(authHttpClient.get<ApiDevice[]>("/api/account/devices"))).map(mapDevice);
 }
 
-export async function revokeDevice(_deviceId: string): Promise<{ message: string }> {
-  return mockDelay({ message: "Device removed" }, 400);
+export async function revokeDevice(deviceId: string): Promise<{ message: string }> {
+  await unwrap(authHttpClient.delete<void>(`/api/account/devices/${deviceId}`));
+  return { message: "Device signed out" };
 }

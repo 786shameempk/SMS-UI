@@ -1,260 +1,207 @@
-import { mockDelay } from "@/utils/mockDelay";
-import { listStaff } from "@/features/staff/api";
-import { listStudents } from "@/features/students/api";
-import { buildSeedAnnouncements, buildSeedPlans, buildSeedTenants } from "./mock";
-import type { Announcement, AnnouncementFormValues, Plan, PlanFormValues, Tenant, TenantFormValues, TenantRow, PlatformReportsSummary } from "./types";
+import { academicHttpClient, authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { useAuthStore } from "@/store/authStore";
+import type {
+  Announcement,
+  AnnouncementFormValues,
+  Plan,
+  PlanFormValues,
+  PlanTier,
+  PlatformReportsSummary,
+  Tenant,
+  TenantFormValues,
+  TenantRow,
+  TenantStatus,
+} from "./types";
 
-const TENANTS_KEY = "sms-mock-platform-tenants";
-const PLANS_KEY = "sms-mock-platform-plans";
-const ANNOUNCEMENTS_KEY = "sms-mock-platform-announcements";
-const SEEDED_KEY = "sms-mock-platform-seeded";
+// Real AuthService-backed (/api/platform): the tenant registry, plan catalog and announcements.
+// Per-tenant student/staff headcounts come from AcademicService's SuperAdmin-only stats endpoint.
 
-function loadJson<T>(key: string, fallback: T): T {
+interface ApiTenant {
+  id: string;
+  schoolName: string;
+  subdomain: string;
+  status: "Trial" | "Active" | "Suspended" | "Cancelled";
+  planId: string;
+  billingContactName: string;
+  billingContactEmail: string;
+  createdAt: string;
+}
+
+interface ApiPlan extends Omit<Plan, "tier"> {
+  tier: "Starter" | "Growth" | "Enterprise";
+}
+
+interface ApiAnnouncement {
+  id: string;
+  title: string;
+  body: string;
+  active: boolean;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+interface ApiTenantCounts {
+  tenantId: string;
+  studentCount: number;
+  staffCount: number;
+}
+
+const TENANT_STATUS_FROM_API: Record<ApiTenant["status"], TenantStatus> = {
+  Trial: "trial",
+  Active: "active",
+  Suspended: "suspended",
+  Cancelled: "cancelled",
+};
+const TENANT_STATUS_TO_API: Record<TenantStatus, ApiTenant["status"]> = {
+  trial: "Trial",
+  active: "Active",
+  suspended: "Suspended",
+  cancelled: "Cancelled",
+};
+const TIER_TO_API: Record<PlanTier, ApiPlan["tier"]> = { starter: "Starter", growth: "Growth", enterprise: "Enterprise" };
+const TIER_FROM_API: Record<ApiPlan["tier"], PlanTier> = { Starter: "starter", Growth: "growth", Enterprise: "enterprise" };
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
 
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
+/** The tenant the SuperAdmin currently has selected in the header switcher - protected from suspend/cancel/delete. */
+const activeTenantId = () => useAuthStore.getState().activeTenantId;
 
-let tenants = loadJson<Tenant[]>(TENANTS_KEY, []);
-let plans = loadJson<Plan[]>(PLANS_KEY, []);
-let announcements = loadJson<Announcement[]>(ANNOUNCEMENTS_KEY, []);
-
-function persistTenants() {
-  saveJson(TENANTS_KEY, tenants);
-}
-function persistPlans() {
-  saveJson(PLANS_KEY, plans);
-}
-function persistAnnouncements() {
-  saveJson(ANNOUNCEMENTS_KEY, announcements);
-}
-
-function requireTenant(id: string): Tenant {
-  const found = tenants.find((t) => t.id === id);
-  if (!found) throw new Error("Tenant not found");
-  return found;
-}
-
-function requirePlan(id: string): Plan {
-  const found = plans.find((p) => p.id === id);
-  if (!found) throw new Error("Plan not found");
-  return found;
-}
-
-/**
- * This app has no real multi-tenant data isolation — every other module's localStorage is
- * one shared dataset for the single school running here. This console is the platform-team
- * layer *on top of* that: it manages a tenant registry, plan catalog, and announcements as
- * this module's own data, and is honest about the fact that only one seeded tenant
- * (`isCurrentEnvironment: true`) reflects this app's real student/staff counts — the rest are
- * illustrative fictional schools with their own seed stats, not real separate datasets.
- */
-async function performSeed(): Promise<void> {
-  if (loadJson(SEEDED_KEY, false)) return;
-
-  if (plans.length === 0) {
-    plans = buildSeedPlans();
-    persistPlans();
-  }
-  if (tenants.length === 0) {
-    tenants = buildSeedTenants();
-    persistTenants();
-  }
-  if (announcements.length === 0) {
-    announcements = buildSeedAnnouncements();
-    persistAnnouncements();
-  }
-
-  saveJson(SEEDED_KEY, true);
-}
-
-const seedPromise: Promise<void> = performSeed().catch((err) => {
-  console.error("Platform console seed failed", err);
+const mapTenant = (dto: ApiTenant): Tenant => ({
+  id: dto.id,
+  schoolName: dto.schoolName,
+  subdomain: dto.subdomain,
+  status: TENANT_STATUS_FROM_API[dto.status],
+  planId: dto.planId,
+  billingContactName: dto.billingContactName,
+  billingContactEmail: dto.billingContactEmail,
+  createdAt: dto.createdAt,
+  isCurrentEnvironment: dto.id === activeTenantId(),
 });
 
-async function toRow(tenant: Tenant, planById: Map<string, Plan>): Promise<TenantRow> {
-  const plan = planById.get(tenant.planId) ?? requirePlan(tenant.planId);
-  if (tenant.isCurrentEnvironment) {
-    const [students, staff] = await Promise.all([listStudents(), listStaff()]);
-    return { ...tenant, plan, studentCount: students.length, staffCount: staff.length, storageUsedGb: tenant.seedStorageUsedGb ?? 2 };
-  }
-  return { ...tenant, plan, studentCount: tenant.seedStudentCount ?? 0, staffCount: tenant.seedStaffCount ?? 0, storageUsedGb: tenant.seedStorageUsedGb ?? 0 };
-}
+const mapPlan = (dto: ApiPlan): Plan => ({ ...dto, tier: TIER_FROM_API[dto.tier] });
+const toPlanRequest = (values: PlanFormValues) => ({ ...values, tier: TIER_TO_API[values.tier] });
+
+const mapAnnouncement = (dto: ApiAnnouncement): Announcement => ({
+  id: dto.id,
+  title: dto.title,
+  body: dto.body,
+  active: dto.active,
+  createdAt: dto.createdAt,
+  expiresAt: dto.expiresAt ?? undefined,
+});
+
+const setStatus = async (id: string, status: TenantStatus): Promise<Tenant> =>
+  mapTenant(await unwrap(authHttpClient.put<ApiTenant>(`/api/platform/tenants/${id}/status`, { status: TENANT_STATUS_TO_API[status] })));
 
 // ── Tenants ──────────────────────────────────────────────────────────────
 
 export async function listTenants(): Promise<TenantRow[]> {
-  await seedPromise;
+  const [tenants, plans, counts] = await Promise.all([
+    unwrap(authHttpClient.get<ApiTenant[]>("/api/platform/tenants")),
+    listPlans(),
+    unwrap(academicHttpClient.get<ApiTenantCounts[]>("/api/stats/tenant-counts")),
+  ]);
   const planById = new Map(plans.map((p) => [p.id, p] as const));
-  const rows = await Promise.all(tenants.map((t) => toRow(t, planById)));
-  rows.sort((a, b) => (b.isCurrentEnvironment ? 1 : 0) - (a.isCurrentEnvironment ? 1 : 0) || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  return mockDelay(rows, 350);
+  const countsByTenant = new Map(counts.map((c) => [c.tenantId, c] as const));
+
+  const rows: TenantRow[] = [];
+  for (const dto of tenants) {
+    const plan = planById.get(dto.planId);
+    if (!plan) continue;
+    const tenant = mapTenant(dto);
+    const c = countsByTenant.get(tenant.id);
+    // No per-tenant storage metering exists yet, so usage isn't reported (the UI shows the plan quota).
+    rows.push({ ...tenant, plan, studentCount: c?.studentCount ?? 0, staffCount: c?.staffCount ?? 0, storageUsedGb: 0 });
+  }
+  rows.sort(
+    (a, b) =>
+      (b.isCurrentEnvironment ? 1 : 0) - (a.isCurrentEnvironment ? 1 : 0) ||
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+  return rows;
 }
 
 export async function createTenant(values: TenantFormValues): Promise<Tenant> {
-  await seedPromise;
-  if (tenants.some((t) => t.subdomain.toLowerCase() === values.subdomain.toLowerCase())) {
-    throw new Error("A tenant with this subdomain already exists");
-  }
-  const tenant: Tenant = {
-    id: genId("tenant"),
-    schoolName: values.schoolName,
-    subdomain: values.subdomain.toLowerCase(),
-    status: "trial",
-    planId: values.planId,
-    billingContactName: values.billingContactName,
-    billingContactEmail: values.billingContactEmail,
-    createdAt: new Date().toISOString(),
-    isCurrentEnvironment: false,
-    seedStudentCount: 0,
-    seedStaffCount: 0,
-    seedStorageUsedGb: 0,
-  };
-  tenants = [...tenants, tenant];
-  persistTenants();
-  return mockDelay(tenant, 400);
+  return mapTenant(await unwrap(authHttpClient.post<ApiTenant>("/api/platform/tenants", values)));
 }
 
 export async function updateTenantPlan(id: string, planId: string): Promise<Tenant> {
-  await seedPromise;
-  requireTenant(id);
-  requirePlan(planId);
-  const updated = tenants.map((t) => (t.id === id ? { ...t, planId } : t));
-  tenants = updated;
-  persistTenants();
-  return mockDelay(requireTenant(id), 300);
+  return mapTenant(await unwrap(authHttpClient.put<ApiTenant>(`/api/platform/tenants/${id}/plan`, { planId })));
 }
 
 export async function activateTenant(id: string): Promise<Tenant> {
-  await seedPromise;
-  const tenant = requireTenant(id);
-  if (tenant.status === "cancelled") throw new Error("A cancelled tenant can't be reactivated — create a new tenant instead");
-  const updated: Tenant = { ...tenant, status: "active" };
-  tenants = tenants.map((t) => (t.id === id ? updated : t));
-  persistTenants();
-  return mockDelay(updated, 300);
+  return setStatus(id, "active");
 }
 
 export async function suspendTenant(id: string): Promise<Tenant> {
-  await seedPromise;
-  const tenant = requireTenant(id);
-  if (tenant.isCurrentEnvironment) throw new Error("Can't suspend the tenant this environment is running as");
-  if (tenant.status !== "active") throw new Error("Only an active tenant can be suspended");
-  const updated: Tenant = { ...tenant, status: "suspended" };
-  tenants = tenants.map((t) => (t.id === id ? updated : t));
-  persistTenants();
-  return mockDelay(updated, 300);
+  if (id === activeTenantId()) throw new Error("Switch to another tenant before suspending the one you're viewing");
+  return setStatus(id, "suspended");
 }
 
 export async function cancelTenant(id: string): Promise<Tenant> {
-  await seedPromise;
-  const tenant = requireTenant(id);
-  if (tenant.isCurrentEnvironment) throw new Error("Can't cancel the tenant this environment is running as");
-  const updated: Tenant = { ...tenant, status: "cancelled" };
-  tenants = tenants.map((t) => (t.id === id ? updated : t));
-  persistTenants();
-  return mockDelay(updated, 300);
+  if (id === activeTenantId()) throw new Error("Switch to another tenant before cancelling the one you're viewing");
+  return setStatus(id, "cancelled");
 }
 
 export async function deleteTenant(id: string): Promise<void> {
-  await seedPromise;
-  const tenant = requireTenant(id);
-  if (tenant.isCurrentEnvironment) throw new Error("Can't delete the tenant this environment is running as");
-  tenants = tenants.filter((t) => t.id !== id);
-  persistTenants();
-  return mockDelay(undefined, 300);
+  if (id === activeTenantId()) throw new Error("Switch to another tenant before deleting the one you're viewing");
+  await unwrap(authHttpClient.delete<void>(`/api/platform/tenants/${id}`));
 }
 
 // ── Plans ────────────────────────────────────────────────────────────────
 
 export async function listPlans(): Promise<Plan[]> {
-  await seedPromise;
-  return mockDelay([...plans].sort((a, b) => a.monthlyPriceInr - b.monthlyPriceInr), 300);
+  return (await unwrap(authHttpClient.get<ApiPlan[]>("/api/platform/plans"))).map(mapPlan);
 }
 
 export async function createPlan(values: PlanFormValues): Promise<Plan> {
-  await seedPromise;
-  const plan: Plan = { id: genId("plan"), ...values };
-  plans = [...plans, plan];
-  persistPlans();
-  return mockDelay(plan, 400);
+  return mapPlan(await unwrap(authHttpClient.post<ApiPlan>("/api/platform/plans", toPlanRequest(values))));
 }
 
 export async function updatePlan(id: string, values: PlanFormValues): Promise<Plan> {
-  await seedPromise;
-  requirePlan(id);
-  const updated: Plan = { id, ...values };
-  plans = plans.map((p) => (p.id === id ? updated : p));
-  persistPlans();
-  return mockDelay(updated, 350);
+  return mapPlan(await unwrap(authHttpClient.put<ApiPlan>(`/api/platform/plans/${id}`, toPlanRequest(values))));
 }
 
 export async function deletePlan(id: string): Promise<void> {
-  await seedPromise;
-  requirePlan(id);
-  if (tenants.some((t) => t.planId === id)) throw new Error("Can't delete a plan that tenants are currently subscribed to");
-  plans = plans.filter((p) => p.id !== id);
-  persistPlans();
-  return mockDelay(undefined, 300);
+  await unwrap(authHttpClient.delete<void>(`/api/platform/plans/${id}`));
 }
 
 // ── Announcements ────────────────────────────────────────────────────────
 
 export async function listAnnouncements(): Promise<Announcement[]> {
-  await seedPromise;
-  return mockDelay(
-    [...announcements].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    300,
-  );
+  return (await unwrap(authHttpClient.get<ApiAnnouncement[]>("/api/platform/announcements"))).map(mapAnnouncement);
 }
 
 export async function createAnnouncement(values: AnnouncementFormValues): Promise<Announcement> {
-  await seedPromise;
-  const announcement: Announcement = { id: genId("announce"), active: true, createdAt: new Date().toISOString(), ...values };
-  announcements = [announcement, ...announcements];
-  persistAnnouncements();
-  return mockDelay(announcement, 400);
+  return mapAnnouncement(
+    await unwrap(
+      authHttpClient.post<ApiAnnouncement>("/api/platform/announcements", {
+        title: values.title,
+        body: values.body,
+        expiresAt: values.expiresAt ? values.expiresAt.slice(0, 10) : null,
+      }),
+    ),
+  );
 }
 
 export async function toggleAnnouncementActive(id: string): Promise<Announcement> {
-  await seedPromise;
-  const found = announcements.find((a) => a.id === id);
-  if (!found) throw new Error("Announcement not found");
-  const updated: Announcement = { ...found, active: !found.active };
-  announcements = announcements.map((a) => (a.id === id ? updated : a));
-  persistAnnouncements();
-  return mockDelay(updated, 300);
+  return mapAnnouncement(await unwrap(authHttpClient.post<ApiAnnouncement>(`/api/platform/announcements/${id}/toggle`)));
 }
 
 export async function deleteAnnouncement(id: string): Promise<void> {
-  await seedPromise;
-  const found = announcements.find((a) => a.id === id);
-  if (!found) throw new Error("Announcement not found");
-  announcements = announcements.filter((a) => a.id !== id);
-  persistAnnouncements();
-  return mockDelay(undefined, 300);
+  await unwrap(authHttpClient.delete<void>(`/api/platform/announcements/${id}`));
 }
 
 // ── Reports ────────────────────────────────────────────────────────────
+// Aggregated client-side from the real tenant list.
 
 export async function getPlatformReportsSummary(): Promise<PlatformReportsSummary> {
-  await seedPromise;
   const rows = await listTenants();
 
   const totalTenants = rows.length;
@@ -274,8 +221,5 @@ export async function getPlatformReportsSummary(): Promise<PlatformReportsSummar
   }
   const tenantsByPlan = Array.from(planCounts.entries()).map(([planId, v]) => ({ planId, planName: v.planName, count: v.count }));
 
-  return mockDelay(
-    { totalTenants, activeTenants, trialTenants, suspendedTenants, cancelledTenants, mrrInr, totalStudentsAcrossTenants, totalStaffAcrossTenants, tenantsByPlan },
-    350,
-  );
+  return { totalTenants, activeTenants, trialTenants, suspendedTenants, cancelledTenants, mrrInr, totalStudentsAcrossTenants, totalStaffAcrossTenants, tenantsByPlan };
 }

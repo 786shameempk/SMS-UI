@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PERMISSION_MODULES } from "../mock";
+import { PERMISSION_MODULES } from "../constants";
 import type { Policy, PolicyFormValues, Role } from "../types";
 
 const policyFormSchema = z.object({

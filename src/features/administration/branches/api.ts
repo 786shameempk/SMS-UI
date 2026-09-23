@@ -1,102 +1,62 @@
-import { mockDelay } from "@/utils/mockDelay";
-import { defaultBranchIdForTenant, getCurrentTenantId } from "@/utils/tenant";
-import type { Branch, BranchFormValues } from "./types";
+import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import type { Branch, BranchFormValues, BranchStatus } from "./types";
 
-const BRANCHES_KEY = "sms-mock-branches";
+// Real AuthService-backed (/api/branches). The server scopes every call to the active tenant and
+// lazily provisions each tenant's "Main Campus" ({tenantId}-main) the first time it's listed.
 
-function loadJson<T>(key: string, fallback: T): T {
+interface ApiBranch {
+  id: string;
+  tenantId: string;
+  name: string;
+  code: string;
+  address: string | null;
+  phone: string | null;
+  status: "Active" | "Inactive";
+  createdAt: string;
+}
+
+const STATUS_TO_API: Record<BranchStatus, ApiBranch["status"]> = { active: "Active", inactive: "Inactive" };
+const STATUS_FROM_API: Record<ApiBranch["status"], BranchStatus> = { Active: "active", Inactive: "inactive" };
+
+const mapBranch = (dto: ApiBranch): Branch => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  name: dto.name,
+  code: dto.code,
+  address: dto.address ?? undefined,
+  phone: dto.phone ?? undefined,
+  status: STATUS_FROM_API[dto.status],
+  createdAt: dto.createdAt,
+});
+
+const toRequest = (values: BranchFormValues) => ({
+  name: values.name,
+  code: values.code,
+  address: values.address || null,
+  phone: values.phone || null,
+  status: STATUS_TO_API[values.status],
+});
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
-}
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-let branches = loadJson<Branch[]>(BRANCHES_KEY, []);
-
-function persistBranches() {
-  saveJson(BRANCHES_KEY, branches);
-}
-
-/**
- * Every tenant needs a "Main Campus" branch to exist before it can be listed or picked from.
- * Lazily provisioned the first time a tenant's branches are touched, rather than a one-time
- * global seed — this transparently covers every platform tenant, both the ones seeded at
- * launch and any created later through Platform Console, with no cross-module dependency on
- * platform/api.ts (which would risk a circular import, since branches has no reason to know
- * about the tenant registry — it only ever needs the *current* tenant id).
- */
-function ensureDefaultBranch(tenantId: string): void {
-  const id = defaultBranchIdForTenant(tenantId);
-  if (branches.some((b) => b.id === id)) return;
-  branches = [...branches, { id, tenantId, name: "Main Campus", code: "MAIN", status: "active", createdAt: new Date().toISOString() }];
-  persistBranches();
-}
-
-function requireBranch(id: string): Branch {
-  const tenantId = getCurrentTenantId();
-  const found = branches.find((b) => b.id === id && b.tenantId === tenantId);
-  if (!found) throw new Error("Branch not found");
-  return found;
 }
 
 export async function listBranches(): Promise<Branch[]> {
-  const tenantId = getCurrentTenantId();
-  ensureDefaultBranch(tenantId);
-  return mockDelay(
-    branches.filter((b) => b.tenantId === tenantId).sort((a, b) => a.name.localeCompare(b.name)),
-    300,
-  );
+  return (await unwrap(authHttpClient.get<ApiBranch[]>("/api/branches"))).map(mapBranch);
 }
 
 export async function createBranch(values: BranchFormValues): Promise<Branch> {
-  const tenantId = getCurrentTenantId();
-  ensureDefaultBranch(tenantId);
-  if (branches.some((b) => b.tenantId === tenantId && b.code.trim().toLowerCase() === values.code.trim().toLowerCase())) {
-    await mockDelay(null, 300);
-    throw new Error("A branch with this code already exists");
-  }
-  const branch: Branch = { id: genId("branch"), tenantId, ...values, code: values.code.trim().toUpperCase(), createdAt: new Date().toISOString() };
-  branches = [...branches, branch];
-  persistBranches();
-  return mockDelay(branch, 400);
+  return mapBranch(await unwrap(authHttpClient.post<ApiBranch>("/api/branches", toRequest(values))));
 }
 
 export async function updateBranch(id: string, values: BranchFormValues): Promise<Branch> {
-  const tenantId = getCurrentTenantId();
-  requireBranch(id);
-  if (branches.some((b) => b.tenantId === tenantId && b.id !== id && b.code.trim().toLowerCase() === values.code.trim().toLowerCase())) {
-    await mockDelay(null, 300);
-    throw new Error("A branch with this code already exists");
-  }
-  const updated: Branch = { ...requireBranch(id), ...values, code: values.code.trim().toUpperCase() };
-  branches = branches.map((b) => (b.id === id ? updated : b));
-  persistBranches();
-  return mockDelay(updated, 400);
+  return mapBranch(await unwrap(authHttpClient.put<ApiBranch>(`/api/branches/${encodeURIComponent(id)}`, toRequest(values))));
 }
 
 export async function deleteBranch(id: string): Promise<void> {
-  const tenantId = getCurrentTenantId();
-  requireBranch(id);
-  if (id === defaultBranchIdForTenant(tenantId)) {
-    await mockDelay(null, 300);
-    throw new Error("The main campus branch can't be deleted");
-  }
-  branches = branches.filter((b) => !(b.id === id && b.tenantId === tenantId));
-  persistBranches();
-  return mockDelay(undefined, 350);
+  await unwrap(authHttpClient.delete<void>(`/api/branches/${encodeURIComponent(id)}`));
 }

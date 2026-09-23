@@ -31,13 +31,8 @@ export interface Tenant {
   billingContactName: string;
   billingContactEmail: string;
   createdAt: string;
-  /** True for exactly one seeded tenant — the school this running app's own data belongs to. */
+  /** True for the tenant currently selected in the header switcher (protected from suspend/cancel/delete). */
   isCurrentEnvironment: boolean;
-  /** Only meaningful when isCurrentEnvironment is false; the current-environment tenant's
-   *  counts are always read live from the real students/staff modules instead. */
-  seedStudentCount?: number;
-  seedStaffCount?: number;
-  seedStorageUsedGb?: number;
 }
 
 export interface TenantFormValues {
@@ -52,6 +47,7 @@ export interface TenantRow extends Tenant {
   plan: Plan;
   studentCount: number;
   staffCount: number;
+  /** Not metered yet - always 0; the Tenants table shows the plan quota instead. */
   storageUsedGb: number;
 }
 

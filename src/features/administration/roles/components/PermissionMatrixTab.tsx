@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRolePermissions, listPermissions, listRoles, setRolePermission } from "../api";
-import { CATEGORY_DESCRIPTION, CATEGORY_LABEL } from "../mock";
+import { CATEGORY_DESCRIPTION, CATEGORY_LABEL } from "../constants";
 import type { PermissionCategory } from "../types";
 
 const CATEGORIES: PermissionCategory[] = ["menu", "api", "screen", "action"];

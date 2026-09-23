@@ -1,11 +1,4 @@
-import { mockDelay } from "@/utils/mockDelay";
-import {
-  getCurrentBranchId,
-  getCurrentTenantId,
-  migrateLegacyRecordsToDefaultBranch,
-  migrateLegacyRecordsToDefaultTenant,
-  scopedToCurrentTenantAndBranch,
-} from "@/utils/tenant";
+import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { getStudent, listStudents } from "@/features/students/api";
 import { listAttendanceRecords } from "@/features/attendance/api";
 import { getTranscript } from "@/features/examinations/api";
@@ -15,34 +8,12 @@ import { formatCurrency } from "@/utils/format";
 import { ACADEMIC_CGPA_RISK_THRESHOLD, ATTENDANCE_RISK_THRESHOLD, RISK_WEIGHTS } from "./constants";
 import type { AtRiskStudent, DismissedFlag, DraftRequest, GeneratedDraft, Insight, RiskFlag } from "./types";
 
-const DISMISSED_KEY = "sms-mock-ai-dismissed-flags";
-
-function loadJson<T>(key: string, fallback: T): T {
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
-}
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-let dismissed = migrateLegacyRecordsToDefaultBranch(migrateLegacyRecordsToDefaultTenant(loadJson<DismissedFlag[]>(DISMISSED_KEY, [])));
-
-function persistDismissed() {
-  saveJson(DISMISSED_KEY, dismissed);
 }
 
 function pick(phrases: string[]): string {
@@ -136,7 +107,7 @@ async function admissionsInsight(): Promise<Insight> {
 
 export async function getInsights(): Promise<Insight[]> {
   const insights = await Promise.all([attendanceInsight(), academicsInsight(), feesInsight(), admissionsInsight()]);
-  return mockDelay(insights, 400);
+  return insights;
 }
 
 // ── At-risk students ─────────────────────────────────────────────────────
@@ -171,31 +142,30 @@ async function overdueInvoicesByStudent(): Promise<Map<string, { count: number; 
   return byStudent;
 }
 
+// Dismissals are persisted in AcademicService (/api/risk-flags/dismissed), scoped to the
+// active tenant/branch server-side. The flags themselves are still computed live below.
+
 export async function listDismissedFlags(): Promise<DismissedFlag[]> {
-  return mockDelay(scopedToCurrentTenantAndBranch(dismissed), 200);
+  return unwrap(academicHttpClient.get<DismissedFlag[]>("/api/risk-flags/dismissed"));
 }
 
 export async function dismissStudentFlags(studentId: string): Promise<DismissedFlag> {
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  const entry: DismissedFlag = { id: genId("dismiss"), tenantId, branchId, studentId, dismissedAt: new Date().toISOString() };
-  dismissed = [...dismissed.filter((d) => !(d.tenantId === tenantId && d.branchId === branchId && d.studentId === studentId)), entry];
-  persistDismissed();
-  return mockDelay(entry, 250);
+  return unwrap(academicHttpClient.post<DismissedFlag>(`/api/risk-flags/dismissed/${studentId}`));
 }
 
 export async function restoreStudentFlags(studentId: string): Promise<void> {
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  dismissed = dismissed.filter((d) => !(d.tenantId === tenantId && d.branchId === branchId && d.studentId === studentId));
-  persistDismissed();
-  return mockDelay(undefined, 250);
+  await unwrap(academicHttpClient.delete<void>(`/api/risk-flags/dismissed/${studentId}`));
 }
 
 export async function getAtRiskStudents(includeDismissed = false): Promise<AtRiskStudent[]> {
-  const [students, attendanceMap, overdueMap] = await Promise.all([listStudents(), attendanceByStudent(), overdueInvoicesByStudent()]);
+  const [students, attendanceMap, overdueMap, dismissed] = await Promise.all([
+    listStudents(),
+    attendanceByStudent(),
+    overdueInvoicesByStudent(),
+    listDismissedFlags(),
+  ]);
   const activeStudents = students.filter((s) => s.status === "active");
-  const dismissedIds = new Set(scopedToCurrentTenantAndBranch(dismissed).map((d) => d.studentId));
+  const dismissedIds = new Set(dismissed.map((d) => d.studentId));
 
   const rows = await Promise.all(
     activeStudents.map(async (student): Promise<AtRiskStudent | null> => {
@@ -228,7 +198,7 @@ export async function getAtRiskStudents(includeDismissed = false): Promise<AtRis
   );
 
   const filtered = rows.filter((r): r is AtRiskStudent => r !== null).sort((a, b) => b.riskScore - a.riskScore);
-  return mockDelay(filtered, 450);
+  return filtered;
 }
 
 // ── Content assistant ────────────────────────────────────────────────────

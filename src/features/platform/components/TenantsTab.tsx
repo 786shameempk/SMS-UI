@@ -91,7 +91,7 @@ export default function TenantsTab() {
           <p className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
             {row.original.schoolName}
             {row.original.isCurrentEnvironment && (
-              <span title="This is the school this environment's data belongs to">
+              <span title="The tenant you currently have selected">
                 <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
               </span>
             )}
@@ -120,7 +120,7 @@ export default function TenantsTab() {
       header: "Storage",
       cell: ({ row }) => (
         <span className="text-sm text-slate-600 tabular-nums">
-          {row.original.storageUsedGb} / {row.original.plan.storageGb} GB
+          {row.original.plan.storageGb} GB quota
         </span>
       ),
     },

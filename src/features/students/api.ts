@@ -1,15 +1,5 @@
-import { mockDelay } from "@/utils/mockDelay";
-import {
-  DEFAULT_TENANT_ID,
-  defaultBranchIdForTenant,
-  getCurrentBranchId,
-  getCurrentTenantId,
-  migrateLegacyRecordsToDefaultBranch,
-  migrateLegacyRecordsToDefaultTenant,
-} from "@/utils/tenant";
 import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listClasses, listSections } from "@/features/academics/api";
-import { SEED_STUDENTS } from "./mock";
 import { CLASS_OPTIONS, FINAL_CLASS } from "./constants";
 import type {
   AdmissionApplication,
@@ -354,43 +344,8 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   }
 }
 
-const STUDENTS_KEY = "sms-mock-students";
-
-function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
-}
-
-/** Still mock-only, kept solely for promoteStudents/graduateStudents below - real Students now
- *  live in AcademicService (see the real functions further down), a known, accepted disconnect
- *  until bulk promotion/graduation gets its own backend endpoint. */
-let students = migrateLegacyRecordsToDefaultBranch(
-  migrateLegacyRecordsToDefaultTenant(
-    loadJson<Student[]>(STUDENTS_KEY, SEED_STUDENTS.map((s) => ({ ...s, tenantId: DEFAULT_TENANT_ID, branchId: defaultBranchIdForTenant(DEFAULT_TENANT_ID) }))),
-  ),
-);
-
-function persistStudents() {
-  saveJson(STUDENTS_KEY, students);
-}
-
 // ── Students ─────────────────────────────────────────────────────────────
-// Real AcademicService-backed (see docs/MICROSERVICES_PLAN.md). Admissions below this point is
-// still mock-only until that pipeline is migrated - enrollAdmission's mock-created Student won't
-// appear in this list until then, a known transitional gap.
+// Real AcademicService-backed (see docs/MICROSERVICES_PLAN.md).
 
 export async function listStudents(): Promise<Student[]> {
   const [apiStudents, index] = await Promise.all([
@@ -556,18 +511,11 @@ export async function promoteStudents(params: {
   toClass: string;
   toSection: string;
 }): Promise<PromotionResult> {
-  let count = 0;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  students = students.map((s) => {
-    if (s.tenantId === tenantId && s.branchId === branchId && s.status === "active" && s.className === params.fromClass && s.section === params.fromSection) {
-      count++;
-      return { ...s, className: params.toClass, section: params.toSection };
-    }
-    return s;
-  });
-  persistStudents();
-  return mockDelay({ promotedCount: count }, 500);
+  const [fromSectionId, toSectionId] = await Promise.all([
+    resolveSectionId(params.fromClass, params.fromSection),
+    resolveSectionId(params.toClass, params.toSection),
+  ]);
+  return unwrap(academicHttpClient.post<PromotionResult>("/api/students/promote", { fromSectionId, toSectionId }));
 }
 
 export interface GraduationResult {
@@ -575,18 +523,12 @@ export interface GraduationResult {
 }
 
 export async function graduateStudents(className: string = FINAL_CLASS): Promise<GraduationResult> {
-  let count = 0;
-  const tenantId = getCurrentTenantId();
-  const branchId = getCurrentBranchId();
-  students = students.map((s) => {
-    if (s.tenantId === tenantId && s.branchId === branchId && s.status === "active" && s.className === className) {
-      count++;
-      return { ...s, status: "graduated" as const };
-    }
-    return s;
-  });
-  persistStudents();
-  return mockDelay({ graduatedCount: count }, 500);
+  const classes = await listClasses();
+  const schoolClass = classes.find((c) => c.name === className);
+  if (!schoolClass) {
+    throw new Error(`No class named "${className}" was found`);
+  }
+  return unwrap(academicHttpClient.post<GraduationResult>("/api/students/graduate", { classId: schoolClass.id }));
 }
 
 // ── Admissions: Inquiry → Registration → Entrance Exam → Interview → ─────
@@ -724,7 +666,7 @@ export async function listSeatAvailability(): Promise<SeatAvailability[]> {
     const currentStrength = classSections.reduce((sum, s) => sum + s.currentStrength, 0);
     return { className, capacity, currentStrength, availableSeats: Math.max(0, capacity - currentStrength) };
   });
-  return mockDelay(result, 350);
+  return result;
 }
 
 export async function getSeatAvailability(className: string): Promise<SeatAvailability | null> {

@@ -4,7 +4,7 @@
  * reading `var(--color-brand-500)` directly at runtime). Overriding them on `document.documentElement`
  * therefore cascades into every `bg-brand-*`/`bg-primary`/etc. utility class live, with no rebuild.
  * Framework-agnostic and synchronous on purpose, so it can run once at module scope in App.tsx
- * before the first paint — going through the usual async api.ts + mockDelay pattern here would
+ * before the first paint — waiting on the async settings API here would
  * flash the default theme in first.
  */
 

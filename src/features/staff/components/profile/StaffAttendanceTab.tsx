@@ -32,7 +32,9 @@ export default function StaffAttendanceTab({ staffId }: { staffId: string }) {
       <CardHeader>
         <CardTitle>Attendance</CardTitle>
         <CardDescription>
-          {pct}% present over the last {data.totalDays} working days.
+          {data.totalDays > 0
+            ? `${pct}% present across ${data.totalDays} marked day${data.totalDays === 1 ? "" : "s"} in the last 90 days.`
+            : "No attendance has been marked for this staff member in the last 90 days."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">

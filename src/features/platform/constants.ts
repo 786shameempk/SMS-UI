@@ -22,7 +22,7 @@ export const PLAN_TIER_OPTIONS: Array<{ value: PlanTier; label: string }> = (Obj
 
 /**
  * Illustrative catalog of module labels a plan can include — mirrors this app's own nav
- * sections. `mock.ts`'s `buildSeedPlans()` slices this list *by position* to build each seeded
+ * sections. AuthService's plan seed (ApplicationDbContextInitializer) slices this list *by position* to build each seeded
  * tier (Starter = first 8, Growth = first 16, Enterprise = all), so new modules are appended at
  * the end rather than inserted in the middle — that keeps every existing plan's composition
  * exactly as it was and only ever grows what Enterprise includes. Administration-only screens

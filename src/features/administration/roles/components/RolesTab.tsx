@@ -90,6 +90,8 @@ export default function RolesTab() {
       header: "",
       cell: ({ row }) => {
         const role = row.original;
+        // Built-in roles are shared by every school on the platform, so they're read-only here.
+        if (role.isSystem) return null;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

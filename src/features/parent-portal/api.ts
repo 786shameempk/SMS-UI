@@ -1,14 +1,16 @@
-import { mockDelay } from "@/utils/mockDelay";
 import { engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
-import { listStudents } from "@/features/students/api";
+import { listClasses, listSubjects } from "@/features/academics/api";
+import { listAttendanceRecords } from "@/features/attendance/api";
+import { getExamResults, listExamSchedules, listExams } from "@/features/examinations/api";
+import { listAssignedHomework } from "@/features/homework/api";
+import { getStudent, listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { listInvoicesForStudent, payInvoiceOnline } from "@/features/fees/api";
 import type { FeeInvoice as FeesInvoice } from "@/features/fees/types";
 import { listMyNotifications, markRead } from "@/features/notifications/api";
 import type { Notification } from "@/features/notifications/types";
-import { PARENT_CHILDREN_MAP } from "./constants";
-import { buildAttendanceSummary, buildExamResults, buildHomework } from "./mock";
 import type {
+  AttendanceDay,
   AttendanceSummary,
   ExamResult,
   FeeInvoice,
@@ -85,22 +87,92 @@ function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
   };
 }
 
+/** A parent's children are the students listing them (by email) as a guardian. */
 export async function getMyChildren(parentEmail: string): Promise<Student[]> {
-  const ids = PARENT_CHILDREN_MAP[parentEmail.toLowerCase()] ?? [];
+  const email = parentEmail.trim().toLowerCase();
   const all = await listStudents();
-  return all.filter((s) => ids.includes(s.id));
+  return all.filter((s) => s.guardians.some((g) => g.email?.trim().toLowerCase() === email));
 }
 
+// ── Composed from other modules (AcademicService) ─────────────────────────
+
+const ATTENDANCE_WINDOW_DAYS = 90;
+const ATTENDANCE_RECENT_DAYS = 14;
+
 export async function getAttendanceSummary(studentId: string): Promise<AttendanceSummary> {
-  return mockDelay(buildAttendanceSummary(studentId), 350);
+  const from = new Date();
+  from.setDate(from.getDate() - ATTENDANCE_WINDOW_DAYS);
+  const records = (await listAttendanceRecords({ dateFrom: from.toISOString().slice(0, 10) }))
+    .filter((r) => r.studentId === studentId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // Half-days count as present and approved leave as absent for the parent-facing summary.
+  const days: AttendanceDay[] = records.map((r) => ({
+    date: r.date,
+    status: r.status === "late" ? "late" : r.status === "present" || r.status === "half-day" ? "present" : "absent",
+  }));
+
+  return {
+    studentId,
+    presentDays: days.filter((d) => d.status === "present").length,
+    absentDays: days.filter((d) => d.status === "absent").length,
+    lateDays: days.filter((d) => d.status === "late").length,
+    totalDays: days.length,
+    recent: days.slice(-ATTENDANCE_RECENT_DAYS),
+  };
 }
 
 export async function listHomework(studentId: string): Promise<HomeworkItem[]> {
-  return mockDelay(buildHomework(studentId), 350);
+  const [rows, subjects] = await Promise.all([listAssignedHomework(studentId), listSubjects()]);
+  const subjectName = new Map(subjects.map((s) => [s.id, s.name] as const));
+  const today = new Date().toISOString().slice(0, 10);
+
+  return rows.map(({ homework, submission }) => {
+    let status: HomeworkItem["status"];
+    if (submission.status === "graded") status = "graded";
+    else if (submission.status === "submitted") status = "submitted";
+    else status = homework.dueDate < today ? "overdue" : "pending";
+    return {
+      id: homework.id,
+      studentId,
+      subject: subjectName.get(homework.subjectId) ?? "—",
+      title: homework.title,
+      assignedDate: homework.assignedDate,
+      dueDate: homework.dueDate,
+      status,
+      grade: submission.grade !== undefined ? String(submission.grade) : undefined,
+    };
+  });
 }
 
 export async function listExamResults(studentId: string): Promise<ExamResult[]> {
-  return mockDelay(buildExamResults(studentId), 350);
+  const student = await getStudent(studentId);
+  const [exams, subjects, schedules, classes] = await Promise.all([listExams(), listSubjects(), listExamSchedules(), listClasses()]);
+  // Student carries its class by name (see students/api.ts mapStudent), so match on that.
+  const classId = classes.find((c) => c.name === student.className)?.id;
+  const classExams = exams.filter((e) => e.classId === classId);
+  const subjectName = new Map(subjects.map((s) => [s.id, s.name] as const));
+  const scheduleDate = new Map(schedules.map((s) => [`${s.examId}:${s.subjectId}`, s.date] as const));
+
+  const results = (await Promise.all(classExams.map((e) => getExamResults(e.id)))).flat();
+  const examById = new Map(classExams.map((e) => [e.id, e] as const));
+
+  return results
+    .filter((r) => r.studentId === studentId && !r.isAbsent)
+    .map((r) => {
+      const exam = examById.get(r.examId);
+      return {
+        id: r.id,
+        studentId,
+        examName: exam?.name ?? "—",
+        subject: subjectName.get(r.subjectId) ?? "—",
+        date: scheduleDate.get(`${r.examId}:${r.subjectId}`) ?? exam?.startDate ?? "",
+        marksObtained: r.marksObtained,
+        maxMarks: r.maxMarks,
+        grade: r.grade,
+      };
+    })
+    .sort((x, y) => y.date.localeCompare(x.date));
 }
 
 export async function listFeeInvoices(studentId: string): Promise<FeeInvoice[]> {

@@ -1,6 +1,5 @@
-import { mockDelay } from "@/utils/mockDelay";
 import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
-import { buildStaffAttendance } from "./mock";
+import { listStaffAttendanceRecords } from "@/features/attendance/api";
 import type {
   Experience,
   ExperienceFormValues,
@@ -418,10 +417,25 @@ export async function recordSalaryPayment(id: string, month: string): Promise<St
 }
 
 // ── Attendance ───────────────────────────────────────────────────────────
-// Still mock-only - the real Attendance module hasn't been migrated to AcademicService yet.
+// Summarized from the real staff attendance register (AcademicService /api/attendance/staff/records).
+
+const STAFF_ATTENDANCE_WINDOW_DAYS = 90;
+const STAFF_ATTENDANCE_RECENT_DAYS = 14;
 
 export async function getStaffAttendance(id: string): Promise<StaffAttendanceSummary> {
-  return mockDelay(buildStaffAttendance(id), 350);
+  const from = new Date();
+  from.setDate(from.getDate() - STAFF_ATTENDANCE_WINDOW_DAYS);
+  const records = (await listStaffAttendanceRecords({ dateFrom: from.toISOString().slice(0, 10) }))
+    .filter((r) => r.staffId === id)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return {
+    presentDays: records.filter((r) => r.status === "present").length,
+    absentDays: records.filter((r) => r.status === "absent").length,
+    lateDays: records.filter((r) => r.status === "late").length,
+    totalDays: records.length,
+    recent: records.slice(-STAFF_ATTENDANCE_RECENT_DAYS).map((r) => ({ date: r.date, status: r.status })),
+  };
 }
 
 // ── Performance reviews ──────────────────────────────────────────────────

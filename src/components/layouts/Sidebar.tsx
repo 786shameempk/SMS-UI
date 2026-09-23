@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import { GraduationCap, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, GraduationCap, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useUiStore } from "@/store/useUiStore";
 import { useAuthStore } from "@/store/authStore";
@@ -65,16 +66,60 @@ function NavSectionBlock({ title, items, isCollapsed }: { title: string; items: 
     );
   }
 
+  return <ExpandedNavSection title={title} items={items} />;
+}
+
+function ExpandedNavSection({ title, items }: { title: string; items: NavItem[] }) {
+  const { pathname } = useLocation();
+  const isCollapsible = items.length > 1;
+  const isSectionCollapsed = useUiStore((s) => s.collapsedNavSections.includes(title));
+  const toggleNavSection = useUiStore((s) => s.toggleNavSection);
+  const expandNavSection = useUiStore((s) => s.expandNavSection);
+  const isOpen = !isCollapsible || !isSectionCollapsed;
+  const containsActive = items.some((item) => (item.end ? pathname === item.to : pathname.startsWith(item.to)));
+
+  // Navigating into a collapsed section (e.g. via a link elsewhere) reveals it, so the active item is never hidden.
+  useEffect(() => {
+    if (containsActive) expandNavSection(title);
+  }, [containsActive, pathname, title, expandNavSection]);
+
+  const titleLabel = (
+    <span className="flex-1 text-left text-[10px] font-bold uppercase tracking-[0.13em] text-muted-foreground">{title}</span>
+  );
+
   return (
     <div className="space-y-0.5">
-      <div className="flex items-center gap-2 px-3 h-7">
-        <span className="flex-1 text-left text-[10px] font-bold uppercase tracking-[0.13em] text-muted-foreground">{title}</span>
-      </div>
-      <div className="space-y-0.5">
-        {items.map((item) => (
-          <NavItemLink key={item.to} item={item} isCollapsed={false} />
-        ))}
-      </div>
+      {isCollapsible ? (
+        <button
+          type="button"
+          onClick={() => toggleNavSection(title)}
+          aria-expanded={isOpen}
+          className="flex w-full items-center gap-2 px-3 h-7 rounded-md hover:bg-secondary transition-colors duration-150 cursor-pointer"
+        >
+          {titleLabel}
+          <ChevronDown
+            style={{ width: 13, height: 13 }}
+            className={cn("shrink-0 text-muted-foreground transition-transform duration-200", !isOpen && "-rotate-90")}
+          />
+        </button>
+      ) : (
+        <div className="flex items-center gap-2 px-3 h-7">{titleLabel}</div>
+      )}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="space-y-0.5 overflow-hidden"
+          >
+            {items.map((item) => (
+              <NavItemLink key={item.to} item={item} isCollapsed={false} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

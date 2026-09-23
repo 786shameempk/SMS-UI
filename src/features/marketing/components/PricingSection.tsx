@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { cn } from "@/utils/cn";
 import { getPricingTiers } from "../data";
 
 export default function PricingSection() {
-  const tiers = getPricingTiers();
+  const { data: tiers = [] } = useQuery({ queryKey: ["marketing", "pricing"], queryFn: getPricingTiers });
 
   return (
     <section id="pricing" className="scroll-mt-16 bg-slate-50 py-20 sm:py-28">

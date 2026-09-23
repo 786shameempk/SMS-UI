@@ -13,7 +13,7 @@ import {
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
-import { buildSeedPlans } from "@/features/platform/mock";
+import { listPlans } from "@/features/platform/api";
 import { formatCurrency } from "@/utils/format";
 
 export interface FeatureItem {
@@ -147,9 +147,9 @@ export interface PricingTier {
   features: string[];
 }
 
-/** Pulled straight from the Platform Console's real seed data so pricing here never drifts from `/platform`. */
-export function getPricingTiers(): PricingTier[] {
-  const plans = buildSeedPlans();
+/** Read from the Platform Console's real plan catalog (public endpoint) so pricing never drifts from `/platform`. */
+export async function getPricingTiers(): Promise<PricingTier[]> {
+  const plans = await listPlans();
   const descriptions: Record<string, string> = {
     starter: "For a single campus just getting off spreadsheets.",
     growth: "For growing schools that need every module working together.",
