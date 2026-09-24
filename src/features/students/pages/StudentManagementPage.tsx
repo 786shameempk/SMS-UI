@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CLASS_OPTIONS } from "../constants";
+import { useClassSectionOptions } from "../hooks";
 import { createStudent, listStudents, transferStudent, updateStudent } from "../api";
 import type { Student, StudentFormValues, TransferFormValues } from "../types";
 import StudentStatusBadge from "../components/StudentStatusBadge";
@@ -35,6 +35,7 @@ function StudentsTab() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: students = [], isLoading } = useQuery({ queryKey: ["students"], queryFn: listStudents });
+  const { classNames } = useClassSectionOptions();
 
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
@@ -53,6 +54,7 @@ function StudentsTab() {
       toast.success("Student registered");
       setFormOpen(false);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not register student"),
   });
 
   const updateMutation = useMutation({
@@ -63,6 +65,7 @@ function StudentsTab() {
       setFormOpen(false);
       setEditingStudent(null);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update student"),
   });
 
   const transferMutation = useMutation({
@@ -72,6 +75,7 @@ function StudentsTab() {
       toast.success(`${transferTarget?.firstName} marked as transferred`);
       setTransferTarget(null);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not transfer student"),
   });
 
   const filtered = useMemo(() => {
@@ -114,11 +118,12 @@ function StudentsTab() {
     {
       id: "class",
       header: "Class",
-      cell: ({ row }) => (
-        <span className="text-sm text-foreground">
-          {row.original.className} - {row.original.section}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const { className, section } = row.original;
+        // Some schools name sections "Grade 1 - A" rather than "A"; don't repeat the class name.
+        const label = section.startsWith(className) ? section : [className, section].filter(Boolean).join(" - ");
+        return <span className="text-sm text-foreground whitespace-nowrap">{label || "—"}</span>;
+      },
     },
     {
       accessorKey: "rollNumber",
@@ -195,7 +200,7 @@ function StudentsTab() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All classes</SelectItem>
-              {CLASS_OPTIONS.map((c) => (
+              {classNames.map((c) => (
                 <SelectItem key={c} value={c}>
                   {c}
                 </SelectItem>

@@ -12,6 +12,11 @@ import { gradeSubmission, listSubmissionsForHomework, requestResubmission } from
 import { SUBMISSION_STATUS_CONFIG } from "../constants";
 import type { Homework, HomeworkSubmission } from "../types";
 
+// Stable fallback: an inline `= []` default is a new array every render, and the drafts effect
+// below depends on it — while loading (or forever, if the request fails) it would setState,
+// re-render, get another new [] and loop, freezing the page. See attendance/MarkAttendanceTab.
+const NO_SUBMISSIONS: HomeworkSubmission[] = [];
+
 interface DraftRow {
   grade: string;
   feedback: string;
@@ -20,7 +25,7 @@ interface DraftRow {
 export default function SubmissionsPanel({ homework, onBack }: { homework: Homework; onBack: () => void }) {
   const queryClient = useQueryClient();
 
-  const { data: submissions = [], isLoading: submissionsLoading } = useQuery({
+  const { data: submissions = NO_SUBMISSIONS, isLoading: submissionsLoading } = useQuery({
     queryKey: ["homework", "submissions", homework.id],
     queryFn: () => listSubmissionsForHomework(homework.id),
   });

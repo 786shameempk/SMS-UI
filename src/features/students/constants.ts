@@ -1,29 +1,5 @@
 import type { AdmissionStage, ExamResultStatus, SelectionDecision } from "./types";
 
-/**
- * `Student.className`/`section` are still plain strings, not id-linked into the Academic
- * Management module's real `Class`/`Section` records (a known follow-up — see PROGRESS.md).
- * This local list is what every student-facing class picker in this feature uses; it's kept
- * in sync by name with academics' own seeded classes ("Grade 1".."Grade 10") so admissions'
- * seat-availability lookup (`getSeatAvailability`) can join the two by name.
- */
-export const CLASS_OPTIONS = [
-  "Grade 1",
-  "Grade 2",
-  "Grade 3",
-  "Grade 4",
-  "Grade 5",
-  "Grade 6",
-  "Grade 7",
-  "Grade 8",
-  "Grade 9",
-  "Grade 10",
-  "Grade 11",
-  "Grade 12",
-] as const;
-
-export const SECTION_OPTIONS = ["A", "B", "C"] as const;
-
 export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "unknown"] as const;
 
 export const GUARDIAN_RELATIONS = ["father", "mother", "guardian"] as const;
@@ -36,14 +12,6 @@ export const DOCUMENT_CATEGORIES = [
   { value: "medical_record", label: "Medical Record" },
   { value: "other", label: "Other" },
 ] as const;
-
-export function nextClass(className: string): string | null {
-  const idx = CLASS_OPTIONS.indexOf(className as (typeof CLASS_OPTIONS)[number]);
-  if (idx === -1 || idx === CLASS_OPTIONS.length - 1) return null;
-  return CLASS_OPTIONS[idx + 1];
-}
-
-export const FINAL_CLASS = CLASS_OPTIONS[CLASS_OPTIONS.length - 1];
 
 // ── Admission pipeline ──────────────────────────────────────────────────
 

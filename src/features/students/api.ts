@@ -1,6 +1,6 @@
 import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { getCurrentBranchId } from "@/utils/tenant";
 import { listClasses, listSections } from "@/features/academics/api";
-import { CLASS_OPTIONS, FINAL_CLASS } from "./constants";
 import type {
   AdmissionApplication,
   AdmissionDecisionFormValues,
@@ -178,13 +178,16 @@ async function buildSectionIndex() {
   return { classById, sectionById };
 }
 
-async function resolveSectionId(className: string, sectionName: string): Promise<string> {
+/** Class names aren't unique across branches, so a known branch narrows the match to it. */
+async function resolveSectionId(className: string, sectionName: string, branchId?: string): Promise<string> {
   const [classes, sections] = await Promise.all([listClasses(), listSections()]);
-  const schoolClass = classes.find((c) => c.name === className);
-  if (!schoolClass) {
-    throw new Error(`No class named "${className}" was found`);
+  const classIds = new Set(
+    classes.filter((c) => c.name === className && (!branchId || c.branchId === branchId)).map((c) => c.id),
+  );
+  if (classIds.size === 0) {
+    throw new Error(`No class named "${className}" was found${branchId ? " in the selected branch" : ""}`);
   }
-  const section = sections.find((s) => s.classId === schoolClass.id && s.name === sectionName);
+  const section = sections.find((s) => classIds.has(s.classId) && s.name === sectionName);
   if (!section) {
     throw new Error(`No section "${sectionName}" was found in class "${className}"`);
   }
@@ -365,7 +368,7 @@ export async function getStudent(id: string): Promise<Student> {
 
 export async function createStudent(values: StudentFormValues): Promise<Student> {
   const [sectionId, index] = await Promise.all([
-    resolveSectionId(values.className, values.section),
+    resolveSectionId(values.className, values.section, values.branchId),
     buildSectionIndex(),
   ]);
   const dto = await unwrap(
@@ -388,7 +391,7 @@ export async function createStudent(values: StudentFormValues): Promise<Student>
 
 export async function updateStudent(id: string, values: StudentFormValues): Promise<Student> {
   const [sectionId, index] = await Promise.all([
-    resolveSectionId(values.className, values.section),
+    resolveSectionId(values.className, values.section, values.branchId),
     buildSectionIndex(),
   ]);
   const dto = await unwrap(
@@ -511,9 +514,11 @@ export async function promoteStudents(params: {
   toClass: string;
   toSection: string;
 }): Promise<PromotionResult> {
+  // The backend promotes within the active branch (X-Branch-Id), so resolve sections there too.
+  const branchId = getCurrentBranchId();
   const [fromSectionId, toSectionId] = await Promise.all([
-    resolveSectionId(params.fromClass, params.fromSection),
-    resolveSectionId(params.toClass, params.toSection),
+    resolveSectionId(params.fromClass, params.fromSection, branchId),
+    resolveSectionId(params.toClass, params.toSection, branchId),
   ]);
   return unwrap(academicHttpClient.post<PromotionResult>("/api/students/promote", { fromSectionId, toSectionId }));
 }
@@ -522,9 +527,10 @@ export interface GraduationResult {
   graduatedCount: number;
 }
 
-export async function graduateStudents(className: string = FINAL_CLASS): Promise<GraduationResult> {
+export async function graduateStudents(className: string): Promise<GraduationResult> {
+  const branchId = getCurrentBranchId();
   const classes = await listClasses();
-  const schoolClass = classes.find((c) => c.name === className);
+  const schoolClass = classes.find((c) => c.name === className && c.branchId === branchId);
   if (!schoolClass) {
     throw new Error(`No class named "${className}" was found`);
   }
@@ -651,17 +657,19 @@ export async function enrollAdmission(id: string): Promise<{ application: Admiss
 // ── Seat availability ────────────────────────────────────────────────────
 
 /**
- * Joins by class name against the Academic Management module's real `Section` capacity/
- * currentStrength (the same string-matching workaround Attendance/Teachers/Examinations/
- * Homework already use, since `Student.className` isn't id-linked to academics' `Class` yet).
+ * Aggregates the Academic Management module's real `Section` capacity/currentStrength per class
+ * name (admissions apply for a class by name). Pass a `branchId` to count only that branch.
  */
-export async function listSeatAvailability(): Promise<SeatAvailability[]> {
-  const [classes, sections] = await Promise.all([listClasses(), listSections()]);
-  const classByName = new Map(classes.map((c) => [c.name, c] as const));
+export async function listSeatAvailability(branchId?: string): Promise<SeatAvailability[]> {
+  const [allClasses, sections] = await Promise.all([listClasses(), listSections()]);
+  const classes = branchId ? allClasses.filter((c) => c.branchId === branchId) : allClasses;
+  const classNames = [...new Set(classes.map((c) => c.name))].sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
+  );
 
-  const result: SeatAvailability[] = CLASS_OPTIONS.map((className) => {
-    const schoolClass = classByName.get(className);
-    const classSections = schoolClass ? sections.filter((s) => s.classId === schoolClass.id) : [];
+  const result: SeatAvailability[] = classNames.map((className) => {
+    const classIds = new Set(classes.filter((c) => c.name === className).map((c) => c.id));
+    const classSections = sections.filter((s) => classIds.has(s.classId));
     const capacity = classSections.reduce((sum, s) => sum + s.capacity, 0);
     const currentStrength = classSections.reduce((sum, s) => sum + s.currentStrength, 0);
     return { className, capacity, currentStrength, availableSeats: Math.max(0, capacity - currentStrength) };

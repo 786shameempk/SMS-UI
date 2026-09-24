@@ -11,6 +11,12 @@ import { listSubjects } from "@/features/academics/api";
 import { getExamResults, getExamRoster, listExamSchedules, listExams, saveExamResults } from "../api";
 import type { ExamResultEntryRow } from "../types";
 
+// Stable fallback: an inline `= []` default is a new array every render, and the drafts effect
+// below depends on it — while loading (or forever, if the request fails) it would setState,
+// re-render, get another new [] and loop, freezing the page. See attendance/MarkAttendanceTab.
+const NO_ROSTER: Awaited<ReturnType<typeof getExamRoster>> = [];
+const NO_RESULTS: Awaited<ReturnType<typeof getExamResults>> = [];
+
 interface DraftRow {
   marksObtained: string;
   isAbsent: boolean;
@@ -28,13 +34,13 @@ export default function MarksEntryTab() {
   const examSchedules = useMemo(() => schedules.filter((s) => s.examId === examId), [schedules, examId]);
   const schedule = useMemo(() => examSchedules.find((s) => s.subjectId === subjectId), [examSchedules, subjectId]);
 
-  const { data: roster = [], isLoading: rosterLoading } = useQuery({
+  const { data: roster = NO_ROSTER, isLoading: rosterLoading } = useQuery({
     queryKey: ["examinations", "roster", examId],
     queryFn: () => getExamRoster(examId as string),
     enabled: Boolean(examId),
   });
 
-  const { data: existingResults = [], isLoading: resultsLoading } = useQuery({
+  const { data: existingResults = NO_RESULTS, isLoading: resultsLoading } = useQuery({
     queryKey: ["examinations", "exam-results", examId, subjectId],
     queryFn: () => getExamResults(examId as string, subjectId),
     enabled: Boolean(examId && subjectId),

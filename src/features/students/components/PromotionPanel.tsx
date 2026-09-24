@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
-import { CLASS_OPTIONS, SECTION_OPTIONS, nextClass } from "../constants";
+import { getCurrentBranchId } from "@/utils/tenant";
+import { useClassSectionOptions } from "../hooks";
 import { listStudents, promoteStudents } from "../api";
 
 export default function PromotionPanel() {
   const queryClient = useQueryClient();
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
+  const { classNames, sectionsFor, nextClassName } = useClassSectionOptions(getCurrentBranchId());
 
   const [fromClass, setFromClass] = useState("");
   const [fromSection, setFromSection] = useState("");
@@ -35,15 +37,21 @@ export default function PromotionPanel() {
       setToClass("");
       setToSection("");
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not promote students"),
   });
 
   const handlePickFromClass = (value: string) => {
     setFromClass(value);
-    const suggested = nextClass(value);
-    if (suggested) setToClass(suggested);
+    setFromSection("");
+    const suggested = nextClassName(value);
+    if (suggested) {
+      setToClass(suggested);
+      setToSection("");
+    }
   };
 
-  const canPromote = fromClass && fromSection && toClass && toSection && eligible.length > 0;
+  const sameSection = Boolean(fromSection) && fromClass === toClass && fromSection === toSection;
+  const canPromote = fromClass && fromSection && toClass && toSection && !sameSection && eligible.length > 0;
 
   return (
     <Card>
@@ -62,19 +70,19 @@ export default function PromotionPanel() {
                 <SelectValue placeholder="From class" />
               </SelectTrigger>
               <SelectContent>
-                {CLASS_OPTIONS.map((c) => (
+                {classNames.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={fromSection} onValueChange={setFromSection}>
-              <SelectTrigger className="w-24">
-                <SelectValue placeholder="Sec." />
+            <Select value={fromSection} onValueChange={setFromSection} disabled={!fromClass}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Section" />
               </SelectTrigger>
               <SelectContent>
-                {SECTION_OPTIONS.map((s) => (
+                {sectionsFor(fromClass).map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
                   </SelectItem>
@@ -86,24 +94,30 @@ export default function PromotionPanel() {
           <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
 
           <div className="flex items-center gap-2">
-            <Select value={toClass} onValueChange={setToClass}>
+            <Select
+              value={toClass}
+              onValueChange={(value) => {
+                setToClass(value);
+                setToSection("");
+              }}
+            >
               <SelectTrigger className="w-36">
                 <SelectValue placeholder="To class" />
               </SelectTrigger>
               <SelectContent>
-                {CLASS_OPTIONS.map((c) => (
+                {classNames.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={toSection} onValueChange={setToSection}>
-              <SelectTrigger className="w-24">
-                <SelectValue placeholder="Sec." />
+            <Select value={toSection} onValueChange={setToSection} disabled={!toClass}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Section" />
               </SelectTrigger>
               <SelectContent>
-                {SECTION_OPTIONS.map((s) => (
+                {sectionsFor(toClass).map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
                   </SelectItem>
@@ -112,6 +126,8 @@ export default function PromotionPanel() {
             </Select>
           </div>
         </div>
+
+        {sameSection && <p className="text-sm text-amber-700">Source and target sections must differ.</p>}
 
         {fromClass && fromSection && (
           <p className="text-sm text-slate-600">

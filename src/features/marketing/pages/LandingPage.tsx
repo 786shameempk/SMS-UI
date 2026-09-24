@@ -9,6 +9,7 @@ import Testimonials from "../components/Testimonials";
 import PricingSection from "../components/PricingSection";
 import FinalCta from "../components/FinalCta";
 import Footer from "../components/Footer";
+import { LeadCaptureProvider } from "../components/LeadCapture";
 
 export default function LandingPage() {
   const token = useAuthStore((s) => s.token);
@@ -19,18 +20,20 @@ export default function LandingPage() {
   if (token && isSessionValid()) return <Navigate to="/dashboard" replace />;
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      <main>
-        <Hero />
-        <FeaturesGrid />
-        <ProductPreview />
-        <WhySection />
-        <Testimonials />
-        <PricingSection />
-        <FinalCta />
-      </main>
-      <Footer />
-    </div>
+    <LeadCaptureProvider>
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main>
+          <Hero />
+          <FeaturesGrid />
+          <ProductPreview />
+          <WhySection />
+          <Testimonials />
+          <PricingSection />
+          <FinalCta />
+        </main>
+        <Footer />
+      </div>
+    </LeadCaptureProvider>
   );
 }

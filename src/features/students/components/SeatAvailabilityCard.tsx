@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { listSeatAvailability } from "../api";
 
 export default function SeatAvailabilityCard() {
-  const { data: seats = [], isLoading } = useQuery({ queryKey: ["students", "seat-availability"], queryFn: listSeatAvailability });
+  const { data: seats = [], isLoading } = useQuery({ queryKey: ["students", "seat-availability"], queryFn: () => listSeatAvailability() });
 
   const trackedSeats = seats.filter((s) => s.capacity > 0);
 

@@ -169,3 +169,26 @@ export async function getPricingTiers(): Promise<PricingTier[]> {
     ],
   }));
 }
+
+// ── Lead capture (Contact Us widget / Request a Demo) ─────────────────────
+
+export const COUNTRY_CODES = [
+  { code: "IN", flag: "🇮🇳", dial: "+91" },
+  { code: "AE", flag: "🇦🇪", dial: "+971" },
+  { code: "SA", flag: "🇸🇦", dial: "+966" },
+  { code: "QA", flag: "🇶🇦", dial: "+974" },
+  { code: "OM", flag: "🇴🇲", dial: "+968" },
+  { code: "KW", flag: "🇰🇼", dial: "+965" },
+  { code: "BH", flag: "🇧🇭", dial: "+973" },
+  { code: "SG", flag: "🇸🇬", dial: "+65" },
+  { code: "GB", flag: "🇬🇧", dial: "+44" },
+  { code: "US", flag: "🇺🇸", dial: "+1" },
+] as const;
+
+export const STUDENT_COUNT_OPTIONS = ["Under 250", "250 – 500", "500 – 1,000", "1,000 – 2,500", "2,500+"] as const;
+
+export const DEMO_HIGHLIGHTS = [
+  "A 30-minute live walkthrough tailored to your school",
+  "See admissions, fees, attendance and exams working together",
+  "Get migration and pricing answers from a product specialist",
+] as const;

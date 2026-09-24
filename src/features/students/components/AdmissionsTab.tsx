@@ -70,6 +70,7 @@ export default function AdmissionsTab() {
       toast.success("Application submitted");
       setOpenDialog(null);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not submit application"),
   });
 
   const registerMutation = useMutation({

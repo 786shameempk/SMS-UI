@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
-import { CLASS_OPTIONS } from "../constants";
+import { useClassSectionOptions } from "../hooks";
 import { listSeatAvailability } from "../api";
 import type { AdmissionFormValues } from "../types";
 
@@ -40,7 +40,6 @@ export default function AdmissionFormDialog({
   onSubmit: (values: AdmissionFormValues) => Promise<void>;
   submitting: boolean;
 }) {
-  const { data: seatAvailability = [] } = useQuery({ queryKey: ["students", "seat-availability"], queryFn: listSeatAvailability, enabled: open });
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
 
   const {
@@ -83,6 +82,13 @@ export default function AdmissionFormDialog({
     }
   }, [open, reset]);
 
+  const branchId = watch("branchId");
+  const { classNames, isLoading: classesLoading } = useClassSectionOptions(branchId);
+  const { data: seatAvailability = [] } = useQuery({
+    queryKey: ["students", "seat-availability", branchId],
+    queryFn: () => listSeatAvailability(branchId),
+    enabled: open,
+  });
   const appliedClass = watch("appliedClass");
   const seats = seatAvailability.find((s) => s.className === appliedClass);
 
@@ -165,10 +171,10 @@ export default function AdmissionFormDialog({
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="appliedClass">
-                    <SelectValue placeholder="Select a class" />
+                    <SelectValue placeholder={classesLoading ? "Loading…" : classNames.length ? "Select a class" : "No classes in this branch"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {CLASS_OPTIONS.map((c) => (
+                    {classNames.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}
                       </SelectItem>

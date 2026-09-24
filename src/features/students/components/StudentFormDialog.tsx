@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
-import { CLASS_OPTIONS, GUARDIAN_RELATIONS, SECTION_OPTIONS } from "../constants";
+import { GUARDIAN_RELATIONS } from "../constants";
+import { useClassSectionOptions } from "../hooks";
 import type { Student, StudentFormValues } from "../types";
 
 const studentFormSchema = z.object({
@@ -45,6 +46,8 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
     handleSubmit,
     reset,
     control,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
@@ -65,6 +68,8 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
   });
 
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
+  const { classNames, sectionsFor, isLoading: classesLoading } = useClassSectionOptions(watch("branchId"));
+  const sectionNames = sectionsFor(watch("className"));
 
   useEffect(() => {
     if (open) {
@@ -176,6 +181,9 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
             </div>
           </div>
 
+          {!classesLoading && classNames.length === 0 && (
+            <p className="text-xs text-amber-700">No classes exist in this branch yet — create them in Academic Setup first.</p>
+          )}
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5 col-span-1">
               <Label htmlFor="className">Class</Label>
@@ -183,12 +191,18 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
                 control={control}
                 name="className"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      if (!sectionsFor(value).includes(watch("section"))) setValue("section", "");
+                    }}
+                  >
                     <SelectTrigger id="className">
-                      <SelectValue placeholder="Class" />
+                      <SelectValue placeholder={classesLoading ? "Loading…" : classNames.length ? "Class" : "No classes"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {CLASS_OPTIONS.map((c) => (
+                      {classNames.map((c) => (
                         <SelectItem key={c} value={c}>
                           {c}
                         </SelectItem>
@@ -205,12 +219,12 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
                 control={control}
                 name="section"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={field.onChange} disabled={!watch("className")}>
                     <SelectTrigger id="section">
-                      <SelectValue placeholder="Section" />
+                      <SelectValue placeholder={watch("className") && sectionNames.length === 0 ? "No sections" : "Section"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {SECTION_OPTIONS.map((s) => (
+                      {sectionNames.map((s) => (
                         <SelectItem key={s} value={s}>
                           {s}
                         </SelectItem>
@@ -220,6 +234,9 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
                 )}
               />
               {errors.section && <p className="text-xs text-red-600">{errors.section.message}</p>}
+              {watch("className") && sectionNames.length === 0 && (
+                <p className="text-xs text-amber-700">Add a section to this class in Academic Setup first.</p>
+              )}
             </div>
             <div className="space-y-1.5 col-span-1">
               <Label htmlFor="rollNumber">Roll number</Label>

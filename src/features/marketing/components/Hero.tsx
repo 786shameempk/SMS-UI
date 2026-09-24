@@ -1,10 +1,12 @@
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUp, Bell, CalendarCheck, Sparkles, Users, Wallet } from "lucide-react";
+import { ArrowRight, ArrowUp, Bell, CalendarCheck, MessageCircle, Sparkles, Users, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HERO_STATS } from "../data";
+import { useLeadCapture } from "./LeadCapture";
 
 export default function Hero() {
+  const { openDemo, openContact } = useLeadCapture();
+
   return (
     <section className="relative overflow-hidden">
       {/* Decorative gradient mesh background */}
@@ -44,19 +46,18 @@ export default function Hero() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Button size="lg" asChild className="group">
-                <Link to="/login">
-                  Get started free
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
+              <Button size="lg" onClick={openDemo} className="group shadow-lg shadow-brand-600/25">
+                Request a Demo
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/login">Explore live demo</Link>
+              <Button size="lg" variant="ghost" onClick={openContact} className="text-slate-700 hover:bg-brand-50 hover:text-brand-700">
+                <MessageCircle className="h-4 w-4" />
+                Contact Us
               </Button>
             </div>
 
             <p className="mt-4 text-xs font-medium text-slate-400">
-              No credit card required &middot; Demo data pre-loaded &middot; 5 role-based logins
+              Free 30-minute walkthrough &middot; Tailored to your school &middot; No commitment
             </p>
 
             <dl className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4">

@@ -52,6 +52,10 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AuthServiceDb;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True;"
       ConnectionStrings__Redis: "redis:6379"
       ClientApp__BaseUrl: http://localhost:8080
+      # Landing-page leads (POST /api/leads) are emailed via SendGrid - empty key = logged only.
+      SendGrid__ApiKey: ${SENDGRID_API_KEY:-}
+      SendGrid__FromEmail: ${SENDGRID_FROM_EMAIL:-no-reply@example.com}
+      SendGrid__FromName: EduCore
     depends_on:
       sqlserver:
         condition: service_healthy

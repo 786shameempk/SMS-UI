@@ -33,7 +33,11 @@ export default function AdmissionDecisionDialog({
   submitting: boolean;
   onSubmit: (values: AdmissionDecisionFormValues) => Promise<void>;
 }) {
-  const { data: seatAvailability = [] } = useQuery({ queryKey: ["students", "seat-availability"], queryFn: listSeatAvailability, enabled: open });
+  const { data: seatAvailability = [] } = useQuery({
+    queryKey: ["students", "seat-availability", application?.branchId],
+    queryFn: () => listSeatAvailability(application?.branchId),
+    enabled: open,
+  });
 
   const {
     handleSubmit,

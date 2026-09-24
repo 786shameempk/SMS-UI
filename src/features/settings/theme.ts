@@ -97,6 +97,32 @@ function isDarkActive(): boolean {
   return document.documentElement.dataset.theme === "dark";
 }
 
+/** Resolves any CSS color (hex, oklch(), …) to #rrggbb by painting one canvas pixel, so the favicon
+ *  SVG below never depends on the browser's favicon renderer understanding oklch(). */
+function toHexColor(color: string): string {
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) return color;
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Re-tints the browser-tab icon to the active brand preset. Same mark as public/favicon.svg (the static
+ *  default served before JS runs) and the sidebar logo: a brand-500 → brand-700 tile with a GraduationCap. */
+function applyBrandFavicon(from: string, to: string): void {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${toHexColor(from)}"/><stop offset="1" stop-color="${toHexColor(to)}"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#g)"/><g transform="translate(5 5) scale(0.9167)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></g></svg>`;
+
+  let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+  link.type = "image/svg+xml";
+  link.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 export function applyBrandPreset(preset: BrandPresetKey): void {
   const { shades, roles } = BRAND_PRESETS[preset];
   const root = document.documentElement.style;
@@ -110,6 +136,7 @@ export function applyBrandPreset(preset: BrandPresetKey): void {
   root.setProperty("--color-accent-foreground", shades[r.accentForeground]);
   root.setProperty("--color-sidebar-accent", shades[r.accent]);
   root.setProperty("--color-sidebar-accent-foreground", shades[r.accentForeground]);
+  applyBrandFavicon(shades[500], shades[700]);
 
   try {
     localStorage.setItem(STORAGE_KEY, preset);
