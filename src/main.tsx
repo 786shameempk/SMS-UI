@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import App from "./app/App";
+import { registerServiceWorker } from "./features/meetings/push";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -13,6 +14,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Installable PWA + Web Push for class reminders (public/sw.js). No offline caching.
+registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

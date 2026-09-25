@@ -124,8 +124,10 @@ function ExpandedNavSection({ title, items }: { title: string; items: NavItem[] 
   );
 }
 
-export default function Sidebar() {
-  const { isSidebarCollapsed, toggleSidebar } = useUiStore();
+/** `forceExpanded`: the phone drawer always shows labels, whatever the desktop collapse preference is. */
+export default function Sidebar({ forceExpanded = false }: { forceExpanded?: boolean }) {
+  const { isSidebarCollapsed: collapsedPreference, toggleSidebar } = useUiStore();
+  const isSidebarCollapsed = collapsedPreference && !forceExpanded;
   const modulePermissions = useAuthStore((s) => s.modulePermissions);
 
   const hasPermission = (key?: NavItem["permissionKey"]) => !key || !modulePermissions || modulePermissions[key];
@@ -170,7 +172,7 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className={cn("shrink-0 flex px-3 py-2", isSidebarCollapsed ? "justify-center" : "justify-end")}>
+        <div className={cn("shrink-0 flex px-3 py-2", isSidebarCollapsed ? "justify-center" : "justify-end", forceExpanded && "hidden")}>
           <Tooltip delayDuration={400}>
             <TooltipTrigger asChild>
               <button

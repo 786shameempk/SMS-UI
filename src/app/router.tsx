@@ -42,12 +42,35 @@ import NotificationCenterPage from "@/features/notifications/pages/NotificationC
 import CalendarPage from "@/features/calendar/pages/CalendarPage";
 import ReportsPage from "@/features/reports/pages/ReportsPage";
 import SettingsPage from "@/features/settings/pages/SettingsPage";
+import CreativeCampusLayout from "@/features/talents/components/CreativeCampusLayout";
+import DiscoverPage from "@/features/talents/pages/DiscoverPage";
+import ExplorePage from "@/features/talents/pages/ExplorePage";
+import TalentDetailPage from "@/features/talents/pages/TalentDetailPage";
+import TalentComposerPage from "@/features/talents/pages/TalentComposerPage";
+import MyTalentsPage from "@/features/talents/pages/MyTalentsPage";
+import ReviewCenterPage from "@/features/talents/pages/ReviewCenterPage";
+import CreatorProfilePage from "@/features/talents/pages/CreatorProfilePage";
+import SchoolShowcasePage from "@/features/talents/pages/SchoolShowcasePage";
+import MeetingsHomePage from "@/features/meetings/pages/MeetingsHomePage";
+import MeetingCalendarPage from "@/features/meetings/pages/MeetingCalendarPage";
+import MeetingDetailsPage from "@/features/meetings/pages/MeetingDetailsPage";
+import MeetingReportsPage from "@/features/meetings/pages/MeetingReportsPage";
+import MeetingRoomPage from "@/features/meetings/pages/MeetingRoomPage";
 
 export const router = createBrowserRouter([
   { path: "/", element: <LandingPage /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
+  {
+    // The live classroom is full screen, outside the app shell (no sidebar/header), but still signed-in only.
+    path: "/online-classes/:id/room",
+    element: (
+      <ProtectedRoute>
+        <MeetingRoomPage />
+      </ProtectedRoute>
+    ),
+  },
   {
     // Pathless layout route: contributes no URL segment of its own, so every child below
     // still resolves to the same absolute path it always has (e.g. "dashboard" -> "/dashboard").
@@ -94,7 +117,27 @@ export const router = createBrowserRouter([
       { path: "communication", element: <CommunicationCenterPage /> },
       { path: "notifications", element: <NotificationCenterPage /> },
       { path: "calendar", element: <CalendarPage /> },
+      { path: "online-classes", element: <MeetingsHomePage /> },
+      { path: "online-classes/calendar", element: <MeetingCalendarPage /> },
+      { path: "online-classes/reports", element: <MeetingReportsPage /> },
+      { path: "online-classes/:id", element: <MeetingDetailsPage /> },
       { path: "reports", element: <ReportsPage /> },
+      {
+        // Talent Showcase ("Creative Campus") - its own layout supplies the module nav and identity.
+        path: "talents",
+        element: <CreativeCampusLayout />,
+        children: [
+          { index: true, element: <DiscoverPage /> },
+          { path: "explore", element: <ExplorePage /> },
+          { path: "new", element: <TalentComposerPage /> },
+          { path: "mine", element: <MyTalentsPage /> },
+          { path: "review", element: <ReviewCenterPage /> },
+          { path: "creators/:userId", element: <CreatorProfilePage /> },
+          { path: "schools/:tenantId", element: <SchoolShowcasePage /> },
+          { path: ":id", element: <TalentDetailPage /> },
+          { path: ":id/edit", element: <TalentComposerPage key="edit" /> },
+        ],
+      },
     ],
   },
 ]);

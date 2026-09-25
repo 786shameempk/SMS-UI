@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Banknote, CalendarDays, Check, GraduationCap, Megaphone, Plus, Settings, Trash2 } from "lucide-react";
+import { AlertTriangle, Banknote, CalendarDays, Check, GraduationCap, Megaphone, Plus, Settings, Sparkles, Trash2, Video } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,8 @@ const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
   event: CalendarDays,
   system: Settings,
   alert: AlertTriangle,
+  talent: Sparkles,
+  meeting: Video,
 };
 
 const ANNOUNCER_ROLES = new Set(["superAdmin", "admin", "principal"]);

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Globe, LogOut, Monitor, Moon, Settings, Sun, User } from "lucide-react";
+import { Building2, Globe, LogOut, Menu, Monitor, Moon, Settings, Sun, User } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -18,6 +18,7 @@ import { listBranches } from "@/features/administration/branches/api";
 import { getBrandPreset, getDensityPreset, getRadiusPreset } from "@/features/settings/api";
 import { applyBrandPreset, applyDensityPreset, applyRadiusPreset, type ThemeMode } from "@/features/settings/theme";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
+import { useMobileNav } from "@/components/layouts/mobileNav";
 
 const THEME_MODE_SEQUENCE: ThemeMode[] = ["light", "dark", "system"];
 const THEME_MODE_ICON: Record<ThemeMode, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
@@ -143,6 +144,7 @@ function initialsOf(name: string | undefined | null) {
 export default function Header() {
   const { user, clearAuth } = useAuthStore();
   const navigate = useNavigate();
+  const openMobileNav = useMobileNav((s) => s.setOpen);
 
   const handleLogout = () => {
     clearAuth();
@@ -151,7 +153,15 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-14 flex items-center gap-4 px-6 border-b border-border bg-card/80 backdrop-blur-md shadow-sm shrink-0">
+    <header className="sticky top-0 z-30 h-14 flex items-center gap-2 sm:gap-4 px-3 sm:px-6 border-b border-border bg-card/80 backdrop-blur-md shadow-sm shrink-0">
+      <button
+        type="button"
+        onClick={() => openMobileNav(true)}
+        aria-label="Open menu"
+        className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
       <div className="flex-1 min-w-0" />
 
       {user?.role === "superAdmin" && <TenantSwitcher />}

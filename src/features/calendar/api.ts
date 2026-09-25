@@ -3,6 +3,7 @@ import { listExams, listExamSchedules } from "@/features/examinations/api";
 import { listHomework } from "@/features/homework/api";
 import { listLeaveRequests, listStaff } from "@/features/staff/api";
 import { listStudents } from "@/features/students/api";
+import { listCalendarEvents as listMeetingEvents } from "@/features/meetings/api";
 import type { AggregatedCalendarEvent } from "./types";
 
 /**
@@ -97,6 +98,23 @@ export async function listAggregatedCalendarEvents(): Promise<AggregatedCalendar
   };
   students.forEach((s) => addBirthday(`birthday-stu-${s.id}`, `${s.firstName} ${s.lastName}`, s.dateOfBirth));
   staff.forEach((s) => addBirthday(`birthday-stf-${s.id}`, `${s.firstName} ${s.lastName}`, s.dateOfBirth));
+
+  // Online classes and meetings the viewer can see (MeetingService), a couple of months either side of today.
+  // Optional: the calendar still renders everything else when MeetingService is unavailable.
+  const from = new Date(Date.now() - 31 * 86_400_000).toISOString();
+  const to = new Date(Date.now() + 62 * 86_400_000).toISOString();
+  const meetings = await listMeetingEvents(from, to).catch(() => []);
+  for (const m of meetings) {
+    if (m.status === "Draft") continue;
+    const time = new Date(m.startUtc).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    events.push({
+      id: `online-${m.id}`,
+      date: m.startUtc,
+      title: `${time} ${m.title}${m.classLabel ? ` · ${m.classLabel}` : ""}${m.status === "Cancelled" ? " (cancelled)" : ""}`,
+      category: "online",
+      description: `Online · ${m.hostName}`,
+    });
+  }
 
   return events;
 }

@@ -11,6 +11,8 @@ export const PERMISSION_MODULES = [
   "Dashboard",
   "Notifications",
   "Calendar",
+  "Online Classes",
+  "Talent Showcase",
   "Parent Portal",
   "Students",
   "Academic Setup",

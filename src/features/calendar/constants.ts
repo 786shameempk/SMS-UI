@@ -8,6 +8,7 @@ export const CATEGORY_CONFIG: Record<CalendarEventCategory, { label: string; dot
   homework: { label: "Homework due", dotClass: "bg-emerald-500", badgeVariant: "success" },
   leave: { label: "Staff on leave", dotClass: "bg-orange-500", badgeVariant: "warning" },
   birthday: { label: "Birthday", dotClass: "bg-pink-500", badgeVariant: "neutral" },
+  online: { label: "Online classes", dotClass: "bg-sky-500", badgeVariant: "info" },
 };
 
-export const CATEGORY_ORDER: CalendarEventCategory[] = ["holiday", "exam", "academic", "event", "homework", "leave", "birthday"];
+export const CATEGORY_ORDER: CalendarEventCategory[] = ["holiday", "exam", "academic", "event", "homework", "leave", "birthday", "online"];

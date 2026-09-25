@@ -30,6 +30,7 @@ services:
         VITE_FINANCE_API_URL: http://localhost:5137/
         VITE_CAMPUS_API_URL: http://localhost:5139/
         VITE_ENGAGEMENT_API_URL: http://localhost:5140/
+        VITE_MEETING_API_URL: http://localhost:5141/
     container_name: school-ui
     ports:
       - "8080:80"
@@ -40,6 +41,7 @@ services:
       - financeservice
       - campusservice
       - engagementservice
+      - meetingservice
 
   authservice:
     <<: *dotnet-service
@@ -101,6 +103,101 @@ services:
     environment:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=EngagementServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      # MeetingService posts meeting events (scheduled, reminder, cancelled...) to /internal/events with this key.
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
+      # Web Push (class reminders on phones). Empty keys = push off.
+      Push__PublicKey: ${PUSH_VAPID_PUBLIC_KEY:-}
+      Push__PrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
+      Push__Subject: mailto:admin@educore.dev
+    volumes:
+      # Talent Showcase uploads survive rebuilds.
+      - talent-media:/app/App_Data/talent-media
+
+  # Online classes & meetings. See E:\Personal\MeetingService and the design doc linked in its README.
+  meetingservice:
+    <<: *dotnet-service
+    build:
+      context: ../MeetingService
+    ports:
+      - "5141:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=MeetingServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Services__AcademicServiceUrl: http://academicservice:8080/
+      Services__EngagementServiceUrl: http://engagementservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
+      # The browser connects to LiveKit on the host port; this service talks to it on the Docker network.
+      LiveKit__Url: ws://localhost:7880
+      LiveKit__ApiUrl: http://livekit:7880
+      LiveKit__ApiKey: ${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required}
+      LiveKit__ApiSecret: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required}
+      # Recording: LiveKit Egress writes MP4s into the shared meeting-files volume (mounted at /out there).
+      LiveKit__EgressEnabled: "true"
+      LiveKit__EgressOutputRoot: /out
+    volumes:
+      # Class materials, recordings and the encryption key ring survive rebuilds.
+      - meeting-files:/app/App_Data/meeting-files
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+
+  # Self-hosted video server for online classes (design decision D2). Dev settings: the node advertises
+  # 127.0.0.1 so a browser on this machine can reach it. Production needs a public IP, TLS (wss://) and TURN.
+  livekit:
+    image: livekit/livekit-server:v1.13.7
+    restart: unless-stopped
+    command: ["--node-ip", "127.0.0.1"]
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: false
+        room:
+          empty_timeout: 300
+          departure_timeout: 20
+        webhook:
+          api_key: ${LIVEKIT_API_KEY}
+          urls:
+            - http://meetingservice:8080/webhooks/livekit
+        # Redis lets LiveKit hand recording jobs to the Egress service below.
+        redis:
+          address: redis:6379
+        logging:
+          level: info
+    depends_on:
+      - redis
+
+  # Class recording (headless Chrome composites the room into an MP4). It shares LiveKit's network namespace
+  # because the dev LiveKit advertises 127.0.0.1 for media, which inside any other container would be itself.
+  egress:
+    image: livekit/egress:v1.14.1
+    restart: unless-stopped
+    network_mode: "service:livekit"
+    cap_add:
+      - SYS_ADMIN
+    shm_size: "1gb"
+    environment:
+      EGRESS_CONFIG_BODY: |
+        api_key: ${LIVEKIT_API_KEY}
+        api_secret: ${LIVEKIT_API_SECRET}
+        ws_url: ws://127.0.0.1:7880
+        redis:
+          address: redis:6379
+        log_level: info
+    volumes:
+      - meeting-files:/out
+    depends_on:
+      - livekit
+      - redis
 
   apigateway:
     build:
@@ -114,10 +211,12 @@ services:
       ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address: http://authservice:8080/
       ReverseProxy__Clusters__academic-cluster__Destinations__destination1__Address: http://academicservice:8080/
       ReverseProxy__Clusters__finance-cluster__Destinations__destination1__Address: http://financeservice:8080/
+      ReverseProxy__Clusters__meeting-cluster__Destinations__destination1__Address: http://meetingservice:8080/
     depends_on:
       - authservice
       - academicservice
       - financeservice
+      - meetingservice
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -144,3 +243,5 @@ services:
 volumes:
   sqlserver-data:
   redis-data:
+  talent-media:
+  meeting-files:

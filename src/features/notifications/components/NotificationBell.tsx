@@ -1,4 +1,4 @@
-import { Bell, Check, Megaphone, Banknote, CalendarDays, GraduationCap, Settings, AlertTriangle } from "lucide-react";
+import { Bell, Check, Megaphone, Banknote, CalendarDays, GraduationCap, Settings, AlertTriangle, Sparkles, Video } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,8 @@ const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
   event: CalendarDays,
   system: Settings,
   alert: AlertTriangle,
+  talent: Sparkles,
+  meeting: Video,
 };
 
 export default function NotificationBell() {

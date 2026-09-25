@@ -11,9 +11,13 @@ import MedicalTab from "../components/profile/MedicalTab";
 import TransportHostelTab from "../components/profile/TransportHostelTab";
 import DocumentsTab from "../components/profile/DocumentsTab";
 import IdCardTab from "../components/profile/IdCardTab";
+import LinkedLoginsPanel from "@/features/administration/users/components/LinkedLoginsPanel";
+import { useAuthStore } from "@/store/authStore";
 
 export default function StudentProfilePage() {
   const { studentId } = useParams<{ studentId: string }>();
+  const role = useAuthStore((s) => s.user?.role);
+  const canLinkLogins = role === "admin" || role === "superAdmin";
   const navigate = useNavigate();
 
   const {
@@ -73,6 +77,7 @@ export default function StudentProfilePage() {
           <TabsTrigger value="transport">Transport &amp; Hostel</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="idcard">ID Card</TabsTrigger>
+          {canLinkLogins && <TabsTrigger value="logins">Logins</TabsTrigger>}
         </TabsList>
         <TabsContent value="overview">
           <ProfileOverviewTab student={student} />
@@ -92,6 +97,11 @@ export default function StudentProfilePage() {
         <TabsContent value="idcard">
           <IdCardTab student={student} />
         </TabsContent>
+        {canLinkLogins && (
+          <TabsContent value="logins">
+            <LinkedLoginsPanel kind="student" personId={student.id} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

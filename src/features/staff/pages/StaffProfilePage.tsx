@@ -11,9 +11,13 @@ import SalaryTab from "../components/profile/SalaryTab";
 import StaffAttendanceTab from "../components/profile/StaffAttendanceTab";
 import PerformanceTab from "../components/profile/PerformanceTab";
 import StaffDocumentsTab from "../components/profile/StaffDocumentsTab";
+import LinkedLoginsPanel from "@/features/administration/users/components/LinkedLoginsPanel";
+import { useAuthStore } from "@/store/authStore";
 
 export default function StaffProfilePage() {
   const { staffId } = useParams<{ staffId: string }>();
+  const role = useAuthStore((s) => s.user?.role);
+  const canLinkLogins = role === "admin" || role === "superAdmin";
   const navigate = useNavigate();
 
   const {
@@ -73,6 +77,7 @@ export default function StaffProfilePage() {
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          {canLinkLogins && <TabsTrigger value="logins">Login</TabsTrigger>}
         </TabsList>
         <TabsContent value="overview">
           <StaffOverviewTab staff={staff} />
@@ -92,6 +97,11 @@ export default function StaffProfilePage() {
         <TabsContent value="documents">
           <StaffDocumentsTab staff={staff} />
         </TabsContent>
+        {canLinkLogins && (
+          <TabsContent value="logins">
+            <LinkedLoginsPanel kind="staff" personId={staff.id} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
