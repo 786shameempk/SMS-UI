@@ -9,6 +9,7 @@ import {
   FileCheck2,
   GraduationCap,
   IdCard,
+  LibraryBig,
   LifeBuoy,
   Megaphone,
   Star,
@@ -48,18 +49,19 @@ const A = {
   visitors: { label: "Visitors", hint: "Check visitors in & out", icon: IdCard, tint: TINT.emerald, to: "/visitors", permissionKey: "visitors" },
   helpdesk: { label: "Help Desk", hint: "Complaints & requests", icon: LifeBuoy, tint: TINT.rose, to: "/helpdesk", permissionKey: "helpdesk" },
   calendar: { label: "Calendar", hint: "Events & holidays", icon: CalendarDays, tint: TINT.sky, to: "/calendar" },
+  studyMaterials: { label: "Study Materials", hint: "Notes, papers & videos", icon: LibraryBig, tint: TINT.emerald, to: "/study-materials", permissionKey: "studyMaterials" },
 } satisfies Record<string, RoleAction>;
 
 const BY_ROLE: Record<UserRole, RoleAction[]> = {
   superAdmin: [A.students, A.attendance, A.fees, A.meetings, A.communication, A.reports],
   admin: [A.students, A.attendance, A.fees, A.meetings, A.communication, A.reports],
   principal: [A.students, A.attendance, A.exams, A.meetings, A.talents, A.reports],
-  teacher: [A.attendance, A.homework, A.timetable, A.exams, A.meetings, A.talents],
+  teacher: [A.attendance, A.homework, A.studyMaterials, A.timetable, A.exams, A.meetings],
   accountant: [A.fees, A.accounting, A.payroll, A.reports, A.meetings, A.talents],
   librarian: [A.library, A.students, A.calendar, A.meetings, A.talents],
   receptionist: [A.visitors, A.helpdesk, A.students, A.calendar, A.meetings],
-  student: [A.myHomework, A.timetable, A.meetings, A.talents, A.calendar],
-  parent: [A.meetings, A.talents, A.calendar],
+  student: [A.myHomework, A.studyMaterials, A.timetable, A.meetings, A.talents],
+  parent: [A.studyMaterials, A.meetings, A.talents, A.calendar],
 };
 
 /** Shortcuts for the dashboard, limited to what the signed-in role can actually open. */

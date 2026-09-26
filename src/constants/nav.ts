@@ -4,6 +4,7 @@ import {
   Briefcase,
   BookOpenCheck,
   BookOpenText,
+  LibraryBig,
   Building2,
   Bus,
   CalendarCheck,
@@ -60,6 +61,8 @@ export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Talent Showcase", to: "/talents", icon: Star, permissionKey: "talents" },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
   { label: "My Homework", to: "/my-homework", icon: BookOpenCheck, permissionKey: "homework" },
+  // Top-level (not under Academics) because students and parents use it and can't see that section.
+  { label: "Study Materials", to: "/study-materials", icon: LibraryBig, permissionKey: "studyMaterials" },
 ];
 
 /** Grouped nav sections (Academics, Administration, ...). Populated module-by-module. */

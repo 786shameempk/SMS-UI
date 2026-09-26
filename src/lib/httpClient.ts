@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance } from "axios";
+import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/store/authStore";
 
 /** Base URL of AuthService (see AuthService/src/AuthService.API). Configure via .env (see .env.example). */
@@ -26,6 +26,43 @@ export const MEETING_API_BASE_URL = import.meta.env.VITE_MEETING_API_URL ?? "htt
  * every request is harmless for everyone else: a locked-in user's own JWT claim always wins
  * server-side, so this can never be used to escalate.
  */
+/** Endpoints that must never trigger a refresh on 401 (a wrong password is a 401 too). */
+const NO_REFRESH = /\/api\/auth\/(login|refresh-token|forgot-password|reset-password)/i;
+
+interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/**
+ * One refresh at a time: when a burst of requests all get 401 together, they wait on the same renewal
+ * instead of each spending the single-use (rotating) refresh token.
+ */
+let refreshInFlight: Promise<string | null> | null = null;
+
+function renewAccessToken(): Promise<string | null> {
+  refreshInFlight ??= (async () => {
+    const { token, refreshToken, setTokens } = useAuthStore.getState();
+    if (!token || !refreshToken) return null;
+    try {
+      // Plain axios, not a service client, so this call never passes through the 401 interceptor itself.
+      const { data } = await axios.post<AuthResponse>(new URL("api/auth/refresh-token", AUTH_API_BASE_URL).toString(), {
+        accessToken: token,
+        refreshToken,
+      });
+      setTokens(data.accessToken, data.refreshToken);
+      return data.accessToken;
+    } catch {
+      return null;
+    }
+  })().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+type RetriableRequest = InternalAxiosRequestConfig & { _retried?: boolean };
+
 function createServiceHttpClient(baseURL: string): AxiosInstance {
   const client = axios.create({ baseURL, headers: { "Content-Type": "application/json" } });
 
@@ -39,6 +76,24 @@ function createServiceHttpClient(baseURL: string): AxiosInstance {
     if (!config.headers.has("X-Tenant-Id")) config.headers["X-Tenant-Id"] = activeTenantId;
     if (!config.headers.has("X-Branch-Id")) config.headers["X-Branch-Id"] = activeBranchId;
     return config;
+  });
+
+  // An expired or revoked access token: renew once and replay the request. When renewal is not possible
+  // the session ends, and the route guard (routes/ProtectedRoute.tsx) sends the user to the login page.
+  client.interceptors.response.use(undefined, async (error: AxiosError) => {
+    const request = error.config as RetriableRequest | undefined;
+    const signedIn = Boolean(useAuthStore.getState().token);
+    if (error.response?.status !== 401 || !request || !signedIn || NO_REFRESH.test(request.url ?? "")) throw error;
+    if (!request._retried) {
+      request._retried = true;
+      const fresh = await renewAccessToken();
+      if (fresh) {
+        request.headers.Authorization = `Bearer ${fresh}`;
+        return client.request(request);
+      }
+    }
+    useAuthStore.getState().clearAuth("expired");
+    throw error;
   });
 
   return client;

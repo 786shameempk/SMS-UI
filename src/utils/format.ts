@@ -23,3 +23,9 @@ export function formatDateTime(isoDate: string): string {
     minute: "2-digit",
   });
 }
+
+/** "26 Sep 2026". Date-only strings ("2026-09-26") are read as local calendar dates, not UTC midnight. */
+export function formatDate(isoDate: string): string {
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(isoDate) ? new Date(`${isoDate}T00:00:00`) : new Date(isoDate);
+  return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}

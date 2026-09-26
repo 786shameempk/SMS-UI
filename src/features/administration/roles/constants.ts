@@ -21,6 +21,7 @@ export const PERMISSION_MODULES = [
   "Timetable",
   "Examinations",
   "Homework",
+  "Study Materials",
   "Staff Management",
   "Payroll",
   "Fee Management",

@@ -45,6 +45,7 @@ const CommunicationCenterPage = lazy(() => import("@/features/communication/page
 const NotificationCenterPage = lazy(() => import("@/features/notifications/pages/NotificationCenterPage"));
 const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage"));
 const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
+const StudyMaterialsPage = lazy(() => import("@/features/study-materials/pages/StudyMaterialsPage"));
 const SettingsPage = lazy(() => import("@/features/settings/pages/SettingsPage"));
 const CreativeCampusLayout = lazy(() => import("@/features/talents/components/CreativeCampusLayout"));
 const DiscoverPage = lazy(() => import("@/features/talents/pages/DiscoverPage"));
@@ -127,6 +128,7 @@ export const router = createBrowserRouter([
       { path: "online-classes/reports", element: <MeetingReportsPage /> },
       { path: "online-classes/:id", element: <MeetingDetailsPage /> },
       { path: "reports", element: <ReportsPage /> },
+      { path: "study-materials", element: <StudyMaterialsPage /> },
       {
         // Talent Showcase ("Creative Campus") - its own layout supplies the module nav and identity.
         path: "talents",

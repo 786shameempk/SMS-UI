@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { GraduationCap, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useAuthStore } from "@/store/authStore";
+import { SIGN_OUT_REASON_KEY, useAuthStore } from "@/store/authStore";
 import { login } from "../api";
 
 const loginSchema = z.object({
@@ -20,8 +20,23 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+/** Where to go after signing in: back to the page the session ended on, never off-site or to /login itself. */
+function useReturnPath(): string {
+  const from = (useLocation().state as { from?: unknown } | null)?.from;
+  return typeof from === "string" && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/login") ? from : "/dashboard";
+}
+
+function readSignOutReason(): string | null {
+  try {
+    return sessionStorage.getItem(SIGN_OUT_REASON_KEY);
+  } catch {
+    return null;
+  }
+}
+
 function CredentialsForm() {
   const navigate = useNavigate();
+  const returnPath = useReturnPath();
   const setSession = useAuthStore((s) => s.setSession);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -41,9 +56,9 @@ function CredentialsForm() {
     setSubmitting(true);
     try {
       const result = await login(values);
-      setSession(result.user, result.token, result.permissions, values.rememberMe);
+      setSession(result.user, result.token, result.permissions, values.rememberMe, result.refreshToken);
       toast.success(`Welcome back, ${result.user.name.split(" ")[0]}`);
-      navigate("/dashboard", { replace: true });
+      navigate(returnPath, { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -118,6 +133,7 @@ function CredentialsForm() {
 }
 
 export default function LoginPage() {
+  const [expired] = useState(() => readSignOutReason() === "expired");
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
@@ -128,6 +144,16 @@ export default function LoginPage() {
           <h1 className="text-page-title">EduCore</h1>
           <p className="text-sm text-muted-foreground mt-1">Sign in to your school management account</p>
         </div>
+
+        {expired && (
+          <div
+            role="status"
+            className="mb-4 flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning-soft px-3.5 py-3 text-sm text-warning-strong"
+          >
+            <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>Your session has expired. Please sign in again to continue where you left off.</p>
+          </div>
+        )}
 
         <CredentialsForm />
 

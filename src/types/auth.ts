@@ -52,6 +52,7 @@ export interface ModulePermissions {
   homework: boolean;
   talents: boolean;
   meetings: boolean;
+  studyMaterials: boolean;
   [module: string]: boolean;
 }
 

@@ -6,6 +6,8 @@ import type { DeviceRecord, SessionRecord } from "./types";
 export interface LoginResult {
   user: AuthUser;
   token: string;
+  /** Lets the web client renew the ~15 min access token silently (see lib/httpClient.ts). */
+  refreshToken: string;
   permissions: ModulePermissions;
 }
 
@@ -86,6 +88,7 @@ function mapModulePermissions(permissions: string[]): ModulePermissions {
     homework: false,
     talents: false,
     meetings: false,
+    studyMaterials: false,
   };
   for (const permission of permissions) {
     if (permission.startsWith(MODULE_PERMISSION_PREFIX)) {
@@ -116,6 +119,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
     return {
       user: mapAuthUser(data.user),
       token: data.accessToken,
+      refreshToken: data.refreshToken,
       permissions: mapModulePermissions(data.user.permissions),
     };
   } catch (err) {

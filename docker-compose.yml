@@ -73,6 +73,9 @@ services:
     environment:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+    volumes:
+      # Study Materials uploads (see AcademicService LocalStudyMaterialStorage); survives image rebuilds.
+      - study-materials:/app/App_Data/study-materials
 
   financeservice:
     <<: *dotnet-service
@@ -212,11 +215,15 @@ services:
       ReverseProxy__Clusters__academic-cluster__Destinations__destination1__Address: http://academicservice:8080/
       ReverseProxy__Clusters__finance-cluster__Destinations__destination1__Address: http://financeservice:8080/
       ReverseProxy__Clusters__meeting-cluster__Destinations__destination1__Address: http://meetingservice:8080/
+      ReverseProxy__Clusters__campus-cluster__Destinations__destination1__Address: http://campusservice:8080/
+      ReverseProxy__Clusters__engagement-cluster__Destinations__destination1__Address: http://engagementservice:8080/
     depends_on:
       - authservice
       - academicservice
       - financeservice
       - meetingservice
+      - campusservice
+      - engagementservice
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -244,4 +251,5 @@ volumes:
   sqlserver-data:
   redis-data:
   talent-media:
+  study-materials:
   meeting-files:
