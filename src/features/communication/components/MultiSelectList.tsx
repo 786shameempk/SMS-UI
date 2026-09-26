@@ -56,7 +56,7 @@ export default function MultiSelectList({
           <label key={option.id} className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-secondary/40">
             <Checkbox checked={selectedSet.has(option.id)} onCheckedChange={() => toggle(option.id)} />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm text-slate-700 truncate">{option.label}</span>
+              <span className="block text-sm text-foreground truncate">{option.label}</span>
               {option.sublabel && <span className="block text-xs text-muted-foreground truncate">{option.sublabel}</span>}
             </span>
           </label>

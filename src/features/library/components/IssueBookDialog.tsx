@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,7 +71,7 @@ export default function IssueBookDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="issue-bookId">Book</Label>
+            <Label htmlFor="issue-bookId" required>Book</Label>
             <Controller
               control={control}
               name="bookId"
@@ -90,11 +90,11 @@ export default function IssueBookDialog({
                 </Select>
               )}
             />
-            {errors.bookId && <p className="text-xs text-red-600">{errors.bookId.message}</p>}
+            {errors.bookId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.bookId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="issue-memberId">Member</Label>
+            <Label htmlFor="issue-memberId" required>Member</Label>
             <Controller
               control={control}
               name="memberId"
@@ -113,21 +113,20 @@ export default function IssueBookDialog({
                 </Select>
               )}
             />
-            {errors.memberId && <p className="text-xs text-red-600">{errors.memberId.message}</p>}
+            {errors.memberId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.memberId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="issue-dueDate">Due date</Label>
-            <Input id="issue-dueDate" type="date" {...register("dueDate")} />
-            {errors.dueDate && <p className="text-xs text-red-600">{errors.dueDate.message}</p>}
+            <Label htmlFor="issue-dueDate" required>Due date</Label>
+            <Input id="issue-dueDate" type="date" aria-invalid={errors.dueDate ? true : undefined} {...register("dueDate")} />
+            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dueDate.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Issue book
             </Button>
           </DialogFooter>

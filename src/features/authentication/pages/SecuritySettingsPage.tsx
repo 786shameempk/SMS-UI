@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Laptop, Loader2, Monitor, Smartphone, Tablet } from "lucide-react";
+import { Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,21 +64,20 @@ function ChangePasswordTab() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-sm">
           <div className="space-y-1.5">
             <Label htmlFor="currentPassword">Current password</Label>
-            <Input id="currentPassword" type="password" autoComplete="current-password" {...register("currentPassword")} />
-            {errors.currentPassword && <p className="text-xs text-red-600">{errors.currentPassword.message}</p>}
+            <Input id="currentPassword" type="password" autoComplete="current-password" aria-invalid={errors.currentPassword ? true : undefined} {...register("currentPassword")} />
+            {errors.currentPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.currentPassword.message}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="newPassword">New password</Label>
-            <Input id="newPassword" type="password" autoComplete="new-password" {...register("newPassword")} />
-            {errors.newPassword && <p className="text-xs text-red-600">{errors.newPassword.message}</p>}
+            <Input id="newPassword" type="password" autoComplete="new-password" aria-invalid={errors.newPassword ? true : undefined} {...register("newPassword")} />
+            {errors.newPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.newPassword.message}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="confirmPassword">Confirm new password</Label>
-            <Input id="confirmPassword" type="password" autoComplete="new-password" {...register("confirmPassword")} />
-            {errors.confirmPassword && <p className="text-xs text-red-600">{errors.confirmPassword.message}</p>}
+            <Input id="confirmPassword" type="password" autoComplete="new-password" aria-invalid={errors.confirmPassword ? true : undefined} {...register("confirmPassword")} />
+            {errors.confirmPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.confirmPassword.message}</p>}
           </div>
-          <Button type="submit" disabled={submitting}>
-            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+          <Button type="submit" loading={submitting}>
             Update password
           </Button>
         </form>
@@ -112,14 +111,14 @@ function SessionsTab() {
           <div key={session.id} className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                <Monitor className="w-4 h-4 text-slate-500" />
+                <Monitor className="w-4 h-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-slate-800 truncate">{session.browser}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{session.browser}</p>
                   {session.isCurrent && <Badge variant="success">Current</Badge>}
                 </div>
-                <p className="text-xs text-slate-500 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {session.location} &middot; {session.ipAddress} &middot; last active{" "}
                   {new Date(session.lastActiveAt).toLocaleString()}
                 </p>
@@ -170,11 +169,11 @@ function DevicesTab() {
             <div key={device.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-slate-500" />
+                  <Icon className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{device.name}</p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">{device.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {device.os} &middot; last used {new Date(device.lastUsedAt).toLocaleString()}
                   </p>
                 </div>
@@ -199,8 +198,8 @@ function DevicesTab() {
 export default function SecuritySettingsPage() {
   return (
     <div className="p-6 max-w-3xl space-y-1">
-      <h1 className="text-xl font-bold text-slate-900">Security</h1>
-      <p className="text-sm text-slate-500 mb-5">Manage your password, sessions, and trusted devices.</p>
+      <h1 className="text-page-title">Security</h1>
+      <p className="text-sm text-muted-foreground mb-5">Manage your password, sessions, and trusted devices.</p>
 
       <Tabs defaultValue="password">
         <TabsList>

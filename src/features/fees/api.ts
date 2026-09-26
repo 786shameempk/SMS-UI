@@ -1,246 +1,381 @@
-import { mockDelay } from "@/utils/mockDelay";
+import { financeHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listClasses } from "@/features/academics/api";
 import { listStudents } from "@/features/students/api";
-import { buildSeedFeeData, SEED_DISCOUNTS, SEED_FEE_STRUCTURES } from "./mock";
 import type {
+  DiscountAppliesTo,
+  DiscountType,
   FeeDiscount,
   FeeDiscountFormValues,
+  FeeFrequency,
   FeeInvoice,
+  FeeInvoiceStatus,
   FeeStructure,
   FeeStructureFormValues,
+  FeeType,
   GenerateInvoicesParams,
   GenerateInvoicesResult,
+  InstallmentStatus,
+  InvoiceInstallment,
   PaymentMode,
   Receipt,
   RecordPaymentParams,
   Refund,
   RefundFormValues,
+  RefundStatus,
 } from "./types";
 
-const STRUCTURES_KEY = "sms-mock-fee-structures";
-const DISCOUNTS_KEY = "sms-mock-fee-discounts";
-const INVOICES_KEY = "sms-mock-fee-invoices";
-const RECEIPTS_KEY = "sms-mock-fee-receipts";
-const REFUNDS_KEY = "sms-mock-fee-refunds";
-const SEEDED_KEY = "sms-mock-fees-seeded";
+// ── Enum translation ────────────────────────────────────────────────────────
+// FinanceService's enums serialize as PascalCase (C# convention); SMS UI's types use
+// lowercase/snake_case unions - see docs/MICROSERVICES_PLAN.md's enum-translation note.
 
-function loadJson<T>(key: string, fallback: T): T {
+const FEE_TYPE_TO_API: Record<FeeType, string> = {
+  tuition: "Tuition",
+  bus: "Bus",
+  hostel: "Hostel",
+  library: "Library",
+  exam: "Exam",
+  miscellaneous: "Miscellaneous",
+};
+const FEE_TYPE_FROM_API: Record<string, FeeType> = {
+  Tuition: "tuition",
+  Bus: "bus",
+  Hostel: "hostel",
+  Library: "library",
+  Exam: "exam",
+  Miscellaneous: "miscellaneous",
+};
+
+const FREQUENCY_TO_API: Record<FeeFrequency, string> = {
+  one_time: "OneTime",
+  monthly: "Monthly",
+  term_wise: "TermWise",
+  annual: "Annual",
+};
+const FREQUENCY_FROM_API: Record<string, FeeFrequency> = {
+  OneTime: "one_time",
+  Monthly: "monthly",
+  TermWise: "term_wise",
+  Annual: "annual",
+};
+
+const DISCOUNT_TYPE_TO_API: Record<DiscountType, string> = { percentage: "Percentage", flat: "Flat" };
+const DISCOUNT_TYPE_FROM_API: Record<string, DiscountType> = { Percentage: "percentage", Flat: "flat" };
+
+const DISCOUNT_APPLIES_TO_TO_API: Record<DiscountAppliesTo, string> = { all: "All", specific: "Specific" };
+const DISCOUNT_APPLIES_TO_FROM_API: Record<string, DiscountAppliesTo> = { All: "all", Specific: "specific" };
+
+const INVOICE_STATUS_FROM_API: Record<string, FeeInvoiceStatus> = {
+  Due: "due",
+  Paid: "paid",
+  Overdue: "overdue",
+  Partial: "partial",
+};
+
+const INSTALLMENT_STATUS_FROM_API: Record<string, InstallmentStatus> = { Due: "due", Paid: "paid", Overdue: "overdue" };
+
+const PAYMENT_MODE_TO_API: Record<PaymentMode, string> = { cash: "Cash", card: "Card", online: "Online", cheque: "Cheque" };
+const PAYMENT_MODE_FROM_API: Record<string, PaymentMode> = { Cash: "cash", Card: "card", Online: "online", Cheque: "cheque" };
+
+const REFUND_STATUS_FROM_API: Record<string, RefundStatus> = { Pending: "pending", Processed: "processed" };
+
+// ── API response shapes (FinanceService DTOs) ───────────────────────────────
+
+interface ApiFeeStructure {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  academicYearId: string;
+  classId: string | null;
+  feeType: string;
+  amount: number;
+  frequency: string;
+  lateFineFlat: number | null;
+  lateFinePerDay: number | null;
+}
+
+interface ApiFeeDiscount {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  type: string;
+  value: number;
+  appliesTo: string;
+  studentIds: string[];
+  description: string | null;
+}
+
+interface ApiInvoiceInstallment {
+  id: string;
+  dueDate: string;
+  amount: number;
+  status: string;
+}
+
+interface ApiFeeInvoice {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  studentId: string;
+  feeStructureId: string;
+  feeType: string;
+  term: string;
+  amount: number;
+  discountId: string | null;
+  discountAmount: number;
+  fineAmount: number;
+  netAmount: number;
+  dueDate: string;
+  status: string;
+  installments: ApiInvoiceInstallment[];
+  paidOn: string | null;
+  paidAmount: number | null;
+}
+
+interface ApiReceipt {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  feeInvoiceId: string;
+  receiptNumber: string;
+  amount: number;
+  paidOn: string;
+  paymentMode: string;
+}
+
+interface ApiRefund {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  feeInvoiceId: string;
+  amount: number;
+  reason: string;
+  refundedOn: string;
+  status: string;
+}
+
+// ── Mappers ──────────────────────────────────────────────────────────────────
+
+function mapFeeStructure(dto: ApiFeeStructure): FeeStructure {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    name: dto.name,
+    academicYearId: dto.academicYearId,
+    classId: dto.classId ?? undefined,
+    feeType: FEE_TYPE_FROM_API[dto.feeType] ?? "tuition",
+    amount: dto.amount,
+    frequency: FREQUENCY_FROM_API[dto.frequency] ?? "term_wise",
+    lateFineFlat: dto.lateFineFlat ?? undefined,
+    lateFinePerDay: dto.lateFinePerDay ?? undefined,
+  };
+}
+
+function mapFeeDiscount(dto: ApiFeeDiscount): FeeDiscount {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    name: dto.name,
+    type: DISCOUNT_TYPE_FROM_API[dto.type] ?? "flat",
+    value: dto.value,
+    appliesTo: DISCOUNT_APPLIES_TO_FROM_API[dto.appliesTo] ?? "all",
+    studentIds: dto.studentIds,
+    description: dto.description ?? undefined,
+  };
+}
+
+function mapInstallment(dto: ApiInvoiceInstallment): InvoiceInstallment {
+  return { id: dto.id, dueDate: dto.dueDate, amount: dto.amount, status: INSTALLMENT_STATUS_FROM_API[dto.status] ?? "due" };
+}
+
+function mapFeeInvoice(dto: ApiFeeInvoice): FeeInvoice {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    studentId: dto.studentId,
+    feeStructureId: dto.feeStructureId,
+    feeType: FEE_TYPE_FROM_API[dto.feeType] ?? "tuition",
+    term: dto.term,
+    amount: dto.amount,
+    discountId: dto.discountId ?? undefined,
+    discountAmount: dto.discountAmount,
+    fineAmount: dto.fineAmount,
+    netAmount: dto.netAmount,
+    dueDate: dto.dueDate,
+    status: INVOICE_STATUS_FROM_API[dto.status] ?? "due",
+    installments: dto.installments.length > 0 ? dto.installments.map(mapInstallment) : undefined,
+    paidOn: dto.paidOn ?? undefined,
+    paidAmount: dto.paidAmount ?? undefined,
+  };
+}
+
+function mapReceipt(dto: ApiReceipt): Receipt {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    invoiceId: dto.feeInvoiceId,
+    receiptNumber: dto.receiptNumber,
+    amount: dto.amount,
+    paidOn: dto.paidOn,
+    paymentMode: PAYMENT_MODE_FROM_API[dto.paymentMode] ?? "cash",
+  };
+}
+
+function mapRefund(dto: ApiRefund): Refund {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    invoiceId: dto.feeInvoiceId,
+    amount: dto.amount,
+    reason: dto.reason,
+    refundedOn: dto.refundedOn,
+    status: REFUND_STATUS_FROM_API[dto.status] ?? "pending",
+  };
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
-}
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-let structures = loadJson<FeeStructure[]>(STRUCTURES_KEY, []);
-let discounts = loadJson<FeeDiscount[]>(DISCOUNTS_KEY, []);
-let invoices = loadJson<FeeInvoice[]>(INVOICES_KEY, []);
-let receipts = loadJson<Receipt[]>(RECEIPTS_KEY, []);
-let refunds = loadJson<Refund[]>(REFUNDS_KEY, []);
-
-const persistStructures = () => saveJson(STRUCTURES_KEY, structures);
-const persistDiscounts = () => saveJson(DISCOUNTS_KEY, discounts);
-const persistInvoices = () => saveJson(INVOICES_KEY, invoices);
-const persistReceipts = () => saveJson(RECEIPTS_KEY, receipts);
-const persistRefunds = () => saveJson(REFUNDS_KEY, refunds);
-
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
-  if (!found) throw new Error(`${label} not found`);
-  return found;
-}
-
-async function performSeed(): Promise<void> {
-  if (loadJson(SEEDED_KEY, false)) return;
-
-  if (structures.length === 0) {
-    structures = SEED_FEE_STRUCTURES.map((s) => ({ ...s }));
-    persistStructures();
-  }
-  if (discounts.length === 0) {
-    discounts = SEED_DISCOUNTS.map((d) => ({ ...d, studentIds: [...d.studentIds] }));
-    persistDiscounts();
-  }
-  if (invoices.length === 0) {
-    const students = await listStudents();
-    const { invoices: seededInvoices, receipts: seededReceipts, refunds: seededRefunds } = buildSeedFeeData(
-      students,
-      structures,
-      discounts,
-    );
-    invoices = seededInvoices;
-    receipts = seededReceipts;
-    refunds = seededRefunds;
-    persistInvoices();
-    persistReceipts();
-    persistRefunds();
-  }
-
-  saveJson(SEEDED_KEY, true);
-}
-
-const seedPromise: Promise<void> = performSeed().catch((err) => {
-  console.error("Failed to seed fees mock data", err);
-});
-
-function daysBetween(from: Date, to: Date): number {
-  return Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-function deriveInvoice(invoice: FeeInvoice): FeeInvoice {
-  if (invoice.status !== "due") return invoice;
-  const dueDate = new Date(invoice.dueDate);
-  const daysLate = daysBetween(dueDate, new Date());
-  if (daysLate <= 0) return invoice;
-
-  const structure = structures.find((s) => s.id === invoice.feeStructureId);
-  const fineAmount = structure ? (structure.lateFineFlat ?? 0) + (structure.lateFinePerDay ?? 0) * daysLate : invoice.fineAmount;
-  const netAmount = invoice.amount - invoice.discountAmount + fineAmount;
-  return { ...invoice, status: "overdue", fineAmount, netAmount };
-}
-
-function deriveAndPersistAll(): FeeInvoice[] {
-  let changed = false;
-  const next = invoices.map((inv) => {
-    const derived = deriveInvoice(inv);
-    if (derived !== inv) changed = true;
-    return derived;
-  });
-  if (changed) {
-    invoices = next;
-    persistInvoices();
-  }
-  return invoices;
-}
-
-function applicableDiscount(studentId: string): FeeDiscount | undefined {
-  return (
-    discounts.find((d) => d.appliesTo === "specific" && d.studentIds.includes(studentId)) ??
-    discounts.find((d) => d.appliesTo === "all")
-  );
-}
-
-function computeDiscountAmount(amount: number, discount?: FeeDiscount): number {
-  if (!discount) return 0;
-  const raw = discount.type === "percentage" ? (amount * discount.value) / 100 : discount.value;
-  return Math.min(amount, Math.round(raw));
 }
 
 // ── Fee structures ──────────────────────────────────────────────────────
 
 export async function listFeeStructures(): Promise<FeeStructure[]> {
-  await seedPromise;
-  return mockDelay([...structures], 350);
+  const structures = await unwrap(financeHttpClient.get<ApiFeeStructure[]>("/api/feestructures"));
+  return structures.map(mapFeeStructure);
 }
 
 export async function createFeeStructure(values: FeeStructureFormValues): Promise<FeeStructure> {
-  await seedPromise;
-  const structure: FeeStructure = { id: genId("fs"), ...values };
-  structures = [structure, ...structures];
-  persistStructures();
-  return mockDelay(structure, 400);
+  const dto = await unwrap(
+    financeHttpClient.post<ApiFeeStructure>("/api/feestructures", {
+      name: values.name,
+      academicYearId: values.academicYearId,
+      classId: values.classId ?? null,
+      feeType: FEE_TYPE_TO_API[values.feeType],
+      amount: values.amount,
+      frequency: FREQUENCY_TO_API[values.frequency],
+      lateFineFlat: values.lateFineFlat ?? null,
+      lateFinePerDay: values.lateFinePerDay ?? null,
+    }),
+  );
+  return mapFeeStructure(dto);
 }
 
 export async function updateFeeStructure(id: string, values: FeeStructureFormValues): Promise<FeeStructure> {
-  await seedPromise;
-  requireEntity(structures, id, "Fee structure");
-  structures = structures.map((s) => (s.id === id ? { ...s, ...values } : s));
-  persistStructures();
-  return mockDelay(requireEntity(structures, id, "Fee structure"), 400);
+  const dto = await unwrap(
+    financeHttpClient.put<ApiFeeStructure>(`/api/feestructures/${id}`, {
+      name: values.name,
+      academicYearId: values.academicYearId,
+      classId: values.classId ?? null,
+      feeType: FEE_TYPE_TO_API[values.feeType],
+      amount: values.amount,
+      frequency: FREQUENCY_TO_API[values.frequency],
+      lateFineFlat: values.lateFineFlat ?? null,
+      lateFinePerDay: values.lateFinePerDay ?? null,
+    }),
+  );
+  return mapFeeStructure(dto);
 }
 
 export async function deleteFeeStructure(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(structures, id, "Fee structure");
-  structures = structures.filter((s) => s.id !== id);
-  persistStructures();
-  return mockDelay(undefined, 350);
+  await unwrap(financeHttpClient.delete(`/api/feestructures/${id}`));
 }
 
 // ── Discounts & scholarships ─────────────────────────────────────────────
 
 export async function listDiscounts(): Promise<FeeDiscount[]> {
-  await seedPromise;
-  return mockDelay([...discounts], 300);
+  const discounts = await unwrap(financeHttpClient.get<ApiFeeDiscount[]>("/api/feediscounts"));
+  return discounts.map(mapFeeDiscount);
 }
 
 export async function createDiscount(values: FeeDiscountFormValues): Promise<FeeDiscount> {
-  await seedPromise;
-  const discount: FeeDiscount = { id: genId("disc"), ...values };
-  discounts = [discount, ...discounts];
-  persistDiscounts();
-  return mockDelay(discount, 400);
+  const dto = await unwrap(
+    financeHttpClient.post<ApiFeeDiscount>("/api/feediscounts", {
+      name: values.name,
+      type: DISCOUNT_TYPE_TO_API[values.type],
+      value: values.value,
+      appliesTo: DISCOUNT_APPLIES_TO_TO_API[values.appliesTo],
+      studentIds: values.studentIds,
+      description: values.description?.trim() || null,
+    }),
+  );
+  return mapFeeDiscount(dto);
 }
 
 export async function updateDiscount(id: string, values: FeeDiscountFormValues): Promise<FeeDiscount> {
-  await seedPromise;
-  requireEntity(discounts, id, "Discount");
-  discounts = discounts.map((d) => (d.id === id ? { ...d, ...values } : d));
-  persistDiscounts();
-  return mockDelay(requireEntity(discounts, id, "Discount"), 400);
+  const dto = await unwrap(
+    financeHttpClient.put<ApiFeeDiscount>(`/api/feediscounts/${id}`, {
+      name: values.name,
+      type: DISCOUNT_TYPE_TO_API[values.type],
+      value: values.value,
+      appliesTo: DISCOUNT_APPLIES_TO_TO_API[values.appliesTo],
+      studentIds: values.studentIds,
+      description: values.description?.trim() || null,
+    }),
+  );
+  return mapFeeDiscount(dto);
 }
 
 export async function deleteDiscount(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(discounts, id, "Discount");
-  discounts = discounts.filter((d) => d.id !== id);
-  persistDiscounts();
-  return mockDelay(undefined, 350);
+  await unwrap(financeHttpClient.delete(`/api/feediscounts/${id}`));
 }
 
-export async function applyDiscountToInvoice(invoiceId: string, discountId: string): Promise<FeeInvoice> {
-  await seedPromise;
-  const invoice = requireEntity(invoices, invoiceId, "Invoice");
-  const discount = requireEntity(discounts, discountId, "Discount");
-  const discountAmount = computeDiscountAmount(invoice.amount, discount);
-  const updated: FeeInvoice = {
-    ...invoice,
-    discountId: discount.id,
-    discountAmount,
-    netAmount: invoice.amount - discountAmount + invoice.fineAmount,
-  };
-  invoices = invoices.map((inv) => (inv.id === invoiceId ? updated : inv));
-  persistInvoices();
-  return mockDelay(updated, 400);
+/**
+ * Not backed by FinanceService yet - `applyDiscountToInvoice` (manually re-applying/overriding a
+ * discount on an already-generated invoice) was a deliberate scope decision left out of the backend
+ * build (see docs/MICROSERVICES_PLAN.md's Fee Management section: "a small supplementary feature,
+ * not part of the mock's core Invoices/Refunds flow, left as a future increment"). Kept as a real
+ * exported function (not deleted) so `InvoicesTab`/`ApplyDiscountDialog` keep compiling and surface a
+ * clear, honest error instead of a silent no-op or a client-only fake update that would revert on the
+ * next refetch.
+ */
+export async function applyDiscountToInvoice(_invoiceId: string, _discountId: string): Promise<FeeInvoice> {
+  throw new Error(
+    "Applying a discount to an existing invoice isn't supported yet - FinanceService has no endpoint for it (see docs/MICROSERVICES_PLAN.md). Generate a new invoice after creating the discount instead.",
+  );
 }
 
 // ── Invoices ─────────────────────────────────────────────────────────────
 
 export async function listInvoices(): Promise<FeeInvoice[]> {
-  await seedPromise;
-  return mockDelay([...deriveAndPersistAll()], 350);
+  const invoices = await unwrap(financeHttpClient.get<ApiFeeInvoice[]>("/api/feeinvoices"));
+  return invoices.map(mapFeeInvoice);
 }
 
 export async function listInvoicesForStudent(studentId: string): Promise<FeeInvoice[]> {
-  await seedPromise;
-  const all = deriveAndPersistAll();
-  return mockDelay(all.filter((inv) => inv.studentId === studentId), 350);
+  const invoices = await unwrap(financeHttpClient.get<ApiFeeInvoice[]>("/api/feeinvoices", { params: { studentId } }));
+  return invoices.map(mapFeeInvoice);
 }
 
+/** No GET-by-id endpoint on FinanceService - resolved by listing and filtering, same as the small
+ *  lookup-by-id precedent elsewhere in this codebase. */
 export async function getInvoice(id: string): Promise<FeeInvoice> {
-  await seedPromise;
-  const all = deriveAndPersistAll();
-  return mockDelay(requireEntity(all, id, "Invoice"), 300);
+  const invoices = await listInvoices();
+  const found = invoices.find((inv) => inv.id === id);
+  if (!found) throw new Error("Invoice not found");
+  return found;
 }
 
+/**
+ * FinanceService's GenerateInvoicesForStructureCommand needs a caller-supplied EligibleStudentIds
+ * list (deliberate scope decision - FinanceService has no cross-service HTTP client to AcademicService
+ * yet, see docs/MICROSERVICES_PLAN.md). Resolved here the same way the mock's own
+ * generateInvoicesForStructure used to: every active student, narrowed to the structure's class if it
+ * has one.
+ */
 export async function generateInvoicesForStructure(params: GenerateInvoicesParams): Promise<GenerateInvoicesResult> {
-  await seedPromise;
-  const structure = requireEntity(structures, params.feeStructureId, "Fee structure");
-  const [students, classes] = await Promise.all([listStudents(), listClasses()]);
+  const [structures, students, classes] = await Promise.all([listFeeStructures(), listStudents(), listClasses()]);
+  const structure = structures.find((s) => s.id === params.feeStructureId);
+  if (!structure) throw new Error("Fee structure not found");
 
   let eligible = students.filter((s) => s.status === "active");
   if (structure.classId) {
@@ -248,114 +383,34 @@ export async function generateInvoicesForStructure(params: GenerateInvoicesParam
     eligible = schoolClass ? eligible.filter((s) => s.className === schoolClass.name) : [];
   }
 
-  let createdCount = 0;
-  let skippedCount = 0;
-  const created: FeeInvoice[] = [];
-
-  for (const student of eligible) {
-    const exists = invoices.some(
-      (inv) => inv.studentId === student.id && inv.feeStructureId === structure.id && inv.term === params.term,
-    );
-    if (exists) {
-      skippedCount++;
-      continue;
-    }
-    const discount = applicableDiscount(student.id);
-    const discountAmount = computeDiscountAmount(structure.amount, discount);
-    const invoice: FeeInvoice = {
-      id: genId("inv"),
-      studentId: student.id,
-      feeStructureId: structure.id,
-      feeType: structure.feeType,
+  const dto = await unwrap(
+    financeHttpClient.post<{ createdCount: number; skippedCount: number }>("/api/feeinvoices/generate", {
+      feeStructureId: params.feeStructureId,
       term: params.term,
-      amount: structure.amount,
-      discountId: discount?.id,
-      discountAmount,
-      fineAmount: 0,
-      netAmount: structure.amount - discountAmount,
       dueDate: params.dueDate,
-      status: "due",
-    };
-    created.push(invoice);
-    createdCount++;
-  }
-
-  if (created.length) {
-    invoices = [...created, ...invoices];
-    persistInvoices();
-  }
-
-  return mockDelay({ createdCount, skippedCount }, 600);
+      eligibleStudentIds: eligible.map((s) => s.id),
+    }),
+  );
+  return { createdCount: dto.createdCount, skippedCount: dto.skippedCount };
 }
 
 export async function generateInstallments(invoiceId: string, count: number): Promise<FeeInvoice> {
-  await seedPromise;
-  const invoice = requireEntity(invoices, invoiceId, "Invoice");
-  if (count < 2) {
-    await mockDelay(null, 300);
-    throw new Error("Installments require at least 2 parts");
-  }
-  const base = Math.floor(invoice.netAmount / count);
-  const remainder = invoice.netAmount - base * count;
-  const startDate = new Date(invoice.dueDate);
-  const installments = Array.from({ length: count }).map((_, i) => {
-    const dueDate = new Date(startDate);
-    dueDate.setMonth(dueDate.getMonth() + i);
-    return {
-      id: genId("inst"),
-      dueDate: dueDate.toISOString(),
-      amount: i === count - 1 ? base + remainder : base,
-      status: "due" as const,
-    };
-  });
-  const updated: FeeInvoice = { ...invoice, installments };
-  invoices = invoices.map((inv) => (inv.id === invoiceId ? updated : inv));
-  persistInvoices();
-  return mockDelay(updated, 400);
+  const dto = await unwrap(financeHttpClient.post<ApiFeeInvoice>(`/api/feeinvoices/${invoiceId}/installments`, { count }));
+  return mapFeeInvoice(dto);
 }
 
 export async function recordPayment(invoiceId: string, params: RecordPaymentParams): Promise<{ invoice: FeeInvoice; receipt: Receipt }> {
-  await seedPromise;
-  const invoice = requireEntity(invoices, invoiceId, "Invoice");
-  if (params.amount <= 0) {
-    await mockDelay(null, 300);
-    throw new Error("Payment amount must be greater than zero");
-  }
-
-  const paidSoFar = invoice.paidAmount ?? 0;
-  const newPaidAmount = Math.min(invoice.netAmount, paidSoFar + params.amount);
-  const status = newPaidAmount >= invoice.netAmount ? "paid" : "partial";
-  const now = new Date().toISOString();
-
-  const updated: FeeInvoice = {
-    ...invoice,
-    status,
-    paidAmount: newPaidAmount,
-    paidOn: now,
-    installments:
-      status === "paid" && invoice.installments
-        ? invoice.installments.map((inst) => ({ ...inst, status: "paid" as const }))
-        : invoice.installments,
-  };
-  invoices = invoices.map((inv) => (inv.id === invoiceId ? updated : inv));
-  persistInvoices();
-
-  const receipt: Receipt = {
-    id: genId("rcpt"),
-    invoiceId,
-    receiptNumber: `RCPT-${new Date().getFullYear()}-${String(receipts.length + 1).padStart(4, "0")}`,
-    amount: params.amount,
-    paidOn: now,
-    paymentMode: params.mode,
-  };
-  receipts = [receipt, ...receipts];
-  persistReceipts();
-
-  return mockDelay({ invoice: updated, receipt }, 700);
+  const dto = await unwrap(
+    financeHttpClient.post<{ invoice: ApiFeeInvoice; receipt: ApiReceipt }>(`/api/feeinvoices/${invoiceId}/payments`, {
+      amount: params.amount,
+      mode: PAYMENT_MODE_TO_API[params.mode],
+    }),
+  );
+  return { invoice: mapFeeInvoice(dto.invoice), receipt: mapReceipt(dto.receipt) };
 }
 
 export async function payInvoiceOnline(invoiceId: string, mode: PaymentMode = "online"): Promise<{ invoice: FeeInvoice; receipt: Receipt }> {
-  const invoice = requireEntity(invoices, invoiceId, "Invoice");
+  const invoice = await getInvoice(invoiceId);
   const remaining = invoice.netAmount - (invoice.paidAmount ?? 0);
   return recordPayment(invoiceId, { amount: remaining, mode });
 }
@@ -363,46 +418,37 @@ export async function payInvoiceOnline(invoiceId: string, mode: PaymentMode = "o
 // ── Receipts ─────────────────────────────────────────────────────────────
 
 export async function listReceipts(): Promise<Receipt[]> {
-  await seedPromise;
-  return mockDelay([...receipts], 300);
+  const receipts = await unwrap(financeHttpClient.get<ApiReceipt[]>("/api/receipts"));
+  return receipts.map(mapReceipt);
 }
 
+/** No GET-by-id endpoint on FinanceService - resolved by listing and filtering. */
 export async function getReceipt(id: string): Promise<Receipt> {
-  await seedPromise;
-  return mockDelay(requireEntity(receipts, id, "Receipt"), 250);
+  const receipts = await listReceipts();
+  const found = receipts.find((r) => r.id === id);
+  if (!found) throw new Error("Receipt not found");
+  return found;
 }
 
 // ── Refunds ──────────────────────────────────────────────────────────────
 
 export async function listRefunds(): Promise<Refund[]> {
-  await seedPromise;
-  return mockDelay([...refunds], 300);
+  const refunds = await unwrap(financeHttpClient.get<ApiRefund[]>("/api/refunds"));
+  return refunds.map(mapRefund);
 }
 
 export async function requestRefund(values: RefundFormValues): Promise<Refund> {
-  await seedPromise;
-  requireEntity(invoices, values.invoiceId, "Invoice");
-  const refund: Refund = { id: genId("refund"), ...values, refundedOn: new Date().toISOString(), status: "pending" };
-  refunds = [refund, ...refunds];
-  persistRefunds();
-  return mockDelay(refund, 400);
+  const dto = await unwrap(
+    financeHttpClient.post<ApiRefund>("/api/refunds", {
+      feeInvoiceId: values.invoiceId,
+      amount: values.amount,
+      reason: values.reason,
+    }),
+  );
+  return mapRefund(dto);
 }
 
 export async function processRefund(id: string): Promise<Refund> {
-  await seedPromise;
-  const refund = requireEntity(refunds, id, "Refund");
-  const updated: Refund = { ...refund, status: "processed", refundedOn: new Date().toISOString() };
-  refunds = refunds.map((r) => (r.id === id ? updated : r));
-  persistRefunds();
-
-  const invoice = invoices.find((inv) => inv.id === refund.invoiceId);
-  if (invoice) {
-    const newPaidAmount = Math.max(0, (invoice.paidAmount ?? 0) - refund.amount);
-    const status = newPaidAmount <= 0 ? "due" : newPaidAmount >= invoice.netAmount ? "paid" : "partial";
-    const revisedInvoice: FeeInvoice = { ...invoice, paidAmount: newPaidAmount, status };
-    invoices = invoices.map((inv) => (inv.id === invoice.id ? revisedInvoice : inv));
-    persistInvoices();
-  }
-
-  return mockDelay(updated, 500);
+  const dto = await unwrap(financeHttpClient.post<ApiRefund>(`/api/refunds/${id}/process`));
+  return mapRefund(dto);
 }

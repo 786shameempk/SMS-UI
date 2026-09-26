@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2, Zap } from "lucide-react";
+import { Pencil, Plus, Trash2, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listAcademicYears, listClasses, listTerms } from "@/features/academics/api";
@@ -20,6 +20,7 @@ import { FEE_TYPE_OPTIONS, FREQUENCY_OPTIONS } from "../constants";
 import type { FeeStructure, FeeStructureFormValues, GenerateInvoicesParams } from "../types";
 import FeeStructureFormDialog from "./FeeStructureFormDialog";
 import GenerateInvoicesDialog from "./GenerateInvoicesDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function FeeStructuresTab() {
   const queryClient = useQueryClient();
@@ -29,7 +30,7 @@ export default function FeeStructuresTab() {
   const [deleteTarget, setDeleteTarget] = useState<FeeStructure | null>(null);
   const [generateOpen, setGenerateOpen] = useState(false);
 
-  const { data: structures = [], isLoading } = useQuery({ queryKey: ["fees", "structures"], queryFn: listFeeStructures });
+  const { data: structures = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "structures"], queryFn: listFeeStructures });
   const { data: academicYears = [] } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
   const { data: terms = [] } = useQuery({ queryKey: ["academics", "terms"], queryFn: listTerms });
@@ -85,18 +86,18 @@ export default function FeeStructuresTab() {
   });
 
   const columns: ColumnDef<FeeStructure, unknown>[] = [
-    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.name}</span> },
+    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "class",
       header: "Class",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">{row.original.classId ? classById.get(row.original.classId)?.name ?? "—" : "All classes"}</span>
+        <span className="text-sm text-secondary-foreground">{row.original.classId ? classById.get(row.original.classId)?.name ?? "—" : "All classes"}</span>
       ),
     },
     {
       id: "academicYear",
       header: "Academic year",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{yearById.get(row.original.academicYearId)?.name ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{yearById.get(row.original.academicYearId)?.name ?? "—"}</span>,
     },
     {
       accessorKey: "feeType",
@@ -106,21 +107,21 @@ export default function FeeStructuresTab() {
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">₹{row.original.amount.toLocaleString("en-IN")}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">₹{row.original.amount.toLocaleString("en-IN")}</span>,
     },
     {
       accessorKey: "frequency",
       header: "Frequency",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{FREQUENCY_OPTIONS.find((o) => o.value === row.original.frequency)?.label}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{FREQUENCY_OPTIONS.find((o) => o.value === row.original.frequency)?.label}</span>,
     },
     {
       id: "fine",
       header: "Late fine",
       cell: ({ row }) => {
         const { lateFineFlat, lateFinePerDay } = row.original;
-        if (!lateFineFlat && !lateFinePerDay) return <span className="text-sm text-slate-400">—</span>;
+        if (!lateFineFlat && !lateFinePerDay) return <span className="text-sm text-muted-foreground">—</span>;
         return (
-          <span className="text-sm text-slate-600">
+          <span className="text-sm text-secondary-foreground">
             {lateFineFlat ? `₹${lateFineFlat} flat` : ""}
             {lateFineFlat && lateFinePerDay ? " + " : ""}
             {lateFinePerDay ? `₹${lateFinePerDay}/day` : ""}
@@ -134,28 +135,21 @@ export default function FeeStructuresTab() {
       cell: ({ row }) => {
         const structure = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(structure);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(structure)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(structure);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(structure)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -182,7 +176,7 @@ export default function FeeStructuresTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={structures} isLoading={isLoading} emptyMessage="No fee structures defined yet." />
+      <DataTable searchable columns={columns} data={structures} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No fee structures defined yet." />
 
       <FeeStructureFormDialog
         open={formOpen}

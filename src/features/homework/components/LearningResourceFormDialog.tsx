@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,9 +101,9 @@ export default function LearningResourceFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="res-classId">Class</Label>
+              <Label htmlFor="res-classId" required>Class</Label>
               <Controller
                 control={control}
                 name="classId"
@@ -122,10 +122,10 @@ export default function LearningResourceFormDialog({
                   </Select>
                 )}
               />
-              {errors.classId && <p className="text-xs text-red-600">{errors.classId.message}</p>}
+              {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="res-subjectId">Subject</Label>
+              <Label htmlFor="res-subjectId" required>Subject</Label>
               <Controller
                 control={control}
                 name="subjectId"
@@ -144,19 +144,19 @@ export default function LearningResourceFormDialog({
                   </Select>
                 )}
               />
-              {errors.subjectId && <p className="text-xs text-red-600">{errors.subjectId.message}</p>}
+              {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="res-title">Title</Label>
-            <Input id="res-title" {...register("title")} />
-            {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+            <Label htmlFor="res-title" required>Title</Label>
+            <Input id="res-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="res-type">Type</Label>
+              <Label htmlFor="res-type" required>Type</Label>
               <Controller
                 control={control}
                 name="type"
@@ -177,7 +177,7 @@ export default function LearningResourceFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="res-createdByStaffId">Shared by</Label>
+              <Label htmlFor="res-createdByStaffId" required>Shared by</Label>
               <Controller
                 control={control}
                 name="createdByStaffId"
@@ -196,7 +196,7 @@ export default function LearningResourceFormDialog({
                   </Select>
                 )}
               />
-              {errors.createdByStaffId && <p className="text-xs text-red-600">{errors.createdByStaffId.message}</p>}
+              {errors.createdByStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.createdByStaffId.message}</p>}
             </div>
           </div>
 
@@ -208,7 +208,7 @@ export default function LearningResourceFormDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="res-description">Description (optional)</Label>
+            <Label htmlFor="res-description" optional>Description</Label>
             <Textarea id="res-description" rows={2} {...register("description")} />
           </div>
 
@@ -216,8 +216,7 @@ export default function LearningResourceFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Share resource"}
             </Button>
           </DialogFooter>

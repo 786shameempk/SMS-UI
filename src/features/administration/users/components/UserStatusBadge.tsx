@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import type { UserStatus } from "../types";
 
 const STATUS_CONFIG: Record<UserStatus, { label: string; variant: "success" | "neutral" | "danger" }> = {
@@ -9,5 +9,5 @@ const STATUS_CONFIG: Record<UserStatus, { label: string; variant: "success" | "n
 
 export default function UserStatusBadge({ status }: { status: UserStatus }) {
   const config = STATUS_CONFIG[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  return <StatusBadge status={status} label={config.label} variant={config.variant} />;
 }

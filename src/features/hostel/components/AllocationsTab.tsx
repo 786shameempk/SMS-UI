@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { LogOut, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { LogOut, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listStudents } from "@/features/students/api";
@@ -14,13 +14,14 @@ import { ALLOCATION_STATUS_CONFIG } from "../constants";
 import { allocateStudent, deleteAllocation, listAllocations, listHostels, listRooms, vacateAllocation } from "../api";
 import type { AllocateStudentFormValues, HostelAllocationRow } from "../types";
 import AllocateStudentDialog from "./AllocateStudentDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function AllocationsTab() {
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<HostelAllocationRow | null>(null);
 
-  const { data: allocations = [], isLoading } = useQuery({ queryKey: ["hostel", "allocations"], queryFn: listAllocations });
+  const { data: allocations = [], isLoading, isError, refetch } = useQuery({ queryKey: ["hostel", "allocations"], queryFn: listAllocations });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: hostels = [] } = useQuery({ queryKey: ["hostel", "hostels"], queryFn: listHostels });
   const { data: allRooms = [] } = useQuery({ queryKey: ["hostel", "rooms", "all"], queryFn: () => listRooms() });
@@ -62,7 +63,7 @@ export default function AllocationsTab() {
       header: "Student",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.student.firstName} {row.original.student.lastName}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -74,13 +75,13 @@ export default function AllocationsTab() {
     {
       id: "hostel",
       header: "Hostel",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.hostel.name}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.hostel.name}</span>,
     },
     {
       id: "room",
       header: "Room / Bed",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.room.roomNumber} · Bed {row.original.bedNumber}
         </span>
       ),
@@ -88,7 +89,7 @@ export default function AllocationsTab() {
     {
       id: "fee",
       header: "Monthly fee",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.monthlyFee != null ? formatCurrency(row.original.monthlyFee) : "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.monthlyFee != null ? formatCurrency(row.original.monthlyFee) : "—"}</span>,
     },
     {
       id: "status",
@@ -104,25 +105,18 @@ export default function AllocationsTab() {
       cell: ({ row }) => {
         const allocation = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {allocation.status === "active" && (
-                <DropdownMenuItem onClick={() => vacateMutation.mutate(allocation.id)}>
-                  <LogOut className="w-3.5 h-3.5" />
-                  Vacate
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => setDeleteTarget(allocation)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Remove
+          <RowActions>
+            {allocation.status === "active" && (
+              <DropdownMenuItem onClick={() => vacateMutation.mutate(allocation.id)}>
+                <LogOut className="w-3.5 h-3.5" />
+                Vacate
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuItem onClick={() => setDeleteTarget(allocation)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Remove
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -138,7 +132,7 @@ export default function AllocationsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={allocations} isLoading={isLoading} emptyMessage="No students allocated yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={allocations} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No students allocated yet." pageSize={10} />
 
       <AllocateStudentDialog
         open={formOpen}

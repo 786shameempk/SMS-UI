@@ -4,6 +4,7 @@ export type AudienceType = "students" | "staff" | "parents";
 
 export interface ContactGroup {
   id: string;
+  tenantId: string;
   name: string;
   description?: string;
   audienceType: AudienceType;
@@ -19,6 +20,7 @@ export interface ContactGroupFormValues {
 
 export interface MessageTemplate {
   id: string;
+  tenantId: string;
   name: string;
   category?: string;
   subject?: string;
@@ -38,6 +40,7 @@ export type MessageStatus = "scheduled" | "sent" | "cancelled";
 
 export interface BroadcastMessage {
   id: string;
+  tenantId: string;
   subject?: string;
   body: string;
   channels: Channel[];
@@ -66,6 +69,7 @@ export type DeliveryStatus = "delivered" | "failed";
 
 export interface DeliveryLogEntry {
   id: string;
+  tenantId: string;
   messageId: string;
   recipientKind: RecipientKind;
   recipientId: string;

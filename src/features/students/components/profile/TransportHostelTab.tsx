@@ -1,6 +1,6 @@
 import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bus, Home, Loader2 } from "lucide-react";
+import { Bus, Home } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,7 +54,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bus className="w-4 h-4 text-slate-400" />
+            <Bus className="w-4 h-4 text-muted-foreground" />
             Transport
           </CardTitle>
           <CardDescription>School bus route and pickup point, if the student uses transport.</CardDescription>
@@ -81,8 +81,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                 </div>
               </div>
             )}
-            <Button type="submit" size="sm" disabled={transportMutation.isPending}>
-              {transportMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" size="sm" loading={transportMutation.isPending}>
               Save transport details
             </Button>
           </form>
@@ -92,7 +91,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Home className="w-4 h-4 text-slate-400" />
+            <Home className="w-4 h-4 text-muted-foreground" />
             Hostel
           </CardTitle>
           <CardDescription>Boarding assignment, if the student resides on campus.</CardDescription>
@@ -119,8 +118,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                 </div>
               </div>
             )}
-            <Button type="submit" size="sm" disabled={hostelMutation.isPending}>
-              {hostelMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" size="sm" loading={hostelMutation.isPending}>
               Save hostel details
             </Button>
           </form>

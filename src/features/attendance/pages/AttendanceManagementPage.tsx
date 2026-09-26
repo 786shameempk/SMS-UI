@@ -2,19 +2,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MarkAttendanceTab from "../components/MarkAttendanceTab";
 import StaffAttendanceTab from "../components/StaffAttendanceTab";
 import ReportsTab from "../components/ReportsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function AttendanceManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Attendance management</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Mark daily student and staff attendance, and review daily, monthly, and yearly attendance reports.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Attendance management"
+        description="Mark daily student and staff attendance, and review daily, monthly, and yearly attendance reports."
+      />
 
       <Tabs defaultValue="mark-attendance">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="mark-attendance">Mark Attendance</TabsTrigger>
           <TabsTrigger value="staff-attendance">Staff Attendance</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -29,6 +28,6 @@ export default function AttendanceManagementPage() {
           <ReportsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

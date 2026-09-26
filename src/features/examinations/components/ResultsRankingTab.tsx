@@ -14,7 +14,7 @@ export default function ResultsRankingTab() {
   const [examId, setExamId] = useState<string | undefined>();
   const activeExamId = examId ?? exams[0]?.id;
 
-  const { data: results = [], isLoading } = useQuery({
+  const { data: results = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["examinations", "class-results", activeExamId],
     queryFn: () => getExamClassResults(activeExamId as string),
     enabled: Boolean(activeExamId),
@@ -24,16 +24,16 @@ export default function ResultsRankingTab() {
     {
       accessorKey: "rank",
       header: "Rank",
-      cell: ({ row }) => <span className="text-sm font-semibold text-slate-800 tabular-nums">#{row.original.rank}</span>,
+      cell: ({ row }) => <span className="text-sm font-semibold text-foreground tabular-nums">#{row.original.rank}</span>,
     },
-    { accessorKey: "admissionNumber", header: "Admission No.", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.admissionNumber}</span> },
-    { accessorKey: "studentName", header: "Student", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.studentName}</span> },
-    { accessorKey: "section", header: "Section", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.section}</span> },
+    { accessorKey: "admissionNumber", header: "Admission No.", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.admissionNumber}</span> },
+    { accessorKey: "studentName", header: "Student", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.studentName}</span> },
+    { accessorKey: "section", header: "Section", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.section}</span> },
     {
       id: "total",
       header: "Total",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600 tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.totalObtained} / {row.original.totalMax}
         </span>
       ),
@@ -41,7 +41,7 @@ export default function ResultsRankingTab() {
     {
       accessorKey: "percentage",
       header: "Percentage",
-      cell: ({ row }) => <span className="text-sm text-slate-600 tabular-nums">{row.original.percentage}%</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.percentage}%</span>,
     },
     {
       accessorKey: "grade",
@@ -51,7 +51,7 @@ export default function ResultsRankingTab() {
     {
       accessorKey: "gpa",
       header: "GPA",
-      cell: ({ row }) => <span className="text-sm text-slate-600 tabular-nums">{row.original.gpa.toFixed(2)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.gpa.toFixed(2)}</span>,
     },
   ];
 
@@ -79,10 +79,12 @@ export default function ResultsRankingTab() {
           </Select>
         </CardHeader>
         <CardContent>
-          <DataTable
+          <DataTable searchable
             columns={columns}
             data={results}
             isLoading={isLoading}
+            isError={isError}
+            onRetry={() => refetch()}
             emptyMessage="No marks entered for this exam yet — use Marks Entry first."
           />
         </CardContent>

@@ -12,7 +12,13 @@ import { Label } from "@/components/ui/label";
 import { getStaffAttendanceForDate, saveStaffAttendance } from "../api";
 import { STAFF_ATTENDANCE_STATUSES, staffAttendanceStatusBadgeVariant, todayDateKey } from "../constants";
 import StatusToggleGroup from "./StatusToggleGroup";
-import type { MarkStaffAttendanceEntry, StaffAttendanceStatus } from "../types";
+import type { StaffMember } from "@/features/staff/types";
+import type { MarkStaffAttendanceEntry, StaffAttendanceRecord, StaffAttendanceStatus } from "../types";
+
+// Stable fallbacks — see MarkAttendanceTab: an inline `= []` default re-triggers the status-map
+// effect on every render while loading (or forever if a request fails), freezing the page.
+const NO_STAFF: StaffMember[] = [];
+const NO_RECORDS: StaffAttendanceRecord[] = [];
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
@@ -23,10 +29,10 @@ export default function StaffAttendanceTab() {
   const [date, setDate] = useState(todayDateKey());
   const [statusMap, setStatusMap] = useState<Record<string, StaffAttendanceStatus>>({});
 
-  const { data: allStaff = [], isLoading: staffLoading } = useQuery({ queryKey: ["attendance", "staff-directory"], queryFn: listStaff });
+  const { data: allStaff = NO_STAFF, isLoading: staffLoading } = useQuery({ queryKey: ["attendance", "staff-directory"], queryFn: listStaff });
   const staffList = useMemo(() => allStaff.filter((s) => s.status === "active" || s.status === "on-leave"), [allStaff]);
 
-  const { data: existingRecords = [] } = useQuery({
+  const { data: existingRecords = NO_RECORDS } = useQuery({
     queryKey: ["attendance", "staff-records", date],
     queryFn: () => getStaffAttendanceForDate(date),
     enabled: Boolean(date),
@@ -131,10 +137,10 @@ export default function StaffAttendanceTab() {
                       <AvatarFallback className="text-[11px]">{initialsOf(member.firstName, member.lastName)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {member.firstName} {member.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {member.designation} · {member.employeeId}
                       </p>
                     </div>

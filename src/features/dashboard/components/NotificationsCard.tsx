@@ -18,7 +18,7 @@ export default function NotificationsCard({ notifications }: { notifications: No
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-slate-400" />
+          <Bell className="w-4 h-4 text-muted-foreground" />
           Notifications
         </CardTitle>
         <CardDescription>{unreadCount} unread</CardDescription>
@@ -27,15 +27,15 @@ export default function NotificationsCard({ notifications }: { notifications: No
         {notifications.map((n) => {
           const Icon = CATEGORY_ICON[n.category];
           return (
-            <div key={n.id} className={cn("flex items-start gap-3 rounded-lg p-2.5", !n.read && "bg-brand-50/50")}>
-              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
-                <Icon className="w-3.5 h-3.5 text-slate-500" />
+            <div key={n.id} className={cn("flex items-start gap-3 rounded-lg p-2.5", !n.read && "bg-accent/50")}>
+              <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center shrink-0">
+                <Icon className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-800 truncate">{n.title}</p>
-                <p className="text-xs text-slate-500 line-clamp-1">{n.body}</p>
+                <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">{n.body}</p>
               </div>
-              <span className="text-[11px] text-slate-400 shrink-0">{formatRelativeDay(n.createdAt)}</span>
+              <span className="text-[11px] text-muted-foreground shrink-0">{formatRelativeDay(n.createdAt)}</span>
             </div>
           );
         })}

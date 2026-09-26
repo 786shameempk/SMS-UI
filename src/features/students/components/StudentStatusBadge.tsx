@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import type { StudentStatus } from "../types";
 
 const STATUS_CONFIG: Record<StudentStatus, { label: string; variant: "success" | "neutral" | "danger" | "info" | "warning" }> = {
@@ -11,5 +11,5 @@ const STATUS_CONFIG: Record<StudentStatus, { label: string; variant: "success" |
 
 export default function StudentStatusBadge({ status }: { status: StudentStatus }) {
   const config = STATUS_CONFIG[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  return <StatusBadge status={status} label={config.label} variant={config.variant} />;
 }

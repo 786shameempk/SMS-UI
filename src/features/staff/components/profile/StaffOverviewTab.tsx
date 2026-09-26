@@ -72,10 +72,10 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
             <div>
-              <p className="text-base font-semibold text-slate-900">
+              <p className="text-base font-semibold text-foreground">
                 {staff.firstName} {staff.lastName}
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {staff.designation} &middot; {staff.department}
               </p>
             </div>
@@ -83,36 +83,36 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
 
           <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-4 text-sm">
             <div>
-              <dt className="text-xs text-slate-400">Employee ID</dt>
-              <dd className="text-slate-800 font-medium">{staff.employeeId}</dd>
+              <dt className="text-xs text-muted-foreground">Employee ID</dt>
+              <dd className="text-foreground font-medium">{staff.employeeId}</dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">Joining date</dt>
-              <dd className="text-slate-800 font-medium">{new Date(staff.joiningDate).toLocaleDateString()}</dd>
+              <dt className="text-xs text-muted-foreground">Joining date</dt>
+              <dd className="text-foreground font-medium">{new Date(staff.joiningDate).toLocaleDateString()}</dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">Date of birth</dt>
-              <dd className="text-slate-800 font-medium">{new Date(staff.dateOfBirth).toLocaleDateString()}</dd>
+              <dt className="text-xs text-muted-foreground">Date of birth</dt>
+              <dd className="text-foreground font-medium">{new Date(staff.dateOfBirth).toLocaleDateString()}</dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">Phone</dt>
-              <dd className="text-slate-800 font-medium">{staff.phone}</dd>
+              <dt className="text-xs text-muted-foreground">Phone</dt>
+              <dd className="text-foreground font-medium">{staff.phone}</dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-400">Email</dt>
-              <dd className="text-slate-800 font-medium">{staff.email}</dd>
+              <dt className="text-xs text-muted-foreground">Email</dt>
+              <dd className="text-foreground font-medium">{staff.email}</dd>
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <dt className="text-xs text-slate-400">Address</dt>
-              <dd className="text-slate-800 font-medium">{staff.address || "—"}</dd>
+              <dt className="text-xs text-muted-foreground">Address</dt>
+              <dd className="text-foreground font-medium">{staff.address || "—"}</dd>
             </div>
           </dl>
 
           {staff.resignation && (
-            <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-sm text-red-700">
+            <div className="rounded-lg bg-destructive-soft border border-red-100 p-3 text-sm text-destructive-strong">
               Resigned on {new Date(staff.resignation.resignedAt).toLocaleDateString()} &middot; last working day{" "}
               {new Date(staff.resignation.lastWorkingDate).toLocaleDateString()}
-              <p className="text-red-600 mt-1">{staff.resignation.reason}</p>
+              <p className="text-destructive-strong mt-1">{staff.resignation.reason}</p>
             </div>
           )}
         </CardContent>
@@ -127,11 +127,11 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
           {staff.promotions.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
-                <p className="text-sm text-slate-800">
-                  <span className="text-slate-500">{p.fromDesignation}</span> &rarr;{" "}
+                <p className="text-sm text-foreground">
+                  <span className="text-muted-foreground">{p.fromDesignation}</span> &rarr;{" "}
                   <span className="font-medium">{p.toDesignation}</span>
                 </p>
-                {p.remarks && <p className="text-xs text-slate-500 mt-0.5">{p.remarks}</p>}
+                {p.remarks && <p className="text-xs text-muted-foreground mt-0.5">{p.remarks}</p>}
               </div>
               <Badge variant="info" className="shrink-0">
                 {new Date(p.effectiveDate).toLocaleDateString()}

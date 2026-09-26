@@ -43,7 +43,7 @@ export default function LiveTrackingTab() {
 
   return (
     <div className="space-y-4">
-      <p className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-2 text-xs text-amber-800">
+      <p className="flex items-start gap-1.5 rounded-md bg-warning-soft border border-warning/30 px-2.5 py-2 text-xs text-warning-strong">
         <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         Simulated — real GPS hardware integration is not available in this demo. Use "Simulate GPS ping" to advance a bus along its route.
       </p>
@@ -62,7 +62,7 @@ export default function LiveTrackingTab() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between gap-2">
                   <CardTitle className="flex items-center gap-2 text-sm">
-                    <Bus className="w-4 h-4 text-slate-400" />
+                    <Bus className="w-4 h-4 text-muted-foreground" />
                     {row.bus.regNumber}
                   </CardTitle>
                   <Badge variant={config.variant}>{config.label}</Badge>
@@ -70,8 +70,8 @@ export default function LiveTrackingTab() {
                 <p className="text-xs text-muted-foreground">{row.route.name}</p>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-start gap-2 text-sm text-slate-700">
-                  <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                <div className="flex items-start gap-2 text-sm text-foreground">
+                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
                     <p>{currentStopLabel(row)}</p>
                     {next && <p className="text-xs text-muted-foreground">{next}</p>}

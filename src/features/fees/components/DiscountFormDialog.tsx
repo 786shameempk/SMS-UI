@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -92,14 +92,14 @@ export default function DiscountFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, description: values.description?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="disc-name">Name</Label>
-            <Input id="disc-name" placeholder="e.g. Merit Scholarship" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="disc-name" required>Name</Label>
+            <Input id="disc-name" placeholder="e.g. Merit Scholarship" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="disc-type">Type</Label>
+              <Label htmlFor="disc-type" required>Type</Label>
               <Controller
                 control={control}
                 name="type"
@@ -120,14 +120,14 @@ export default function DiscountFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="disc-value">Value</Label>
-              <Input id="disc-value" type="number" step="1" min="0" {...register("value")} />
-              {errors.value && <p className="text-xs text-red-600">{errors.value.message}</p>}
+              <Label htmlFor="disc-value" required>Value</Label>
+              <Input id="disc-value" type="number" step="1" min="0" aria-invalid={errors.value ? true : undefined} {...register("value")} />
+              {errors.value && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.value.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="disc-appliesTo">Applies to</Label>
+            <Label htmlFor="disc-appliesTo" required>Applies to</Label>
             <Controller
               control={control}
               name="appliesTo"
@@ -150,7 +150,7 @@ export default function DiscountFormDialog({
               <Label>Students</Label>
               <div className="max-h-40 overflow-y-auto rounded-lg border border-border p-2 space-y-1.5">
                 {students.map((s) => (
-                  <label key={s.id} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                  <label key={s.id} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                     <Checkbox checked={studentIds.includes(s.id)} onCheckedChange={(checked) => toggleStudent(s.id, checked === true)} />
                     {s.firstName} {s.lastName} ({s.className} - {s.section})
                   </label>
@@ -160,7 +160,7 @@ export default function DiscountFormDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="disc-description">Description (optional)</Label>
+            <Label htmlFor="disc-description" optional>Description</Label>
             <Textarea id="disc-description" rows={2} {...register("description")} />
           </div>
 
@@ -168,8 +168,7 @@ export default function DiscountFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create discount"}
             </Button>
           </DialogFooter>

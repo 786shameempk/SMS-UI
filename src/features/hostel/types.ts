@@ -6,6 +6,8 @@ export type HostelStatus = "active" | "inactive";
 
 export interface Hostel {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   type: HostelType;
   wardenStaffId?: string;
@@ -33,6 +35,8 @@ export type RoomStatus = "active" | "maintenance";
 
 export interface Room {
   id: string;
+  tenantId: string;
+  branchId: string;
   hostelId: string;
   roomNumber: string;
   floor: string;
@@ -57,6 +61,8 @@ export type AllocationStatus = "active" | "vacated";
 
 export interface HostelAllocation {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   hostelId: string;
   roomId: string;
@@ -84,6 +90,8 @@ export type VisitorStatus = "checked-in" | "checked-out";
 
 export interface VisitorLog {
   id: string;
+  tenantId: string;
+  branchId: string;
   hostelId: string;
   studentId: string;
   visitorName: string;
@@ -113,6 +121,8 @@ export type HostelAttendanceStatus = "present" | "absent" | "on-leave";
 
 export interface HostelAttendanceRecord {
   id: string;
+  tenantId: string;
+  branchId: string;
   studentId: string;
   date: string;
   status: HostelAttendanceStatus;
@@ -127,6 +137,8 @@ export type HostelFeePaymentStatus = "pending" | "paid";
 
 export interface HostelFeePayment {
   id: string;
+  tenantId: string;
+  branchId: string;
   allocationId: string;
   month: string;
   amount: number;
@@ -145,6 +157,8 @@ export type MealType = "breakfast" | "lunch" | "snacks" | "dinner";
 
 export interface MessMenuEntry {
   id: string;
+  tenantId: string;
+  branchId: string;
   hostelId: string;
   day: DayOfWeek;
   meal: MealType;

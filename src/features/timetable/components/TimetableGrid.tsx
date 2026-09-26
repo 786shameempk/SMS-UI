@@ -43,7 +43,7 @@ export default function TimetableGrid({ slots, renderCell, onCellClick, holidayD
           {PERIOD_DEFINITIONS.map((period) => (
             <tr key={period.periodNumber} className="border-b border-border last:border-0">
               <td className="border-r border-border px-3 py-2 align-top">
-                <p className="text-sm font-medium text-slate-800">{period.label}</p>
+                <p className="text-sm font-medium text-foreground">{period.label}</p>
                 <p className="text-xs text-muted-foreground">{period.time}</p>
               </td>
               {DAY_DEFINITIONS.map((day) => {

@@ -2,10 +2,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { AttendanceSummary } from "../types";
 
 const SEGMENTS: { key: keyof Omit<AttendanceSummary, "totalMarked">; label: string; color: string }[] = [
-  { key: "present", label: "Present", color: "bg-green-500" },
-  { key: "late", label: "Late", color: "bg-amber-500" },
-  { key: "absent", label: "Absent", color: "bg-red-500" },
-  { key: "onLeave", label: "On leave", color: "bg-slate-300" },
+  { key: "present", label: "Present", color: "bg-success" },
+  { key: "late", label: "Late", color: "bg-warning" },
+  { key: "absent", label: "Absent", color: "bg-destructive" },
+  { key: "onLeave", label: "On leave", color: "bg-muted-foreground/40" },
 ];
 
 export default function AttendanceSummaryCard({ attendance }: { attendance: AttendanceSummary }) {
@@ -19,7 +19,7 @@ export default function AttendanceSummaryCard({ attendance }: { attendance: Atte
         <CardDescription>{presentPct}% present today, out of {attendance.totalMarked} marked.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-secondary">
           {SEGMENTS.map((seg) => {
             const value = attendance[seg.key];
             const pct = total ? (value / total) * 100 : 0;
@@ -32,8 +32,8 @@ export default function AttendanceSummaryCard({ attendance }: { attendance: Atte
             <div key={seg.key} className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full shrink-0 ${seg.color}`} />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-800 tabular-nums">{attendance[seg.key]}</p>
-                <p className="text-[11px] text-slate-500">{seg.label}</p>
+                <p className="text-sm font-semibold text-foreground tabular-nums">{attendance[seg.key]}</p>
+                <p className="text-[11px] text-muted-foreground">{seg.label}</p>
               </div>
             </div>
           ))}

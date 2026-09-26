@@ -1,556 +1,485 @@
-import { mockDelay } from "@/utils/mockDelay";
-import { createStaff, listStaff } from "@/features/staff/api";
+import { campusHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { listStaff } from "@/features/staff/api";
 import type { StaffMember } from "@/features/staff/types";
 import { listStudents } from "@/features/students/api";
-import type { Student } from "@/features/students/types";
-import { DRIVER_LICENSE_PLAN, EXTRA_DRIVER_SEEDS, ROUTE_PLAN, SEED_BUSES } from "./mock";
 import type {
   Bus,
   BusFormValues,
   BusLiveStatus,
   BusLiveStatusRow,
+  BusStatus,
+  BusTrackingStatus,
   Driver,
   DriverFormValues,
-  DriverProfile,
+  DriverStatus,
+  RouteStatus,
   RouteStop,
   RouteStopFormValues,
   StudentTransportAssignment,
   StudentTransportAssignmentFormValues,
   StudentTransportAssignmentRow,
+  TransportAssignmentStatus,
   TransportRoute,
   TransportRouteFormValues,
 } from "./types";
 
-const BUSES_KEY = "sms-mock-transport-buses";
-const DRIVER_PROFILES_KEY = "sms-mock-transport-driver-profiles";
-const ROUTES_KEY = "sms-mock-transport-routes";
-const STOPS_KEY = "sms-mock-transport-stops";
-const ASSIGNMENTS_KEY = "sms-mock-transport-assignments";
-const LIVE_STATUS_KEY = "sms-mock-transport-live-status";
-const SEEDED_KEY = "sms-mock-transport-seeded";
+// ── Enum translation ────────────────────────────────────────────────────────
+// CampusService's enums serialize as PascalCase (C# convention); SMS UI's types use
+// lowercase unions - see docs/MICROSERVICES_PLAN.md's enum-translation note.
 
-function loadJson<T>(key: string, fallback: T): T {
+const BUS_STATUS_TO_API: Record<BusStatus, string> = { active: "Active", maintenance: "Maintenance", inactive: "Inactive" };
+const BUS_STATUS_FROM_API: Record<string, BusStatus> = { Active: "active", Maintenance: "maintenance", Inactive: "inactive" };
+
+const DRIVER_STATUS_TO_API: Record<DriverStatus, string> = { active: "Active", "on-leave": "OnLeave", inactive: "Inactive" };
+const DRIVER_STATUS_FROM_API: Record<string, DriverStatus> = { Active: "active", OnLeave: "on-leave", Inactive: "inactive" };
+
+const ROUTE_STATUS_TO_API: Record<RouteStatus, string> = { active: "Active", inactive: "Inactive" };
+const ROUTE_STATUS_FROM_API: Record<string, RouteStatus> = { Active: "active", Inactive: "inactive" };
+
+const ASSIGNMENT_STATUS_TO_API: Record<TransportAssignmentStatus, string> = { active: "Active", inactive: "Inactive" };
+const ASSIGNMENT_STATUS_FROM_API: Record<string, TransportAssignmentStatus> = { Active: "active", Inactive: "inactive" };
+
+const TRACKING_STATUS_FROM_API: Record<string, BusTrackingStatus> = {
+  Idle: "idle",
+  OnRoute: "on-route",
+  AtStop: "at-stop",
+  Completed: "completed",
+};
+
+// ── API response shapes (CampusService DTOs) ────────────────────────────────
+
+interface ApiBus {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  regNumber: string;
+  model: string;
+  capacity: number;
+  manufactureYear: number;
+  gpsDeviceId: string | null;
+  status: string;
+}
+
+interface ApiDriverProfile {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  staffId: string;
+  licenseNumber: string;
+  licenseExpiryDate: string;
+  experienceYears: number;
+  status: string;
+}
+
+interface ApiTransportRoute {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  busId: string | null;
+  driverId: string | null;
+  startTime: string;
+  endTime: string;
+  status: string;
+}
+
+interface ApiRouteStop {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  routeId: string;
+  name: string;
+  sequence: number;
+  arrivalTime: string;
+  landmark: string | null;
+}
+
+interface ApiStudentTransportAssignment {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  studentId: string;
+  routeId: string;
+  stopId: string;
+  monthlyFee: number | null;
+  assignedOn: string;
+  status: string;
+}
+
+interface ApiBusLiveStatus {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  busId: string;
+  routeId: string;
+  status: string;
+  currentStopIndex: number;
+  speedKmph: number;
+  lastUpdated: string;
+}
+
+// ── Mappers ──────────────────────────────────────────────────────────────────
+
+function mapBus(dto: ApiBus): Bus {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    regNumber: dto.regNumber,
+    model: dto.model,
+    capacity: dto.capacity,
+    manufactureYear: dto.manufactureYear,
+    gpsDeviceId: dto.gpsDeviceId ?? undefined,
+    status: BUS_STATUS_FROM_API[dto.status] ?? "active",
+  };
+}
+
+function mapDriverProfile(dto: ApiDriverProfile) {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    staffId: dto.staffId,
+    licenseNumber: dto.licenseNumber,
+    licenseExpiryDate: dto.licenseExpiryDate,
+    experienceYears: dto.experienceYears,
+    status: DRIVER_STATUS_FROM_API[dto.status] ?? "active",
+  };
+}
+
+function mapRoute(dto: ApiTransportRoute): TransportRoute {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    name: dto.name,
+    busId: dto.busId ?? undefined,
+    driverId: dto.driverId ?? undefined,
+    startTime: dto.startTime,
+    endTime: dto.endTime,
+    status: ROUTE_STATUS_FROM_API[dto.status] ?? "active",
+  };
+}
+
+function mapStop(dto: ApiRouteStop): RouteStop {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    routeId: dto.routeId,
+    name: dto.name,
+    sequence: dto.sequence,
+    arrivalTime: dto.arrivalTime,
+    landmark: dto.landmark ?? undefined,
+  };
+}
+
+function mapAssignment(dto: ApiStudentTransportAssignment): StudentTransportAssignment {
+  return {
+    id: dto.id,
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    studentId: dto.studentId,
+    routeId: dto.routeId,
+    stopId: dto.stopId,
+    monthlyFee: dto.monthlyFee ?? undefined,
+    assignedOn: dto.assignedOn,
+    status: ASSIGNMENT_STATUS_FROM_API[dto.status] ?? "active",
+  };
+}
+
+function mapLiveStatus(dto: ApiBusLiveStatus): BusLiveStatus {
+  return {
+    tenantId: dto.tenantId,
+    branchId: dto.branchId,
+    busId: dto.busId,
+    routeId: dto.routeId,
+    status: TRACKING_STATUS_FROM_API[dto.status] ?? "idle",
+    currentStopIndex: dto.currentStopIndex,
+    speedKmph: dto.speedKmph,
+    lastUpdated: dto.lastUpdated,
+  };
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
-}
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
-  if (!found) throw new Error(`${label} not found`);
-  return found;
-}
-
-let buses = loadJson<Bus[]>(BUSES_KEY, []);
-let driverProfiles = loadJson<DriverProfile[]>(DRIVER_PROFILES_KEY, []);
-let routes = loadJson<TransportRoute[]>(ROUTES_KEY, []);
-let stops = loadJson<RouteStop[]>(STOPS_KEY, []);
-let assignments = loadJson<StudentTransportAssignment[]>(ASSIGNMENTS_KEY, []);
-let liveStatuses = loadJson<BusLiveStatus[]>(LIVE_STATUS_KEY, []);
-
-const persistBuses = () => saveJson(BUSES_KEY, buses);
-const persistDriverProfiles = () => saveJson(DRIVER_PROFILES_KEY, driverProfiles);
-const persistRoutes = () => saveJson(ROUTES_KEY, routes);
-const persistStops = () => saveJson(STOPS_KEY, stops);
-const persistAssignments = () => saveJson(ASSIGNMENTS_KEY, assignments);
-const persistLiveStatuses = () => saveJson(LIVE_STATUS_KEY, liveStatuses);
-
-/**
- * Drivers are staff members with designation "Driver" (see staff/mock.ts + EXTRA_DRIVER_SEEDS
- * here) with license/experience data layered on top, buses/routes/stops/assignments are owned
- * outright by this module — same conventions the teachers and library modules use.
- */
-async function performSeed(): Promise<void> {
-  if (loadJson(SEEDED_KEY, false)) return;
-
-  const existingStaff = await listStaff();
-  const staffIdByEmail = new Map(existingStaff.map((s) => [s.email.toLowerCase(), s.id] as const));
-
-  const toCreate = EXTRA_DRIVER_SEEDS.filter((d) => !staffIdByEmail.has(d.email.toLowerCase()));
-  const created = await Promise.all(toCreate.map((values) => createStaff(values)));
-  for (const member of created) staffIdByEmail.set(member.email.toLowerCase(), member.id);
-
-  if (driverProfiles.length === 0) {
-    const newProfiles: DriverProfile[] = [];
-    for (const plan of DRIVER_LICENSE_PLAN) {
-      const staffId = staffIdByEmail.get(plan.driverEmail.toLowerCase());
-      if (!staffId) continue;
-      newProfiles.push({
-        id: genId("drv"),
-        staffId,
-        licenseNumber: plan.licenseNumber,
-        licenseExpiryDate: plan.licenseExpiryDate,
-        experienceYears: plan.experienceYears,
-        status: "active",
-      });
-    }
-    driverProfiles = newProfiles;
-    persistDriverProfiles();
-  }
-  const driverProfileIdByStaffId = new Map(driverProfiles.map((d) => [d.staffId, d.id] as const));
-  const driverProfileIdByEmail = new Map(
-    DRIVER_LICENSE_PLAN.map((p) => {
-      const staffId = staffIdByEmail.get(p.driverEmail.toLowerCase());
-      return [p.driverEmail.toLowerCase(), staffId ? driverProfileIdByStaffId.get(staffId) : undefined] as const;
-    }),
-  );
-
-  if (buses.length === 0) {
-    buses = SEED_BUSES.map((b) => ({ ...b }));
-    persistBuses();
-  }
-
-  if (routes.length === 0) {
-    const newRoutes: TransportRoute[] = [];
-    const newStops: RouteStop[] = [];
-    for (const plan of ROUTE_PLAN) {
-      newRoutes.push({
-        id: plan.id,
-        name: plan.name,
-        busId: plan.busId,
-        driverId: driverProfileIdByEmail.get(plan.driverEmail.toLowerCase()),
-        startTime: plan.startTime,
-        endTime: plan.endTime,
-        status: plan.status,
-      });
-      plan.stops.forEach((stop, index) => {
-        newStops.push({
-          id: genId("stop"),
-          routeId: plan.id,
-          name: stop.name,
-          sequence: index + 1,
-          arrivalTime: stop.arrivalTime,
-          landmark: stop.landmark,
-        });
-      });
-    }
-    routes = newRoutes;
-    stops = newStops;
-    persistRoutes();
-    persistStops();
-  }
-
-  if (assignments.length === 0) {
-    const students = await listStudents();
-    const activeRoutes = routes.filter((r) => r.status === "active");
-    const stopsByRoute = new Map(activeRoutes.map((r) => [r.id, stops.filter((s) => s.routeId === r.id).sort((a, b) => a.sequence - b.sequence)] as const));
-    const eligible = students.filter((s) => s.status === "active");
-    const target = Math.min(eligible.length, 28);
-    const newAssignments: StudentTransportAssignment[] = [];
-    for (let i = 0; i < target; i++) {
-      const student = eligible[i];
-      const route = activeRoutes[i % activeRoutes.length];
-      const routeStops = stopsByRoute.get(route?.id ?? "") ?? [];
-      const stop = routeStops[i % routeStops.length];
-      if (!student || !route || !stop) continue;
-      newAssignments.push({
-        id: genId("tra"),
-        studentId: student.id,
-        routeId: route.id,
-        stopId: stop.id,
-        monthlyFee: 1000 + stop.sequence * 50,
-        assignedOn: new Date(Date.now() - (i % 60) * 24 * 60 * 60 * 1000).toISOString(),
-        status: i % 11 === 0 ? "inactive" : "active",
-      });
-    }
-    assignments = newAssignments;
-    persistAssignments();
-  }
-
-  saveJson(SEEDED_KEY, true);
-}
-
-const seedPromise: Promise<void> = performSeed().catch((err) => {
-  console.error("Failed to seed transport mock data", err);
-});
-
-function toDriver(profile: DriverProfile, staffById: Map<string, StaffMember>): Driver | null {
-  const staff = staffById.get(profile.staffId);
-  if (!staff) return null;
-  return { ...profile, staff };
-}
-
-function toAssignmentRow(
-  assignment: StudentTransportAssignment,
-  studentById: Map<string, Student>,
-  routeById: Map<string, TransportRoute>,
-  stopById: Map<string, RouteStop>,
-): StudentTransportAssignmentRow | null {
-  const student = studentById.get(assignment.studentId);
-  const route = routeById.get(assignment.routeId);
-  const stop = stopById.get(assignment.stopId);
-  if (!student || !route || !stop) return null;
-  return { ...assignment, student, route, stop };
 }
 
 // ── Buses ────────────────────────────────────────────────────────────────
 
 export async function listBuses(): Promise<Bus[]> {
-  await seedPromise;
-  return mockDelay([...buses], 300);
+  const buses = await unwrap(campusHttpClient.get<ApiBus[]>("/api/buses"));
+  return buses.map(mapBus);
 }
 
 export async function createBus(values: BusFormValues): Promise<Bus> {
-  await seedPromise;
-  if (buses.some((b) => b.regNumber.toLowerCase() === values.regNumber.trim().toLowerCase())) {
-    await mockDelay(null, 300);
-    throw new Error("A bus with this registration number already exists");
-  }
-  const bus: Bus = { id: genId("bus"), ...values, regNumber: values.regNumber.trim() };
-  buses = [bus, ...buses];
-  persistBuses();
-  return mockDelay(bus, 350);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiBus>("/api/buses", {
+      regNumber: values.regNumber.trim(),
+      model: values.model,
+      capacity: values.capacity,
+      manufactureYear: values.manufactureYear,
+      gpsDeviceId: values.gpsDeviceId?.trim() || null,
+      status: BUS_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapBus(dto);
 }
 
 export async function updateBus(id: string, values: BusFormValues): Promise<Bus> {
-  await seedPromise;
-  requireEntity(buses, id, "Bus");
-  const updated: Bus = { ...requireEntity(buses, id, "Bus"), ...values, regNumber: values.regNumber.trim() };
-  buses = buses.map((b) => (b.id === id ? updated : b));
-  persistBuses();
-  return mockDelay(updated, 350);
+  const dto = await unwrap(
+    campusHttpClient.put<ApiBus>(`/api/buses/${id}`, {
+      regNumber: values.regNumber.trim(),
+      model: values.model,
+      capacity: values.capacity,
+      manufactureYear: values.manufactureYear,
+      gpsDeviceId: values.gpsDeviceId?.trim() || null,
+      status: BUS_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapBus(dto);
 }
 
 export async function deleteBus(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(buses, id, "Bus");
-  if (routes.some((r) => r.busId === id)) {
-    await mockDelay(null, 300);
-    throw new Error("Unassign this bus from its route before deleting it");
-  }
-  buses = buses.filter((b) => b.id !== id);
-  liveStatuses = liveStatuses.filter((l) => l.busId !== id);
-  persistBuses();
-  persistLiveStatuses();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/buses/${id}`));
 }
 
 // ── Drivers ──────────────────────────────────────────────────────────────
 
 export async function listDrivers(): Promise<Driver[]> {
-  await seedPromise;
-  const staff = await listStaff();
+  const [profiles, staff] = await Promise.all([
+    unwrap(campusHttpClient.get<ApiDriverProfile[]>("/api/driverprofiles")),
+    listStaff(),
+  ]);
   const staffById = new Map(staff.map((s) => [s.id, s] as const));
-  const result = driverProfiles.map((p) => toDriver(p, staffById)).filter((d): d is Driver => d !== null);
-  return mockDelay(result, 350);
+  return profiles
+    .map(mapDriverProfile)
+    .map((p) => {
+      const staffMember = staffById.get(p.staffId);
+      return staffMember ? { ...p, staff: staffMember } : null;
+    })
+    .filter((d): d is Driver => d !== null);
 }
 
 /** Staff with designation "Driver" who don't already have a transport driver profile. */
 export async function listEligibleDriverStaff(): Promise<StaffMember[]> {
-  await seedPromise;
-  const staff = await listStaff();
-  const profiledStaffIds = new Set(driverProfiles.map((p) => p.staffId));
-  const result = staff.filter((s) => s.designation === "Driver" && !profiledStaffIds.has(s.id));
-  return mockDelay(result, 300);
+  const [profiles, staff] = await Promise.all([
+    unwrap(campusHttpClient.get<ApiDriverProfile[]>("/api/driverprofiles")),
+    listStaff(),
+  ]);
+  const profiledStaffIds = new Set(profiles.map((p) => p.staffId));
+  return staff.filter((s) => s.designation === "Driver" && !profiledStaffIds.has(s.id));
 }
 
 export async function createDriver(values: DriverFormValues): Promise<Driver> {
-  await seedPromise;
-  if (driverProfiles.some((p) => p.staffId === values.staffId)) {
-    await mockDelay(null, 300);
-    throw new Error("This staff member already has a driver profile");
-  }
   const staff = await listStaff();
   const staffMember = staff.find((s) => s.id === values.staffId);
-  if (!staffMember) {
-    await mockDelay(null, 300);
-    throw new Error("Staff member not found");
-  }
-  const profile: DriverProfile = { id: genId("drv"), ...values };
-  driverProfiles = [profile, ...driverProfiles];
-  persistDriverProfiles();
-  return mockDelay({ ...profile, staff: staffMember }, 400);
+  if (!staffMember) throw new Error("Staff member not found");
+
+  const dto = await unwrap(
+    campusHttpClient.post<ApiDriverProfile>("/api/driverprofiles", {
+      staffId: values.staffId,
+      licenseNumber: values.licenseNumber,
+      licenseExpiryDate: values.licenseExpiryDate,
+      experienceYears: values.experienceYears,
+      status: DRIVER_STATUS_TO_API[values.status],
+    }),
+  );
+  return { ...mapDriverProfile(dto), staff: staffMember };
 }
 
 export async function updateDriver(id: string, values: DriverFormValues): Promise<Driver> {
-  await seedPromise;
-  const existing = requireEntity(driverProfiles, id, "Driver");
+  const dto = await unwrap(
+    campusHttpClient.put<ApiDriverProfile>(`/api/driverprofiles/${id}`, {
+      licenseNumber: values.licenseNumber,
+      licenseExpiryDate: values.licenseExpiryDate,
+      experienceYears: values.experienceYears,
+      status: DRIVER_STATUS_TO_API[values.status],
+    }),
+  );
   const staff = await listStaff();
-  const staffMember = staff.find((s) => s.id === existing.staffId);
-  if (!staffMember) {
-    await mockDelay(null, 300);
-    throw new Error("Staff member not found");
-  }
-  const updated: DriverProfile = { ...existing, licenseNumber: values.licenseNumber, licenseExpiryDate: values.licenseExpiryDate, experienceYears: values.experienceYears, status: values.status };
-  driverProfiles = driverProfiles.map((p) => (p.id === id ? updated : p));
-  persistDriverProfiles();
-  return mockDelay({ ...updated, staff: staffMember }, 400);
+  const staffMember = staff.find((s) => s.id === dto.staffId);
+  if (!staffMember) throw new Error("Staff member not found");
+  return { ...mapDriverProfile(dto), staff: staffMember };
 }
 
 export async function deleteDriver(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(driverProfiles, id, "Driver");
-  if (routes.some((r) => r.driverId === id)) {
-    await mockDelay(null, 300);
-    throw new Error("Unassign this driver from their route before deleting the profile");
-  }
-  driverProfiles = driverProfiles.filter((p) => p.id !== id);
-  persistDriverProfiles();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/driverprofiles/${id}`));
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────
 
 export async function listRoutes(): Promise<TransportRoute[]> {
-  await seedPromise;
-  return mockDelay([...routes], 300);
+  const routes = await unwrap(campusHttpClient.get<ApiTransportRoute[]>("/api/transportroutes"));
+  return routes.map(mapRoute);
 }
 
 export async function createRoute(values: TransportRouteFormValues): Promise<TransportRoute> {
-  await seedPromise;
-  const route: TransportRoute = { id: genId("rt"), ...values };
-  routes = [route, ...routes];
-  persistRoutes();
-  return mockDelay(route, 350);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiTransportRoute>("/api/transportroutes", {
+      name: values.name,
+      busId: values.busId ?? null,
+      driverId: values.driverId ?? null,
+      startTime: values.startTime,
+      endTime: values.endTime,
+      status: ROUTE_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapRoute(dto);
 }
 
 export async function updateRoute(id: string, values: TransportRouteFormValues): Promise<TransportRoute> {
-  await seedPromise;
-  requireEntity(routes, id, "Route");
-  const updated: TransportRoute = { ...requireEntity(routes, id, "Route"), ...values };
-  routes = routes.map((r) => (r.id === id ? updated : r));
-  persistRoutes();
-  if (updated.status === "inactive") {
-    liveStatuses = liveStatuses.filter((l) => l.routeId !== id);
-    persistLiveStatuses();
-  }
-  return mockDelay(updated, 350);
+  const dto = await unwrap(
+    campusHttpClient.put<ApiTransportRoute>(`/api/transportroutes/${id}`, {
+      name: values.name,
+      busId: values.busId ?? null,
+      driverId: values.driverId ?? null,
+      startTime: values.startTime,
+      endTime: values.endTime,
+      status: ROUTE_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapRoute(dto);
 }
 
 export async function deleteRoute(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(routes, id, "Route");
-  if (assignments.some((a) => a.routeId === id && a.status === "active")) {
-    await mockDelay(null, 300);
-    throw new Error("Reassign or remove students on this route before deleting it");
-  }
-  routes = routes.filter((r) => r.id !== id);
-  stops = stops.filter((s) => s.routeId !== id);
-  liveStatuses = liveStatuses.filter((l) => l.routeId !== id);
-  persistRoutes();
-  persistStops();
-  persistLiveStatuses();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/transportroutes/${id}`));
 }
 
 // ── Stops ────────────────────────────────────────────────────────────────
 
 export async function listStops(routeId?: string): Promise<RouteStop[]> {
-  await seedPromise;
-  const result = (routeId ? stops.filter((s) => s.routeId === routeId) : [...stops]).sort((a, b) => a.sequence - b.sequence);
-  return mockDelay(result, 300);
+  const stops = await unwrap(campusHttpClient.get<ApiRouteStop[]>("/api/routestops", { params: routeId ? { routeId } : undefined }));
+  return stops.map(mapStop).sort((a, b) => a.sequence - b.sequence);
 }
 
 export async function addStop(routeId: string, values: RouteStopFormValues): Promise<RouteStop> {
-  await seedPromise;
-  requireEntity(routes, routeId, "Route");
-  const nextSequence = stops.filter((s) => s.routeId === routeId).reduce((max, s) => Math.max(max, s.sequence), 0) + 1;
-  const stop: RouteStop = { id: genId("stop"), routeId, sequence: nextSequence, ...values };
-  stops = [...stops, stop];
-  persistStops();
-  return mockDelay(stop, 350);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiRouteStop>("/api/routestops", {
+      routeId,
+      name: values.name,
+      arrivalTime: values.arrivalTime,
+      landmark: values.landmark?.trim() || null,
+    }),
+  );
+  return mapStop(dto);
 }
 
 export async function updateStop(id: string, values: RouteStopFormValues): Promise<RouteStop> {
-  await seedPromise;
-  const existing = requireEntity(stops, id, "Stop");
-  const updated: RouteStop = { ...existing, ...values };
-  stops = stops.map((s) => (s.id === id ? updated : s));
-  persistStops();
-  return mockDelay(updated, 350);
+  const dto = await unwrap(
+    campusHttpClient.put<ApiRouteStop>(`/api/routestops/${id}`, {
+      name: values.name,
+      arrivalTime: values.arrivalTime,
+      landmark: values.landmark?.trim() || null,
+    }),
+  );
+  return mapStop(dto);
 }
 
 export async function deleteStop(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(stops, id, "Stop");
-  if (assignments.some((a) => a.stopId === id && a.status === "active")) {
-    await mockDelay(null, 300);
-    throw new Error("Reassign students at this stop before deleting it");
-  }
-  stops = stops.filter((s) => s.id !== id);
-  persistStops();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/routestops/${id}`));
 }
 
 export async function moveStop(id: string, direction: "up" | "down"): Promise<RouteStop[]> {
-  await seedPromise;
-  const stop = requireEntity(stops, id, "Stop");
-  const siblings = stops.filter((s) => s.routeId === stop.routeId).sort((a, b) => a.sequence - b.sequence);
-  const index = siblings.findIndex((s) => s.id === id);
-  const swapIndex = direction === "up" ? index - 1 : index + 1;
-  if (swapIndex < 0 || swapIndex >= siblings.length) {
-    await mockDelay(null, 200);
-    throw new Error("Stop is already at the end of the route");
-  }
-  const other = siblings[swapIndex]!;
-  const stopSeq = stop.sequence;
-  stop.sequence = other.sequence;
-  other.sequence = stopSeq;
-  stops = stops.map((s) => {
-    if (s.id === stop.id) return stop;
-    if (s.id === other.id) return other;
-    return s;
-  });
-  persistStops();
-  return mockDelay(stops.filter((s) => s.routeId === stop.routeId).sort((a, b) => a.sequence - b.sequence), 250);
+  const stops = await unwrap(campusHttpClient.post<ApiRouteStop[]>(`/api/routestops/${id}/move`, { direction }));
+  return stops.map(mapStop).sort((a, b) => a.sequence - b.sequence);
 }
 
 // ── Student assignments ─────────────────────────────────────────────────
 
 export async function listAssignments(): Promise<StudentTransportAssignmentRow[]> {
-  await seedPromise;
-  const [students] = await Promise.all([listStudents()]);
+  const [assignments, students, routes, stops] = await Promise.all([
+    unwrap(campusHttpClient.get<ApiStudentTransportAssignment[]>("/api/studenttransportassignments")),
+    listStudents(),
+    listRoutes(),
+    listStops(),
+  ]);
   const studentById = new Map(students.map((s) => [s.id, s] as const));
   const routeById = new Map(routes.map((r) => [r.id, r] as const));
   const stopById = new Map(stops.map((s) => [s.id, s] as const));
-  const rows = assignments
-    .map((a) => toAssignmentRow(a, studentById, routeById, stopById))
-    .filter((r): r is StudentTransportAssignmentRow => r !== null);
-  return mockDelay(rows, 350);
+
+  return assignments
+    .map(mapAssignment)
+    .map((a) => {
+      const student = studentById.get(a.studentId);
+      const route = routeById.get(a.routeId);
+      const stop = stopById.get(a.stopId);
+      return student && route && stop ? { ...a, student, route, stop } : null;
+    })
+    .filter((row): row is StudentTransportAssignmentRow => row !== null);
 }
 
 export async function createAssignment(values: StudentTransportAssignmentFormValues): Promise<StudentTransportAssignment> {
-  await seedPromise;
-  const stop = requireEntity(stops, values.stopId, "Stop");
-  if (stop.routeId !== values.routeId) {
-    await mockDelay(null, 300);
-    throw new Error("The selected stop does not belong to the selected route");
-  }
-  if (assignments.some((a) => a.studentId === values.studentId && a.status === "active")) {
-    await mockDelay(null, 300);
-    throw new Error("This student already has an active transport assignment");
-  }
-  const assignment: StudentTransportAssignment = {
-    id: genId("tra"),
-    ...values,
-    assignedOn: new Date().toISOString(),
-    status: "active",
-  };
-  assignments = [assignment, ...assignments];
-  persistAssignments();
-  return mockDelay(assignment, 400);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiStudentTransportAssignment>("/api/studenttransportassignments", {
+      studentId: values.studentId,
+      routeId: values.routeId,
+      stopId: values.stopId,
+      monthlyFee: values.monthlyFee ?? null,
+    }),
+  );
+  return mapAssignment(dto);
 }
 
 export async function updateAssignment(id: string, values: StudentTransportAssignmentFormValues): Promise<StudentTransportAssignment> {
-  await seedPromise;
-  const existing = requireEntity(assignments, id, "Assignment");
-  const stop = requireEntity(stops, values.stopId, "Stop");
-  if (stop.routeId !== values.routeId) {
-    await mockDelay(null, 300);
-    throw new Error("The selected stop does not belong to the selected route");
-  }
-  const updated: StudentTransportAssignment = { ...existing, ...values };
-  assignments = assignments.map((a) => (a.id === id ? updated : a));
-  persistAssignments();
-  return mockDelay(updated, 400);
+  const dto = await unwrap(
+    campusHttpClient.put<ApiStudentTransportAssignment>(`/api/studenttransportassignments/${id}`, {
+      studentId: values.studentId,
+      routeId: values.routeId,
+      stopId: values.stopId,
+      monthlyFee: values.monthlyFee ?? null,
+    }),
+  );
+  return mapAssignment(dto);
 }
 
 export async function setAssignmentStatus(id: string, status: "active" | "inactive"): Promise<StudentTransportAssignment> {
-  await seedPromise;
-  const existing = requireEntity(assignments, id, "Assignment");
-  if (status === "active" && assignments.some((a) => a.studentId === existing.studentId && a.status === "active" && a.id !== id)) {
-    await mockDelay(null, 300);
-    throw new Error("This student already has another active transport assignment");
-  }
-  const updated: StudentTransportAssignment = { ...existing, status };
-  assignments = assignments.map((a) => (a.id === id ? updated : a));
-  persistAssignments();
-  return mockDelay(updated, 300);
+  const dto = await unwrap(
+    campusHttpClient.post<ApiStudentTransportAssignment>(`/api/studenttransportassignments/${id}/status`, {
+      status: ASSIGNMENT_STATUS_TO_API[status],
+    }),
+  );
+  return mapAssignment(dto);
 }
 
 export async function deleteAssignment(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(assignments, id, "Assignment");
-  assignments = assignments.filter((a) => a.id !== id);
-  persistAssignments();
-  return mockDelay(undefined, 300);
+  await unwrap(campusHttpClient.delete(`/api/studenttransportassignments/${id}`));
 }
 
 // ── Live tracking (simulated GPS) ───────────────────────────────────────
 
 export async function listLiveStatuses(): Promise<BusLiveStatusRow[]> {
-  await seedPromise;
-  const trackableRoutes = routes.filter((r) => r.status === "active" && r.busId);
+  const [statuses, buses, routes, stops] = await Promise.all([
+    unwrap(campusHttpClient.get<ApiBusLiveStatus[]>("/api/buslivestatuses")),
+    listBuses(),
+    listRoutes(),
+    listStops(),
+  ]);
   const busById = new Map(buses.map((b) => [b.id, b] as const));
+  const routeById = new Map(routes.map((r) => [r.id, r] as const));
 
-  let changed = false;
-  for (const route of trackableRoutes) {
-    if (!liveStatuses.some((l) => l.busId === route.busId)) {
-      liveStatuses.push({ busId: route.busId!, routeId: route.id, status: "idle", currentStopIndex: -1, speedKmph: 0, lastUpdated: new Date().toISOString() });
-      changed = true;
-    }
-  }
-  if (changed) persistLiveStatuses();
-
-  const rows: BusLiveStatusRow[] = liveStatuses
+  return statuses
+    .map(mapLiveStatus)
     .map((status) => {
-      const route = routes.find((r) => r.id === status.routeId);
+      const route = routeById.get(status.routeId);
       const bus = busById.get(status.busId);
       if (!route || !bus || route.status !== "active") return null;
       const routeStops = stops.filter((s) => s.routeId === route.id).sort((a, b) => a.sequence - b.sequence);
       return { ...status, bus, route, stops: routeStops };
     })
-    .filter((r): r is BusLiveStatusRow => r !== null);
-
-  return mockDelay(rows, 350);
+    .filter((row): row is BusLiveStatusRow => row !== null);
 }
 
 export async function simulateGpsPing(busId: string): Promise<BusLiveStatus> {
-  await seedPromise;
-  const current = liveStatuses.find((l) => l.busId === busId);
-  if (!current) {
-    await mockDelay(null, 300);
-    throw new Error("This bus is not currently on a trackable route");
-  }
-  const routeStops = stops.filter((s) => s.routeId === current.routeId).sort((a, b) => a.sequence - b.sequence);
-  const lastIndex = routeStops.length - 1;
-
-  let next: BusLiveStatus;
-  if (current.status === "idle") {
-    next = { ...current, status: "on-route", speedKmph: 25 + Math.round(Math.random() * 20), lastUpdated: new Date().toISOString() };
-  } else if (current.status === "on-route") {
-    const arrivedIndex = current.currentStopIndex + 1;
-    next = { ...current, status: "at-stop", currentStopIndex: arrivedIndex, speedKmph: 0, lastUpdated: new Date().toISOString() };
-  } else if (current.status === "at-stop") {
-    if (current.currentStopIndex >= lastIndex) {
-      next = { ...current, status: "completed", speedKmph: 0, lastUpdated: new Date().toISOString() };
-    } else {
-      next = { ...current, status: "on-route", speedKmph: 20 + Math.round(Math.random() * 25), lastUpdated: new Date().toISOString() };
-    }
-  } else {
-    next = { ...current, status: "idle", currentStopIndex: -1, speedKmph: 0, lastUpdated: new Date().toISOString() };
-  }
-
-  liveStatuses = liveStatuses.map((l) => (l.busId === busId ? next : l));
-  persistLiveStatuses();
-  return mockDelay(next, 300);
+  const dto = await unwrap(campusHttpClient.post<ApiBusLiveStatus>(`/api/buslivestatuses/${busId}/simulate-ping`));
+  return mapLiveStatus(dto);
 }
 
 export async function resetLiveStatus(busId: string): Promise<BusLiveStatus> {
-  await seedPromise;
-  const current = liveStatuses.find((l) => l.busId === busId);
-  if (!current) {
-    await mockDelay(null, 300);
-    throw new Error("This bus is not currently on a trackable route");
-  }
-  const next: BusLiveStatus = { ...current, status: "idle", currentStopIndex: -1, speedKmph: 0, lastUpdated: new Date().toISOString() };
-  liveStatuses = liveStatuses.map((l) => (l.busId === busId ? next : l));
-  persistLiveStatuses();
-  return mockDelay(next, 250);
+  const dto = await unwrap(campusHttpClient.post<ApiBusLiveStatus>(`/api/buslivestatuses/${busId}/reset`));
+  return mapLiveStatus(dto);
 }

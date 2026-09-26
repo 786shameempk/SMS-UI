@@ -3,6 +3,8 @@ export type ExamStatus = "scheduled" | "ongoing" | "completed";
 
 export interface Exam {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   examType: ExamType;
   termId: string;
@@ -24,6 +26,8 @@ export interface ExamFormValues {
 
 export interface ExamSchedule {
   id: string;
+  tenantId: string;
+  branchId: string;
   examId: string;
   subjectId: string;
   date: string;
@@ -46,6 +50,8 @@ export interface ExamScheduleFormValues {
 
 export interface ExamResult {
   id: string;
+  tenantId: string;
+  branchId: string;
   examId: string;
   subjectId: string;
   studentId: string;

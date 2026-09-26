@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,7 +92,7 @@ export default function AssignStudentDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="ta-studentId">Student</Label>
+            <Label htmlFor="ta-studentId" required>Student</Label>
             <Controller
               control={control}
               name="studentId"
@@ -111,11 +111,11 @@ export default function AssignStudentDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p className="text-xs text-red-600">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ta-routeId">Route</Label>
+            <Label htmlFor="ta-routeId" required>Route</Label>
             <Controller
               control={control}
               name="routeId"
@@ -139,11 +139,11 @@ export default function AssignStudentDialog({
                 </Select>
               )}
             />
-            {errors.routeId && <p className="text-xs text-red-600">{errors.routeId.message}</p>}
+            {errors.routeId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.routeId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ta-stopId">Pickup stop</Label>
+            <Label htmlFor="ta-stopId" required>Pickup stop</Label>
             <Controller
               control={control}
               name="stopId"
@@ -162,11 +162,11 @@ export default function AssignStudentDialog({
                 </Select>
               )}
             />
-            {errors.stopId && <p className="text-xs text-red-600">{errors.stopId.message}</p>}
+            {errors.stopId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.stopId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ta-monthlyFee">Monthly fee (optional)</Label>
+            <Label htmlFor="ta-monthlyFee" optional>Monthly fee</Label>
             <Input id="ta-monthlyFee" type="number" min="0" step="1" placeholder="e.g. 1200" {...register("monthlyFee")} />
           </div>
 
@@ -174,8 +174,7 @@ export default function AssignStudentDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Assign"}
             </Button>
           </DialogFooter>

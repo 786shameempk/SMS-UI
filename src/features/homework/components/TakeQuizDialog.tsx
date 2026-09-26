@@ -65,21 +65,21 @@ export default function TakeQuizDialog({
         </DialogHeader>
 
         {result !== null ? (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto" />
-            <p className="text-lg font-semibold text-green-800">Score: {result}%</p>
-            <p className="text-sm text-green-700">Your attempt has been recorded.</p>
+          <div className="rounded-lg border border-success/30 bg-success-soft p-4 text-center space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-success-strong mx-auto" />
+            <p className="text-lg font-semibold text-success-strong">Score: {result}%</p>
+            <p className="text-sm text-success-strong">Your attempt has been recorded.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {quiz.questions.map((q, qIndex) => (
               <div key={q.id} className="rounded-lg border border-border p-3 space-y-2">
-                <p className="text-sm font-medium text-slate-800">
+                <p className="text-sm font-medium text-foreground">
                   {qIndex + 1}. {q.text}
                 </p>
                 <div className="space-y-1.5">
                   {q.options.map((option, oIndex) => (
-                    <label key={oIndex} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                    <label key={oIndex} className="flex items-center gap-2 text-sm text-secondary-foreground cursor-pointer">
                       <input
                         type="radio"
                         name={`take-quiz-${q.id}`}

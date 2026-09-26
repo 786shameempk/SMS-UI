@@ -52,9 +52,9 @@ export default function TeacherViewTab() {
             const room = rooms.find((r) => r.id === slot.room);
             return (
               <div>
-                <p className="text-sm font-medium text-slate-800">{subject?.name ?? "Subject"}</p>
-                <p className="text-xs text-slate-500">{sectionFullLabel(section, classes)}</p>
-                {room && <p className="text-xs text-slate-400">{room.name}</p>}
+                <p className="text-sm font-medium text-foreground">{subject?.name ?? "Subject"}</p>
+                <p className="text-xs text-muted-foreground">{sectionFullLabel(section, classes)}</p>
+                {room && <p className="text-xs text-muted-foreground">{room.name}</p>}
               </div>
             );
           }}

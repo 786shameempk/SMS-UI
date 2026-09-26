@@ -1,18 +1,19 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { CALENDAR_EVENT_TYPES } from "../constants";
 import { createCalendarEvent, deleteCalendarEvent, listAcademicYears, listCalendarEvents, updateCalendarEvent } from "../api";
 import type { CalendarEvent, CalendarEventFormValues, CalendarEventType } from "../types";
 import CalendarEventFormDialog from "./CalendarEventFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 const TYPE_VARIANT: Record<CalendarEventType, "info" | "warning" | "danger" | "neutral"> = {
   term_start: "info",
@@ -28,7 +29,7 @@ function typeLabel(type: CalendarEventType): string {
 
 export default function AcademicCalendarTab() {
   const queryClient = useQueryClient();
-  const { data: events = [], isLoading } = useQuery({ queryKey: ["academics", "calendar-events"], queryFn: listCalendarEvents });
+  const { data: events = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "calendar-events"], queryFn: listCalendarEvents });
   const { data: academicYears = [] } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
 
   const [typeFilter, setTypeFilter] = useState("all");
@@ -80,8 +81,8 @@ export default function AcademicCalendarTab() {
       header: "Event",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.title}</p>
-          {row.original.description && <p className="text-xs text-slate-500 max-w-sm truncate">{row.original.description}</p>}
+          <p className="text-sm font-medium text-foreground">{row.original.title}</p>
+          {row.original.description && <p className="text-xs text-muted-foreground max-w-sm truncate">{row.original.description}</p>}
         </div>
       ),
     },
@@ -94,7 +95,7 @@ export default function AcademicCalendarTab() {
       id: "dates",
       header: "Dates",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.startDate}
           {row.original.endDate && row.original.endDate !== row.original.startDate ? ` → ${row.original.endDate}` : ""}
         </span>
@@ -104,7 +105,7 @@ export default function AcademicCalendarTab() {
       id: "academicYear",
       header: "Academic year",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {academicYears.find((y) => y.id === row.original.academicYearId)?.name ?? "—"}
         </span>
       ),
@@ -115,28 +116,21 @@ export default function AcademicCalendarTab() {
       cell: ({ row }) => {
         const event = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(event);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(event)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(event);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(event)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -169,7 +163,7 @@ export default function AcademicCalendarTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={sorted} isLoading={isLoading} emptyMessage="No calendar events yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No calendar events yet." />
 
       <CalendarEventFormDialog
         open={formOpen}

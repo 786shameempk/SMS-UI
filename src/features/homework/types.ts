@@ -2,6 +2,8 @@ export type HomeworkStatus = "draft" | "published";
 
 export interface Homework {
   id: string;
+  tenantId: string;
+  branchId: string;
   title: string;
   description: string;
   subjectId: string;
@@ -31,6 +33,8 @@ export type SubmissionStatus = "not_submitted" | "submitted" | "graded" | "resub
 
 export interface HomeworkSubmission {
   id: string;
+  tenantId: string;
+  branchId: string;
   homeworkId: string;
   studentId: string;
   submittedAt?: string;
@@ -50,6 +54,8 @@ export type ResourceType = "video" | "notes" | "pdf" | "ppt" | "quiz" | "discuss
 
 export interface LearningResource {
   id: string;
+  tenantId: string;
+  branchId: string;
   subjectId: string;
   classId: string;
   title: string;
@@ -81,6 +87,8 @@ export interface QuizQuestion {
 
 export interface Quiz {
   id: string;
+  tenantId: string;
+  branchId: string;
   subjectId: string;
   classId: string;
   title: string;
@@ -96,6 +104,8 @@ export interface QuizFormValues {
 
 export interface QuizAttempt {
   id: string;
+  tenantId: string;
+  branchId: string;
   quizId: string;
   studentId: string;
   score: number;
@@ -104,6 +114,8 @@ export interface QuizAttempt {
 
 export interface DiscussionComment {
   id: string;
+  tenantId: string;
+  branchId: string;
   resourceId: string;
   authorName: string;
   authorRole: string;

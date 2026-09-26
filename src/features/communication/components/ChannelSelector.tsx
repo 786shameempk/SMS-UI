@@ -32,7 +32,7 @@ export default function ChannelSelector({ value, onChange }: { value: Channel[];
               onClick={() => toggle(channel.value)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors cursor-pointer",
-                active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-slate-600 hover:bg-secondary",
+                active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-secondary-foreground hover:bg-secondary",
               )}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -42,7 +42,7 @@ export default function ChannelSelector({ value, onChange }: { value: Channel[];
         })}
       </div>
       {hasSimulated && (
-        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-2">
+        <p className="text-xs text-warning-strong bg-warning-soft border border-warning/30 rounded-md px-2.5 py-2">
           Simulated — email/SMS/push/WhatsApp delivery is not connected to a real provider in this demo. Only in-app delivery is guaranteed instant.
         </p>
       )}

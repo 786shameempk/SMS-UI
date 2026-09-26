@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -77,10 +77,10 @@ export default function LeaveRequestsTab({ studentId }: { studentId: string }) {
           return (
             <div key={req.id} className="flex items-center justify-between rounded-lg border border-border p-3 gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800">
+                <p className="text-sm font-medium text-foreground">
                   {new Date(req.fromDate).toLocaleDateString()} - {new Date(req.toDate).toLocaleDateString()}
                 </p>
-                <p className="text-xs text-slate-500 truncate">{req.reason}</p>
+                <p className="text-xs text-muted-foreground truncate">{req.reason}</p>
               </div>
               <Badge variant={config.variant} className="shrink-0">
                 {config.label}
@@ -100,26 +100,25 @@ export default function LeaveRequestsTab({ studentId }: { studentId: string }) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="fromDate">From</Label>
-                <Input id="fromDate" type="date" {...register("fromDate")} />
-                {errors.fromDate && <p className="text-xs text-red-600">{errors.fromDate.message}</p>}
+                <Input id="fromDate" type="date" aria-invalid={errors.fromDate ? true : undefined} {...register("fromDate")} />
+                {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromDate.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="toDate">To</Label>
-                <Input id="toDate" type="date" {...register("toDate")} />
-                {errors.toDate && <p className="text-xs text-red-600">{errors.toDate.message}</p>}
+                <Input id="toDate" type="date" aria-invalid={errors.toDate ? true : undefined} {...register("toDate")} />
+                {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toDate.message}</p>}
               </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="reason">Reason</Label>
-              <Textarea id="reason" rows={3} {...register("reason")} />
-              {errors.reason && <p className="text-xs text-red-600">{errors.reason.message}</p>}
+              <Textarea id="reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
+              {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              <Button type="submit" loading={createMutation.isPending}>
                 Submit request
               </Button>
             </DialogFooter>

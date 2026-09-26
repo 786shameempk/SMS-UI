@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +57,7 @@ export default function RecordPaymentDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="pay-mode">Payment mode</Label>
+            <Label htmlFor="pay-mode" required>Payment mode</Label>
             <Controller
               control={control}
               name="mode"
@@ -78,17 +78,16 @@ export default function RecordPaymentDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pay-amount">Amount</Label>
-            <Input id="pay-amount" type="number" step="1" min="1" {...register("amount")} />
-            {errors.amount && <p className="text-xs text-red-600">{errors.amount.message}</p>}
+            <Label htmlFor="pay-amount" required>Amount</Label>
+            <Input id="pay-amount" type="number" step="1" min="1" aria-invalid={errors.amount ? true : undefined} {...register("amount")} />
+            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.amount.message}</p>}
             <p className="text-xs text-muted-foreground">Paying less than the balance marks the invoice as partially paid.</p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Record payment
             </Button>
           </DialogFooter>

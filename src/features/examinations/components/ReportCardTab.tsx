@@ -96,8 +96,8 @@ export default function ReportCardTab() {
           <CardContent className="p-8 space-y-6">
             <div className="text-center space-y-1 border-b border-border pb-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Report Card</p>
-              <h2 className="text-lg font-bold text-slate-900">{exam.name}</h2>
-              <p className="text-sm text-slate-500">
+              <h2 className="text-lg font-bold text-foreground">{exam.name}</h2>
+              <p className="text-sm text-muted-foreground">
                 {EXAM_TYPE_LABELS[exam.examType]} &middot; {exam.startDate} &rarr; {exam.endDate}
               </p>
             </div>
@@ -105,21 +105,21 @@ export default function ReportCardTab() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-muted-foreground">Student: </span>
-                <span className="font-medium text-slate-800">{report.studentName}</span>
+                <span className="font-medium text-foreground">{report.studentName}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Admission No.: </span>
-                <span className="font-medium text-slate-800">{report.admissionNumber}</span>
+                <span className="font-medium text-foreground">{report.admissionNumber}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Class: </span>
-                <span className="font-medium text-slate-800">
+                <span className="font-medium text-foreground">
                   {report.className} - {report.section}
                 </span>
               </div>
               <div>
                 <span className="text-muted-foreground">Rank in class: </span>
-                <span className="font-medium text-slate-800">#{report.rank}</span>
+                <span className="font-medium text-foreground">#{report.rank}</span>
               </div>
             </div>
 
@@ -136,11 +136,11 @@ export default function ReportCardTab() {
                 <tbody>
                   {report.subjects.map((s) => (
                     <tr key={s.subjectId} className="border-b border-border last:border-0">
-                      <td className="px-4 py-2.5 font-medium text-slate-800">
+                      <td className="px-4 py-2.5 font-medium text-foreground">
                         {s.subjectName} <span className="text-xs text-muted-foreground">({s.subjectCode})</span>
                       </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{s.isAbsent ? "Absent" : s.marksObtained}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{s.maxMarks}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-foreground">{s.isAbsent ? "Absent" : s.marksObtained}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-secondary-foreground">{s.maxMarks}</td>
                       <td className="px-4 py-2.5 text-right">
                         <Badge variant={gradeBadgeVariant(s.grade)}>{s.grade}</Badge>
                       </td>
@@ -149,9 +149,9 @@ export default function ReportCardTab() {
                 </tbody>
                 <tfoot>
                   <tr className="bg-secondary/40">
-                    <td className="px-4 py-2.5 font-semibold text-slate-800">Total</td>
-                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-slate-800">{report.totalObtained}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-slate-800">{report.totalMax}</td>
+                    <td className="px-4 py-2.5 font-semibold text-foreground">Total</td>
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-foreground">{report.totalObtained}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-foreground">{report.totalMax}</td>
                     <td />
                   </tr>
                 </tfoot>
@@ -161,7 +161,7 @@ export default function ReportCardTab() {
             <div className="flex flex-wrap items-center gap-6">
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Percentage</p>
-                <p className="text-lg font-bold text-slate-900 tabular-nums">{report.percentage}%</p>
+                <p className="text-lg font-bold text-foreground tabular-nums">{report.percentage}%</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Overall grade</p>
@@ -171,11 +171,11 @@ export default function ReportCardTab() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">GPA</p>
-                <p className="text-lg font-bold text-slate-900 tabular-nums">{report.gpa.toFixed(2)}</p>
+                <p className="text-lg font-bold text-foreground tabular-nums">{report.gpa.toFixed(2)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Rank</p>
-                <p className="text-lg font-bold text-slate-900 tabular-nums">#{report.rank}</p>
+                <p className="text-lg font-bold text-foreground tabular-nums">#{report.rank}</p>
               </div>
             </div>
 

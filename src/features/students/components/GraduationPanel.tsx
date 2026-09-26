@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GraduationCap } from "lucide-react";
 import toast from "react-hot-toast";
@@ -6,13 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
-import { CLASS_OPTIONS, FINAL_CLASS } from "../constants";
+import { getCurrentBranchId } from "@/utils/tenant";
+import { useClassSectionOptions } from "../hooks";
 import { graduateStudents, listStudents } from "../api";
 
 export default function GraduationPanel() {
   const queryClient = useQueryClient();
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
-  const [className, setClassName] = useState<string>(FINAL_CLASS);
+  const { classNames, finalClassName } = useClassSectionOptions(getCurrentBranchId());
+  const [className, setClassName] = useState("");
+
+  // Default to the final class once the real class list has loaded.
+  useEffect(() => {
+    if (!className && finalClassName) setClassName(finalClassName);
+  }, [className, finalClassName]);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const eligible = useMemo(() => students.filter((s) => s.status === "active" && s.className === className), [students, className]);
@@ -24,13 +31,14 @@ export default function GraduationPanel() {
       toast.success(`Graduated ${result.graduatedCount} student(s) from ${className}`);
       setConfirmOpen(false);
     },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not graduate students"),
   });
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <GraduationCap className="w-4 h-4 text-slate-400" />
+          <GraduationCap className="w-4 h-4 text-muted-foreground" />
           Graduate students
         </CardTitle>
         <CardDescription>Move all active students in a class to alumni status at the end of their final year.</CardDescription>
@@ -38,10 +46,10 @@ export default function GraduationPanel() {
       <CardContent className="space-y-5">
         <Select value={className} onValueChange={setClassName}>
           <SelectTrigger className="w-44">
-            <SelectValue />
+            <SelectValue placeholder="Select class" />
           </SelectTrigger>
           <SelectContent>
-            {CLASS_OPTIONS.map((c) => (
+            {classNames.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
               </SelectItem>
@@ -49,9 +57,11 @@ export default function GraduationPanel() {
           </SelectContent>
         </Select>
 
-        <p className="text-sm text-slate-600">
-          <span className="font-semibold tabular-nums">{eligible.length}</span> active student(s) in {className} will graduate.
-        </p>
+        {className && (
+          <p className="text-sm text-secondary-foreground">
+            <span className="font-semibold tabular-nums">{eligible.length}</span> active student(s) in {className} will graduate.
+          </p>
+        )}
 
         <Button disabled={eligible.length === 0} onClick={() => setConfirmOpen(true)}>
           Graduate class

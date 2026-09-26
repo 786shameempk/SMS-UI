@@ -26,7 +26,7 @@ export default function ReservationsTab() {
   const [cancelTarget, setCancelTarget] = useState<BookReservation | null>(null);
   const [fulfillTarget, setFulfillTarget] = useState<BookReservation | null>(null);
 
-  const { data: reservations = [], isLoading } = useQuery({ queryKey: ["library", "reservations"], queryFn: listReservations });
+  const { data: reservations = [], isLoading, isError, refetch } = useQuery({ queryKey: ["library", "reservations"], queryFn: listReservations });
   const { data: books = [] } = useQuery({ queryKey: ["library", "books"], queryFn: listBooks });
   const { data: members = [] } = useQuery({ queryKey: ["library", "members"], queryFn: listMembers });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -78,16 +78,16 @@ export default function ReservationsTab() {
   const sorted = [...reservations].sort((a, b) => new Date(b.reservedOn).getTime() - new Date(a.reservedOn).getTime());
 
   const columns: ColumnDef<BookReservation, unknown>[] = [
-    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
+    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
     {
       id: "member",
       header: "Member",
       cell: ({ row }) => {
         const member = memberById.get(row.original.memberId);
-        return <span className="text-sm text-slate-700">{member ? memberLabel(member) : "—"}</span>;
+        return <span className="text-sm text-foreground">{member ? memberLabel(member) : "—"}</span>;
       },
     },
-    { id: "reservedOn", header: "Reserved on", cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.reservedOn).toLocaleDateString()}</span> },
+    { id: "reservedOn", header: "Reserved on", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.reservedOn).toLocaleDateString()}</span> },
     {
       id: "status",
       header: "Status",
@@ -134,7 +134,7 @@ export default function ReservationsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={sorted} isLoading={isLoading} emptyMessage="No reservations yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No reservations yet." />
 
       <ReserveBookDialog
         open={reserveOpen}

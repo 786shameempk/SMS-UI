@@ -43,14 +43,14 @@ export default function FeatureTogglesTab() {
       </p>
       {Object.entries(grouped).map(([module, items]) => (
         <div key={module} className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{module}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{module}</p>
           <Card>
             <CardContent className="p-0 divide-y divide-border">
               {items.map((toggle) => (
                 <div key={toggle.id} className="flex items-center justify-between gap-4 p-4">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800">{toggle.label}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{toggle.description}</p>
+                    <p className="text-sm font-medium text-foreground">{toggle.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{toggle.description}</p>
                   </div>
                   <Switch
                     checked={toggle.enabled}

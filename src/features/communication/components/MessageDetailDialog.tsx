@@ -44,7 +44,7 @@ export default function MessageDetailDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <p className="text-sm text-slate-700 whitespace-pre-wrap rounded-lg border border-border bg-secondary/30 px-3 py-2.5">{message.body}</p>
+          <p className="text-sm text-foreground whitespace-pre-wrap rounded-lg border border-border bg-secondary/30 px-3 py-2.5">{message.body}</p>
 
           <div className="flex flex-wrap gap-1.5">
             {message.channels.map((c) => (
@@ -54,7 +54,7 @@ export default function MessageDetailDialog({
             ))}
           </div>
 
-          <div className="text-sm text-slate-600 space-y-1">
+          <div className="text-sm text-secondary-foreground space-y-1">
             <p>{message.recipientCount} recipients</p>
             {message.sentAt && <p>Sent {new Date(message.sentAt).toLocaleString()}</p>}
             {message.scheduledAt && !message.sentAt && <p>Scheduled for {new Date(message.scheduledAt).toLocaleString()}</p>}
@@ -62,7 +62,7 @@ export default function MessageDetailDialog({
 
           {message.status === "sent" && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-800">Delivery by channel</p>
+              <p className="text-sm font-medium text-foreground">Delivery by channel</p>
               {summary.length === 0 && <p className="text-sm text-muted-foreground">No delivery data.</p>}
               <div className="space-y-1.5">
                 {summary.map((s) => {
@@ -70,10 +70,10 @@ export default function MessageDetailDialog({
                   const total = s.delivered + s.failed;
                   return (
                     <div key={s.channel} className="flex items-center gap-2.5 rounded-lg border border-border px-3 py-2">
-                      <Icon className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span className="text-sm text-slate-700 flex-1">{CHANNELS.find((ch) => ch.value === s.channel)?.label ?? s.channel}</span>
-                      <span className="text-xs text-emerald-700">{s.delivered} delivered</span>
-                      {s.failed > 0 && <span className="text-xs text-red-600">{s.failed} failed</span>}
+                      <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm text-foreground flex-1">{CHANNELS.find((ch) => ch.value === s.channel)?.label ?? s.channel}</span>
+                      <span className="text-xs text-success-strong">{s.delivered} delivered</span>
+                      {s.failed > 0 && <span className="text-xs text-destructive-strong">{s.failed} failed</span>}
                       <span className="text-xs text-muted-foreground">/ {total}</span>
                     </div>
                   );

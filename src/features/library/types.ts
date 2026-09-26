@@ -1,5 +1,6 @@
 export interface Author {
   id: string;
+  tenantId: string;
   name: string;
   bio?: string;
 }
@@ -11,6 +12,7 @@ export interface AuthorFormValues {
 
 export interface Publisher {
   id: string;
+  tenantId: string;
   name: string;
   address?: string;
 }
@@ -22,6 +24,7 @@ export interface PublisherFormValues {
 
 export interface BookCategory {
   id: string;
+  tenantId: string;
   name: string;
 }
 
@@ -31,6 +34,8 @@ export interface BookCategoryFormValues {
 
 export interface Book {
   id: string;
+  tenantId: string;
+  branchId: string;
   title: string;
   isbn: string;
   authorId: string;
@@ -58,6 +63,8 @@ export type LibraryMemberStatus = "active" | "suspended";
 
 export interface LibraryMember {
   id: string;
+  tenantId: string;
+  branchId: string;
   personType: LibraryPersonType;
   personId: string;
   membershipId: string;
@@ -75,6 +82,8 @@ export type BookLoanStatus = "issued" | "returned" | "overdue";
 
 export interface BookLoan {
   id: string;
+  tenantId: string;
+  branchId: string;
   bookId: string;
   memberId: string;
   issuedOn: string;
@@ -96,6 +105,8 @@ export type ReservationStatus = "pending" | "fulfilled" | "cancelled";
 
 export interface BookReservation {
   id: string;
+  tenantId: string;
+  branchId: string;
   bookId: string;
   memberId: string;
   reservedOn: string;

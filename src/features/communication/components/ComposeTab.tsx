@@ -124,7 +124,7 @@ export default function ComposeTab() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="cmp-template">Start from a template (optional)</Label>
+            <Label htmlFor="cmp-template" optional>Start from a template</Label>
             <Select value={templateId} onValueChange={applyTemplate}>
               <SelectTrigger id="cmp-template">
                 <SelectValue placeholder="None" />
@@ -146,15 +146,15 @@ export default function ComposeTab() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cmp-body">Message</Label>
-            <Textarea id="cmp-body" rows={6} placeholder="Write your message…" {...register("body")} />
-            {errors.body && <p className="text-xs text-red-600">{errors.body.message}</p>}
+            <Label htmlFor="cmp-body" required>Message</Label>
+            <Textarea id="cmp-body" rows={6} placeholder="Write your message…" aria-invalid={errors.body ? true : undefined} {...register("body")} />
+            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label>Channels</Label>
             <Controller control={control} name="channels" render={({ field }) => <ChannelSelector value={field.value} onChange={field.onChange} />} />
-            {errors.channels && <p className="text-xs text-red-600">{errors.channels.message}</p>}
+            {errors.channels && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.channels.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -202,7 +202,7 @@ export default function ComposeTab() {
             )}
           />
 
-          <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-slate-700">
+          <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-foreground">
             <span className="font-semibold">{recipientCount}</span> recipient{recipientCount === 1 ? "" : "s"} will receive this message.
           </div>
 

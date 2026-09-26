@@ -1,5 +1,5 @@
 import type { AuditCategory, LocalizationSettings, SchoolProfile } from "./types";
-import type { BrandPresetKey } from "./theme";
+import type { BrandPresetKey, DensityPresetKey, RadiusPresetKey } from "./theme";
 
 export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
   name: "EduCore International School",
@@ -47,11 +47,23 @@ export const DATE_FORMAT_OPTIONS: Array<{ value: string; label: string }> = [
 ];
 
 export const BRAND_PRESET_OPTIONS: Array<{ value: BrandPresetKey; label: string }> = [
+  { value: "yellow", label: "Yellow" },
   { value: "blue", label: "Blue" },
   { value: "emerald", label: "Emerald" },
   { value: "violet", label: "Violet" },
   { value: "amber", label: "Amber" },
   { value: "rose", label: "Rose" },
+];
+
+export const RADIUS_PRESET_OPTIONS: Array<{ value: RadiusPresetKey; label: string }> = [
+  { value: "sharp", label: "Sharp" },
+  { value: "rounded", label: "Rounded" },
+  { value: "pill", label: "Pill" },
+];
+
+export const DENSITY_PRESET_OPTIONS: Array<{ value: DensityPresetKey; label: string; description: string }> = [
+  { value: "comfortable", label: "Comfortable", description: "More breathing room in cards, tables, and lists." },
+  { value: "compact", label: "Compact", description: "Tighter spacing — fits more on screen at once." },
 ];
 
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "neutral";

@@ -1,24 +1,4 @@
-/**
- * Class Management doesn't exist yet (it's a later module), so student records reference
- * this small local list of classes/sections for now. When Class Management ships, this
- * will be replaced the same way Users was wired to the real Roles module.
- */
-export const CLASS_OPTIONS = [
-  "Grade 1",
-  "Grade 2",
-  "Grade 3",
-  "Grade 4",
-  "Grade 5",
-  "Grade 6",
-  "Grade 7",
-  "Grade 8",
-  "Grade 9",
-  "Grade 10",
-  "Grade 11",
-  "Grade 12",
-] as const;
-
-export const SECTION_OPTIONS = ["A", "B", "C"] as const;
+import type { AdmissionStage, ExamResultStatus, SelectionDecision } from "./types";
 
 export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "unknown"] as const;
 
@@ -33,10 +13,45 @@ export const DOCUMENT_CATEGORIES = [
   { value: "other", label: "Other" },
 ] as const;
 
-export function nextClass(className: string): string | null {
-  const idx = CLASS_OPTIONS.indexOf(className as (typeof CLASS_OPTIONS)[number]);
-  if (idx === -1 || idx === CLASS_OPTIONS.length - 1) return null;
-  return CLASS_OPTIONS[idx + 1];
-}
+// ── Admission pipeline ──────────────────────────────────────────────────
 
-export const FINAL_CLASS = CLASS_OPTIONS[CLASS_OPTIONS.length - 1];
+type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "neutral";
+
+/** Linear order of the pipeline's forward-progress stages, for a stepper/progress display. */
+export const ADMISSION_STAGE_ORDER: AdmissionStage[] = [
+  "inquiry",
+  "registration",
+  "entrance_exam",
+  "interview",
+  "fee_collection",
+  "enrolled",
+];
+
+export const ADMISSION_STAGE_CONFIG: Record<AdmissionStage, { label: string; variant: BadgeVariant }> = {
+  inquiry: { label: "Inquiry", variant: "neutral" },
+  registration: { label: "Registration", variant: "info" },
+  entrance_exam: { label: "Entrance Exam", variant: "info" },
+  interview: { label: "Interview", variant: "info" },
+  fee_collection: { label: "Fee Collection", variant: "warning" },
+  enrolled: { label: "Enrolled", variant: "success" },
+  waitlisted: { label: "Waitlisted", variant: "warning" },
+  rejected: { label: "Rejected", variant: "danger" },
+  withdrawn: { label: "Withdrawn", variant: "neutral" },
+};
+
+/** Flat processing fee charged once an applicant is selected, due before enrollment. */
+export const ADMISSION_FEE_AMOUNT = 2000;
+
+export const EXAM_STATUS_OPTIONS: Array<{ value: ExamResultStatus; label: string }> = [
+  { value: "scheduled", label: "Scheduled" },
+  { value: "completed", label: "Completed" },
+  { value: "absent", label: "Absent" },
+];
+
+export const DECISION_OPTIONS: Array<{ value: SelectionDecision; label: string }> = [
+  { value: "selected", label: "Select for admission" },
+  { value: "waitlisted", label: "Waitlist" },
+  { value: "rejected", label: "Reject" },
+];
+
+export const PAYMENT_MODE_OPTIONS = ["Cash", "Card", "UPI", "Bank Transfer", "Cheque"] as const;

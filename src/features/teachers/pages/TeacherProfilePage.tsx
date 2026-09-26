@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getStaffMember } from "@/features/staff/api";
@@ -14,6 +14,8 @@ import StaffDocumentsTab from "@/features/staff/components/profile/StaffDocument
 import SubjectsClassesTab from "../components/profile/SubjectsClassesTab";
 import LessonPlansTab from "../components/profile/LessonPlansTab";
 import StudentPerformanceTab from "../components/profile/StudentPerformanceTab";
+import { PageContainer } from "@/components/ui/page";
+import { EmptyState, PageSkeleton } from "@/components/ui/states";
 
 export default function TeacherProfilePage() {
   const { staffId } = useParams<{ staffId: string }>();
@@ -31,45 +33,48 @@ export default function TeacherProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        Loading teacher profile…
-      </div>
+      <PageSkeleton />
     );
   }
 
   if (isError || !staff) {
     return (
-      <div className="p-6">
-        <p className="text-sm text-slate-600">That teacher record could not be found.</p>
-        <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/teachers")}>
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to teachers
-        </Button>
-      </div>
+      <PageContainer width="narrow">
+        <EmptyState
+          icon={SearchX}
+          title="Record not found"
+          description="That teacher record could not be found. It may have been removed, or you may not have access to it."
+          action={
+            <Button variant="outline" size="sm" onClick={() => navigate("/teachers")}>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to teachers
+            </Button>
+          }
+        />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-6 space-y-5 max-w-[1000px]">
+    <PageContainer width="narrow">
       <div>
         <Button variant="ghost" size="sm" onClick={() => navigate("/teachers")} className="-ml-2 mb-2">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to teachers
         </Button>
         <div className="flex items-center gap-2.5 flex-wrap">
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-page-title">
             {staff.firstName} {staff.lastName}
           </h1>
           <StaffStatusBadge status={staff.status} />
         </div>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           {staff.designation} &middot; {staff.department} &middot; {staff.employeeId}
         </p>
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="qualifications">Qualifications &amp; Experience</TabsTrigger>
           <TabsTrigger value="salary">Salary</TabsTrigger>
@@ -108,6 +113,6 @@ export default function TeacherProfilePage() {
           <StudentPerformanceTab staff={staff} />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

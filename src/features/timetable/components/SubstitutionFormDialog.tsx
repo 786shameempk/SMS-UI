@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,12 +92,12 @@ export default function SubstitutionFormDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="date">Date</Label>
-              <Input id="date" type="date" {...register("date")} />
-              {errors.date && <p className="text-xs text-red-600">{errors.date.message}</p>}
-              {dateVal && dayOfWeek === null && <p className="text-xs text-amber-600">No periods run on Sundays.</p>}
+              <Label htmlFor="date" required>Date</Label>
+              <Input id="date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
+              {dateVal && dayOfWeek === null && <p className="text-xs text-warning-strong">No periods run on Sundays.</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="section">Section</Label>
@@ -119,7 +119,7 @@ export default function SubstitutionFormDialog({
                   </Select>
                 )}
               />
-              {errors.sectionId && <p className="text-xs text-red-600">{errors.sectionId.message}</p>}
+              {errors.sectionId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.sectionId.message}</p>}
             </div>
           </div>
 
@@ -151,7 +151,7 @@ export default function SubstitutionFormDialog({
                 </Select>
               )}
             />
-            {errors.periodNumber && <p className="text-xs text-red-600">{errors.periodNumber.message}</p>}
+            {errors.periodNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.periodNumber.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -174,11 +174,11 @@ export default function SubstitutionFormDialog({
                 </Select>
               )}
             />
-            {errors.substituteStaffId && <p className="text-xs text-red-600">{errors.substituteStaffId.message}</p>}
+            {errors.substituteStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.substituteStaffId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="reason">Reason (optional)</Label>
+            <Label htmlFor="reason" optional>Reason</Label>
             <Textarea id="reason" placeholder="e.g. Sick leave" {...register("reason")} />
           </div>
 
@@ -186,8 +186,7 @@ export default function SubstitutionFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Assign substitute
             </Button>
           </DialogFooter>

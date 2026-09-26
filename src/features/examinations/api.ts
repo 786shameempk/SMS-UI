@@ -1,8 +1,5 @@
-import { listAcademicYears, listClasses, listSubjects, listTerms } from "@/features/academics/api";
-import { createStudent, getStudent, listStudents } from "@/features/students/api";
-import { mockDelay } from "@/utils/mockDelay";
-import { computeGrade, gradeBandForPercentage, gradePointForGrade } from "./constants";
-import { EXAM_ROSTER_SEEDS, SEED_ABSENT_RESULT, SEED_EXAMS, SEED_EXAM_SCHEDULES } from "./mock";
+import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { listStudents } from "@/features/students/api";
 import type {
   Exam,
   ExamFormValues,
@@ -10,211 +7,303 @@ import type {
   ExamResultEntryRow,
   ExamSchedule,
   ExamScheduleFormValues,
+  ExamStatus,
+  ExamType,
   StudentExamSummary,
   SubjectResultRow,
   Transcript,
   TranscriptRow,
 } from "./types";
 
-const EXAMS_KEY = "sms-mock-exams";
-const SCHEDULES_KEY = "sms-mock-exam-schedules";
-const RESULTS_KEY = "sms-mock-exam-results";
-const REMARKS_KEY = "sms-mock-exam-remarks";
-const SEEDED_KEY = "sms-mock-examinations-seeded";
+// ── Enum translation ────────────────────────────────────────────────────────
+// AcademicService's enums serialize as PascalCase; SMS UI's types use lowercase unions.
 
-interface ExamRemark {
+const EXAM_TYPE_TO_API: Record<ExamType, string> = {
+  internal: "Internal",
+  midterm: "Midterm",
+  final: "Final",
+  practical: "Practical",
+  viva: "Viva",
+};
+const EXAM_TYPE_FROM_API: Record<string, ExamType> = {
+  Internal: "internal",
+  Midterm: "midterm",
+  Final: "final",
+  Practical: "practical",
+  Viva: "viva",
+};
+
+const EXAM_STATUS_TO_API: Record<ExamStatus, string> = {
+  scheduled: "Scheduled",
+  ongoing: "Ongoing",
+  completed: "Completed",
+};
+const EXAM_STATUS_FROM_API: Record<string, ExamStatus> = {
+  Scheduled: "scheduled",
+  Ongoing: "ongoing",
+  Completed: "completed",
+};
+
+// ── API response shapes (AcademicService DTOs) ──────────────────────────────
+
+interface ApiExam {
   id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  examType: string;
+  termId: string;
+  classId: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+interface ApiExamSchedule {
+  id: string;
+  tenantId: string;
+  branchId: string;
   examId: string;
+  subjectId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  maxMarks: number;
+  passMarks: number;
+  room: string | null;
+}
+
+interface ApiExamResult {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  examId: string;
+  subjectId: string;
   studentId: string;
-  remarks: string;
+  marksObtained: number;
+  maxMarks: number;
+  grade: string;
+  isAbsent: boolean;
 }
 
-function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
+interface ApiSubjectResultRow {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  marksObtained: number;
+  maxMarks: number;
+  grade: string;
+  isAbsent: boolean;
 }
 
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
+interface ApiStudentExamSummary {
+  studentId: string;
+  studentName: string;
+  admissionNumber: string;
+  className: string;
+  section: string;
+  subjects: ApiSubjectResultRow[];
+  totalObtained: number;
+  totalMax: number;
+  percentage: number;
+  grade: string;
+  gpa: number;
+  rank: number;
 }
 
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+interface ApiTranscriptRow {
+  examId: string;
+  examName: string;
+  examType: string;
+  termName: string;
+  academicYearName: string;
+  totalObtained: number;
+  totalMax: number;
+  percentage: number;
+  grade: string;
+  gpa: number;
 }
 
-let exams = loadJson<Exam[]>(EXAMS_KEY, SEED_EXAMS.map((e) => ({ ...e })));
-let examSchedules = loadJson<ExamSchedule[]>(SCHEDULES_KEY, SEED_EXAM_SCHEDULES.map((s) => ({ ...s })));
-let examResults = loadJson<ExamResult[]>(RESULTS_KEY, []);
-let examRemarks = loadJson<ExamRemark[]>(REMARKS_KEY, []);
-
-const persistExams = () => saveJson(EXAMS_KEY, exams);
-const persistSchedules = () => saveJson(SCHEDULES_KEY, examSchedules);
-const persistResults = () => saveJson(RESULTS_KEY, examResults);
-const persistRemarks = () => saveJson(REMARKS_KEY, examRemarks);
-
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
-  if (!found) throw new Error(`${label} not found`);
-  return found;
+interface ApiTranscript {
+  studentId: string;
+  studentName: string;
+  admissionNumber: string;
+  rows: ApiTranscriptRow[];
+  cgpa: number;
 }
 
-function seededPercentage(studentId: string, subjectId: string): number {
-  const seed = `${studentId}:${subjectId}`.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return 40 + (seed % 55);
+interface ApiRosterEntry {
+  id: string;
 }
 
-/**
- * One-time seed that layers exam-roster students on top of the generic students module
- * (via its own createStudent API, never editing students/mock.ts directly — the same
- * approach the teachers module uses for extra staff) and then generates deterministic
- * marks so Results/Ranking, Report Cards, and Transcript are populated on first load.
- */
-async function performSeed(): Promise<void> {
-  if (loadJson(SEEDED_KEY, false)) return;
+// ── Mappers ──────────────────────────────────────────────────────────────────
 
-  const existingStudents = await listStudents();
-  const hasStudent = (firstName: string, lastName: string, className: string) =>
-    existingStudents.some((s) => s.firstName === firstName && s.lastName === lastName && s.className === className);
-
-  const toCreate = EXAM_ROSTER_SEEDS.filter((s) => !hasStudent(s.firstName, s.lastName, s.className));
-  await Promise.all(toCreate.map((values) => createStudent(values)));
-
-  const allStudents = await listStudents();
-  const classes = await listClasses();
-
-  const gradedExamIds = new Set(SEED_EXAMS.filter((e) => e.status === "completed").map((e) => e.id));
-  const newResults: ExamResult[] = [];
-  for (const exam of SEED_EXAMS) {
-    if (!gradedExamIds.has(exam.id)) continue;
-    const schoolClass = classes.find((c) => c.id === exam.classId);
-    if (!schoolClass) continue;
-    const roster = allStudents.filter((s) => s.className === schoolClass.name);
-    const schedules = SEED_EXAM_SCHEDULES.filter((s) => s.examId === exam.id);
-    for (const schedule of schedules) {
-      for (const student of roster) {
-        const isAbsent = SEED_ABSENT_RESULT.examId === exam.id && SEED_ABSENT_RESULT.subjectId === schedule.subjectId && student === roster[0];
-        const marksObtained = isAbsent ? 0 : Math.round((seededPercentage(student.id, schedule.subjectId) / 100) * schedule.maxMarks);
-        newResults.push({
-          id: genId("exres"),
-          examId: exam.id,
-          subjectId: schedule.subjectId,
-          studentId: student.id,
-          marksObtained,
-          maxMarks: schedule.maxMarks,
-          grade: computeGrade(marksObtained, schedule.maxMarks, isAbsent),
-          isAbsent,
-        });
-      }
-    }
-  }
-  if (newResults.length) {
-    examResults = [...examResults, ...newResults];
-    persistResults();
-  }
-
-  saveJson(SEEDED_KEY, true);
-}
-
-const seedPromise: Promise<void> = performSeed().catch((err) => {
-  console.error("Failed to seed examinations mock data", err);
+const mapExam = (dto: ApiExam): Exam => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  name: dto.name,
+  examType: EXAM_TYPE_FROM_API[dto.examType] ?? "internal",
+  termId: dto.termId,
+  classId: dto.classId,
+  startDate: dto.startDate,
+  endDate: dto.endDate,
+  status: EXAM_STATUS_FROM_API[dto.status] ?? "scheduled",
 });
+
+const mapSchedule = (dto: ApiExamSchedule): ExamSchedule => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  examId: dto.examId,
+  subjectId: dto.subjectId,
+  date: dto.date,
+  startTime: dto.startTime,
+  endTime: dto.endTime,
+  maxMarks: dto.maxMarks,
+  passMarks: dto.passMarks,
+  room: dto.room ?? undefined,
+});
+
+const mapResult = (dto: ApiExamResult): ExamResult => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  examId: dto.examId,
+  subjectId: dto.subjectId,
+  studentId: dto.studentId,
+  marksObtained: dto.marksObtained,
+  maxMarks: dto.maxMarks,
+  grade: dto.grade,
+  isAbsent: dto.isAbsent,
+});
+
+const mapSubjectRow = (dto: ApiSubjectResultRow): SubjectResultRow => ({
+  subjectId: dto.subjectId,
+  subjectName: dto.subjectName,
+  subjectCode: dto.subjectCode,
+  marksObtained: dto.marksObtained,
+  maxMarks: dto.maxMarks,
+  grade: dto.grade,
+  isAbsent: dto.isAbsent,
+});
+
+const mapSummary = (dto: ApiStudentExamSummary): StudentExamSummary => ({
+  studentId: dto.studentId,
+  studentName: dto.studentName,
+  admissionNumber: dto.admissionNumber,
+  className: dto.className,
+  section: dto.section,
+  subjects: dto.subjects.map(mapSubjectRow),
+  totalObtained: dto.totalObtained,
+  totalMax: dto.totalMax,
+  percentage: dto.percentage,
+  grade: dto.grade,
+  gpa: dto.gpa,
+  rank: dto.rank,
+});
+
+const mapTranscriptRow = (dto: ApiTranscriptRow): TranscriptRow => ({
+  examId: dto.examId,
+  examName: dto.examName,
+  examType: EXAM_TYPE_FROM_API[dto.examType] ?? "internal",
+  termName: dto.termName,
+  academicYearName: dto.academicYearName,
+  totalObtained: dto.totalObtained,
+  totalMax: dto.totalMax,
+  percentage: dto.percentage,
+  grade: dto.grade,
+  gpa: dto.gpa,
+});
+
+const mapTranscript = (dto: ApiTranscript): Transcript => ({
+  studentId: dto.studentId,
+  studentName: dto.studentName,
+  admissionNumber: dto.admissionNumber,
+  rows: dto.rows.map(mapTranscriptRow),
+  cgpa: dto.cgpa,
+});
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
+  try {
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
+  }
+}
 
 // ── Exams ────────────────────────────────────────────────────────────────
 
 export async function listExams(): Promise<Exam[]> {
-  await seedPromise;
-  return mockDelay([...exams], 350);
+  const exams = await unwrap(academicHttpClient.get<ApiExam[]>("/api/exams"));
+  return exams.map(mapExam);
 }
 
 export async function createExam(values: ExamFormValues): Promise<Exam> {
-  await seedPromise;
-  const exam: Exam = { id: genId("exam"), ...values };
-  exams = [exam, ...exams];
-  persistExams();
-  return mockDelay(exam, 400);
+  const exam = await unwrap(
+    academicHttpClient.post<ApiExam>("/api/exams", { ...values, examType: EXAM_TYPE_TO_API[values.examType], status: EXAM_STATUS_TO_API[values.status] }),
+  );
+  return mapExam(exam);
 }
 
 export async function updateExam(id: string, values: ExamFormValues): Promise<Exam> {
-  await seedPromise;
-  requireEntity(exams, id, "Exam");
-  exams = exams.map((e) => (e.id === id ? { ...e, ...values } : e));
-  persistExams();
-  return mockDelay(requireEntity(exams, id, "Exam"), 400);
+  const exam = await unwrap(
+    academicHttpClient.put<ApiExam>(`/api/exams/${id}`, {
+      ...values,
+      examType: EXAM_TYPE_TO_API[values.examType],
+      status: EXAM_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapExam(exam);
 }
 
 export async function deleteExam(id: string): Promise<void> {
-  await seedPromise;
-  requireEntity(exams, id, "Exam");
-  exams = exams.filter((e) => e.id !== id);
-  examSchedules = examSchedules.filter((s) => s.examId !== id);
-  examResults = examResults.filter((r) => r.examId !== id);
-  examRemarks = examRemarks.filter((r) => r.examId !== id);
-  persistExams();
-  persistSchedules();
-  persistResults();
-  persistRemarks();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete<void>(`/api/exams/${id}`));
 }
 
 // ── Exam schedules ───────────────────────────────────────────────────────
 
 export async function listExamSchedules(examId?: string): Promise<ExamSchedule[]> {
-  await seedPromise;
-  const result = examId ? examSchedules.filter((s) => s.examId === examId) : [...examSchedules];
-  return mockDelay(result, 300);
+  const schedules = await unwrap(academicHttpClient.get<ApiExamSchedule[]>("/api/exams/schedules", { params: { examId } }));
+  return schedules.map(mapSchedule);
 }
 
 export async function createExamSchedule(examId: string, values: ExamScheduleFormValues): Promise<ExamSchedule> {
-  await seedPromise;
-  requireEntity(exams, examId, "Exam");
-  const schedule: ExamSchedule = { id: genId("exsch"), examId, ...values };
-  examSchedules = [schedule, ...examSchedules];
-  persistSchedules();
-  return mockDelay(schedule, 400);
+  const schedule = await unwrap(academicHttpClient.post<ApiExamSchedule>(`/api/exams/${examId}/schedules`, values));
+  return mapSchedule(schedule);
 }
 
 export async function updateExamSchedule(id: string, values: ExamScheduleFormValues): Promise<ExamSchedule> {
-  await seedPromise;
-  requireEntity(examSchedules, id, "Exam schedule");
-  examSchedules = examSchedules.map((s) => (s.id === id ? { ...s, ...values } : s));
-  persistSchedules();
-  return mockDelay(requireEntity(examSchedules, id, "Exam schedule"), 400);
+  const schedule = await unwrap(academicHttpClient.put<ApiExamSchedule>(`/api/exams/schedules/${id}`, values));
+  return mapSchedule(schedule);
 }
 
 export async function deleteExamSchedule(id: string): Promise<void> {
-  await seedPromise;
-  const schedule = requireEntity(examSchedules, id, "Exam schedule");
-  examSchedules = examSchedules.filter((s) => s.id !== id);
-  examResults = examResults.filter((r) => !(r.examId === schedule.examId && r.subjectId === schedule.subjectId));
-  persistSchedules();
-  persistResults();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete<void>(`/api/exams/schedules/${id}`));
 }
 
 // ── Marks entry ──────────────────────────────────────────────────────────
 
+/**
+ * The backend resolves the roster via the real Student.SectionId -> Section.ClassId FK chain
+ * (a real improvement over the old className string match). This composes that id list with the
+ * already-migrated, fully-mapped `listStudents()` so the UI keeps getting full `Student` objects
+ * without duplicating students/api.ts's private section-name resolution here.
+ */
 export async function getExamRoster(examId: string) {
-  await seedPromise;
-  const exam = requireEntity(exams, examId, "Exam");
-  const [classes, students] = await Promise.all([listClasses(), listStudents()]);
-  const schoolClass = classes.find((c) => c.id === exam.classId);
-  const roster = schoolClass ? students.filter((s) => s.className === schoolClass.name) : [];
-  return mockDelay(roster, 350);
+  const [rosterIds, allStudents] = await Promise.all([
+    unwrap(academicHttpClient.get<ApiRosterEntry[]>(`/api/exams/${examId}/roster`)),
+    listStudents(),
+  ]);
+  const ids = new Set(rosterIds.map((s) => s.id));
+  return allStudents.filter((s) => ids.has(s.id));
 }
 
 export async function getExamResults(examId: string, subjectId?: string): Promise<ExamResult[]> {
-  await seedPromise;
-  const result = examResults.filter((r) => r.examId === examId && (!subjectId || r.subjectId === subjectId));
-  return mockDelay(result, 300);
+  const results = await unwrap(
+    academicHttpClient.get<ApiExamResult[]>(`/api/exams/${examId}/results`, { params: { subjectId } }),
+  );
+  return results.map(mapResult);
 }
 
 export async function saveExamResults(
@@ -223,93 +312,21 @@ export async function saveExamResults(
   maxMarks: number,
   rows: ExamResultEntryRow[],
 ): Promise<ExamResult[]> {
-  await seedPromise;
-  requireEntity(exams, examId, "Exam");
-  for (const row of rows) {
-    const clamped = Math.max(0, Math.min(row.marksObtained, maxMarks));
-    const grade = computeGrade(clamped, maxMarks, row.isAbsent);
-    const existing = examResults.find((r) => r.examId === examId && r.subjectId === subjectId && r.studentId === row.studentId);
-    if (existing) {
-      examResults = examResults.map((r) =>
-        r.id === existing.id ? { ...r, marksObtained: row.isAbsent ? 0 : clamped, maxMarks, grade, isAbsent: row.isAbsent } : r,
-      );
-    } else {
-      examResults = [
-        ...examResults,
-        {
-          id: genId("exres"),
-          examId,
-          subjectId,
-          studentId: row.studentId,
-          marksObtained: row.isAbsent ? 0 : clamped,
-          maxMarks,
-          grade,
-          isAbsent: row.isAbsent,
-        },
-      ];
-    }
-  }
-  persistResults();
-  return mockDelay(examResults.filter((r) => r.examId === examId && r.subjectId === subjectId), 450);
+  const results = await unwrap(
+    academicHttpClient.post<ApiExamResult[]>(`/api/exams/${examId}/results`, {
+      subjectId,
+      maxMarks,
+      entries: rows.map((r) => ({ studentId: r.studentId, marksObtained: r.marksObtained, isAbsent: r.isAbsent })),
+    }),
+  );
+  return results.map(mapResult);
 }
 
 // ── Results, ranking & report cards ─────────────────────────────────────
 
 export async function getExamClassResults(examId: string): Promise<StudentExamSummary[]> {
-  await seedPromise;
-  const exam = requireEntity(exams, examId, "Exam");
-  const results = examResults.filter((r) => r.examId === examId);
-  if (results.length === 0) return mockDelay([], 350);
-
-  const [classes, subjects, students, schedules] = await Promise.all([
-    listClasses(),
-    listSubjects(),
-    listStudents(),
-    listExamSchedules(examId),
-  ]);
-  const schoolClass = classes.find((c) => c.id === exam.classId);
-  const roster = schoolClass ? students.filter((s) => s.className === schoolClass.name) : [];
-
-  const summaries: StudentExamSummary[] = roster.map((student) => {
-    const subjectRows: SubjectResultRow[] = schedules.map((schedule) => {
-      const subject = subjects.find((su) => su.id === schedule.subjectId);
-      const result = results.find((r) => r.subjectId === schedule.subjectId && r.studentId === student.id);
-      return {
-        subjectId: schedule.subjectId,
-        subjectName: subject?.name ?? "Unknown subject",
-        subjectCode: subject?.code ?? "",
-        marksObtained: result?.marksObtained ?? 0,
-        maxMarks: schedule.maxMarks,
-        grade: result?.grade ?? computeGrade(0, schedule.maxMarks),
-        isAbsent: result?.isAbsent ?? false,
-      };
-    });
-    const totalObtained = subjectRows.reduce((sum, r) => sum + r.marksObtained, 0);
-    const totalMax = subjectRows.reduce((sum, r) => sum + r.maxMarks, 0);
-    const percentage = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
-    const gpa = subjectRows.length
-      ? subjectRows.reduce((sum, r) => sum + gradePointForGrade(r.grade), 0) / subjectRows.length
-      : 0;
-    return {
-      studentId: student.id,
-      studentName: `${student.firstName} ${student.lastName}`,
-      admissionNumber: student.admissionNumber,
-      className: student.className,
-      section: student.section,
-      subjects: subjectRows,
-      totalObtained,
-      totalMax,
-      percentage: Math.round(percentage * 10) / 10,
-      grade: gradeBandForPercentage(percentage).grade,
-      gpa: Math.round(gpa * 100) / 100,
-      rank: 0,
-    };
-  });
-
-  summaries.sort((a, b) => b.totalObtained - a.totalObtained || a.studentName.localeCompare(b.studentName));
-  summaries.forEach((s, idx) => (s.rank = idx + 1));
-
-  return mockDelay(summaries, 400);
+  const summaries = await unwrap(academicHttpClient.get<ApiStudentExamSummary[]>(`/api/exams/${examId}/class-results`));
+  return summaries.map(mapSummary);
 }
 
 export async function getReportCard(examId: string, studentId: string): Promise<StudentExamSummary | null> {
@@ -318,79 +335,17 @@ export async function getReportCard(examId: string, studentId: string): Promise<
 }
 
 export async function getRemark(examId: string, studentId: string): Promise<string> {
-  await seedPromise;
-  const remark = examRemarks.find((r) => r.examId === examId && r.studentId === studentId);
-  return mockDelay(remark?.remarks ?? "", 250);
+  const result = await unwrap(academicHttpClient.get<{ remarks: string }>(`/api/exams/${examId}/remarks/${studentId}`));
+  return result.remarks;
 }
 
 export async function saveRemark(examId: string, studentId: string, remarks: string): Promise<void> {
-  await seedPromise;
-  const existing = examRemarks.find((r) => r.examId === examId && r.studentId === studentId);
-  if (existing) {
-    examRemarks = examRemarks.map((r) => (r.id === existing.id ? { ...r, remarks } : r));
-  } else {
-    examRemarks = [...examRemarks, { id: genId("exrmk"), examId, studentId, remarks }];
-  }
-  persistRemarks();
-  return mockDelay(undefined, 300);
+  await unwrap(academicHttpClient.post<void>(`/api/exams/${examId}/remarks/${studentId}`, { remarks }));
 }
 
 // ── Transcript ───────────────────────────────────────────────────────────
 
 export async function getTranscript(studentId: string): Promise<Transcript> {
-  await seedPromise;
-  const student = await getStudent(studentId);
-  const [terms, academicYears] = await Promise.all([listTerms(), listAcademicYears()]);
-
-  const examIds = [...new Set(examResults.filter((r) => r.studentId === studentId).map((r) => r.examId))];
-  const rows: TranscriptRow[] = [];
-  let currentYearGpaSum = 0;
-  let currentYearGpaCount = 0;
-
-  for (const examId of examIds) {
-    const exam = exams.find((e) => e.id === examId);
-    if (!exam) continue;
-    const resultsForExam = examResults.filter((r) => r.examId === examId && r.studentId === studentId);
-    const totalObtained = resultsForExam.reduce((sum, r) => sum + r.marksObtained, 0);
-    const totalMax = resultsForExam.reduce((sum, r) => sum + r.maxMarks, 0);
-    const percentage = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
-    const gpa = resultsForExam.length
-      ? resultsForExam.reduce((sum, r) => sum + gradePointForGrade(r.grade), 0) / resultsForExam.length
-      : 0;
-    const term = terms.find((t) => t.id === exam.termId);
-    const academicYear = academicYears.find((y) => y.id === term?.academicYearId);
-
-    if (exam.status === "completed" && academicYear?.isCurrent) {
-      currentYearGpaSum += gpa;
-      currentYearGpaCount += 1;
-    }
-
-    rows.push({
-      examId: exam.id,
-      examName: exam.name,
-      examType: exam.examType,
-      termName: term?.name ?? "—",
-      academicYearName: academicYear?.name ?? "—",
-      totalObtained,
-      totalMax,
-      percentage: Math.round(percentage * 10) / 10,
-      grade: gradeBandForPercentage(percentage).grade,
-      gpa: Math.round(gpa * 100) / 100,
-    });
-  }
-
-  rows.sort((a, b) => (exams.find((e) => e.id === a.examId)?.startDate ?? "").localeCompare(exams.find((e) => e.id === b.examId)?.startDate ?? ""));
-
-  const cgpa = currentYearGpaCount > 0 ? Math.round((currentYearGpaSum / currentYearGpaCount) * 100) / 100 : 0;
-
-  return mockDelay(
-    {
-      studentId,
-      studentName: `${student.firstName} ${student.lastName}`,
-      admissionNumber: student.admissionNumber,
-      rows,
-      cgpa,
-    },
-    400,
-  );
+  const transcript = await unwrap(academicHttpClient.get<ApiTranscript>(`/api/exams/transcript/${studentId}`));
+  return mapTranscript(transcript);
 }

@@ -6,9 +6,9 @@ import type { CalendarEvent } from "../types";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const EVENT_DOT: Record<CalendarEvent["kind"], string> = {
-  holiday: "bg-amber-500",
-  exam: "bg-red-500",
-  event: "bg-blue-500",
+  holiday: "bg-warning",
+  exam: "bg-destructive",
+  event: "bg-info",
 };
 
 function buildMonthGrid(year: number, month: number): (Date | null)[] {
@@ -42,7 +42,7 @@ export default function MiniCalendar({ events }: { events: CalendarEvent[] }) {
           <button
             type="button"
             onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
-            className="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+            className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-muted-foreground cursor-pointer"
             aria-label="Previous month"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -50,7 +50,7 @@ export default function MiniCalendar({ events }: { events: CalendarEvent[] }) {
           <button
             type="button"
             onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
-            className="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+            className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-muted-foreground cursor-pointer"
             aria-label="Next month"
           >
             <ChevronRight className="w-3.5 h-3.5" />
@@ -60,7 +60,7 @@ export default function MiniCalendar({ events }: { events: CalendarEvent[] }) {
       <CardContent>
         <div className="grid grid-cols-7 gap-y-1.5 text-center">
           {WEEKDAYS.map((wd, i) => (
-            <span key={i} className="text-[10px] font-semibold text-slate-400">
+            <span key={i} className="text-[10px] font-semibold text-muted-foreground">
               {wd}
             </span>
           ))}
@@ -74,7 +74,7 @@ export default function MiniCalendar({ events }: { events: CalendarEvent[] }) {
                   title={dayEvents.map((e) => e.label).join(", ")}
                   className={cn(
                     "w-6 h-6 flex items-center justify-center rounded-full text-xs",
-                    isToday ? "bg-brand-500 text-white font-semibold" : "text-slate-600",
+                    isToday ? "bg-brand-500 text-white font-semibold" : "text-muted-foreground",
                   )}
                 >
                   {date.getDate()}

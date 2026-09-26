@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Banknote, CalendarDays, Check, GraduationCap, Megaphone, Plus, Settings, Trash2 } from "lucide-react";
+import { AlertTriangle, Banknote, CalendarDays, Check, GraduationCap, Megaphone, Plus, Settings, Sparkles, Trash2, Video } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { CATEGORY_CONFIG } from "../constants";
 import { deleteNotification, listMyNotifications, markAllReadForCurrentUser, markRead, postAnnouncement } from "../api";
 import type { Notification, NotificationCategory } from "../types";
 import AnnouncementFormDialog from "../components/AnnouncementFormDialog";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
   announcement: Megaphone,
@@ -21,6 +22,8 @@ const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
   event: CalendarDays,
   system: Settings,
   alert: AlertTriangle,
+  talent: Sparkles,
+  meeting: Video,
 };
 
 const ANNOUNCER_ROLES = new Set(["superAdmin", "admin", "principal"]);
@@ -69,29 +72,29 @@ export default function NotificationCenterPage() {
   };
 
   return (
-    <div className="p-6 space-y-5 max-w-[900px]">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Notification center</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "You're all caught up."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <Button variant="outline" onClick={() => markAllReadMutation.mutate()} disabled={markAllReadMutation.isPending}>
-              <Check className="w-4 h-4" />
-              Mark all read
-            </Button>
-          )}
-          {canAnnounce && (
-            <Button onClick={() => setFormOpen(true)}>
-              <Plus className="w-4 h-4" />
-              Post announcement
-            </Button>
-          )}
-        </div>
-      </div>
+    <PageContainer width="narrow">
+      <PageHeader
+        title="Notification center"
+        description={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "You're all caught up."}
+        actions={
+          <>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <Button variant="outline" onClick={() => markAllReadMutation.mutate()} disabled={markAllReadMutation.isPending}>
+                  <Check className="w-4 h-4" />
+                  Mark all read
+                </Button>
+              )}
+              {canAnnounce && (
+                <Button onClick={() => setFormOpen(true)}>
+                  <Plus className="w-4 h-4" />
+                  Post announcement
+                </Button>
+              )}
+            </div>
+          </>
+        }
+      />
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {isLoading && <p className="px-4 py-8 text-sm text-muted-foreground text-center">Loading…</p>}
@@ -102,17 +105,17 @@ export default function NotificationCenterPage() {
             const categoryConfig = CATEGORY_CONFIG[n.category];
             return (
               <div key={n.id} className={cn("flex items-start gap-3 px-4 py-3.5", !n.read && "bg-brand-50/40")}>
-                <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
-                  <Icon className="w-4 h-4 text-slate-500" />
+                <div className="w-9 h-9 rounded-lg bg-card border border-border flex items-center justify-center shrink-0 mt-0.5">
+                  <Icon className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-slate-800">{n.title}</p>
+                    <p className="text-sm font-medium text-foreground">{n.title}</p>
                     <Badge variant={categoryConfig.variant}>{categoryConfig.label}</Badge>
                     {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />}
                   </div>
-                  <p className="text-sm text-slate-600 mt-0.5">{n.body}</p>
-                  <p className="text-xs text-slate-400 mt-1">{formatRelativeDay(n.createdAt)}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{n.body}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{formatRelativeDay(n.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {n.actionUrl && (
@@ -143,6 +146,6 @@ export default function NotificationCenterPage() {
           await postMutation.mutateAsync(values);
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

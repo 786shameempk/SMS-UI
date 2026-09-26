@@ -13,6 +13,12 @@ import { todayDateKey as attendanceTodayDateKey } from "@/features/attendance/co
 import { getHostelAttendanceForDate, listActiveResidents, listHostels, saveHostelAttendance } from "../api";
 import type { HostelAttendanceStatus, MarkHostelAttendanceEntry } from "../types";
 
+// Stable fallback: an inline `= []` default is a new array every render, and the status-map effect
+// below depends on it — while loading (or forever, if the request fails) it would setState,
+// re-render, get another new [] and loop, freezing the page. See attendance/MarkAttendanceTab.
+const NO_RESIDENTS: Awaited<ReturnType<typeof listActiveResidents>> = [];
+const NO_RECORDS: Awaited<ReturnType<typeof getHostelAttendanceForDate>> = [];
+
 const STATUS_OPTIONS: { value: HostelAttendanceStatus; label: string }[] = [
   { value: "present", label: "Present" },
   { value: "absent", label: "Absent" },
@@ -32,11 +38,11 @@ export default function HostelAttendanceTab() {
   const [statusMap, setStatusMap] = useState<Record<string, HostelAttendanceStatus>>({});
 
   const { data: hostels = [] } = useQuery({ queryKey: ["hostel", "hostels"], queryFn: listHostels });
-  const { data: residents = [], isLoading: residentsLoading } = useQuery({
+  const { data: residents = NO_RESIDENTS, isLoading: residentsLoading } = useQuery({
     queryKey: ["hostel", "active-residents"],
     queryFn: listActiveResidents,
   });
-  const { data: existingRecords = [] } = useQuery({
+  const { data: existingRecords = NO_RECORDS } = useQuery({
     queryKey: ["hostel", "attendance", date],
     queryFn: () => getHostelAttendanceForDate(date),
     enabled: Boolean(date),
@@ -171,10 +177,10 @@ export default function HostelAttendanceTab() {
                 hostelResidents.map((resident) => (
                   <div key={resident.studentId} className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3">
                     <div className="min-w-[180px]">
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {resident.student.firstName} {resident.student.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {resident.room.roomNumber} · Bed {resident.bedNumber}
                       </p>
                     </div>

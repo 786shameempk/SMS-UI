@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,7 +72,7 @@ export default function GenerateInvoicesDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="gi-feeStructureId">Fee structure</Label>
+            <Label htmlFor="gi-feeStructureId" required>Fee structure</Label>
             <Controller
               control={control}
               name="feeStructureId"
@@ -91,12 +91,12 @@ export default function GenerateInvoicesDialog({
                 </Select>
               )}
             />
-            {errors.feeStructureId && <p className="text-xs text-red-600">{errors.feeStructureId.message}</p>}
+            {errors.feeStructureId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.feeStructureId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="gi-academicYearId">Academic year</Label>
+              <Label htmlFor="gi-academicYearId" required>Academic year</Label>
               <Controller
                 control={control}
                 name="academicYearId"
@@ -115,10 +115,10 @@ export default function GenerateInvoicesDialog({
                   </Select>
                 )}
               />
-              {errors.academicYearId && <p className="text-xs text-red-600">{errors.academicYearId.message}</p>}
+              {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.academicYearId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="gi-term">Term</Label>
+              <Label htmlFor="gi-term" required>Term</Label>
               <Controller
                 control={control}
                 name="term"
@@ -137,22 +137,21 @@ export default function GenerateInvoicesDialog({
                   </Select>
                 )}
               />
-              {errors.term && <p className="text-xs text-red-600">{errors.term.message}</p>}
+              {errors.term && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.term.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="gi-dueDate">Due date</Label>
-            <Input id="gi-dueDate" type="date" {...register("dueDate")} />
-            {errors.dueDate && <p className="text-xs text-red-600">{errors.dueDate.message}</p>}
+            <Label htmlFor="gi-dueDate" required>Due date</Label>
+            <Input id="gi-dueDate" type="date" aria-invalid={errors.dueDate ? true : undefined} {...register("dueDate")} />
+            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dueDate.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Generate invoices
             </Button>
           </DialogFooter>

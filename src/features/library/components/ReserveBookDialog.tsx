@@ -58,7 +58,7 @@ export default function ReserveBookDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="resv-bookId">Book</Label>
+            <Label htmlFor="resv-bookId" required>Book</Label>
             <Controller
               control={control}
               name="bookId"
@@ -77,12 +77,12 @@ export default function ReserveBookDialog({
                 </Select>
               )}
             />
-            {errors.bookId && <p className="text-xs text-red-600">{errors.bookId.message}</p>}
+            {errors.bookId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.bookId.message}</p>}
             {fullyBookedBooks.length === 0 && <p className="text-xs text-muted-foreground">No books are fully booked right now.</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="resv-memberId">Member</Label>
+            <Label htmlFor="resv-memberId" required>Member</Label>
             <Controller
               control={control}
               name="memberId"
@@ -101,7 +101,7 @@ export default function ReserveBookDialog({
                 </Select>
               )}
             />
-            {errors.memberId && <p className="text-xs text-red-600">{errors.memberId.message}</p>}
+            {errors.memberId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.memberId.message}</p>}
           </div>
 
           <DialogFooter>

@@ -1,3 +1,6 @@
+import type { BusTrackingStatus } from "@/features/transport/types";
+import type { FeeInvoiceStatus } from "@/features/fees/types";
+
 export interface StatCardData {
   id: string;
   label: string;
@@ -14,11 +17,62 @@ export interface AttendanceSummary {
   totalMarked: number;
 }
 
-export interface FeeSummary {
-  collected: number;
-  pending: number;
-  overdue: number;
+export interface FeeDueItem {
+  id: string;
+  studentName: string;
+  term: string;
+  amount: number;
+  dueDate: string;
+  status: FeeInvoiceStatus;
+}
+
+export interface FeeDueSummary {
+  totalPending: number;
+  totalOverdue: number;
   currency: string;
+  items: FeeDueItem[];
+}
+
+export interface LibraryDueItem {
+  id: string;
+  bookTitle: string;
+  borrowerName: string;
+  dueDate: string;
+  overdue: boolean;
+}
+
+export interface BusFleetStatusCount {
+  status: BusTrackingStatus;
+  count: number;
+}
+
+export interface MyBusStatus {
+  routeName: string;
+  busRegNumber: string;
+  status: BusTrackingStatus;
+  currentStopName?: string;
+}
+
+export interface BusStatusSummary {
+  fleet: BusFleetStatusCount[];
+  mine: MyBusStatus | null;
+}
+
+export interface HostelOccupancyItem {
+  hostelName: string;
+  occupiedCount: number;
+  bedCount: number;
+}
+
+export interface MyHostelAllocation {
+  hostelName: string;
+  roomNumber: string;
+  bedNumber: number;
+}
+
+export interface HostelOccupancySummary {
+  hostels: HostelOccupancyItem[];
+  mine: MyHostelAllocation | null;
 }
 
 export interface ClassSession {
@@ -101,10 +155,13 @@ export interface RevenueTrendPoint {
 export interface DashboardData {
   stats: StatCardData[];
   attendance: AttendanceSummary;
-  fees: FeeSummary;
   todayClasses: ClassSession[];
   upcomingExams: UpcomingExam[];
   pendingAssignments: PendingAssignment[];
+  feesDue: FeeDueSummary;
+  libraryDue: LibraryDueItem[];
+  busStatus: BusStatusSummary;
+  hostelOccupancy: HostelOccupancySummary;
   notifications: NotificationItem[];
   birthdays: BirthdayItem[];
   holidays: HolidayItem[];
@@ -112,4 +169,36 @@ export interface DashboardData {
   recentActivity: ActivityItem[];
   performanceTrend: PerformanceTrendPoint[];
   revenueTrend: RevenueTrendPoint[];
+}
+
+// ── Dashboard controls ──────────────────────────────────────────────────
+
+/** Aggregated = every branch of the active school added together; segregated = only the branch
+ *  currently picked in the header's branch switcher. Same meaning for Admin and Super Admin. */
+export type DashboardScopeView = "aggregated" | "segregated";
+
+export type DateRangePreset = "thisYear" | "last3Months" | "last6Months" | "custom";
+
+export interface DashboardDateRange {
+  preset: DateRangePreset;
+  /** yyyy-mm-dd, only meaningful for "custom". */
+  from?: string;
+  to?: string;
+}
+
+export interface ScopeMetrics {
+  students: number;
+  staff: number;
+  feesCollected: number;
+  feesPending: number;
+  overdueInvoices: number;
+  /** True when at least one request failed, so the numbers are incomplete. */
+  failed: boolean;
+}
+
+export interface ScopeSummary {
+  view: DashboardScopeView;
+  /** The branches that were summed — every active branch, or just the selected one. */
+  branches: Array<{ id: string; name: string }>;
+  metrics: ScopeMetrics;
 }

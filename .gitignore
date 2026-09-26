@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 
 # Editor directories and files
 .vscode/*
@@ -22,6 +23,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/.vs/SMS UI/CopilotIndices/18.9.1311.36310
+/.vs/SMS UI.slnx/FileContentIndex
+/.vs/slnx.sqlite
+/.vs
 
 
 # amplify
@@ -29,3 +34,6 @@ node_modules
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+
+# Docker Compose secrets (see .env.docker.example)
+.env.docker

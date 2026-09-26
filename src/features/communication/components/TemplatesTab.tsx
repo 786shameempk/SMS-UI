@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { CHANNELS } from "../constants";
 import { createTemplate, deleteTemplate, listTemplates, updateTemplate } from "../api";
 import type { MessageTemplate, MessageTemplateFormValues } from "../types";
 import TemplateFormDialog from "./TemplateFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function TemplatesTab() {
   const queryClient = useQueryClient();
@@ -19,7 +20,7 @@ export default function TemplatesTab() {
   const [editing, setEditing] = useState<MessageTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MessageTemplate | null>(null);
 
-  const { data: templates = [], isLoading } = useQuery({ queryKey: ["communication", "templates"], queryFn: listTemplates });
+  const { data: templates = [], isLoading, isError, refetch } = useQuery({ queryKey: ["communication", "templates"], queryFn: listTemplates });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["communication", "templates"] });
 
@@ -60,7 +61,7 @@ export default function TemplatesTab() {
       header: "Template",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.name}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.name}</p>
           <p className="text-xs text-muted-foreground line-clamp-1">{row.original.subject ?? row.original.body}</p>
         </div>
       ),
@@ -89,28 +90,21 @@ export default function TemplatesTab() {
       cell: ({ row }) => {
         const template = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(template);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(template)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(template);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(template)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -131,7 +125,7 @@ export default function TemplatesTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={templates} isLoading={isLoading} emptyMessage="No templates yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={templates} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No templates yet." pageSize={8} />
 
       <TemplateFormDialog
         open={formOpen}

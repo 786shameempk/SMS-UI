@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { DRIVER_STATUS_CONFIG } from "../constants";
 import { createDriver, deleteDriver, listDrivers, listEligibleDriverStaff, updateDriver } from "../api";
 import type { Driver, DriverFormValues } from "../types";
 import DriverFormDialog from "./DriverFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function DriversTab() {
   const queryClient = useQueryClient();
@@ -19,7 +20,7 @@ export default function DriversTab() {
   const [editing, setEditing] = useState<Driver | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Driver | null>(null);
 
-  const { data: drivers = [], isLoading } = useQuery({ queryKey: ["transport", "drivers"], queryFn: listDrivers });
+  const { data: drivers = [], isLoading, isError, refetch } = useQuery({ queryKey: ["transport", "drivers"], queryFn: listDrivers });
   const { data: eligibleStaff = [] } = useQuery({ queryKey: ["transport", "eligible-driver-staff"], queryFn: listEligibleDriverStaff });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["transport"] });
@@ -61,7 +62,7 @@ export default function DriversTab() {
       header: "Driver",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.staff.firstName} {row.original.staff.lastName}
           </p>
           <p className="text-xs text-muted-foreground">{row.original.staff.employeeId} · {row.original.staff.phone}</p>
@@ -73,7 +74,7 @@ export default function DriversTab() {
       header: "License",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm text-slate-600">{row.original.licenseNumber}</p>
+          <p className="text-sm text-secondary-foreground">{row.original.licenseNumber}</p>
           <p className="text-xs text-muted-foreground">Expires {new Date(row.original.licenseExpiryDate).toLocaleDateString()}</p>
         </div>
       ),
@@ -81,7 +82,7 @@ export default function DriversTab() {
     {
       id: "experience",
       header: "Experience",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.experienceYears} yrs</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.experienceYears} yrs</span>,
     },
     {
       id: "status",
@@ -97,28 +98,21 @@ export default function DriversTab() {
       cell: ({ row }) => {
         const driver = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(driver);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(driver)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(driver);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(driver)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Remove
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -139,7 +133,7 @@ export default function DriversTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={drivers} isLoading={isLoading} emptyMessage="No driver profiles yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={drivers} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No driver profiles yet." pageSize={8} />
 
       <DriverFormDialog
         open={formOpen}

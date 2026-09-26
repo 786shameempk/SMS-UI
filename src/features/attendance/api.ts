@@ -1,10 +1,9 @@
-import { listClasses, listSections } from "@/features/academics/api";
-import { mockDelay } from "@/utils/mockDelay";
-import { SEED_ATTENDANCE_RECORDS, SEED_ROSTER, SEED_STAFF_ATTENDANCE_RECORDS } from "./mock";
+import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import type {
   AttendanceRecord,
   AttendanceRecordFilters,
   AttendanceStatus,
+  CaptureMode,
   DailySectionSummary,
   MonthlyStudentRow,
   RosterSectionOption,
@@ -12,207 +11,310 @@ import type {
   SaveStaffAttendanceParams,
   StaffAttendanceFilters,
   StaffAttendanceRecord,
+  StaffAttendanceStatus,
   StudentRosterEntry,
   YearlyTrendPoint,
 } from "./types";
 
-const RECORDS_KEY = "sms-mock-attendance-records";
-const STAFF_RECORDS_KEY = "sms-mock-staff-attendance-records";
+// ── Enum translation ────────────────────────────────────────────────────────
+// AcademicService's enums serialize as PascalCase; SMS UI's types use lowercase/kebab-case unions.
 
-function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
+const ATTENDANCE_STATUS_TO_API: Record<AttendanceStatus, string> = {
+  present: "Present",
+  absent: "Absent",
+  late: "Late",
+  "half-day": "HalfDay",
+  leave: "Leave",
+};
+const ATTENDANCE_STATUS_FROM_API: Record<string, AttendanceStatus> = {
+  Present: "present",
+  Absent: "absent",
+  Late: "late",
+  HalfDay: "half-day",
+  Leave: "leave",
+};
+
+const STAFF_ATTENDANCE_STATUS_TO_API: Record<StaffAttendanceStatus, string> = {
+  present: "Present",
+  absent: "Absent",
+  late: "Late",
+};
+const STAFF_ATTENDANCE_STATUS_FROM_API: Record<string, StaffAttendanceStatus> = {
+  Present: "present",
+  Absent: "absent",
+  Late: "late",
+};
+
+const CAPTURE_MODE_TO_API: Record<CaptureMode, string> = {
+  manual: "Manual",
+  qr: "Qr",
+  rfid: "Rfid",
+  biometric: "Biometric",
+  face: "Face",
+  mobile: "Mobile",
+};
+const CAPTURE_MODE_FROM_API: Record<string, CaptureMode> = {
+  Manual: "manual",
+  Qr: "qr",
+  Rfid: "rfid",
+  Biometric: "biometric",
+  Face: "face",
+  Mobile: "mobile",
+};
+
+// ── API response shapes (AcademicService DTOs) ──────────────────────────────
+
+interface ApiAttendanceRecord {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  studentId: string;
+  sectionId: string;
+  date: string;
+  status: string;
+  captureMode: string;
+  remarks: string | null;
+  markedAt: string;
+}
+
+interface ApiStaffAttendanceRecord {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  staffId: string;
+  date: string;
+  status: string;
+  markedAt: string;
+}
+
+interface ApiStudentRosterEntry {
+  id: string;
+  sectionId: string;
+  admissionNumber: string;
+  firstName: string;
+  lastName: string;
+  rollNumber: string | null;
+}
+
+interface ApiRosterSectionOption {
+  sectionId: string;
+  classId: string;
+  studentCount: number;
+}
+
+interface ApiDailySectionSummary {
+  sectionId: string;
+  classId: string;
+  className: string;
+  sectionName: string;
+  totalStudents: number;
+  marked: number;
+  present: number;
+  absent: number;
+  late: number;
+  halfDay: number;
+  leave: number;
+  percentPresent: number;
+}
+
+interface ApiMonthlyStudentRow {
+  studentId: string;
+  name: string;
+  rollNumber: string | null;
+  statusByDay: Record<string, string | null>;
+  presentDays: number;
+  absentDays: number;
+  lateDays: number;
+  halfDays: number;
+  leaveDays: number;
+  markedDays: number;
+  percentPresent: number;
+}
+
+interface ApiYearlyTrendPoint {
+  month: string;
+  percentPresent: number;
+  totalMarked: number;
+}
+
+// ── Mappers ──────────────────────────────────────────────────────────────────
+
+const mapRecord = (dto: ApiAttendanceRecord): AttendanceRecord => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  studentId: dto.studentId,
+  sectionId: dto.sectionId,
+  date: dto.date,
+  status: ATTENDANCE_STATUS_FROM_API[dto.status] ?? "present",
+  captureMode: CAPTURE_MODE_FROM_API[dto.captureMode] ?? "manual",
+  remarks: dto.remarks ?? undefined,
+  markedAt: dto.markedAt,
+});
+
+const mapStaffRecord = (dto: ApiStaffAttendanceRecord): StaffAttendanceRecord => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  staffId: dto.staffId,
+  date: dto.date,
+  status: STAFF_ATTENDANCE_STATUS_FROM_API[dto.status] ?? "present",
+  markedAt: dto.markedAt,
+});
+
+const mapRosterEntry = (dto: ApiStudentRosterEntry): StudentRosterEntry => ({
+  id: dto.id,
+  sectionId: dto.sectionId,
+  admissionNumber: dto.admissionNumber,
+  firstName: dto.firstName,
+  lastName: dto.lastName,
+  rollNumber: dto.rollNumber ?? "",
+});
+
+const mapRosterSection = (dto: ApiRosterSectionOption): RosterSectionOption => ({
+  sectionId: dto.sectionId,
+  classId: dto.classId,
+  studentCount: dto.studentCount,
+});
+
+const mapDailySummary = (dto: ApiDailySectionSummary): DailySectionSummary => ({
+  sectionId: dto.sectionId,
+  classId: dto.classId,
+  className: dto.className,
+  sectionName: dto.sectionName,
+  totalStudents: dto.totalStudents,
+  marked: dto.marked,
+  present: dto.present,
+  absent: dto.absent,
+  late: dto.late,
+  halfDay: dto.halfDay,
+  leave: dto.leave,
+  percentPresent: dto.percentPresent,
+});
+
+const mapMonthlyRow = (dto: ApiMonthlyStudentRow): MonthlyStudentRow => {
+  const statusByDay: Record<number, AttendanceStatus | undefined> = {};
+  for (const [day, status] of Object.entries(dto.statusByDay)) {
+    if (status) statusByDay[Number(day)] = ATTENDANCE_STATUS_FROM_API[status] ?? undefined;
   }
-  return fallback;
-}
+  return {
+    studentId: dto.studentId,
+    name: dto.name,
+    rollNumber: dto.rollNumber ?? "",
+    statusByDay,
+    presentDays: dto.presentDays,
+    absentDays: dto.absentDays,
+    lateDays: dto.lateDays,
+    halfDays: dto.halfDays,
+    leaveDays: dto.leaveDays,
+    markedDays: dto.markedDays,
+    percentPresent: dto.percentPresent,
+  };
+};
 
-function saveJson(key: string, value: unknown) {
+const mapYearlyPoint = (dto: ApiYearlyTrendPoint): YearlyTrendPoint => ({
+  month: dto.month,
+  percentPresent: dto.percentPresent,
+  totalMarked: dto.totalMarked,
+});
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-let records = loadJson<AttendanceRecord[]>(RECORDS_KEY, SEED_ATTENDANCE_RECORDS.map((r) => ({ ...r })));
-let staffRecords = loadJson<StaffAttendanceRecord[]>(STAFF_RECORDS_KEY, SEED_STAFF_ATTENDANCE_RECORDS.map((r) => ({ ...r })));
-
-const persistRecords = () => saveJson(RECORDS_KEY, records);
-const persistStaffRecords = () => saveJson(STAFF_RECORDS_KEY, staffRecords);
 
 // ── Roster ───────────────────────────────────────────────────────────────
 
 export async function listRosterSections(): Promise<RosterSectionOption[]> {
-  const sections = await listSections();
-  const bySectionId = new Map<string, number>();
-  for (const student of SEED_ROSTER) {
-    bySectionId.set(student.sectionId, (bySectionId.get(student.sectionId) ?? 0) + 1);
-  }
-  const options = Array.from(bySectionId.entries()).map(([sectionId, studentCount]) => ({
-    sectionId,
-    classId: sections.find((s) => s.id === sectionId)?.classId ?? "",
-    studentCount,
-  }));
-  return mockDelay(options, 250);
+  const options = await unwrap(academicHttpClient.get<ApiRosterSectionOption[]>("/api/attendance/roster-sections"));
+  return options.map(mapRosterSection);
 }
 
 export async function getSectionRoster(sectionId: string): Promise<StudentRosterEntry[]> {
-  return mockDelay(SEED_ROSTER.filter((r) => r.sectionId === sectionId), 300);
+  const roster = await unwrap(academicHttpClient.get<ApiStudentRosterEntry[]>(`/api/attendance/sections/${sectionId}/roster`));
+  return roster.map(mapRosterEntry);
 }
 
 // ── Student attendance ───────────────────────────────────────────────────
 
 export async function getAttendanceForSectionDate(sectionId: string, date: string): Promise<AttendanceRecord[]> {
-  return mockDelay(records.filter((r) => r.sectionId === sectionId && r.date === date), 300);
+  const records = await unwrap(
+    academicHttpClient.get<ApiAttendanceRecord[]>(`/api/attendance/sections/${sectionId}/date/${date}`),
+  );
+  return records.map(mapRecord);
 }
 
 export async function saveAttendance(params: SaveAttendanceParams): Promise<AttendanceRecord[]> {
-  const { sectionId, date, captureMode, entries } = params;
-  const now = new Date().toISOString();
-  const created: AttendanceRecord[] = entries.map((entry) => ({
-    id: genId("att"),
-    studentId: entry.studentId,
-    sectionId,
-    date,
-    status: entry.status,
-    captureMode,
-    remarks: entry.remarks,
-    markedAt: now,
-  }));
-  records = [...records.filter((r) => !(r.sectionId === sectionId && r.date === date)), ...created];
-  persistRecords();
-  return mockDelay(created, 450);
+  const records = await unwrap(
+    academicHttpClient.post<ApiAttendanceRecord[]>("/api/attendance", {
+      sectionId: params.sectionId,
+      date: params.date,
+      captureMode: CAPTURE_MODE_TO_API[params.captureMode],
+      entries: params.entries.map((e) => ({
+        studentId: e.studentId,
+        status: ATTENDANCE_STATUS_TO_API[e.status],
+        remarks: e.remarks ?? null,
+      })),
+    }),
+  );
+  return records.map(mapRecord);
 }
 
 export async function listAttendanceRecords(filters?: AttendanceRecordFilters): Promise<AttendanceRecord[]> {
-  let result = [...records];
-  if (filters?.sectionId) result = result.filter((r) => r.sectionId === filters.sectionId);
-  if (filters?.dateFrom) result = result.filter((r) => r.date >= filters.dateFrom!);
-  if (filters?.dateTo) result = result.filter((r) => r.date <= filters.dateTo!);
-  return mockDelay(result, 350);
+  const records = await unwrap(
+    academicHttpClient.get<ApiAttendanceRecord[]>("/api/attendance/records", {
+      params: { sectionId: filters?.sectionId, dateFrom: filters?.dateFrom, dateTo: filters?.dateTo },
+    }),
+  );
+  return records.map(mapRecord);
 }
 
 // ── Staff attendance ─────────────────────────────────────────────────────
 
 export async function getStaffAttendanceForDate(date: string): Promise<StaffAttendanceRecord[]> {
-  return mockDelay(staffRecords.filter((r) => r.date === date), 300);
+  const records = await unwrap(academicHttpClient.get<ApiStaffAttendanceRecord[]>(`/api/attendance/staff/date/${date}`));
+  return records.map(mapStaffRecord);
 }
 
 export async function saveStaffAttendance(params: SaveStaffAttendanceParams): Promise<StaffAttendanceRecord[]> {
-  const { date, entries } = params;
-  const now = new Date().toISOString();
-  const created: StaffAttendanceRecord[] = entries.map((entry) => ({
-    id: genId("satt"),
-    staffId: entry.staffId,
-    date,
-    status: entry.status,
-    markedAt: now,
-  }));
-  const staffIds = new Set(entries.map((e) => e.staffId));
-  staffRecords = [...staffRecords.filter((r) => !(r.date === date && staffIds.has(r.staffId))), ...created];
-  persistStaffRecords();
-  return mockDelay(created, 450);
+  const records = await unwrap(
+    academicHttpClient.post<ApiStaffAttendanceRecord[]>("/api/attendance/staff", {
+      date: params.date,
+      entries: params.entries.map((e) => ({ staffId: e.staffId, status: STAFF_ATTENDANCE_STATUS_TO_API[e.status] })),
+    }),
+  );
+  return records.map(mapStaffRecord);
 }
 
 export async function listStaffAttendanceRecords(filters?: StaffAttendanceFilters): Promise<StaffAttendanceRecord[]> {
-  let result = [...staffRecords];
-  if (filters?.dateFrom) result = result.filter((r) => r.date >= filters.dateFrom!);
-  if (filters?.dateTo) result = result.filter((r) => r.date <= filters.dateTo!);
-  return mockDelay(result, 350);
+  const records = await unwrap(
+    academicHttpClient.get<ApiStaffAttendanceRecord[]>("/api/attendance/staff/records", {
+      params: { dateFrom: filters?.dateFrom, dateTo: filters?.dateTo },
+    }),
+  );
+  return records.map(mapStaffRecord);
 }
 
 // ── Reports ──────────────────────────────────────────────────────────────
 
 export async function getDailySectionSummaries(date: string): Promise<DailySectionSummary[]> {
-  const [sections, classes] = await Promise.all([listSections(), listClasses()]);
-  const sectionIds = Array.from(new Set(SEED_ROSTER.map((r) => r.sectionId)));
-
-  const summaries: DailySectionSummary[] = sectionIds.map((sectionId) => {
-    const section = sections.find((s) => s.id === sectionId);
-    const schoolClass = section ? classes.find((c) => c.id === section.classId) : undefined;
-    const roster = SEED_ROSTER.filter((r) => r.sectionId === sectionId);
-    const dayRecords = records.filter((r) => r.sectionId === sectionId && r.date === date);
-    const count = (status: AttendanceStatus) => dayRecords.filter((r) => r.status === status).length;
-    const present = count("present");
-    const marked = dayRecords.length;
-    return {
-      sectionId,
-      classId: section?.classId ?? "",
-      className: schoolClass?.name ?? "Unknown class",
-      sectionName: section?.name ?? "Unknown section",
-      totalStudents: roster.length,
-      marked,
-      present,
-      absent: count("absent"),
-      late: count("late"),
-      halfDay: count("half-day"),
-      leave: count("leave"),
-      percentPresent: marked > 0 ? Math.round((present / marked) * 1000) / 10 : 0,
-    };
-  });
-
-  return mockDelay(summaries, 350);
+  const summaries = await unwrap(academicHttpClient.get<ApiDailySectionSummary[]>(`/api/attendance/reports/daily/${date}`));
+  return summaries.map(mapDailySummary);
 }
 
 export async function getMonthlyStudentSummary(sectionId: string, year: number, month: number): Promise<MonthlyStudentRow[]> {
-  const roster = SEED_ROSTER.filter((r) => r.sectionId === sectionId);
-  const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}`;
-  const monthRecords = records.filter((r) => r.sectionId === sectionId && r.date.startsWith(monthPrefix));
-
-  const rows: MonthlyStudentRow[] = roster.map((student) => {
-    const studentRecords = monthRecords.filter((r) => r.studentId === student.id);
-    const statusByDay: Record<number, AttendanceStatus | undefined> = {};
-    for (const record of studentRecords) statusByDay[Number(record.date.slice(8, 10))] = record.status;
-    const count = (status: AttendanceStatus) => studentRecords.filter((r) => r.status === status).length;
-    const present = count("present");
-    const markedDays = studentRecords.length;
-    return {
-      studentId: student.id,
-      name: `${student.firstName} ${student.lastName}`,
-      rollNumber: student.rollNumber,
-      statusByDay,
-      presentDays: present,
-      absentDays: count("absent"),
-      lateDays: count("late"),
-      halfDays: count("half-day"),
-      leaveDays: count("leave"),
-      markedDays,
-      percentPresent: markedDays > 0 ? Math.round((present / markedDays) * 1000) / 10 : 0,
-    };
-  });
-
-  return mockDelay(rows, 400);
+  const rows = await unwrap(
+    academicHttpClient.get<ApiMonthlyStudentRow[]>(`/api/attendance/reports/monthly/${sectionId}/${year}/${month}`),
+  );
+  return rows.map(mapMonthlyRow);
 }
 
 export async function getYearlyTrend(sectionId?: string): Promise<YearlyTrendPoint[]> {
-  const filtered = sectionId ? records.filter((r) => r.sectionId === sectionId) : records;
-  const byMonth = new Map<string, { present: number; total: number }>();
-  for (const record of filtered) {
-    const monthKey = record.date.slice(0, 7);
-    const bucket = byMonth.get(monthKey) ?? { present: 0, total: 0 };
-    bucket.total += 1;
-    if (record.status === "present") bucket.present += 1;
-    byMonth.set(monthKey, bucket);
-  }
-
-  const points: YearlyTrendPoint[] = Array.from(byMonth.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([monthKey, bucket]) => {
-      const [year, month] = monthKey.split("-").map(Number);
-      const label = new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
-      return {
-        month: label,
-        percentPresent: bucket.total > 0 ? Math.round((bucket.present / bucket.total) * 1000) / 10 : 0,
-        totalMarked: bucket.total,
-      };
-    });
-
-  return mockDelay(points, 400);
+  const points = await unwrap(
+    academicHttpClient.get<ApiYearlyTrendPoint[]>("/api/attendance/reports/yearly-trend", { params: { sectionId } }),
+  );
+  return points.map(mapYearlyPoint);
 }

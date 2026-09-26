@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Briefcase, GraduationCap, Loader2, Plus, Trash2 } from "lucide-react";
+import { Briefcase, GraduationCap, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,26 +71,25 @@ function QualificationFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="degree">Degree</Label>
-            <Input id="degree" {...register("degree")} />
-            {errors.degree && <p className="text-xs text-red-600">{errors.degree.message}</p>}
+            <Label htmlFor="degree" required>Degree</Label>
+            <Input id="degree" aria-invalid={errors.degree ? true : undefined} {...register("degree")} />
+            {errors.degree && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.degree.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="institution">Institution</Label>
-            <Input id="institution" {...register("institution")} />
-            {errors.institution && <p className="text-xs text-red-600">{errors.institution.message}</p>}
+            <Label htmlFor="institution" required>Institution</Label>
+            <Input id="institution" aria-invalid={errors.institution ? true : undefined} {...register("institution")} />
+            {errors.institution && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.institution.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="yearCompleted">Year completed</Label>
-            <Input id="yearCompleted" type="number" {...register("yearCompleted")} />
-            {errors.yearCompleted && <p className="text-xs text-red-600">{errors.yearCompleted.message}</p>}
+            <Label htmlFor="yearCompleted" required>Year completed</Label>
+            <Input id="yearCompleted" type="number" aria-invalid={errors.yearCompleted ? true : undefined} {...register("yearCompleted")} />
+            {errors.yearCompleted && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.yearCompleted.message}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Add
             </Button>
           </DialogFooter>
@@ -142,36 +141,35 @@ function ExperienceFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="organization">Organization</Label>
-            <Input id="organization" {...register("organization")} />
-            {errors.organization && <p className="text-xs text-red-600">{errors.organization.message}</p>}
+            <Label htmlFor="organization" required>Organization</Label>
+            <Input id="organization" aria-invalid={errors.organization ? true : undefined} {...register("organization")} />
+            {errors.organization && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.organization.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="role">Role</Label>
-            <Input id="role" {...register("role")} />
-            {errors.role && <p className="text-xs text-red-600">{errors.role.message}</p>}
+            <Label htmlFor="role" required>Role</Label>
+            <Input id="role" aria-invalid={errors.role ? true : undefined} {...register("role")} />
+            {errors.role && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.role.message}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fromYear">From year</Label>
-              <Input id="fromYear" type="number" {...register("fromYear")} />
-              {errors.fromYear && <p className="text-xs text-red-600">{errors.fromYear.message}</p>}
+              <Label htmlFor="fromYear" required>From year</Label>
+              <Input id="fromYear" type="number" aria-invalid={errors.fromYear ? true : undefined} {...register("fromYear")} />
+              {errors.fromYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromYear.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="toYear">To year (optional)</Label>
+              <Label htmlFor="toYear" optional>To year</Label>
               <Input id="toYear" type="number" {...register("toYear")} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description" optional>Description</Label>
             <Textarea id="description" rows={2} {...register("description")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Add
             </Button>
           </DialogFooter>
@@ -231,7 +229,7 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-slate-400" />
+            <GraduationCap className="w-4 h-4 text-muted-foreground" />
             Qualifications
           </CardTitle>
           <Button size="sm" onClick={() => setQualFormOpen(true)}>
@@ -244,12 +242,12 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
           {staff.qualifications.map((q) => (
             <div key={q.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
-                <p className="text-sm font-medium text-slate-800">{q.degree}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm font-medium text-foreground">{q.degree}</p>
+                <p className="text-xs text-muted-foreground">
                   {q.institution} &middot; {q.yearCompleted}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => setDeleteQualId(q.id)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setDeleteQualId(q.id)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -260,7 +258,7 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-slate-400" />
+            <Briefcase className="w-4 h-4 text-muted-foreground" />
             Experience
           </CardTitle>
           <Button size="sm" onClick={() => setExpFormOpen(true)}>
@@ -273,15 +271,15 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
           {staff.experience.map((e) => (
             <div key={e.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
-                <p className="text-sm font-medium text-slate-800">
+                <p className="text-sm font-medium text-foreground">
                   {e.role} &middot; {e.organization}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {e.fromYear} - {e.toYear ?? "Present"}
                   {e.description ? ` · ${e.description}` : ""}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => setDeleteExpId(e.id)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setDeleteExpId(e.id)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>

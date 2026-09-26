@@ -68,13 +68,13 @@ function GuardianFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="g-name">Name</Label>
-            <Input id="g-name" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="g-name" required>Name</Label>
+            <Input id="g-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="g-relation">Relation</Label>
+              <Label htmlFor="g-relation" required>Relation</Label>
               <Controller
                 control={control}
                 name="relation"
@@ -95,18 +95,18 @@ function GuardianFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="g-phone">Phone</Label>
-              <Input id="g-phone" {...register("phone")} />
-              {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
+              <Label htmlFor="g-phone" required>Phone</Label>
+              <Input id="g-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
+              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="g-email">Email (optional)</Label>
+              <Label htmlFor="g-email" optional>Email</Label>
               <Input id="g-email" type="email" {...register("email")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="g-occupation">Occupation (optional)</Label>
+              <Label htmlFor="g-occupation" optional>Occupation</Label>
               <Input id="g-occupation" {...register("occupation")} />
             </div>
           </div>
@@ -114,8 +114,7 @@ function GuardianFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save
             </Button>
           </DialogFooter>
@@ -198,13 +197,13 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
             <div key={g.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4 text-slate-500" />
+                  <User className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">
-                    {g.name} <span className="text-slate-400 font-normal capitalize">&middot; {g.relation}</span>
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {g.name} <span className="text-muted-foreground font-normal capitalize">&middot; {g.relation}</span>
                   </p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {g.phone}
                     {g.email ? ` · ${g.email}` : ""}
                   </p>
@@ -222,7 +221,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => setDeleteTarget(g)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setDeleteTarget(g)}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -234,7 +233,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-slate-400" />
+            <Phone className="w-4 h-4 text-muted-foreground" />
             Emergency contact
           </CardTitle>
           <CardDescription>Who to reach first in a medical or safety emergency.</CardDescription>
@@ -245,15 +244,15 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
             className="grid grid-cols-1 sm:grid-cols-3 gap-3"
           >
             <div className="space-y-1.5">
-              <Label htmlFor="e-name">Name</Label>
+              <Label htmlFor="e-name" required>Name</Label>
               <Input id="e-name" {...registerEmergency("name")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="e-relation">Relation</Label>
+              <Label htmlFor="e-relation" required>Relation</Label>
               <Input id="e-relation" {...registerEmergency("relation")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="e-phone">Phone</Label>
+              <Label htmlFor="e-phone" required>Phone</Label>
               <Input id="e-phone" {...registerEmergency("phone")} />
             </div>
             <div className="sm:col-span-3">

@@ -122,7 +122,7 @@ export default function LocalizationTab() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-slate-700">
+          <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-foreground">
             Preview: <span className="font-semibold">{preview}</span>
           </div>
 

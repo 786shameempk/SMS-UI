@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,18 +64,18 @@ export default function AnnouncementFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="ann-title">Title</Label>
-            <Input id="ann-title" placeholder="e.g. Sports Day rescheduled" {...register("title")} />
-            {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+            <Label htmlFor="ann-title" required>Title</Label>
+            <Input id="ann-title" placeholder="e.g. Sports Day rescheduled" aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ann-body">Message</Label>
-            <Textarea id="ann-body" rows={4} placeholder="Write the announcement…" {...register("body")} />
-            {errors.body && <p className="text-xs text-red-600">{errors.body.message}</p>}
+            <Label htmlFor="ann-body" required>Message</Label>
+            <Textarea id="ann-body" rows={4} placeholder="Write the announcement…" aria-invalid={errors.body ? true : undefined} {...register("body")} />
+            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="ann-category">Category</Label>
               <Controller
@@ -121,7 +121,7 @@ export default function AnnouncementFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ann-actionUrl">Link (optional)</Label>
+            <Label htmlFor="ann-actionUrl" optional>Link</Label>
             <Input id="ann-actionUrl" placeholder="e.g. /fees" {...register("actionUrl")} />
             <p className="text-xs text-muted-foreground">Where "View" takes the reader, e.g. /fees or /examinations.</p>
           </div>
@@ -130,8 +130,7 @@ export default function AnnouncementFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Post announcement
             </Button>
           </DialogFooter>

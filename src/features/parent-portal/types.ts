@@ -92,6 +92,7 @@ export interface LeaveRequestFormValues {
 
 export interface ParentNotification {
   id: string;
+  tenantId: string;
   title: string;
   body: string;
   createdAt: string;

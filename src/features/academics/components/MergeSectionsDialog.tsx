@@ -48,7 +48,7 @@ export default function MergeSectionsDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Merge className="w-4 h-4 text-slate-400" />
+            <Merge className="w-4 h-4 text-muted-foreground" />
             Merge sections
           </DialogTitle>
           <DialogDescription>
@@ -80,7 +80,7 @@ export default function MergeSectionsDialog({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="primarySection">Keep section</Label>
               <Select value={primarySectionId} onValueChange={setPrimarySectionId} disabled={!classId}>
@@ -114,7 +114,7 @@ export default function MergeSectionsDialog({
           </div>
 
           {canMerge && primarySection && secondarySection && (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-secondary-foreground">
               {secondarySection.name} will be merged into {primarySection.name}, combining {secondarySection.currentStrength} student(s)
               and {secondarySection.capacity} seats.
             </p>

@@ -1,15 +1,255 @@
-version: "3.9"
+# Full SMS stack: SMS UI + every backend service + SQL Server + Redis.
+# Backend build contexts are the sibling repos under E:\Personal (see AuthService/docs/MICROSERVICES_PLAN.md).
+#
+#   cp .env.docker.example .env.docker   # then set real values
+#   docker compose --env-file .env.docker up --build
+#
+# UI: http://localhost:8080. Host ports for the services match the local `dotnet run --launch-profile http`
+# ports, so stop any locally running services first. The browser calls every service directly, which is
+# why the UI's build args use localhost URLs rather than Docker service names.
+
+x-dotnet-service: &dotnet-service
+  restart: unless-stopped
+  depends_on:
+    sqlserver:
+      condition: service_healthy
+
+x-dotnet-env: &dotnet-env
+  ASPNETCORE_ENVIRONMENT: Development
+  Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
+  Cors__AllowedOrigins__0: http://localhost:8080
 
 services:
-
   ui:
     build:
       context: .
       dockerfile: Dockerfile
-
+      args:
+        VITE_AUTH_API_URL: http://localhost:5118/
+        VITE_ACADEMIC_API_URL: http://localhost:5136/
+        VITE_FINANCE_API_URL: http://localhost:5137/
+        VITE_CAMPUS_API_URL: http://localhost:5139/
+        VITE_ENGAGEMENT_API_URL: http://localhost:5140/
+        VITE_MEETING_API_URL: http://localhost:5141/
     container_name: school-ui
-
     ports:
       - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      - authservice
+      - academicservice
+      - financeservice
+      - campusservice
+      - engagementservice
+      - meetingservice
 
-    restart: always
+  authservice:
+    <<: *dotnet-service
+    build:
+      context: ../AuthService
+    ports:
+      - "5118:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AuthServiceDb;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True;"
+      ConnectionStrings__Redis: "redis:6379"
+      ClientApp__BaseUrl: http://localhost:8080
+      # Landing-page leads (POST /api/leads) are emailed via SendGrid - empty key = logged only.
+      SendGrid__ApiKey: ${SENDGRID_API_KEY:-}
+      SendGrid__FromEmail: ${SENDGRID_FROM_EMAIL:-no-reply@example.com}
+      SendGrid__FromName: EduCore
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  academicservice:
+    <<: *dotnet-service
+    build:
+      context: ../AcademicService
+    ports:
+      - "5136:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+    volumes:
+      # Study Materials uploads (see AcademicService LocalStudyMaterialStorage); survives image rebuilds.
+      - study-materials:/app/App_Data/study-materials
+
+  financeservice:
+    <<: *dotnet-service
+    build:
+      context: ../FinanceService
+    ports:
+      - "5137:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinanceServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+
+  campusservice:
+    <<: *dotnet-service
+    build:
+      context: ../CampusService
+    ports:
+      - "5139:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CampusServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+
+  engagementservice:
+    <<: *dotnet-service
+    build:
+      context: ../EngagementService
+    ports:
+      - "5140:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=EngagementServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      # MeetingService posts meeting events (scheduled, reminder, cancelled...) to /internal/events with this key.
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
+      # Web Push (class reminders on phones). Empty keys = push off.
+      Push__PublicKey: ${PUSH_VAPID_PUBLIC_KEY:-}
+      Push__PrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
+      Push__Subject: mailto:admin@educore.dev
+    volumes:
+      # Talent Showcase uploads survive rebuilds.
+      - talent-media:/app/App_Data/talent-media
+
+  # Online classes & meetings. See E:\Personal\MeetingService and the design doc linked in its README.
+  meetingservice:
+    <<: *dotnet-service
+    build:
+      context: ../MeetingService
+    ports:
+      - "5141:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=MeetingServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Services__AcademicServiceUrl: http://academicservice:8080/
+      Services__EngagementServiceUrl: http://engagementservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
+      # The browser connects to LiveKit on the host port; this service talks to it on the Docker network.
+      LiveKit__Url: ws://localhost:7880
+      LiveKit__ApiUrl: http://livekit:7880
+      LiveKit__ApiKey: ${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required}
+      LiveKit__ApiSecret: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required}
+      # Recording: LiveKit Egress writes MP4s into the shared meeting-files volume (mounted at /out there).
+      LiveKit__EgressEnabled: "true"
+      LiveKit__EgressOutputRoot: /out
+    volumes:
+      # Class materials, recordings and the encryption key ring survive rebuilds.
+      - meeting-files:/app/App_Data/meeting-files
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+
+  # Self-hosted video server for online classes (design decision D2). Dev settings: the node advertises
+  # 127.0.0.1 so a browser on this machine can reach it. Production needs a public IP, TLS (wss://) and TURN.
+  livekit:
+    image: livekit/livekit-server:v1.13.7
+    restart: unless-stopped
+    command: ["--node-ip", "127.0.0.1"]
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: false
+        room:
+          empty_timeout: 300
+          departure_timeout: 20
+        webhook:
+          api_key: ${LIVEKIT_API_KEY}
+          urls:
+            - http://meetingservice:8080/webhooks/livekit
+        # Redis lets LiveKit hand recording jobs to the Egress service below.
+        redis:
+          address: redis:6379
+        logging:
+          level: info
+    depends_on:
+      - redis
+
+  # Class recording (headless Chrome composites the room into an MP4). It shares LiveKit's network namespace
+  # because the dev LiveKit advertises 127.0.0.1 for media, which inside any other container would be itself.
+  egress:
+    image: livekit/egress:v1.14.1
+    restart: unless-stopped
+    network_mode: "service:livekit"
+    cap_add:
+      - SYS_ADMIN
+    shm_size: "1gb"
+    environment:
+      EGRESS_CONFIG_BODY: |
+        api_key: ${LIVEKIT_API_KEY}
+        api_secret: ${LIVEKIT_API_SECRET}
+        ws_url: ws://127.0.0.1:7880
+        redis:
+          address: redis:6379
+        log_level: info
+    volumes:
+      - meeting-files:/out
+    depends_on:
+      - livekit
+      - redis
+
+  apigateway:
+    build:
+      context: ../ApiGateway
+    restart: unless-stopped
+    ports:
+      - "5138:8080"
+    environment:
+      <<: *dotnet-env
+      Services__FinanceServiceUrl: http://financeservice:8080/
+      ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address: http://authservice:8080/
+      ReverseProxy__Clusters__academic-cluster__Destinations__destination1__Address: http://academicservice:8080/
+      ReverseProxy__Clusters__finance-cluster__Destinations__destination1__Address: http://financeservice:8080/
+      ReverseProxy__Clusters__meeting-cluster__Destinations__destination1__Address: http://meetingservice:8080/
+      ReverseProxy__Clusters__campus-cluster__Destinations__destination1__Address: http://campusservice:8080/
+      ReverseProxy__Clusters__engagement-cluster__Destinations__destination1__Address: http://engagementservice:8080/
+    depends_on:
+      - authservice
+      - academicservice
+      - financeservice
+      - meetingservice
+      - campusservice
+      - engagementservice
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?SA_PASSWORD is required}
+    ports:
+      # 14330 rather than 1433, so it doesn't clash with a local SQL Server instance.
+      - "14330:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+
+volumes:
+  sqlserver-data:
+  redis-data:
+  talent-media:
+  study-materials:
+  meeting-files:

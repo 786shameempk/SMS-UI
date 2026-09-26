@@ -1,0 +1,236 @@
+/*
+ * Creative Campus — Talent Showcase's visual identity. Scoped under .cc-root so nothing leaks into the
+ * rest of the ERP. Surfaces still use the app's semantic tokens (bg-card, text-foreground...), so light
+ * and dark themes both work; the module layers its own palette on top:
+ * deep navy / indigo + purple + sky + teal, with a warm amber accent.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650;12..96,800&display=swap");
+
+.cc-root {
+  --cc-navy: #0b1030;
+  --cc-indigo: #3730a3;
+  --cc-purple: #7c3aed;
+  --cc-sky: #38bdf8;
+  --cc-teal: #14b8a6;
+  --cc-warm: #f59e0b;
+  --cc-coral: #fb7185;
+  --cc-ink: #1e1b4b;
+  --cc-glow: 0 18px 40px -18px rgb(76 29 149 / 0.45);
+}
+
+.cc-display {
+  font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Signature gradient: indigo → purple → sky, with a warm spark. */
+.cc-gradient-text {
+  background: linear-gradient(100deg, #a78bfa 0%, #f0abfc 35%, #7dd3fc 70%, #fcd34d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cc-gradient-text-strong {
+  background: linear-gradient(100deg, var(--cc-indigo), var(--cc-purple) 45%, #0ea5e9 80%, var(--cc-teal));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cc-gradient-bg {
+  background: linear-gradient(120deg, var(--cc-indigo), var(--cc-purple) 50%, #0ea5e9);
+}
+
+.cc-warm-bg {
+  background: linear-gradient(120deg, #f59e0b, #fb7185);
+}
+
+/* The hero: deep navy canvas with drifting colour fields. */
+.cc-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 80% at 12% 10%, rgb(124 58 237 / 0.55), transparent 60%),
+    radial-gradient(50% 70% at 88% 20%, rgb(56 189 248 / 0.35), transparent 60%),
+    radial-gradient(45% 60% at 70% 110%, rgb(20 184 166 / 0.35), transparent 60%),
+    radial-gradient(40% 50% at 20% 120%, rgb(245 158 11 / 0.25), transparent 60%),
+    linear-gradient(160deg, #0b1030 0%, #1e1b4b 55%, #0b1030 100%);
+  color: white;
+}
+
+.cc-hero::after {
+  /* faint dot grid for texture */
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+.cc-glass {
+  background: rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  backdrop-filter: blur(14px);
+}
+
+.cc-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.55;
+  animation: cc-drift 18s ease-in-out infinite alternate;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes cc-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(30px, -20px, 0) scale(1.15); }
+}
+
+.cc-sparkle {
+  position: absolute;
+  pointer-events: none;
+  animation: cc-twinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes cc-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.6) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(20deg); }
+}
+
+.cc-float {
+  animation: cc-float 6s ease-in-out infinite;
+}
+
+@keyframes cc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Cards lift and glow on hover; media zooms gently. */
+.cc-card {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
+}
+
+.cc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--cc-glow);
+}
+
+.cc-card .cc-card-media {
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cc-card:hover .cc-card-media {
+  transform: scale(1.05);
+}
+
+.cc-ring-gradient {
+  position: relative;
+}
+
+.cc-ring-gradient::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from 180deg, #7c3aed, #38bdf8, #14b8a6, #f59e0b, #fb7185, #7c3aed);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Horizontal rails: momentum scroll with snap, no visible scrollbar. */
+.cc-rail {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cc-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.cc-rail > * {
+  scroll-snap-align: start;
+}
+
+.cc-shimmer {
+  background: linear-gradient(90deg, rgb(148 163 184 / 0.12) 25%, rgb(148 163 184 / 0.24) 50%, rgb(148 163 184 / 0.12) 75%);
+  background-size: 200% 100%;
+  animation: cc-shimmer 1.4s linear infinite;
+}
+
+@keyframes cc-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* Audio equalizer bars while playing. */
+.cc-eq-bar {
+  transform-origin: bottom;
+  animation: cc-eq 0.9s ease-in-out infinite;
+}
+
+@keyframes cc-eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+.cc-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cc-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #a78bfa var(--cc-progress, 0%), rgb(255 255 255 / 0.25) var(--cc-progress, 0%));
+}
+
+.cc-range::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #a78bfa var(--cc-progress, 0%), rgb(255 255 255 / 0.25) var(--cc-progress, 0%));
+}
+
+.cc-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: white;
+  box-shadow: 0 0 0 4px rgb(167 139 250 / 0.35);
+}
+
+.cc-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 9999px;
+  background: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-blob,
+  .cc-sparkle,
+  .cc-float,
+  .cc-eq-bar,
+  .cc-shimmer {
+    animation: none;
+  }
+
+  .cc-card,
+  .cc-card .cc-card-media {
+    transition: none;
+  }
+}

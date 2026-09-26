@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,12 +102,12 @@ export default function RouteFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="rt-name">Route name</Label>
-            <Input id="rt-name" placeholder="e.g. Route 1 — Jayanagar / JP Nagar" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="rt-name" required>Route name</Label>
+            <Input id="rt-name" placeholder="e.g. Route 1 — Jayanagar / JP Nagar" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="rt-busId">Bus</Label>
               <Controller
@@ -154,21 +154,21 @@ export default function RouteFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="rt-startTime">Start time</Label>
-              <Input id="rt-startTime" type="time" {...register("startTime")} />
-              {errors.startTime && <p className="text-xs text-red-600">{errors.startTime.message}</p>}
+              <Label htmlFor="rt-startTime" required>Start time</Label>
+              <Input id="rt-startTime" type="time" aria-invalid={errors.startTime ? true : undefined} {...register("startTime")} />
+              {errors.startTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startTime.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="rt-endTime">End time</Label>
-              <Input id="rt-endTime" type="time" {...register("endTime")} />
-              {errors.endTime && <p className="text-xs text-red-600">{errors.endTime.message}</p>}
+              <Label htmlFor="rt-endTime" required>End time</Label>
+              <Input id="rt-endTime" type="time" aria-invalid={errors.endTime ? true : undefined} {...register("endTime")} />
+              {errors.endTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endTime.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="rt-status">Status</Label>
+            <Label htmlFor="rt-status" required>Status</Label>
             <Controller
               control={control}
               name="status"
@@ -190,8 +190,7 @@ export default function RouteFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create route"}
             </Button>
           </DialogFooter>

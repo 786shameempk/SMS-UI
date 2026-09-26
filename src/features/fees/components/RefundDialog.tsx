@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,21 +61,20 @@ export default function RefundDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="refund-amount">Amount</Label>
-            <Input id="refund-amount" type="number" step="1" min="1" {...register("amount")} />
-            {errors.amount && <p className="text-xs text-red-600">{errors.amount.message}</p>}
+            <Label htmlFor="refund-amount" required>Amount</Label>
+            <Input id="refund-amount" type="number" step="1" min="1" aria-invalid={errors.amount ? true : undefined} {...register("amount")} />
+            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.amount.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="refund-reason">Reason</Label>
-            <Textarea id="refund-reason" rows={3} {...register("reason")} />
-            {errors.reason && <p className="text-xs text-red-600">{errors.reason.message}</p>}
+            <Label htmlFor="refund-reason" required>Reason</Label>
+            <Textarea id="refund-reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Submit refund request
             </Button>
           </DialogFooter>

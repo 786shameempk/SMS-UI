@@ -22,7 +22,7 @@ interface FineRow {
 export default function FinesTab() {
   const queryClient = useQueryClient();
 
-  const { data: loans = [], isLoading } = useQuery({ queryKey: ["library", "loans"], queryFn: listLoans });
+  const { data: loans = [], isLoading, isError, refetch } = useQuery({ queryKey: ["library", "loans"], queryFn: listLoans });
   const { data: books = [] } = useQuery({ queryKey: ["library", "books"], queryFn: listBooks });
   const { data: members = [] } = useQuery({ queryKey: ["library", "members"], queryFn: listMembers });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -66,22 +66,22 @@ export default function FinesTab() {
   }, [loans]);
 
   const columns: ColumnDef<FineRow, unknown>[] = [
-    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{bookById.get(row.original.loan.bookId)?.title ?? "—"}</span> },
+    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.loan.bookId)?.title ?? "—"}</span> },
     {
       id: "member",
       header: "Member",
       cell: ({ row }) => {
         const member = memberById.get(row.original.loan.memberId);
-        return <span className="text-sm text-slate-700">{member ? memberLabel(member) : "—"}</span>;
+        return <span className="text-sm text-foreground">{member ? memberLabel(member) : "—"}</span>;
       },
     },
-    { id: "dueDate", header: "Due date", cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.loan.dueDate).toLocaleDateString()}</span> },
+    { id: "dueDate", header: "Due date", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.loan.dueDate).toLocaleDateString()}</span> },
     {
       id: "returnedOn",
       header: "Returned",
       cell: ({ row }) =>
         row.original.loan.returnedOn ? (
-          <span className="text-sm text-slate-600">{new Date(row.original.loan.returnedOn).toLocaleDateString()}</span>
+          <span className="text-sm text-secondary-foreground">{new Date(row.original.loan.returnedOn).toLocaleDateString()}</span>
         ) : (
           <Badge variant="danger">Not yet returned</Badge>
         ),
@@ -90,7 +90,7 @@ export default function FinesTab() {
       id: "fineAmount",
       header: "Fine",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-700 tabular-nums">
+        <span className="text-sm text-foreground tabular-nums">
           {formatCurrency(row.original.fineAmount)}
           {!row.original.finalized && <span className="text-xs text-muted-foreground"> (running)</span>}
         </span>
@@ -127,7 +127,7 @@ export default function FinesTab() {
         </p>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={rows} isLoading={isLoading} emptyMessage="No fines to show." />
+      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No fines to show." />
     </div>
   );
 }

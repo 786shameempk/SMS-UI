@@ -104,7 +104,7 @@ export default function LearningResourcesTab() {
             <Card key={resource.id}>
               <CardHeader className="flex-row items-start justify-between gap-2 pb-2">
                 <div className="flex items-start gap-2 min-w-0">
-                  <Icon className="w-4 h-4 text-brand-600 mt-0.5 shrink-0" />
+                  <Icon className="w-4 h-4 text-primary-text mt-0.5 shrink-0" />
                   <div className="min-w-0">
                     <CardTitle className="text-sm truncate">{resource.title}</CardTitle>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -118,7 +118,7 @@ export default function LearningResourcesTab() {
               </CardHeader>
               <CardContent className="space-y-2.5 pt-0">
                 <Badge variant="neutral">{typeLabel}</Badge>
-                {resource.description && <p className="text-sm text-slate-600 line-clamp-2">{resource.description}</p>}
+                {resource.description && <p className="text-sm text-secondary-foreground line-clamp-2">{resource.description}</p>}
                 <p className="text-xs text-muted-foreground">Shared by {teacherById.get(resource.createdByStaffId)?.firstName ?? "Unknown"}</p>
 
                 {resource.type === "discussion" && (
@@ -127,9 +127,9 @@ export default function LearningResourcesTab() {
                     View discussion
                   </Button>
                 )}
-                {resource.type === "quiz" && quiz && <p className="text-xs text-slate-500">{quiz.questions.length} question(s)</p>}
+                {resource.type === "quiz" && quiz && <p className="text-xs text-muted-foreground">{quiz.questions.length} question(s)</p>}
                 {resource.url && (
-                  <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-600 hover:underline">
+                  <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary-text hover:underline">
                     <ExternalLink className="w-3 h-3" />
                     Open link
                   </a>

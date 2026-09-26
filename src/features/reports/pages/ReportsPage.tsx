@@ -8,20 +8,18 @@ import LibraryUsageTab from "../components/LibraryUsageTab";
 import StudentPerformanceTab from "../components/StudentPerformanceTab";
 import TeacherPerformanceTab from "../components/TeacherPerformanceTab";
 import TransportUtilizationTab from "../components/TransportUtilizationTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function ReportsPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Reports & analytics</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Dashboards pulled live from every module — student performance, attendance, fees, teachers, admissions, dropout risk,
-          library usage, transport, and hostel occupancy.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Reports & analytics"
+        description="Dashboards pulled live from every module — student performance, attendance, fees, teachers, admissions, dropout risk, library usage, transport, and hostel occupancy."
+      />
 
       <Tabs defaultValue="student-performance">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="student-performance">Student Performance</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="fees">Fee Collection</TabsTrigger>
@@ -60,6 +58,6 @@ export default function ReportsPage() {
           <HostelOccupancyTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

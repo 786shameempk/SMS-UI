@@ -21,7 +21,7 @@ export default function StatusToggleGroup<T extends string>({
             onClick={() => onChange(opt.value)}
             className={cn(
               "px-2.5 py-1 rounded-md text-xs font-medium border transition-colors cursor-pointer",
-              active ? statusToggleActiveClass(opt.value) : "border-border bg-card text-slate-600 hover:bg-secondary",
+              active ? statusToggleActiveClass(opt.value) : "border-border bg-card text-secondary-foreground hover:bg-secondary",
             )}
           >
             {opt.label}

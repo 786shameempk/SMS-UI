@@ -49,7 +49,7 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-slate-400" />
+            <BarChart3 className="w-4 h-4 text-muted-foreground" />
             Class average by subject
           </CardTitle>
           <CardDescription>
@@ -78,7 +78,7 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
         <Card key={row.assignmentId}>
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-slate-400" />
+              <Users className="w-4 h-4 text-muted-foreground" />
               {row.subject.name} &middot; {row.schoolClass.name}
             </CardTitle>
             <Badge variant="info">Class average {row.classAverage}</Badge>
@@ -108,11 +108,11 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
                   <tbody>
                     {row.students.map(({ student, averageScore, grade }) => (
                       <tr key={student.id} className="border-b border-border last:border-0">
-                        <td className="px-3 py-2 text-slate-800">
+                        <td className="px-3 py-2 text-foreground">
                           {student.firstName} {student.lastName}
                         </td>
-                        <td className="px-3 py-2 text-slate-600">{student.rollNumber ?? "—"}</td>
-                        <td className="px-3 py-2 text-slate-600">{averageScore}</td>
+                        <td className="px-3 py-2 text-secondary-foreground">{student.rollNumber ?? "—"}</td>
+                        <td className="px-3 py-2 text-secondary-foreground">{averageScore}</td>
                         <td className="px-3 py-2">
                           <Badge variant={gradeVariant(grade)}>{grade}</Badge>
                         </td>

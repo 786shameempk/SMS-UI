@@ -15,8 +15,8 @@ export default function UpcomingExamsCard({ exams }: { exams: UpcomingExam[] }) 
         {exams.map((exam) => (
           <div key={exam.id} className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800 truncate">{exam.subject}</p>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-sm font-medium text-foreground truncate">{exam.subject}</p>
+              <p className="text-xs text-muted-foreground truncate">
                 {exam.className} &middot; {exam.durationMinutes} min
               </p>
             </div>

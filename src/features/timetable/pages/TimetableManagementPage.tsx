@@ -4,19 +4,18 @@ import RoomsTab from "../components/RoomsTab";
 import StudentParentViewTab from "../components/StudentParentViewTab";
 import SubstitutionsTab from "../components/SubstitutionsTab";
 import TeacherViewTab from "../components/TeacherViewTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function TimetableManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Timetable management</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Weekly period grids per section, room allocation, substitute teachers, and holiday awareness.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Timetable management"
+        description="Weekly period grids per section, room allocation, substitute teachers, and holiday awareness."
+      />
 
       <Tabs defaultValue="class-section">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="class-section">Class/Section View</TabsTrigger>
           <TabsTrigger value="teacher">Teacher View</TabsTrigger>
           <TabsTrigger value="student-parent">Student/Parent View</TabsTrigger>
@@ -39,6 +38,6 @@ export default function TimetableManagementPage() {
           <SubstitutionsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

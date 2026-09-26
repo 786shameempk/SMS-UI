@@ -4,8 +4,44 @@
     {
       "name": "sms-ui-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 5173
+    },
+    {
+      "name": "sms-ui-127",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "port": 5173,
+      "url": "http://127.0.0.1:5173"
+    },
+    {
+      "name": "educore-student-web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "../SMS Mobile/node_modules/expo/bin/cli",
+        "start",
+        "../SMS Mobile/apps/student",
+        "--web",
+        "--port",
+        "8081"
+      ],
+      "port": 8081,
+      "env": {
+        "CI": "1",
+        "EXPO_PUBLIC_API_URL": "http://localhost:5138"
+      }
     }
   ]
 }

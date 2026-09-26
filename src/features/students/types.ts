@@ -1,7 +1,26 @@
 export type Gender = "male" | "female" | "other";
 export type BloodGroup = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "unknown";
 export type StudentStatus = "active" | "inactive" | "transferred" | "graduated" | "alumni";
-export type AdmissionStatus = "pending" | "approved" | "rejected" | "waitlisted";
+/**
+ * Full admission pipeline: Inquiry → Registration → Entrance Exam → Interview → (Selection
+ * decision) → Fee Collection → Student Creation ("enrolled"). "waitlisted"/"rejected"/"withdrawn"
+ * are terminal side-branches reachable from the decision step (or, for reject/withdraw, from
+ * any in-progress step). There's no persisted "selection" stage — the decision made at that
+ * point is what routes an application to fee_collection/waitlisted/rejected directly.
+ */
+export type AdmissionStage =
+  | "inquiry"
+  | "registration"
+  | "entrance_exam"
+  | "interview"
+  | "fee_collection"
+  | "enrolled"
+  | "waitlisted"
+  | "rejected"
+  | "withdrawn";
+
+export type ExamResultStatus = "scheduled" | "completed" | "absent";
+export type SelectionDecision = "selected" | "waitlisted" | "rejected";
 export type GuardianRelation = "father" | "mother" | "guardian";
 export type DocumentCategory =
   | "birth_certificate"
@@ -64,6 +83,8 @@ export interface TransferRecord {
 
 export interface Student {
   id: string;
+  tenantId: string;
+  branchId: string;
   admissionNumber: string;
   firstName: string;
   lastName: string;
@@ -86,6 +107,7 @@ export interface Student {
 }
 
 export interface StudentFormValues {
+  branchId: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -101,27 +123,99 @@ export interface StudentFormValues {
 
 export interface AdmissionApplication {
   id: string;
+  tenantId: string;
+  branchId: string;
+  applicationNumber: string;
   applicantFirstName: string;
   applicantLastName: string;
   dateOfBirth: string;
   gender: Gender;
   guardianName: string;
   guardianPhone: string;
+  guardianEmail?: string;
   appliedClass: string;
-  status: AdmissionStatus;
+  stage: AdmissionStage;
   submittedAt: string;
   notes?: string;
+
+  // Registration
+  address?: string;
+  previousSchool?: string;
+  registeredAt?: string;
+
+  // Entrance exam
+  examDate?: string;
+  examScore?: number;
+  examStatus?: ExamResultStatus;
+
+  // Interview
+  interviewDate?: string;
+  interviewerName?: string;
+  interviewRating?: number;
+  interviewRemarks?: string;
+
+  // Selection decision
+  decision?: SelectionDecision;
+  decisionRemarks?: string;
+  decidedAt?: string;
+
+  // Fee collection
+  admissionFeeAmount?: number;
+  admissionFeePaid?: boolean;
+  admissionFeePaidOn?: string;
+  admissionFeeReceiptNumber?: string;
+
+  // Student creation
+  studentId?: string;
+  enrolledAt?: string;
 }
 
 export interface AdmissionFormValues {
+  branchId: string;
   applicantFirstName: string;
   applicantLastName: string;
   dateOfBirth: string;
   gender: Gender;
   guardianName: string;
   guardianPhone: string;
+  guardianEmail?: string;
   appliedClass: string;
   notes?: string;
+}
+
+export interface AdmissionRegistrationFormValues {
+  address: string;
+  previousSchool?: string;
+}
+
+export interface AdmissionExamFormValues {
+  examDate: string;
+  examStatus: ExamResultStatus;
+  examScore?: number;
+}
+
+export interface AdmissionInterviewFormValues {
+  interviewDate: string;
+  interviewerName: string;
+  interviewRating?: number;
+  interviewRemarks?: string;
+}
+
+export interface AdmissionDecisionFormValues {
+  decision: SelectionDecision;
+  decisionRemarks?: string;
+}
+
+export interface AdmissionFeePaymentFormValues {
+  amount: number;
+  paymentMode: string;
+}
+
+export interface SeatAvailability {
+  className: string;
+  capacity: number;
+  currentStrength: number;
+  availableSeats: number;
 }
 
 export interface TransferFormValues {

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,14 +83,14 @@ export default function HostelFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="hst-name">Hostel name</Label>
-            <Input id="hst-name" placeholder="e.g. Sunrise Boys Hostel" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="hst-name" required>Hostel name</Label>
+            <Input id="hst-name" placeholder="e.g. Sunrise Boys Hostel" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="hst-type">Type</Label>
+              <Label htmlFor="hst-type" required>Type</Label>
               <Controller
                 control={control}
                 name="type"
@@ -111,7 +111,7 @@ export default function HostelFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="hst-status">Status</Label>
+              <Label htmlFor="hst-status" required>Status</Label>
               <Controller
                 control={control}
                 name="status"
@@ -154,7 +154,7 @@ export default function HostelFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hst-address">Address (optional)</Label>
+            <Label htmlFor="hst-address" optional>Address</Label>
             <Input id="hst-address" placeholder="e.g. Block A, School Campus" {...register("address")} />
           </div>
 
@@ -162,8 +162,7 @@ export default function HostelFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create hostel"}
             </Button>
           </DialogFooter>

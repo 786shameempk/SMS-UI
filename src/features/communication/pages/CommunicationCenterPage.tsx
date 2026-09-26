@@ -3,19 +3,18 @@ import ComposeTab from "../components/ComposeTab";
 import GroupsTab from "../components/GroupsTab";
 import HistoryTab from "../components/HistoryTab";
 import TemplatesTab from "../components/TemplatesTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function CommunicationCenterPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Communication center</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Compose and broadcast messages across channels, manage templates and recipient groups, and track scheduled/sent messages.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Communication center"
+        description="Compose and broadcast messages across channels, manage templates and recipient groups, and track scheduled/sent messages."
+      />
 
       <Tabs defaultValue="compose">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="compose">Compose</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="groups">Groups</TabsTrigger>
@@ -34,6 +33,6 @@ export default function CommunicationCenterPage() {
           <HistoryTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

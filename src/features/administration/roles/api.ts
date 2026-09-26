@@ -1,197 +1,132 @@
-import { mockDelay } from "@/utils/mockDelay";
-import { listUsers } from "../users/api";
-import {
-  SEED_FEATURE_TOGGLES,
-  SEED_POLICIES,
-  SEED_PERMISSIONS,
-  SEED_ROLE_PERMISSIONS,
-  SEED_ROLES,
-} from "./mock";
+import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { PERMISSION_CATALOG } from "./constants";
 import type { FeatureToggle, Permission, Policy, PolicyFormValues, Role, RoleFormValues, RolePermissionMap } from "./types";
 
-const ROLES_KEY = "sms-mock-roles";
-const ROLE_PERMISSIONS_KEY = "sms-mock-role-permissions";
-const POLICIES_KEY = "sms-mock-policies";
-const FEATURE_TOGGLES_KEY = "sms-mock-feature-toggles";
+// Real AuthService-backed (/api/school-roles), scoped server-side to the active tenant. Built-in
+// roles are shared by every school, so only a school's own custom roles can be renamed/deleted.
 
-function loadJson<T>(key: string, fallback: T): T {
+interface ApiSchoolRole {
+  id: string;
+  tenantId: string | null;
+  key: string;
+  name: string;
+  description: string;
+  isSystem: boolean;
+  grantsAllBranchAccess: boolean;
+  createdAt: string;
+  userCount: number;
+}
+
+interface ApiPolicy {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string;
+  module: string;
+  condition: string;
+  roleIds: string[];
+  enabled: boolean;
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
 
-let roles = loadJson<Role[]>(ROLES_KEY, SEED_ROLES.map((r) => ({ ...r })));
-let rolePermissions = loadJson<RolePermissionMap>(ROLE_PERMISSIONS_KEY, { ...SEED_ROLE_PERMISSIONS });
-let policies = loadJson<Policy[]>(POLICIES_KEY, SEED_POLICIES.map((p) => ({ ...p })));
-let featureToggles = loadJson<FeatureToggle[]>(FEATURE_TOGGLES_KEY, SEED_FEATURE_TOGGLES.map((f) => ({ ...f })));
+const mapRole = (dto: ApiSchoolRole): Role => ({
+  id: dto.id,
+  tenantId: dto.tenantId ?? "",
+  name: dto.name,
+  description: dto.description,
+  isSystem: dto.isSystem,
+  grantsAllBranchAccess: dto.grantsAllBranchAccess,
+  createdAt: dto.createdAt,
+});
 
-function nextRoleId(): string {
-  return `role-custom-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function nextPolicyId(): string {
-  const max = policies.reduce((acc, p) => Math.max(acc, Number(p.id.replace("pol-", "")) || 0), 0);
-  return `pol-${max + 1}`;
-}
+const fetchRoles = () => unwrap(authHttpClient.get<ApiSchoolRole[]>("/api/school-roles"));
 
 // ── Roles ──────────────────────────────────────────────────────────────────
 
 export async function listRoles(): Promise<Role[]> {
-  return mockDelay([...roles], 350);
+  return (await fetchRoles()).map(mapRole);
 }
 
 export async function getRoleUserCounts(): Promise<Record<string, number>> {
-  const users = await listUsers();
-  const counts: Record<string, number> = {};
-  for (const user of users) counts[user.roleId] = (counts[user.roleId] ?? 0) + 1;
-  return counts;
+  return Object.fromEntries((await fetchRoles()).map((r) => [r.id, r.userCount]));
 }
 
 export async function createRole(values: RoleFormValues): Promise<Role> {
-  if (roles.some((r) => r.name.toLowerCase() === values.name.trim().toLowerCase())) {
-    await mockDelay(null, 350);
-    throw new Error("A role with this name already exists");
-  }
-  const role: Role = {
-    id: nextRoleId(),
-    name: values.name.trim(),
-    description: values.description.trim(),
-    isSystem: false,
-    createdAt: new Date().toISOString(),
-  };
-  roles = [...roles, role];
-  rolePermissions = { ...rolePermissions, [role.id]: [] };
-  saveJson(ROLES_KEY, roles);
-  saveJson(ROLE_PERMISSIONS_KEY, rolePermissions);
-  return mockDelay(role, 400);
+  return mapRole(await unwrap(authHttpClient.post<ApiSchoolRole>("/api/school-roles", values)));
 }
 
 export async function updateRole(id: string, values: RoleFormValues): Promise<Role> {
-  const idx = roles.findIndex((r) => r.id === id);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Role not found");
-  }
-  if (roles.some((r) => r.id !== id && r.name.toLowerCase() === values.name.trim().toLowerCase())) {
-    await mockDelay(null, 350);
-    throw new Error("A role with this name already exists");
-  }
-  const updated: Role = { ...roles[idx], name: values.name.trim(), description: values.description.trim() };
-  roles = roles.map((r) => (r.id === id ? updated : r));
-  saveJson(ROLES_KEY, roles);
-  return mockDelay(updated, 400);
+  return mapRole(await unwrap(authHttpClient.put<ApiSchoolRole>(`/api/school-roles/${id}`, values)));
 }
 
 export async function deleteRole(id: string): Promise<void> {
-  const role = roles.find((r) => r.id === id);
-  if (!role) {
-    await mockDelay(null, 300);
-    throw new Error("Role not found");
-  }
-  if (role.isSystem) {
-    await mockDelay(null, 300);
-    throw new Error("Built-in roles cannot be deleted");
-  }
-  const counts = await getRoleUserCounts();
-  if ((counts[id] ?? 0) > 0) {
-    throw new Error(`Reassign ${counts[id]} user(s) away from this role before deleting it`);
-  }
-  roles = roles.filter((r) => r.id !== id);
-  const remainingPermissions = { ...rolePermissions };
-  delete remainingPermissions[id];
-  rolePermissions = remainingPermissions;
-  saveJson(ROLES_KEY, roles);
-  saveJson(ROLE_PERMISSIONS_KEY, rolePermissions);
+  await unwrap(authHttpClient.delete<void>(`/api/school-roles/${id}`));
 }
 
 // ── Permissions ──────────────────────────────────────────────────────────────
 
+/** The catalog is static app metadata (one row per nav destination), shared verbatim with AuthService. */
 export async function listPermissions(): Promise<Permission[]> {
-  return mockDelay([...SEED_PERMISSIONS], 300);
+  return [...PERMISSION_CATALOG];
 }
 
+/** Which matrix modules this user may see and grant: their school's plan, or every module for superAdmin. */
+export interface MatrixModuleScope {
+  restricted: boolean;
+  planName: string | null;
+  modules: string[];
+}
+
+export async function getMatrixModules(): Promise<MatrixModuleScope> {
+  return unwrap(authHttpClient.get<MatrixModuleScope>("/api/school-roles/matrix/modules"));
+}
+
+export const MATRIX_MODULES_QUERY_KEY = ["admin", "matrix-modules"] as const;
+
 export async function getRolePermissions(): Promise<RolePermissionMap> {
-  return mockDelay({ ...rolePermissions }, 300);
+  return unwrap(authHttpClient.get<RolePermissionMap>("/api/school-roles/matrix"));
 }
 
 export async function setRolePermission(roleId: string, permissionId: string, granted: boolean): Promise<RolePermissionMap> {
-  const current = new Set(rolePermissions[roleId] ?? []);
-  if (granted) current.add(permissionId);
-  else current.delete(permissionId);
-  rolePermissions = { ...rolePermissions, [roleId]: Array.from(current) };
-  saveJson(ROLE_PERMISSIONS_KEY, rolePermissions);
-  return mockDelay({ ...rolePermissions }, 150);
+  await unwrap(authHttpClient.put<void>(`/api/school-roles/${roleId}/matrix/${encodeURIComponent(permissionId)}`, { granted }));
+  return getRolePermissions();
 }
 
 // ── Policies ─────────────────────────────────────────────────────────────────
 
 export async function listPolicies(): Promise<Policy[]> {
-  return mockDelay([...policies], 350);
+  return unwrap(authHttpClient.get<ApiPolicy[]>("/api/school-roles/policies"));
 }
 
 export async function createPolicy(values: PolicyFormValues): Promise<Policy> {
-  const policy: Policy = { id: nextPolicyId(), enabled: true, ...values };
-  policies = [policy, ...policies];
-  saveJson(POLICIES_KEY, policies);
-  return mockDelay(policy, 400);
+  return unwrap(authHttpClient.post<ApiPolicy>("/api/school-roles/policies", values));
 }
 
 export async function updatePolicy(id: string, values: PolicyFormValues): Promise<Policy> {
-  const idx = policies.findIndex((p) => p.id === id);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Policy not found");
-  }
-  const updated: Policy = { ...policies[idx], ...values };
-  policies = policies.map((p) => (p.id === id ? updated : p));
-  saveJson(POLICIES_KEY, policies);
-  return mockDelay(updated, 400);
+  return unwrap(authHttpClient.put<ApiPolicy>(`/api/school-roles/policies/${id}`, values));
 }
 
 export async function deletePolicy(id: string): Promise<void> {
-  policies = policies.filter((p) => p.id !== id);
-  saveJson(POLICIES_KEY, policies);
-  await mockDelay(null, 300);
+  await unwrap(authHttpClient.delete<void>(`/api/school-roles/policies/${id}`));
 }
 
 export async function setPolicyEnabled(id: string, enabled: boolean): Promise<Policy> {
-  const idx = policies.findIndex((p) => p.id === id);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Policy not found");
-  }
-  const updated = { ...policies[idx], enabled };
-  policies = policies.map((p) => (p.id === id ? updated : p));
-  saveJson(POLICIES_KEY, policies);
-  return mockDelay(updated, 250);
+  return unwrap(authHttpClient.put<ApiPolicy>(`/api/school-roles/policies/${id}/enabled`, { enabled }));
 }
 
 // ── Feature toggles ──────────────────────────────────────────────────────────
 
 export async function listFeatureToggles(): Promise<FeatureToggle[]> {
-  return mockDelay([...featureToggles], 300);
+  return unwrap(authHttpClient.get<FeatureToggle[]>("/api/school-roles/feature-toggles"));
 }
 
 export async function setFeatureToggle(id: string, enabled: boolean): Promise<FeatureToggle> {
-  const idx = featureToggles.findIndex((f) => f.id === id);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Feature not found");
-  }
-  const updated = { ...featureToggles[idx], enabled };
-  featureToggles = featureToggles.map((f) => (f.id === id ? updated : f));
-  saveJson(FEATURE_TOGGLES_KEY, featureToggles);
-  return mockDelay(updated, 250);
+  return unwrap(authHttpClient.put<FeatureToggle>(`/api/school-roles/feature-toggles/${id}`, { enabled }));
 }

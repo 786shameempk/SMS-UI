@@ -13,7 +13,13 @@ import { getAttendanceForSectionDate, getSectionRoster, listRosterSections, save
 import { ATTENDANCE_STATUSES, attendanceStatusBadgeVariant, todayDateKey } from "../constants";
 import CaptureModeSelector from "./CaptureModeSelector";
 import StatusToggleGroup from "./StatusToggleGroup";
-import type { AttendanceStatus, CaptureMode, MarkAttendanceEntry } from "../types";
+import type { AttendanceRecord, AttendanceStatus, CaptureMode, MarkAttendanceEntry, StudentRosterEntry } from "../types";
+
+// Stable fallbacks: an inline `= []` default is a new array every render, and the status-map effect
+// below depends on these — with no roster/records it would setState, re-render, get another new []
+// and loop forever, freezing the page (the sidebar stopped responding after opening Attendance).
+const NO_ROSTER: StudentRosterEntry[] = [];
+const NO_RECORDS: AttendanceRecord[] = [];
 
 export default function MarkAttendanceTab() {
   const queryClient = useQueryClient();
@@ -62,13 +68,13 @@ export default function MarkAttendanceTab() {
     }
   }, [availableSections, sectionId]);
 
-  const { data: roster = [], isLoading: rosterLoading } = useQuery({
+  const { data: roster = NO_ROSTER, isLoading: rosterLoading } = useQuery({
     queryKey: ["attendance", "roster", sectionId],
     queryFn: () => getSectionRoster(sectionId),
     enabled: Boolean(sectionId),
   });
 
-  const { data: existingRecords = [] } = useQuery({
+  const { data: existingRecords = NO_RECORDS } = useQuery({
     queryKey: ["attendance", "records", sectionId, date],
     queryFn: () => getAttendanceForSectionDate(sectionId, date),
     enabled: Boolean(sectionId && date),
@@ -237,10 +243,10 @@ export default function MarkAttendanceTab() {
                 roster.map((student) => (
                   <div key={student.id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3">
                     <div className="min-w-[180px]">
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {student.firstName} {student.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">Roll {student.rollNumber}</p>
+                      <p className="text-xs text-muted-foreground">Roll {student.rollNumber}</p>
                     </div>
                     <div className="sm:ml-auto">
                       <StatusToggleGroup

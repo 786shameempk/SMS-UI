@@ -81,7 +81,7 @@ export default function MessMenuTab() {
               <tbody>
                 {DAYS_OF_WEEK.map((day, index) => (
                   <tr key={day.value} className={cn("border-b border-border last:border-0", index % 2 === 1 && "bg-secondary/20")}>
-                    <td className="px-4 py-3 align-top text-sm font-medium text-slate-800 whitespace-nowrap">{day.label}</td>
+                    <td className="px-4 py-3 align-top text-sm font-medium text-foreground whitespace-nowrap">{day.label}</td>
                     {MEAL_TYPES.map((meal) => {
                       const entry = entryFor(day.value, meal.value);
                       return (
@@ -91,8 +91,8 @@ export default function MessMenuTab() {
                             onClick={() => setEditingCell({ day: day.value, meal: meal.value })}
                             className="group flex items-start gap-1.5 text-left cursor-pointer"
                           >
-                            <span className="text-sm text-slate-600">{entry?.items || "—"}</span>
-                            <Pencil className="w-3 h-3 text-slate-300 group-hover:text-slate-500 shrink-0 mt-0.5" />
+                            <span className="text-sm text-secondary-foreground">{entry?.items || "—"}</span>
+                            <Pencil className="w-3 h-3 text-muted-foreground/70 group-hover:text-muted-foreground shrink-0 mt-0.5" />
                           </button>
                         </td>
                       );

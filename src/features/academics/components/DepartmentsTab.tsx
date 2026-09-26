@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createDepartment, deleteDepartment, listDepartments, updateDepartment } from "../api";
 import type { Department, DepartmentFormValues } from "../types";
 import DepartmentFormDialog from "./DepartmentFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function DepartmentsTab() {
   const queryClient = useQueryClient();
-  const { data: departments = [], isLoading } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
+  const { data: departments = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Department | null>(null);
@@ -50,11 +51,11 @@ export default function DepartmentsTab() {
   });
 
   const columns: ColumnDef<Department, unknown>[] = [
-    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.name}</span> },
+    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       accessorKey: "description",
       header: "Description",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.description || "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.description || "—"}</span>,
     },
     {
       id: "actions",
@@ -62,28 +63,21 @@ export default function DepartmentsTab() {
       cell: ({ row }) => {
         const department = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(department);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(department)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(department);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(department)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -92,7 +86,7 @@ export default function DepartmentsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-slate-500">Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.</p>
+        <p className="text-sm text-muted-foreground">Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -104,7 +98,7 @@ export default function DepartmentsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={departments} isLoading={isLoading} emptyMessage="No departments yet." />
+      <DataTable searchable columns={columns} data={departments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No departments yet." />
 
       <DepartmentFormDialog
         open={formOpen}

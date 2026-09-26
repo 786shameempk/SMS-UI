@@ -1,18 +1,11 @@
-import { mockDelay } from "@/utils/mockDelay";
-import {
-  SEED_ACADEMIC_YEARS,
-  SEED_CALENDAR_EVENTS,
-  SEED_CLASSES,
-  SEED_DEPARTMENTS,
-  SEED_SECTIONS,
-  SEED_SUBJECTS,
-  SEED_TERMS,
-} from "./mock";
+import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import type {
   AcademicYear,
   AcademicYearFormValues,
+  AcademicYearStatus,
   CalendarEvent,
   CalendarEventFormValues,
+  CalendarEventType,
   Department,
   DepartmentFormValues,
   MergeSectionsResult,
@@ -22,270 +15,471 @@ import type {
   SectionFormValues,
   Subject,
   SubjectFormValues,
+  SubjectType,
   Term,
   TermFormValues,
+  TermStatus,
 } from "./types";
 
-const ACADEMIC_YEARS_KEY = "sms-mock-academic-years";
-const TERMS_KEY = "sms-mock-terms";
-const DEPARTMENTS_KEY = "sms-mock-departments";
-const CLASSES_KEY = "sms-mock-classes";
-const SECTIONS_KEY = "sms-mock-sections";
-const SUBJECTS_KEY = "sms-mock-subjects";
-const CALENDAR_EVENTS_KEY = "sms-mock-calendar-events";
+// ── Enum translation ────────────────────────────────────────────────────────
+// AcademicService's enums serialize as PascalCase (C# convention); SMS UI's types use
+// lowercase/snake_case unions. Small lookup tables keep this a one-line mapping at each call site
+// rather than a generic (and fragile) casing transform.
 
-function loadJson<T>(key: string, fallback: T): T {
+const ACADEMIC_YEAR_STATUS_TO_API: Record<AcademicYearStatus, string> = {
+  upcoming: "Upcoming",
+  active: "Active",
+  closed: "Closed",
+};
+const ACADEMIC_YEAR_STATUS_FROM_API: Record<string, AcademicYearStatus> = {
+  Upcoming: "upcoming",
+  Active: "active",
+  Closed: "closed",
+};
+
+const TERM_STATUS_TO_API: Record<TermStatus, string> = {
+  upcoming: "Upcoming",
+  ongoing: "Ongoing",
+  completed: "Completed",
+};
+const TERM_STATUS_FROM_API: Record<string, TermStatus> = {
+  Upcoming: "upcoming",
+  Ongoing: "ongoing",
+  Completed: "completed",
+};
+
+const SUBJECT_TYPE_TO_API: Record<SubjectType, string> = { core: "Core", elective: "Elective" };
+const SUBJECT_TYPE_FROM_API: Record<string, SubjectType> = { Core: "core", Elective: "elective" };
+
+const CALENDAR_EVENT_TYPE_TO_API: Record<CalendarEventType, string> = {
+  term_start: "TermStart",
+  term_end: "TermEnd",
+  exam: "Exam",
+  holiday: "Holiday",
+  other: "Other",
+};
+const CALENDAR_EVENT_TYPE_FROM_API: Record<string, CalendarEventType> = {
+  TermStart: "term_start",
+  TermEnd: "term_end",
+  Exam: "exam",
+  Holiday: "holiday",
+  Other: "other",
+};
+
+// ── API response shapes (AcademicService DTOs) ──────────────────────────────
+
+interface ApiAcademicYear {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  status: string;
+}
+
+interface ApiTerm {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  academicYearId: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+interface ApiDepartment {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  description: string | null;
+}
+
+interface ApiSchoolClass {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  departmentId: string | null;
+  academicYearId: string;
+}
+
+interface ApiSection {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  classId: string;
+  classTeacherName: string | null;
+  classTeacherStaffId: string | null;
+  capacity: number;
+  currentStrength: number;
+}
+
+interface ApiSubject {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  code: string;
+  type: string;
+  classIds: string[];
+}
+
+interface ApiCalendarEvent {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  title: string;
+  type: string;
+  startDate: string;
+  endDate: string | null;
+  academicYearId: string | null;
+  description: string | null;
+}
+
+// ── Mappers ──────────────────────────────────────────────────────────────────
+
+const mapAcademicYear = (dto: ApiAcademicYear): AcademicYear => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  name: dto.name,
+  startDate: dto.startDate,
+  endDate: dto.endDate,
+  isCurrent: dto.isCurrent,
+  status: ACADEMIC_YEAR_STATUS_FROM_API[dto.status] ?? "upcoming",
+});
+
+const mapTerm = (dto: ApiTerm): Term => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  name: dto.name,
+  academicYearId: dto.academicYearId,
+  startDate: dto.startDate,
+  endDate: dto.endDate,
+  status: TERM_STATUS_FROM_API[dto.status] ?? "upcoming",
+});
+
+const mapDepartment = (dto: ApiDepartment): Department => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  name: dto.name,
+  description: dto.description ?? undefined,
+});
+
+const mapSchoolClass = (dto: ApiSchoolClass): SchoolClass => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  name: dto.name,
+  departmentId: dto.departmentId ?? undefined,
+  academicYearId: dto.academicYearId,
+});
+
+const mapSection = (dto: ApiSection): Section => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  name: dto.name,
+  classId: dto.classId,
+  classTeacherName: dto.classTeacherName ?? undefined,
+  classTeacherStaffId: dto.classTeacherStaffId ?? undefined,
+  capacity: dto.capacity,
+  currentStrength: dto.currentStrength,
+});
+
+const mapSubject = (dto: ApiSubject): Subject => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  name: dto.name,
+  code: dto.code,
+  type: SUBJECT_TYPE_FROM_API[dto.type] ?? "core",
+  classIds: dto.classIds,
+});
+
+const mapCalendarEvent = (dto: ApiCalendarEvent): CalendarEvent => ({
+  id: dto.id,
+  tenantId: dto.tenantId,
+  branchId: dto.branchId,
+  title: dto.title,
+  type: CALENDAR_EVENT_TYPE_FROM_API[dto.type] ?? "other",
+  startDate: dto.startDate,
+  endDate: dto.endDate ?? undefined,
+  academicYearId: dto.academicYearId ?? undefined,
+  description: dto.description ?? undefined,
+});
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
-  return fallback;
-}
-
-function saveJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
-  }
-}
-
-function genId(prefix: string): string {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-let academicYears = loadJson<AcademicYear[]>(ACADEMIC_YEARS_KEY, SEED_ACADEMIC_YEARS.map((y) => ({ ...y })));
-let terms = loadJson<Term[]>(TERMS_KEY, SEED_TERMS.map((t) => ({ ...t })));
-let departments = loadJson<Department[]>(DEPARTMENTS_KEY, SEED_DEPARTMENTS.map((d) => ({ ...d })));
-let classes = loadJson<SchoolClass[]>(CLASSES_KEY, SEED_CLASSES.map((c) => ({ ...c })));
-let sections = loadJson<Section[]>(SECTIONS_KEY, SEED_SECTIONS.map((s) => ({ ...s })));
-let subjects = loadJson<Subject[]>(SUBJECTS_KEY, SEED_SUBJECTS.map((s) => ({ ...s })));
-let calendarEvents = loadJson<CalendarEvent[]>(CALENDAR_EVENTS_KEY, SEED_CALENDAR_EVENTS.map((e) => ({ ...e })));
-
-const persistAcademicYears = () => saveJson(ACADEMIC_YEARS_KEY, academicYears);
-const persistTerms = () => saveJson(TERMS_KEY, terms);
-const persistDepartments = () => saveJson(DEPARTMENTS_KEY, departments);
-const persistClasses = () => saveJson(CLASSES_KEY, classes);
-const persistSections = () => saveJson(SECTIONS_KEY, sections);
-const persistSubjects = () => saveJson(SUBJECTS_KEY, subjects);
-const persistCalendarEvents = () => saveJson(CALENDAR_EVENTS_KEY, calendarEvents);
-
-function requireEntity<T extends { id: string }>(list: T[], id: string, label: string): T {
-  const found = list.find((item) => item.id === id);
-  if (!found) throw new Error(`${label} not found`);
-  return found;
 }
 
 // ── Academic years ──────────────────────────────────────────────────────
 
 export async function listAcademicYears(): Promise<AcademicYear[]> {
-  return mockDelay([...academicYears], 350);
+  const years = await unwrap(academicHttpClient.get<ApiAcademicYear[]>("/api/academicyears"));
+  return years.map(mapAcademicYear);
 }
 
 export async function createAcademicYear(values: AcademicYearFormValues): Promise<AcademicYear> {
-  const year: AcademicYear = { id: genId("ay"), ...values };
-  academicYears = values.isCurrent ? academicYears.map((y) => ({ ...y, isCurrent: false })) : academicYears;
-  academicYears = [year, ...academicYears];
-  persistAcademicYears();
-  return mockDelay(year, 400);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiAcademicYear>("/api/academicyears", {
+      name: values.name,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      isCurrent: values.isCurrent,
+      status: ACADEMIC_YEAR_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapAcademicYear(dto);
 }
 
 export async function updateAcademicYear(id: string, values: AcademicYearFormValues): Promise<AcademicYear> {
-  requireEntity(academicYears, id, "Academic year");
-  academicYears = academicYears.map((y) => {
-    if (values.isCurrent && y.id !== id) return { ...y, isCurrent: false };
-    return y.id === id ? { ...y, ...values } : y;
-  });
-  persistAcademicYears();
-  return mockDelay(requireEntity(academicYears, id, "Academic year"), 400);
+  const dto = await unwrap(
+    academicHttpClient.put<ApiAcademicYear>(`/api/academicyears/${id}`, {
+      name: values.name,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      isCurrent: values.isCurrent,
+      status: ACADEMIC_YEAR_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapAcademicYear(dto);
 }
 
 export async function deleteAcademicYear(id: string): Promise<void> {
-  requireEntity(academicYears, id, "Academic year");
-  academicYears = academicYears.filter((y) => y.id !== id);
-  persistAcademicYears();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete(`/api/academicyears/${id}`));
 }
 
 // ── Terms ────────────────────────────────────────────────────────────────
 
 export async function listTerms(): Promise<Term[]> {
-  return mockDelay([...terms], 350);
+  const terms = await unwrap(academicHttpClient.get<ApiTerm[]>("/api/terms"));
+  return terms.map(mapTerm);
 }
 
 export async function createTerm(values: TermFormValues): Promise<Term> {
-  const term: Term = { id: genId("term"), ...values };
-  terms = [term, ...terms];
-  persistTerms();
-  return mockDelay(term, 400);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiTerm>("/api/terms", {
+      name: values.name,
+      academicYearId: values.academicYearId,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      status: TERM_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapTerm(dto);
 }
 
 export async function updateTerm(id: string, values: TermFormValues): Promise<Term> {
-  requireEntity(terms, id, "Term");
-  terms = terms.map((t) => (t.id === id ? { ...t, ...values } : t));
-  persistTerms();
-  return mockDelay(requireEntity(terms, id, "Term"), 400);
+  const dto = await unwrap(
+    academicHttpClient.put<ApiTerm>(`/api/terms/${id}`, {
+      name: values.name,
+      academicYearId: values.academicYearId,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      status: TERM_STATUS_TO_API[values.status],
+    }),
+  );
+  return mapTerm(dto);
 }
 
 export async function deleteTerm(id: string): Promise<void> {
-  requireEntity(terms, id, "Term");
-  terms = terms.filter((t) => t.id !== id);
-  persistTerms();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete(`/api/terms/${id}`));
 }
 
 // ── Departments / streams ────────────────────────────────────────────────
 
 export async function listDepartments(): Promise<Department[]> {
-  return mockDelay([...departments], 300);
+  const departments = await unwrap(academicHttpClient.get<ApiDepartment[]>("/api/departments"));
+  return departments.map(mapDepartment);
 }
 
 export async function createDepartment(values: DepartmentFormValues): Promise<Department> {
-  const department: Department = { id: genId("dept"), ...values };
-  departments = [department, ...departments];
-  persistDepartments();
-  return mockDelay(department, 400);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiDepartment>("/api/departments", {
+      name: values.name,
+      description: values.description ?? null,
+    }),
+  );
+  return mapDepartment(dto);
 }
 
 export async function updateDepartment(id: string, values: DepartmentFormValues): Promise<Department> {
-  requireEntity(departments, id, "Department");
-  departments = departments.map((d) => (d.id === id ? { ...d, ...values } : d));
-  persistDepartments();
-  return mockDelay(requireEntity(departments, id, "Department"), 400);
+  const dto = await unwrap(
+    academicHttpClient.put<ApiDepartment>(`/api/departments/${id}`, {
+      name: values.name,
+      description: values.description ?? null,
+    }),
+  );
+  return mapDepartment(dto);
 }
 
 export async function deleteDepartment(id: string): Promise<void> {
-  requireEntity(departments, id, "Department");
-  departments = departments.filter((d) => d.id !== id);
-  persistDepartments();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete(`/api/departments/${id}`));
 }
 
 // ── Classes ──────────────────────────────────────────────────────────────
 
 export async function listClasses(): Promise<SchoolClass[]> {
-  return mockDelay([...classes], 350);
+  const classes = await unwrap(academicHttpClient.get<ApiSchoolClass[]>("/api/classes"));
+  return classes.map(mapSchoolClass);
 }
 
 export async function createClass(values: SchoolClassFormValues): Promise<SchoolClass> {
-  const schoolClass: SchoolClass = { id: genId("class"), ...values };
-  classes = [schoolClass, ...classes];
-  persistClasses();
-  return mockDelay(schoolClass, 400);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiSchoolClass>("/api/classes", {
+      name: values.name,
+      departmentId: values.departmentId ?? null,
+      academicYearId: values.academicYearId,
+    }),
+  );
+  return mapSchoolClass(dto);
 }
 
 export async function updateClass(id: string, values: SchoolClassFormValues): Promise<SchoolClass> {
-  requireEntity(classes, id, "Class");
-  classes = classes.map((c) => (c.id === id ? { ...c, ...values } : c));
-  persistClasses();
-  return mockDelay(requireEntity(classes, id, "Class"), 400);
+  const dto = await unwrap(
+    academicHttpClient.put<ApiSchoolClass>(`/api/classes/${id}`, {
+      name: values.name,
+      departmentId: values.departmentId ?? null,
+      academicYearId: values.academicYearId,
+    }),
+  );
+  return mapSchoolClass(dto);
 }
 
+/** Unlike the old mock, the backend enforces referential integrity: deleting a class that still has
+ * sections is rejected (Section→Class is a Restrict FK), not silently cascaded. */
 export async function deleteClass(id: string): Promise<void> {
-  requireEntity(classes, id, "Class");
-  classes = classes.filter((c) => c.id !== id);
-  sections = sections.filter((s) => s.classId !== id);
-  persistClasses();
-  persistSections();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete(`/api/classes/${id}`));
 }
 
 // ── Sections ─────────────────────────────────────────────────────────────
 
 export async function listSections(): Promise<Section[]> {
-  return mockDelay([...sections], 350);
+  const sections = await unwrap(academicHttpClient.get<ApiSection[]>("/api/sections"));
+  return sections.map(mapSection);
 }
 
 export async function createSection(values: SectionFormValues): Promise<Section> {
-  const section: Section = { id: genId("sec"), ...values };
-  sections = [section, ...sections];
-  persistSections();
-  return mockDelay(section, 400);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiSection>("/api/sections", {
+      name: values.name,
+      classId: values.classId,
+      classTeacherName: values.classTeacherName ?? null,
+      classTeacherStaffId: values.classTeacherStaffId ?? null,
+      capacity: values.capacity,
+      currentStrength: values.currentStrength,
+    }),
+  );
+  return mapSection(dto);
 }
 
 export async function updateSection(id: string, values: SectionFormValues): Promise<Section> {
-  requireEntity(sections, id, "Section");
-  sections = sections.map((s) => (s.id === id ? { ...s, ...values } : s));
-  persistSections();
-  return mockDelay(requireEntity(sections, id, "Section"), 400);
+  const dto = await unwrap(
+    academicHttpClient.put<ApiSection>(`/api/sections/${id}`, {
+      name: values.name,
+      classId: values.classId,
+      classTeacherName: values.classTeacherName ?? null,
+      classTeacherStaffId: values.classTeacherStaffId ?? null,
+      capacity: values.capacity,
+      currentStrength: values.currentStrength,
+    }),
+  );
+  return mapSection(dto);
 }
 
 export async function deleteSection(id: string): Promise<void> {
-  requireEntity(sections, id, "Section");
-  sections = sections.filter((s) => s.id !== id);
-  persistSections();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete(`/api/sections/${id}`));
 }
 
 export async function mergeSections(primarySectionId: string, secondarySectionId: string): Promise<MergeSectionsResult> {
-  const primary = requireEntity(sections, primarySectionId, "Section");
-  const secondary = requireEntity(sections, secondarySectionId, "Section");
-  if (primary.classId !== secondary.classId) {
-    await mockDelay(undefined, 300);
-    throw new Error("Sections must belong to the same class to merge");
-  }
-  const merged: Section = {
-    ...primary,
-    capacity: primary.capacity + secondary.capacity,
-    currentStrength: primary.currentStrength + secondary.currentStrength,
-  };
-  sections = sections.filter((s) => s.id !== secondary.id).map((s) => (s.id === primary.id ? merged : s));
-  persistSections();
-  return mockDelay({ mergedSection: merged }, 500);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiSection>("/api/sections/merge", { primarySectionId, secondarySectionId }),
+  );
+  return { mergedSection: mapSection(dto) };
 }
 
 // ── Subjects ─────────────────────────────────────────────────────────────
 
 export async function listSubjects(): Promise<Subject[]> {
-  return mockDelay([...subjects], 350);
+  const subjects = await unwrap(academicHttpClient.get<ApiSubject[]>("/api/subjects"));
+  return subjects.map(mapSubject);
 }
 
 export async function createSubject(values: SubjectFormValues): Promise<Subject> {
-  const subject: Subject = { id: genId("subj"), ...values };
-  subjects = [subject, ...subjects];
-  persistSubjects();
-  return mockDelay(subject, 400);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiSubject>("/api/subjects", {
+      name: values.name,
+      code: values.code,
+      type: SUBJECT_TYPE_TO_API[values.type],
+      classIds: values.classIds,
+    }),
+  );
+  return mapSubject(dto);
 }
 
 export async function updateSubject(id: string, values: SubjectFormValues): Promise<Subject> {
-  requireEntity(subjects, id, "Subject");
-  subjects = subjects.map((s) => (s.id === id ? { ...s, ...values } : s));
-  persistSubjects();
-  return mockDelay(requireEntity(subjects, id, "Subject"), 400);
+  const dto = await unwrap(
+    academicHttpClient.put<ApiSubject>(`/api/subjects/${id}`, {
+      name: values.name,
+      code: values.code,
+      type: SUBJECT_TYPE_TO_API[values.type],
+      classIds: values.classIds,
+    }),
+  );
+  return mapSubject(dto);
 }
 
 export async function deleteSubject(id: string): Promise<void> {
-  requireEntity(subjects, id, "Subject");
-  subjects = subjects.filter((s) => s.id !== id);
-  persistSubjects();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete(`/api/subjects/${id}`));
 }
 
 // ── Academic calendar ────────────────────────────────────────────────────
 
 export async function listCalendarEvents(): Promise<CalendarEvent[]> {
-  return mockDelay([...calendarEvents], 350);
+  const events = await unwrap(academicHttpClient.get<ApiCalendarEvent[]>("/api/calendarevents"));
+  return events.map(mapCalendarEvent);
 }
 
 export async function createCalendarEvent(values: CalendarEventFormValues): Promise<CalendarEvent> {
-  const event: CalendarEvent = { id: genId("cal"), ...values };
-  calendarEvents = [event, ...calendarEvents];
-  persistCalendarEvents();
-  return mockDelay(event, 400);
+  const dto = await unwrap(
+    academicHttpClient.post<ApiCalendarEvent>("/api/calendarevents", {
+      title: values.title,
+      type: CALENDAR_EVENT_TYPE_TO_API[values.type],
+      startDate: values.startDate,
+      endDate: values.endDate ?? null,
+      academicYearId: values.academicYearId ?? null,
+      description: values.description ?? null,
+    }),
+  );
+  return mapCalendarEvent(dto);
 }
 
 export async function updateCalendarEvent(id: string, values: CalendarEventFormValues): Promise<CalendarEvent> {
-  requireEntity(calendarEvents, id, "Calendar event");
-  calendarEvents = calendarEvents.map((e) => (e.id === id ? { ...e, ...values } : e));
-  persistCalendarEvents();
-  return mockDelay(requireEntity(calendarEvents, id, "Calendar event"), 400);
+  const dto = await unwrap(
+    academicHttpClient.put<ApiCalendarEvent>(`/api/calendarevents/${id}`, {
+      title: values.title,
+      type: CALENDAR_EVENT_TYPE_TO_API[values.type],
+      startDate: values.startDate,
+      endDate: values.endDate ?? null,
+      academicYearId: values.academicYearId ?? null,
+      description: values.description ?? null,
+    }),
+  );
+  return mapCalendarEvent(dto);
 }
 
 export async function deleteCalendarEvent(id: string): Promise<void> {
-  requireEntity(calendarEvents, id, "Calendar event");
-  calendarEvents = calendarEvents.filter((e) => e.id !== id);
-  persistCalendarEvents();
-  return mockDelay(undefined, 350);
+  await unwrap(academicHttpClient.delete(`/api/calendarevents/${id}`));
 }

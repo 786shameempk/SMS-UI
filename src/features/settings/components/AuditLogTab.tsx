@@ -42,11 +42,11 @@ export default function AuditLogTab() {
             return (
               <div key={entry.id} className="flex items-start gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-slate-700">
-                    <span className="font-semibold text-slate-900">{entry.actor}</span> {entry.action}
-                    {entry.detail && <span className="text-slate-500"> — {entry.detail}</span>}
+                  <p className="text-sm text-foreground">
+                    <span className="font-semibold text-foreground">{entry.actor}</span> {entry.action}
+                    {entry.detail && <span className="text-muted-foreground"> — {entry.detail}</span>}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">{new Date(entry.createdAt).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{new Date(entry.createdAt).toLocaleString()}</p>
                 </div>
                 <Badge variant={config.variant}>{config.label}</Badge>
               </div>

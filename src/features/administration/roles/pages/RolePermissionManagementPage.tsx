@@ -3,19 +3,18 @@ import RolesTab from "../components/RolesTab";
 import PermissionMatrixTab from "../components/PermissionMatrixTab";
 import PoliciesTab from "../components/PoliciesTab";
 import FeatureTogglesTab from "../components/FeatureTogglesTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function RolePermissionManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Roles &amp; permissions</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Manage roles, fine-grained permissions, attribute-based policies, and feature availability.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Roles &amp; permissions"
+        description="Manage roles, fine-grained permissions, attribute-based policies, and feature availability."
+      />
 
       <Tabs defaultValue="roles">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="matrix">Permission matrix</TabsTrigger>
           <TabsTrigger value="policies">Policies</TabsTrigger>
@@ -34,6 +33,6 @@ export default function RolePermissionManagementPage() {
           <FeatureTogglesTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

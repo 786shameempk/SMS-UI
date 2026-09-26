@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PERMISSION_MODULES } from "../mock";
+import { useQuery } from "@tanstack/react-query";
+import { PERMISSION_MODULES } from "../constants";
+import { getMatrixModules, MATRIX_MODULES_QUERY_KEY } from "../api";
 import type { Policy, PolicyFormValues, Role } from "../types";
 
 const policyFormSchema = z.object({
@@ -32,6 +34,9 @@ interface PolicyFormDialogProps {
 
 export default function PolicyFormDialog({ open, onOpenChange, policy, roles, onSubmit, submitting }: PolicyFormDialogProps) {
   const isEdit = Boolean(policy);
+  const { data: scope } = useQuery({ queryKey: MATRIX_MODULES_QUERY_KEY, queryFn: getMatrixModules, enabled: open });
+  // Plan modules only - but an existing policy keeps showing its own module even if the plan dropped it.
+  const moduleOptions = PERMISSION_MODULES.filter((m) => !scope || scope.modules.includes(m) || m === policy?.module);
   const {
     register,
     handleSubmit,
@@ -71,19 +76,19 @@ export default function PolicyFormDialog({ open, onOpenChange, policy, roles, on
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Policy name</Label>
-            <Input id="name" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="name" required>Policy name</Label>
+            <Input id="name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" rows={2} {...register("description")} />
-            {errors.description && <p className="text-xs text-red-600">{errors.description.message}</p>}
+            <Label htmlFor="description" required>Description</Label>
+            <Textarea id="description" rows={2} aria-invalid={errors.description ? true : undefined} {...register("description")} />
+            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="module">Module</Label>
+            <Label htmlFor="module" required>Module</Label>
             <Controller
               control={control}
               name="module"
@@ -93,7 +98,7 @@ export default function PolicyFormDialog({ open, onOpenChange, policy, roles, on
                     <SelectValue placeholder="Select a module" />
                   </SelectTrigger>
                   <SelectContent>
-                    {PERMISSION_MODULES.map((m) => (
+                    {moduleOptions.map((m) => (
                       <SelectItem key={m} value={m}>
                         {m}
                       </SelectItem>
@@ -102,37 +107,36 @@ export default function PolicyFormDialog({ open, onOpenChange, policy, roles, on
                 </Select>
               )}
             />
-            {errors.module && <p className="text-xs text-red-600">{errors.module.message}</p>}
+            {errors.module && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.module.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="condition">Condition expression</Label>
-            <Input id="condition" placeholder="e.g. resource.ownerId == user.id" className="font-mono text-xs" {...register("condition")} />
-            {errors.condition && <p className="text-xs text-red-600">{errors.condition.message}</p>}
+            <Label htmlFor="condition" required>Condition expression</Label>
+            <Input id="condition" placeholder="e.g. resource.ownerId == user.id" className="font-mono text-xs" aria-invalid={errors.condition ? true : undefined} {...register("condition")} />
+            {errors.condition && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.condition.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label>Applies to roles</Label>
-            <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg border border-border p-3">
               {roles.map((role) => (
                 <label key={role.id} className="flex items-center gap-2 cursor-pointer select-none">
                   <Checkbox
                     checked={selectedRoleIds.includes(role.id)}
                     onCheckedChange={(v) => toggleRole(role.id, v === true)}
                   />
-                  <span className="text-sm text-slate-700">{role.name}</span>
+                  <span className="text-sm text-foreground">{role.name}</span>
                 </label>
               ))}
             </div>
-            {errors.roleIds && <p className="text-xs text-red-600">{errors.roleIds.message}</p>}
+            {errors.roleIds && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.roleIds.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create policy"}
             </Button>
           </DialogFooter>

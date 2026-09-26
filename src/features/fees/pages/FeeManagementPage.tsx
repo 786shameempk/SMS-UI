@@ -4,19 +4,18 @@ import FeeStructuresTab from "../components/FeeStructuresTab";
 import InvoicesTab from "../components/InvoicesTab";
 import ReceiptsTab from "../components/ReceiptsTab";
 import RefundsTab from "../components/RefundsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function FeeManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Fee management</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Configure fee structures and discounts, generate and track student invoices, and manage receipts and refunds.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Fee management"
+        description="Configure fee structures and discounts, generate and track student invoices, and manage receipts and refunds."
+      />
 
       <Tabs defaultValue="structures">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="structures">Fee Structures</TabsTrigger>
           <TabsTrigger value="discounts">Discounts & Scholarships</TabsTrigger>
           <TabsTrigger value="invoices">Student Invoices</TabsTrigger>
@@ -39,6 +38,6 @@ export default function FeeManagementPage() {
           <RefundsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

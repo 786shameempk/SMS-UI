@@ -61,7 +61,7 @@ export default function SubmitHomeworkDialog({
         </div>
 
         {submission.status === "resubmit_requested" && submission.feedback && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="rounded-lg border border-warning/30 bg-warning-soft p-3 text-sm text-warning-strong">
             <p className="font-medium">Your teacher asked you to resubmit:</p>
             <p className="mt-1">{submission.feedback}</p>
           </div>
@@ -69,8 +69,8 @@ export default function SubmitHomeworkDialog({
 
         {submission.status === "graded" && (
           <div className="rounded-lg border border-border bg-secondary/40 p-3 text-sm space-y-1">
-            <p className="font-medium text-slate-800">Grade: {submission.grade}</p>
-            {submission.feedback && <p className="text-slate-600">{submission.feedback}</p>}
+            <p className="font-medium text-foreground">Grade: {submission.grade}</p>
+            {submission.feedback && <p className="text-secondary-foreground">{submission.feedback}</p>}
           </div>
         )}
 

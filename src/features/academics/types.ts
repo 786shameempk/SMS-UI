@@ -5,6 +5,8 @@ export type CalendarEventType = "term_start" | "term_end" | "exam" | "holiday" |
 
 export interface AcademicYear {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -22,6 +24,8 @@ export interface AcademicYearFormValues {
 
 export interface Term {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   academicYearId: string;
   startDate: string;
@@ -39,6 +43,8 @@ export interface TermFormValues {
 
 export interface Department {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   description?: string;
 }
@@ -50,6 +56,8 @@ export interface DepartmentFormValues {
 
 export interface SchoolClass {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   departmentId?: string;
   academicYearId: string;
@@ -63,6 +71,8 @@ export interface SchoolClassFormValues {
 
 export interface Section {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   classId: string;
   classTeacherName?: string;
@@ -83,6 +93,8 @@ export interface SectionFormValues {
 
 export interface Subject {
   id: string;
+  tenantId: string;
+  branchId: string;
   name: string;
   code: string;
   type: SubjectType;
@@ -98,6 +110,8 @@ export interface SubjectFormValues {
 
 export interface CalendarEvent {
   id: string;
+  tenantId: string;
+  branchId: string;
   title: string;
   type: CalendarEventType;
   startDate: string;

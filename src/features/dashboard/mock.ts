@@ -5,43 +5,44 @@ import type {
   BirthdayItem,
   CalendarEvent,
   ClassSession,
-  DashboardData,
-  FeeSummary,
   HolidayItem,
   NotificationItem,
-  PendingAssignment,
   PerformanceTrendPoint,
   RevenueTrendPoint,
   StatCardData,
-  UpcomingExam,
 } from "./types";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * DAY_MS).toISOString();
 
-const MONTHS = ["Mar", "Apr", "May", "Jun", "Jul", "Aug"];
+type MonthBucket = { key: string; label: string };
 
-function buildPerformanceTrend(): PerformanceTrendPoint[] {
-  const base = [72, 74, 73, 77, 79, 81];
-  const pass = [88, 89, 87, 91, 92, 94];
-  return MONTHS.map((month, i) => ({ month, averageScore: base[i], passRate: pass[i] }));
+/** Stable pseudo-random 0..1 per month key, so a month keeps its value when the range changes. */
+function wobble(key: string, salt: number): number {
+  let h = salt;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return (h % 1000) / 1000;
 }
 
-function buildRevenueTrend(): RevenueTrendPoint[] {
-  const collected = [412000, 438000, 401000, 452000, 467000, 481000];
-  const expected = [450000, 450000, 460000, 460000, 470000, 490000];
-  return MONTHS.map((month, i) => ({ month, collected: collected[i], expected: expected[i] }));
+function buildPerformanceTrend(months: MonthBucket[]): PerformanceTrendPoint[] {
+  return months.map((m, i) => ({
+    month: m.label,
+    averageScore: Math.round(70 + i * 0.8 + wobble(m.key, 7) * 5),
+    passRate: Math.min(99, Math.round(86 + i * 0.6 + wobble(m.key, 13) * 4)),
+  }));
+}
+
+function buildRevenueTrend(months: MonthBucket[]): RevenueTrendPoint[] {
+  return months.map((m) => {
+    const expected = 450000 + Math.round(wobble(m.key, 3) * 4) * 10000;
+    return { month: m.label, expected, collected: Math.round(expected * (0.86 + wobble(m.key, 5) * 0.12)) };
+  });
 }
 
 function buildAttendance(role: UserRole): AttendanceSummary {
   if (role === "parent") return { present: 1, absent: 0, late: 0, onLeave: 0, totalMarked: 1 };
   if (role === "teacher") return { present: 27, absent: 2, late: 1, onLeave: 0, totalMarked: 30 };
   return { present: 1148, absent: 62, late: 24, onLeave: 15, totalMarked: 1249 };
-}
-
-function buildFees(role: UserRole): FeeSummary {
-  if (role === "parent") return { collected: 45000, pending: 15000, overdue: 0, currency: "INR" };
-  return { collected: 4812000, pending: 683000, overdue: 214000, currency: "INR" };
 }
 
 function buildTodayClasses(role: UserRole): ClassSession[] {
@@ -52,28 +53,6 @@ function buildTodayClasses(role: UserRole): ClassSession[] {
     { id: "cs-4", subject: "Computer Science", className: "Grade 11 - C", room: "Lab 1", startTime: "13:30", endTime: "14:15" },
   ];
   if (role === "parent") return all.slice(0, 2);
-  return all;
-}
-
-function buildUpcomingExams(role: UserRole): UpcomingExam[] {
-  const all: UpcomingExam[] = [
-    { id: "ex-1", subject: "Mathematics", className: "Grade 8 - A", date: iso(3), durationMinutes: 90 },
-    { id: "ex-2", subject: "Science", className: "Grade 8 - A", date: iso(6), durationMinutes: 90 },
-    { id: "ex-3", subject: "Physics", className: "Grade 10 - B", date: iso(9), durationMinutes: 120 },
-    { id: "ex-4", subject: "History", className: "Grade 9 - A", date: iso(12), durationMinutes: 60 },
-  ];
-  if (role === "parent") return all.slice(0, 2);
-  if (role === "teacher") return all.slice(0, 3);
-  return all;
-}
-
-function buildPendingAssignments(role: UserRole): PendingAssignment[] {
-  const all: PendingAssignment[] = [
-    { id: "as-1", title: "Algebra worksheet 4", subject: "Mathematics", className: "Grade 8 - A", dueDate: iso(2), submittedCount: 24, totalCount: 30 },
-    { id: "as-2", title: "Lab report — refraction", subject: "Physics", className: "Grade 10 - B", dueDate: iso(1), submittedCount: 18, totalCount: 28 },
-    { id: "as-3", title: "Essay: Industrial Revolution", subject: "History", className: "Grade 9 - A", dueDate: iso(5), submittedCount: 10, totalCount: 26 },
-  ];
-  if (role === "parent") return [{ ...all[0], id: "as-parent-1" }];
   return all;
 }
 
@@ -148,20 +127,20 @@ function buildStats(role: UserRole): StatCardData[] {
   ];
 }
 
-export function buildDashboardData(role: UserRole): DashboardData {
-  return {
-    stats: buildStats(role),
-    attendance: buildAttendance(role),
-    fees: buildFees(role),
-    todayClasses: buildTodayClasses(role),
-    upcomingExams: buildUpcomingExams(role),
-    pendingAssignments: buildPendingAssignments(role),
-    notifications: buildNotifications(),
-    birthdays: buildBirthdays(),
-    holidays: buildHolidays(),
-    calendarEvents: buildCalendarEvents(),
-    recentActivity: buildRecentActivity(role),
-    performanceTrend: buildPerformanceTrend(),
-    revenueTrend: buildRevenueTrend(),
-  };
-}
+/** Everything here is still synthetic — the pieces of DashboardData that have no owning
+ * module yet (notifications/birthdays/holidays are dashboard-only concepts, and
+ * today's classes / performance / revenue trends would need Timetable/Examinations/Fees
+ * aggregation beyond this task's scope). Real per-module data (homework, exams, fees,
+ * library, transport, hostel) is assembled in api.ts instead. */
+export {
+  buildStats,
+  buildAttendance,
+  buildTodayClasses,
+  buildNotifications,
+  buildBirthdays,
+  buildHolidays,
+  buildCalendarEvents,
+  buildRecentActivity,
+  buildPerformanceTrend,
+  buildRevenueTrend,
+};

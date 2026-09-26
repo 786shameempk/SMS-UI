@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,13 +64,13 @@ export default function TermFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="e.g. Term 1" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="name" required>Name</Label>
+            <Input id="name" placeholder="e.g. Term 1" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="academicYearId">Academic year</Label>
+            <Label htmlFor="academicYearId" required>Academic year</Label>
             <Controller
               control={control}
               name="academicYearId"
@@ -89,24 +89,24 @@ export default function TermFormDialog({
                 </Select>
               )}
             />
-            {errors.academicYearId && <p className="text-xs text-red-600">{errors.academicYearId.message}</p>}
+            {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.academicYearId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="startDate">Start date</Label>
-              <Input id="startDate" type="date" {...register("startDate")} />
-              {errors.startDate && <p className="text-xs text-red-600">{errors.startDate.message}</p>}
+              <Label htmlFor="startDate" required>Start date</Label>
+              <Input id="startDate" type="date" aria-invalid={errors.startDate ? true : undefined} {...register("startDate")} />
+              {errors.startDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endDate">End date</Label>
-              <Input id="endDate" type="date" {...register("endDate")} />
-              {errors.endDate && <p className="text-xs text-red-600">{errors.endDate.message}</p>}
+              <Label htmlFor="endDate" required>End date</Label>
+              <Input id="endDate" type="date" aria-invalid={errors.endDate ? true : undefined} {...register("endDate")} />
+              {errors.endDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endDate.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status" required>Status</Label>
             <Controller
               control={control}
               name="status"
@@ -131,8 +131,7 @@ export default function TermFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create term"}
             </Button>
           </DialogFooter>

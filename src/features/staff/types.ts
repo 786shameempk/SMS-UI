@@ -7,6 +7,7 @@ export type StaffDesignation =
   | "Librarian"
   | "Driver"
   | "Warden"
+  | "Nurse"
   | "Cleaner"
   | "Security"
   | "HR"
@@ -92,6 +93,8 @@ export interface StaffAttendanceSummary {
 
 export interface StaffMember {
   id: string;
+  tenantId: string;
+  branchId: string;
   employeeId: string;
   firstName: string;
   lastName: string;
@@ -116,6 +119,7 @@ export interface StaffMember {
 }
 
 export interface StaffFormValues {
+  branchId: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -163,6 +167,8 @@ export type LeaveStatus = "pending" | "approved" | "rejected";
 
 export interface StaffLeaveRequest {
   id: string;
+  tenantId: string;
+  branchId: string;
   staffId: string;
   leaveType: LeaveType;
   fromDate: string;

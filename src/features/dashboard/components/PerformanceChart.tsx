@@ -2,12 +2,12 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PerformanceTrendPoint } from "../types";
 
-export default function PerformanceChart({ data }: { data: PerformanceTrendPoint[] }) {
+export default function PerformanceChart({ data, rangeLabel }: { data: PerformanceTrendPoint[]; rangeLabel: string }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Academic performance trend</CardTitle>
-        <CardDescription>Average score and pass rate over the last 6 months.</CardDescription>
+        <CardDescription>{`Average score and pass rate · ${rangeLabel}`}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-64 w-full">

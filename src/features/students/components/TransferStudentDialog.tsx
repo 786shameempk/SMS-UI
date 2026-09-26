@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,26 +54,25 @@ export default function TransferStudentDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="toSchool">Destination school</Label>
-            <Input id="toSchool" {...register("toSchool")} />
-            {errors.toSchool && <p className="text-xs text-red-600">{errors.toSchool.message}</p>}
+            <Label htmlFor="toSchool" required>Destination school</Label>
+            <Input id="toSchool" aria-invalid={errors.toSchool ? true : undefined} {...register("toSchool")} />
+            {errors.toSchool && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toSchool.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="transferCertificateNumber">Transfer certificate number</Label>
-            <Input id="transferCertificateNumber" {...register("transferCertificateNumber")} />
-            {errors.transferCertificateNumber && <p className="text-xs text-red-600">{errors.transferCertificateNumber.message}</p>}
+            <Label htmlFor="transferCertificateNumber" required>Transfer certificate number</Label>
+            <Input id="transferCertificateNumber" aria-invalid={errors.transferCertificateNumber ? true : undefined} {...register("transferCertificateNumber")} />
+            {errors.transferCertificateNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.transferCertificateNumber.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="reason">Reason</Label>
-            <Textarea id="reason" rows={3} {...register("reason")} />
-            {errors.reason && <p className="text-xs text-red-600">{errors.reason.message}</p>}
+            <Label htmlFor="reason" required>Reason</Label>
+            <Textarea id="reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="destructive" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" variant="destructive" loading={submitting}>
               Confirm transfer
             </Button>
           </DialogFooter>

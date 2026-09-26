@@ -57,8 +57,8 @@ export function todayDateKey(): string {
 const STATUS_ACTIVE_CLASSES: Record<string, string> = {
   present: "border-green-600 bg-green-600 text-white",
   absent: "border-red-600 bg-red-600 text-white",
-  late: "border-amber-500 bg-amber-500 text-white",
-  "half-day": "border-amber-500 bg-amber-500 text-white",
+  late: "border-amber-500 bg-warning text-white",
+  "half-day": "border-amber-500 bg-warning text-white",
   leave: "border-blue-600 bg-blue-600 text-white",
 };
 

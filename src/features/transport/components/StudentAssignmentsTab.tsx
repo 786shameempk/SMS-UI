@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2, UserRoundCheck, UserRoundX } from "lucide-react";
+import { Pencil, Plus, Trash2, UserRoundCheck, UserRoundX } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listStudents } from "@/features/students/api";
@@ -14,6 +14,7 @@ import { ASSIGNMENT_STATUS_CONFIG } from "../constants";
 import { createAssignment, deleteAssignment, listAssignments, listRoutes, listStops, setAssignmentStatus, updateAssignment } from "../api";
 import type { StudentTransportAssignmentFormValues, StudentTransportAssignmentRow } from "../types";
 import AssignStudentDialog from "./AssignStudentDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function StudentAssignmentsTab() {
   const queryClient = useQueryClient();
@@ -21,7 +22,7 @@ export default function StudentAssignmentsTab() {
   const [editing, setEditing] = useState<StudentTransportAssignmentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StudentTransportAssignmentRow | null>(null);
 
-  const { data: assignments = [], isLoading } = useQuery({ queryKey: ["transport", "assignments"], queryFn: listAssignments });
+  const { data: assignments = [], isLoading, isError, refetch } = useQuery({ queryKey: ["transport", "assignments"], queryFn: listAssignments });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: routes = [] } = useQuery({ queryKey: ["transport", "routes"], queryFn: listRoutes });
   const { data: allStops = [] } = useQuery({ queryKey: ["transport", "stops", "all"], queryFn: () => listStops() });
@@ -74,7 +75,7 @@ export default function StudentAssignmentsTab() {
       header: "Student",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.student.firstName} {row.original.student.lastName}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -86,13 +87,13 @@ export default function StudentAssignmentsTab() {
     {
       id: "route",
       header: "Route",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.route.name}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.route.name}</span>,
     },
     {
       id: "stop",
       header: "Stop",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.stop.name} ({row.original.stop.arrivalTime})
         </span>
       ),
@@ -100,7 +101,7 @@ export default function StudentAssignmentsTab() {
     {
       id: "fee",
       header: "Monthly fee",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.monthlyFee != null ? formatCurrency(row.original.monthlyFee) : "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.monthlyFee != null ? formatCurrency(row.original.monthlyFee) : "—"}</span>,
     },
     {
       id: "status",
@@ -116,39 +117,32 @@ export default function StudentAssignmentsTab() {
       cell: ({ row }) => {
         const assignment = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(assignment);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(assignment);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            {assignment.status === "active" ? (
+              <DropdownMenuItem onClick={() => statusMutation.mutate({ id: assignment.id, status: "inactive" })}>
+                <UserRoundX className="w-3.5 h-3.5" />
+                Mark inactive
               </DropdownMenuItem>
-              {assignment.status === "active" ? (
-                <DropdownMenuItem onClick={() => statusMutation.mutate({ id: assignment.id, status: "inactive" })}>
-                  <UserRoundX className="w-3.5 h-3.5" />
-                  Mark inactive
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => statusMutation.mutate({ id: assignment.id, status: "active" })}>
-                  <UserRoundCheck className="w-3.5 h-3.5" />
-                  Mark active
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => setDeleteTarget(assignment)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Remove
+            ) : (
+              <DropdownMenuItem onClick={() => statusMutation.mutate({ id: assignment.id, status: "active" })}>
+                <UserRoundCheck className="w-3.5 h-3.5" />
+                Mark active
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuItem onClick={() => setDeleteTarget(assignment)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Remove
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -169,7 +163,7 @@ export default function StudentAssignmentsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={assignments} isLoading={isLoading} emptyMessage="No students assigned to transport yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={assignments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No students assigned to transport yet." pageSize={10} />
 
       <AssignStudentDialog
         open={formOpen}

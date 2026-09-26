@@ -6,7 +6,17 @@ import { CATEGORICAL_COLORS, CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, C
 import { getAdmissionsReport } from "../api";
 import StatTile from "./StatTile";
 
-const STATUS_LABEL: Record<string, string> = { pending: "Pending", approved: "Approved", rejected: "Rejected", waitlisted: "Waitlisted" };
+const STATUS_LABEL: Record<string, string> = {
+  inquiry: "Inquiry",
+  registration: "Registration",
+  entrance_exam: "Entrance Exam",
+  interview: "Interview",
+  fee_collection: "Fee Collection",
+  enrolled: "Enrolled",
+  waitlisted: "Waitlisted",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+};
 
 export default function AdmissionsTab() {
   const { data, isLoading } = useQuery({ queryKey: ["reports", "admissions"], queryFn: getAdmissionsReport });
@@ -17,10 +27,10 @@ export default function AdmissionsTab() {
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatTile label="Total applications" value={String(data.totalApplications)} icon={FileText} />
-        <StatTile label="Approval rate" value={`${data.approvalRate}%`} icon={Percent} />
+        <StatTile label="Enrollment rate" value={`${data.approvalRate}%`} icon={Percent} />
         <StatTile
-          label="Approved"
-          value={String(data.statusBreakdown.find((s) => s.status === "approved")?.count ?? 0)}
+          label="Enrolled"
+          value={String(data.statusBreakdown.find((s) => s.status === "enrolled")?.count ?? 0)}
           icon={CheckCircle2}
         />
       </div>

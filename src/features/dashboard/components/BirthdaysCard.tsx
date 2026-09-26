@@ -9,7 +9,7 @@ export default function BirthdaysCard({ birthdays }: { birthdays: BirthdayItem[]
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Cake className="w-4 h-4 text-slate-400" />
+          <Cake className="w-4 h-4 text-muted-foreground" />
           Birthdays
         </CardTitle>
       </CardHeader>
@@ -21,10 +21,10 @@ export default function BirthdaysCard({ birthdays }: { birthdays: BirthdayItem[]
               <AvatarFallback className="text-[10px]">{b.avatarInitials}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-800 truncate">{b.name}</p>
-              <p className="text-[11px] text-slate-500 capitalize">{b.role}</p>
+              <p className="text-sm font-medium text-foreground truncate">{b.name}</p>
+              <p className="text-[11px] text-muted-foreground capitalize">{b.role}</p>
             </div>
-            <span className="text-xs font-medium text-slate-500 shrink-0">{formatRelativeDay(b.date)}</span>
+            <span className="text-xs font-medium text-muted-foreground shrink-0">{formatRelativeDay(b.date)}</span>
           </div>
         ))}
       </CardContent>

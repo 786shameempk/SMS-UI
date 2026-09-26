@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,14 +70,14 @@ export default function SectionFormDialog({
           <DialogDescription>Sections are nested under a class and track capacity and enrolled strength.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="e.g. Section A" {...register("name")} />
-              {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+              <Label htmlFor="name" required>Name</Label>
+              <Input id="name" placeholder="e.g. Section A" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+              {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="classId">Class</Label>
+              <Label htmlFor="classId" required>Class</Label>
               <Controller
                 control={control}
                 name="classId"
@@ -96,26 +96,26 @@ export default function SectionFormDialog({
                   </Select>
                 )}
               />
-              {errors.classId && <p className="text-xs text-red-600">{errors.classId.message}</p>}
+              {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="classTeacherName">Class teacher (optional)</Label>
+            <Label htmlFor="classTeacherName" optional>Class teacher</Label>
             <Input id="classTeacherName" placeholder="Teacher name" {...register("classTeacherName")} />
             <p className="text-xs text-muted-foreground">Free-text for now until the teacher module is wired up.</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input id="capacity" type="number" min={1} {...register("capacity")} />
-              {errors.capacity && <p className="text-xs text-red-600">{errors.capacity.message}</p>}
+              <Label htmlFor="capacity" required>Capacity</Label>
+              <Input id="capacity" type="number" min={1} aria-invalid={errors.capacity ? true : undefined} {...register("capacity")} />
+              {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.capacity.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="currentStrength">Current strength</Label>
-              <Input id="currentStrength" type="number" min={0} {...register("currentStrength")} />
-              {errors.currentStrength && <p className="text-xs text-red-600">{errors.currentStrength.message}</p>}
+              <Label htmlFor="currentStrength" required>Current strength</Label>
+              <Input id="currentStrength" type="number" min={0} aria-invalid={errors.currentStrength ? true : undefined} {...register("currentStrength")} />
+              {errors.currentStrength && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.currentStrength.message}</p>}
             </div>
           </div>
 
@@ -123,8 +123,7 @@ export default function SectionFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create section"}
             </Button>
           </DialogFooter>

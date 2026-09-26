@@ -17,7 +17,7 @@ export default function HostelFeesTab() {
   const queryClient = useQueryClient();
   const [month, setMonth] = useState(currentMonthKey());
 
-  const { data: payments = [], isLoading } = useQuery({ queryKey: ["hostel", "fee-payments"], queryFn: listFeePayments });
+  const { data: payments = [], isLoading, isError, refetch } = useQuery({ queryKey: ["hostel", "fee-payments"], queryFn: listFeePayments });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["hostel", "fee-payments"] });
 
@@ -45,7 +45,7 @@ export default function HostelFeesTab() {
       header: "Student",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.student.firstName} {row.original.student.lastName}
           </p>
           <p className="text-xs text-muted-foreground">{row.original.hostel.name}</p>
@@ -55,17 +55,17 @@ export default function HostelFeesTab() {
     {
       accessorKey: "month",
       header: "Month",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.month}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.month}</span>,
     },
     {
       id: "amount",
       header: "Amount",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatCurrency(row.original.amount)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatCurrency(row.original.amount)}</span>,
     },
     {
       id: "paidOn",
       header: "Paid on",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.paidOn ? new Date(row.original.paidOn).toLocaleDateString() : "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.paidOn ? new Date(row.original.paidOn).toLocaleDateString() : "—"}</span>,
     },
     {
       id: "status",
@@ -111,7 +111,7 @@ export default function HostelFeesTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={payments} isLoading={isLoading} emptyMessage="No fee records yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={payments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No fee records yet." pageSize={10} />
     </div>
   );
 }

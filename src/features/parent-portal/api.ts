@@ -1,53 +1,78 @@
-import { mockDelay } from "@/utils/mockDelay";
-import { listStudents } from "@/features/students/api";
+import { engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { listClasses, listSubjects } from "@/features/academics/api";
+import { listAttendanceRecords } from "@/features/attendance/api";
+import { getExamResults, listExamSchedules, listExams } from "@/features/examinations/api";
+import { listAssignedHomework } from "@/features/homework/api";
+import { getStudent, listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { listInvoicesForStudent, payInvoiceOnline } from "@/features/fees/api";
 import type { FeeInvoice as FeesInvoice } from "@/features/fees/types";
-import { PARENT_CHILDREN_MAP } from "./constants";
-import {
-  buildAttendanceSummary,
-  buildExamResults,
-  buildHomework,
-  buildLeaveRequests,
-  buildMessageThreads,
-  buildNotifications,
-} from "./mock";
+import { listMyNotifications, markRead } from "@/features/notifications/api";
+import type { Notification } from "@/features/notifications/types";
 import type {
+  AttendanceDay,
   AttendanceSummary,
   ExamResult,
   FeeInvoice,
   HomeworkItem,
   LeaveRequest,
   LeaveRequestFormValues,
+  LeaveRequestStatus,
   MessageThread,
   ParentNotification,
+  ThreadMessage,
 } from "./types";
 
-const THREADS_KEY = "sms-mock-parent-threads";
-const LEAVE_KEY = "sms-mock-parent-leave";
-const NOTIFICATIONS_KEY = "sms-mock-parent-notifications";
+// ── Owned slice (EngagementService) ─────────────────────────────────────────
+// Message threads and leave requests are Parent Portal's own data, served by EngagementService.
+// Its notifications are the real inbox (features/notifications), not a separate mock list.
 
-function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to fallback
-  }
-  return fallback;
+const SENDER_FROM_API: Record<string, ThreadMessage["sender"]> = { Parent: "parent", Teacher: "teacher" };
+const LEAVE_STATUS_FROM_API: Record<string, LeaveRequestStatus> = { Pending: "pending", Approved: "approved", Rejected: "rejected" };
+
+interface ApiThread {
+  id: string;
+  studentId: string;
+  teacherName: string;
+  subject: string;
+  messages: Array<{ id: string; sender: string; body: string; sentAt: string }>;
 }
 
-function saveJson(key: string, value: unknown) {
+interface ApiLeaveRequest {
+  id: string;
+  studentId: string;
+  fromDate: string;
+  toDate: string;
+  reason: string;
+  status: string;
+  requestedAt: string;
+}
+
+async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // best-effort only
+    return (await request).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
   }
 }
 
-let threadsByStudent = loadJson<Record<string, MessageThread[]>>(THREADS_KEY, {});
-let leaveByStudent = loadJson<Record<string, LeaveRequest[]>>(LEAVE_KEY, {});
-let notifications = loadJson<ParentNotification[]>(NOTIFICATIONS_KEY, buildNotifications());
+function mapThread(t: ApiThread): MessageThread {
+  return {
+    id: t.id,
+    studentId: t.studentId,
+    teacherName: t.teacherName,
+    subject: t.subject,
+    messages: t.messages.map((m) => ({ id: m.id, sender: SENDER_FROM_API[m.sender], body: m.body, sentAt: m.sentAt })),
+  };
+}
+
+function mapLeaveRequest(r: ApiLeaveRequest): LeaveRequest {
+  return { ...r, status: LEAVE_STATUS_FROM_API[r.status] };
+}
+
+function toParentNotification(n: Notification): ParentNotification {
+  return { id: n.id, tenantId: n.tenantId, title: n.title, body: n.body, createdAt: n.createdAt, read: n.read };
+}
 
 function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
   return {
@@ -62,38 +87,92 @@ function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
   };
 }
 
-function ensureThreads(studentId: string, teacherName: string): MessageThread[] {
-  if (!threadsByStudent[studentId]) {
-    threadsByStudent = { ...threadsByStudent, [studentId]: buildMessageThreads(studentId, teacherName) };
-    saveJson(THREADS_KEY, threadsByStudent);
-  }
-  return threadsByStudent[studentId];
-}
-
-function ensureLeave(studentId: string): LeaveRequest[] {
-  if (!leaveByStudent[studentId]) {
-    leaveByStudent = { ...leaveByStudent, [studentId]: buildLeaveRequests(studentId) };
-    saveJson(LEAVE_KEY, leaveByStudent);
-  }
-  return leaveByStudent[studentId];
-}
-
+/** A parent's children are the students listing them (by email) as a guardian. */
 export async function getMyChildren(parentEmail: string): Promise<Student[]> {
-  const ids = PARENT_CHILDREN_MAP[parentEmail.toLowerCase()] ?? [];
+  const email = parentEmail.trim().toLowerCase();
   const all = await listStudents();
-  return all.filter((s) => ids.includes(s.id));
+  return all.filter((s) => s.guardians.some((g) => g.email?.trim().toLowerCase() === email));
 }
+
+// ── Composed from other modules (AcademicService) ─────────────────────────
+
+const ATTENDANCE_WINDOW_DAYS = 90;
+const ATTENDANCE_RECENT_DAYS = 14;
 
 export async function getAttendanceSummary(studentId: string): Promise<AttendanceSummary> {
-  return mockDelay(buildAttendanceSummary(studentId), 350);
+  const from = new Date();
+  from.setDate(from.getDate() - ATTENDANCE_WINDOW_DAYS);
+  const records = (await listAttendanceRecords({ dateFrom: from.toISOString().slice(0, 10) }))
+    .filter((r) => r.studentId === studentId)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // Half-days count as present and approved leave as absent for the parent-facing summary.
+  const days: AttendanceDay[] = records.map((r) => ({
+    date: r.date,
+    status: r.status === "late" ? "late" : r.status === "present" || r.status === "half-day" ? "present" : "absent",
+  }));
+
+  return {
+    studentId,
+    presentDays: days.filter((d) => d.status === "present").length,
+    absentDays: days.filter((d) => d.status === "absent").length,
+    lateDays: days.filter((d) => d.status === "late").length,
+    totalDays: days.length,
+    recent: days.slice(-ATTENDANCE_RECENT_DAYS),
+  };
 }
 
 export async function listHomework(studentId: string): Promise<HomeworkItem[]> {
-  return mockDelay(buildHomework(studentId), 350);
+  const [rows, subjects] = await Promise.all([listAssignedHomework(studentId), listSubjects()]);
+  const subjectName = new Map(subjects.map((s) => [s.id, s.name] as const));
+  const today = new Date().toISOString().slice(0, 10);
+
+  return rows.map(({ homework, submission }) => {
+    let status: HomeworkItem["status"];
+    if (submission.status === "graded") status = "graded";
+    else if (submission.status === "submitted") status = "submitted";
+    else status = homework.dueDate < today ? "overdue" : "pending";
+    return {
+      id: homework.id,
+      studentId,
+      subject: subjectName.get(homework.subjectId) ?? "—",
+      title: homework.title,
+      assignedDate: homework.assignedDate,
+      dueDate: homework.dueDate,
+      status,
+      grade: submission.grade !== undefined ? String(submission.grade) : undefined,
+    };
+  });
 }
 
 export async function listExamResults(studentId: string): Promise<ExamResult[]> {
-  return mockDelay(buildExamResults(studentId), 350);
+  const student = await getStudent(studentId);
+  const [exams, subjects, schedules, classes] = await Promise.all([listExams(), listSubjects(), listExamSchedules(), listClasses()]);
+  // Student carries its class by name (see students/api.ts mapStudent), so match on that.
+  const classId = classes.find((c) => c.name === student.className)?.id;
+  const classExams = exams.filter((e) => e.classId === classId);
+  const subjectName = new Map(subjects.map((s) => [s.id, s.name] as const));
+  const scheduleDate = new Map(schedules.map((s) => [`${s.examId}:${s.subjectId}`, s.date] as const));
+
+  const results = (await Promise.all(classExams.map((e) => getExamResults(e.id)))).flat();
+  const examById = new Map(classExams.map((e) => [e.id, e] as const));
+
+  return results
+    .filter((r) => r.studentId === studentId && !r.isAbsent)
+    .map((r) => {
+      const exam = examById.get(r.examId);
+      return {
+        id: r.id,
+        studentId,
+        examName: exam?.name ?? "—",
+        subject: subjectName.get(r.subjectId) ?? "—",
+        date: scheduleDate.get(`${r.examId}:${r.subjectId}`) ?? exam?.startDate ?? "",
+        marksObtained: r.marksObtained,
+        maxMarks: r.maxMarks,
+        grade: r.grade,
+      };
+    })
+    .sort((x, y) => y.date.localeCompare(x.date));
 }
 
 export async function listFeeInvoices(studentId: string): Promise<FeeInvoice[]> {
@@ -107,55 +186,43 @@ export async function payFeeInvoice(studentId: string, invoiceId: string): Promi
   return toParentFeeInvoice(invoice);
 }
 
+/**
+ * The mock seeded a demo "Progress check-in" thread with made-up teacher messages per child.
+ * With real data, a child with no thread yet gets one empty "General" thread with their class
+ * teacher instead, so the parent always has somewhere to write (MessagesTab has no "new thread").
+ */
 export async function listMessageThreads(studentId: string, teacherName: string): Promise<MessageThread[]> {
-  return mockDelay([...ensureThreads(studentId, teacherName)], 350);
+  const threads = await unwrap(engagementHttpClient.get<ApiThread[]>("api/ParentMessageThreads", { params: { studentId } }));
+  if (threads.length > 0) return threads.map(mapThread);
+  const started = await unwrap(
+    engagementHttpClient.post<ApiThread>("api/ParentMessageThreads", { studentId, teacherName, subject: "General" }),
+  );
+  return [mapThread(started)];
 }
 
 export async function sendMessage(studentId: string, threadId: string, body: string): Promise<MessageThread> {
-  const threads = ensureThreads(studentId, "Teacher");
-  const idx = threads.findIndex((t) => t.id === threadId);
-  if (idx === -1) {
-    await mockDelay(null, 300);
-    throw new Error("Thread not found");
-  }
-  const updated: MessageThread = {
-    ...threads[idx],
-    messages: [
-      ...threads[idx].messages,
-      { id: `msg-${Math.random().toString(36).slice(2, 8)}`, sender: "parent", body, sentAt: new Date().toISOString() },
-    ],
-  };
-  const nextList = threads.map((t) => (t.id === threadId ? updated : t));
-  threadsByStudent = { ...threadsByStudent, [studentId]: nextList };
-  saveJson(THREADS_KEY, threadsByStudent);
-  return mockDelay(updated, 400);
+  void studentId;
+  return mapThread(
+    await unwrap(engagementHttpClient.post<ApiThread>(`api/ParentMessageThreads/${threadId}/messages`, { sender: "Parent", body })),
+  );
 }
 
 export async function listLeaveRequests(studentId: string): Promise<LeaveRequest[]> {
-  return mockDelay([...ensureLeave(studentId)], 350);
+  const requests = await unwrap(engagementHttpClient.get<ApiLeaveRequest[]>("api/StudentLeaveRequests", { params: { studentId } }));
+  return requests.map(mapLeaveRequest);
 }
 
 export async function createLeaveRequest(studentId: string, values: LeaveRequestFormValues): Promise<LeaveRequest> {
-  const requests = ensureLeave(studentId);
-  const request: LeaveRequest = {
-    id: `${studentId}-leave-${Math.random().toString(36).slice(2, 8)}`,
-    studentId,
-    ...values,
-    status: "pending",
-    requestedAt: new Date().toISOString(),
-  };
-  const nextList = [request, ...requests];
-  leaveByStudent = { ...leaveByStudent, [studentId]: nextList };
-  saveJson(LEAVE_KEY, leaveByStudent);
-  return mockDelay(request, 450);
+  return mapLeaveRequest(
+    await unwrap(engagementHttpClient.post<ApiLeaveRequest>("api/StudentLeaveRequests", { studentId, ...values })),
+  );
 }
 
 export async function listNotifications(): Promise<ParentNotification[]> {
-  return mockDelay([...notifications], 300);
+  return (await listMyNotifications()).map(toParentNotification);
 }
 
 export async function markNotificationRead(id: string): Promise<ParentNotification[]> {
-  notifications = notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
-  saveJson(NOTIFICATIONS_KEY, notifications);
-  return mockDelay([...notifications], 150);
+  await markRead(id);
+  return listNotifications();
 }

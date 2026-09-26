@@ -1,50 +1,81 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@theme {
-  /* Brand palette — indigo/blue, enterprise-education tone */
-  --color-brand-50: oklch(97% 0.014 264);
-  --color-brand-100: oklch(93% 0.032 264);
-  --color-brand-200: oklch(86% 0.06 264);
-  --color-brand-300: oklch(77% 0.1 264);
-  --color-brand-400: oklch(68% 0.14 264);
-  --color-brand-500: oklch(58% 0.18 264);
-  --color-brand-600: oklch(50% 0.19 264);
-  --color-brand-700: oklch(43% 0.17 264);
-  --color-brand-800: oklch(36% 0.14 264);
-  --color-brand-900: oklch(29% 0.11 264);
+/*
+ * Selector-based dark mode: lets `dark:` utilities respond to a manually-toggleable
+ * `data-theme="dark"` attribute on <html> (set by settings/theme.ts's applyThemeMode) instead of
+ * only `prefers-color-scheme`. Most of the app never needs `dark:` at all — its semantic tokens
+ * below are CSS custom properties that already get overridden wholesale in the dark block, so
+ * every `bg-card`/`text-foreground`/`border-border` utility repaints for free.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-  /* Semantic tokens */
-  --color-background: oklch(99% 0.002 247.8);
-  --color-foreground: oklch(15% 0.012 256);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(15% 0.012 256);
-  --color-primary: oklch(50% 0.19 264);
-  --color-primary-foreground: oklch(100% 0 0);
-  --color-secondary: oklch(96.8% 0.007 247.9);
-  --color-secondary-foreground: oklch(44.7% 0.018 256);
-  --color-muted: oklch(98.2% 0.004 247.9);
-  --color-muted-foreground: oklch(57.9% 0.02 254.1);
-  --color-accent: oklch(93% 0.032 264);
-  --color-accent-foreground: oklch(43% 0.17 264);
-  --color-destructive: oklch(63.7% 0.237 25.3);
-  --color-destructive-foreground: oklch(100% 0 0);
-  --color-success: oklch(64% 0.15 152);
-  --color-success-foreground: oklch(100% 0 0);
-  --color-warning: oklch(75% 0.16 80);
-  --color-warning-foreground: oklch(20% 0.02 80);
-  --color-border: oklch(91.9% 0.013 248.6);
-  --color-input: oklch(91.9% 0.013 248.6);
-  --color-ring: oklch(58% 0.18 264);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(15% 0.012 256);
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Brand palette — yellow, built around #ECA427 (swapped at runtime by settings/theme.ts presets) */
+  --color-brand-50: #FDF9EE;
+  --color-brand-100: #FBF1D5;
+  --color-brand-200: #F6E0A6;
+  --color-brand-300: #F0CA6E;
+  --color-brand-400: #EDB445;
+  --color-brand-500: #ECA427;
+  --color-brand-600: #D18818;
+  --color-brand-700: #A06212;
+  --color-brand-800: #724212;
+  --color-brand-900: #492911;
+
+  /* ── Surfaces & text ─────────────────────────────────────────────── */
+  --color-background: #f7f8fa;
+  --color-foreground: #0f172a; /* text primary */
+  --color-card: #ffffff; /* surface */
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #475569; /* text secondary */
+  --color-muted: #f4f6f9;
+  --color-muted-foreground: #64748b; /* muted / helper text */
+  --color-border: #e5e8ee;
+  --color-input: #d9dee6;
+
+  /* ── Brand roles ─────────────────────────────────────────────────── */
+  --color-primary: #ECA427;
+  --color-primary-hover: #D18818;
+  /* Dark ink on the yellow brand: white-on-#ECA427 is ~2:1 contrast and fails WCAG. Blue/violet/…
+     presets switch this back to white at runtime (see settings/theme.ts). */
+  --color-primary-foreground: #3a2208;
+  /* Readable brand-coloured text/links on light surfaces (brand-500 itself is too light for text). */
+  --color-primary-text: #A06212;
+  --color-accent: #FDF9EE;
+  --color-accent-foreground: #A06212;
+  --color-ring: #ECA427;
+
+  /* ── Status: solid (icons, dots, fills) · soft (tinted bg) · strong (readable text on soft/surface) */
+  --color-success: #16a34a;
+  --color-success-foreground: #ffffff;
+  --color-success-soft: #ecfdf3;
+  --color-success-strong: #15803d;
+  --color-warning: #d97706;
+  --color-warning-foreground: #ffffff;
+  --color-warning-soft: #fff7e8;
+  --color-warning-strong: #b45309;
+  --color-destructive: #dc2626;
+  --color-destructive-hover: #b91c1c;
+  --color-destructive-foreground: #ffffff;
+  --color-destructive-soft: #fef2f2;
+  --color-destructive-strong: #b91c1c;
+  --color-info: #2563eb;
+  --color-info-foreground: #ffffff;
+  --color-info-soft: #eff5ff;
+  --color-info-strong: #1d4ed8;
 
   /* Sidebar */
-  --color-sidebar: oklch(100% 0 0);
-  --color-sidebar-foreground: oklch(44.7% 0.018 256);
-  --color-sidebar-border: oklch(91.9% 0.013 248.6);
-  --color-sidebar-accent: oklch(93% 0.032 264);
-  --color-sidebar-accent-foreground: oklch(43% 0.17 264);
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #475569;
+  --color-sidebar-border: #e5e8ee;
+  --color-sidebar-accent: #FDF9EE;
+  --color-sidebar-accent-foreground: #A06212;
 
   /* Border radius */
   --radius: 0.625rem;
@@ -52,18 +83,148 @@
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Elevation — deliberately soft; cards mostly rely on the border. */
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05), 0 1px 3px 0 rgb(15 23 42 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+  --shadow-lg: 0 12px 28px -6px rgb(15 23 42 / 0.12), 0 4px 8px -4px rgb(15 23 42 / 0.06);
+
+  /* Density — the "comfortable" default. Settings > Appearance's "compact" preset overrides
+     these three on :root at runtime, the same way a brand preset overrides --color-brand-*. */
+  --space-card-padding: 1.25rem; /* comfortable: p-5, compact: p-3.5 */
+  --space-row-padding-y: 0.75rem; /* comfortable: py-3, compact: py-1.5 */
+  --space-row-padding-x: 1rem; /* comfortable: px-4, compact: px-3 */
+}
+
+/*
+ * Dark palette — overrides only the neutral surface/text/border and status tokens. The brand-*
+ * ramp and its preset-swap mechanism (settings/theme.ts) are untouched; applyBrandPreset picks
+ * lighter shade indices for --color-primary/--color-ring/--color-primary-text in dark mode.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: oklch(20% 0.012 256);
+  --color-foreground: oklch(94% 0.006 256);
+  --color-card: oklch(24.5% 0.013 256);
+  --color-card-foreground: oklch(94% 0.006 256);
+  --color-popover: oklch(26% 0.013 256);
+  --color-popover-foreground: oklch(94% 0.006 256);
+  --color-secondary: oklch(30% 0.014 256);
+  --color-secondary-foreground: oklch(84% 0.008 256);
+  --color-muted: oklch(27.5% 0.013 256);
+  --color-muted-foreground: oklch(70% 0.014 256);
+  --color-border: oklch(32% 0.014 256);
+  --color-input: oklch(37% 0.014 256);
+
+  --color-primary: #ECA427;
+  --color-primary-hover: #F0CA6E;
+  --color-primary-foreground: #2a1905;
+  --color-primary-text: #F0CA6E;
+  --color-accent: #3d2a10;
+  --color-accent-foreground: #F6E0A6;
+  --color-ring: #ECA427;
+
+  --color-success: oklch(68% 0.15 152);
+  --color-success-foreground: oklch(18% 0.03 152);
+  --color-success-soft: oklch(30% 0.05 152);
+  --color-success-strong: oklch(82% 0.12 152);
+  --color-warning: oklch(76% 0.15 75);
+  --color-warning-foreground: oklch(20% 0.03 75);
+  --color-warning-soft: oklch(31% 0.05 75);
+  --color-warning-strong: oklch(84% 0.12 80);
+  --color-destructive: oklch(64% 0.19 25);
+  --color-destructive-hover: oklch(58% 0.2 25);
+  --color-destructive-foreground: oklch(98% 0.005 25);
+  --color-destructive-soft: oklch(30% 0.06 25);
+  --color-destructive-strong: oklch(80% 0.11 25);
+  --color-info: oklch(68% 0.14 255);
+  --color-info-foreground: oklch(18% 0.03 255);
+  --color-info-soft: oklch(30% 0.05 255);
+  --color-info-strong: oklch(82% 0.09 255);
+
+  --color-sidebar: oklch(17.5% 0.011 256);
+  --color-sidebar-foreground: oklch(78% 0.01 256);
+  --color-sidebar-border: oklch(27% 0.013 256);
+  --color-sidebar-accent: #3d2a10;
+  --color-sidebar-accent-foreground: #F6E0A6;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.25);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 0 rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 12px 28px -6px rgb(0 0 0 / 0.5), 0 4px 8px -4px rgb(0 0 0 / 0.3);
+}
+
+/* ── Typography scale ────────────────────────────────────────────────
+ * One named class per role so pages stop hand-picking sizes/weights. */
+@utility text-page-title {
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--color-foreground);
+}
+@utility text-section-title {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.006em;
+  color: var(--color-foreground);
+}
+@utility text-card-title {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.004em;
+  color: var(--color-foreground);
+}
+@utility text-body {
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  color: var(--color-foreground);
+}
+@utility text-body-muted {
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  color: var(--color-muted-foreground);
+}
+@utility text-label {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--color-foreground);
+}
+@utility text-helper {
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: var(--color-muted-foreground);
+}
+@utility text-overline {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
 }
 
 @layer base {
   * {
     box-sizing: border-box;
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
+    font-size: 0.875rem;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
@@ -73,5 +234,53 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-primary) 30%, transparent);
+  }
+
+  /* Keyboard focus is always visible, even on elements that forgot their own ring. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  :where(input, textarea, select, button, [role="combobox"], [role="tab"], [role="menuitem"], a):focus-visible {
+    outline: none;
+  }
+  a:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Form fields inside a wrapper that renders a field error pick up the error colour, so every
+     existing `{errors.x && <p data-slot="field-error">…}` form gets an invalid state for free. */
+  :where(*:has(> [data-slot="field-error"])) > :is(input, textarea, button[role="combobox"]),
+  [aria-invalid="true"]:is(input, textarea, button) {
+    border-color: var(--color-destructive);
+  }
+
+  /* Thin, theme-aware scrollbars for inner scroll areas (tables, panels, sidebar). */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-muted-foreground) 35%, transparent) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
   }
 }

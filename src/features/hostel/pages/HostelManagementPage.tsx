@@ -5,19 +5,18 @@ import HostelFeesTab from "../components/HostelFeesTab";
 import HostelsTab from "../components/HostelsTab";
 import MessMenuTab from "../components/MessMenuTab";
 import VisitorRegisterTab from "../components/VisitorRegisterTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function HostelManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Hostel management</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Manage hostels, rooms and beds, student allocation, the visitor register, hostel attendance, fees, and the mess menu.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Hostel management"
+        description="Manage hostels, rooms and beds, student allocation, the visitor register, hostel attendance, fees, and the mess menu."
+      />
 
       <Tabs defaultValue="hostels">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="hostels">Hostels & Rooms</TabsTrigger>
           <TabsTrigger value="allocations">Student Allocation</TabsTrigger>
           <TabsTrigger value="visitors">Visitor Register</TabsTrigger>
@@ -44,6 +43,6 @@ export default function HostelManagementPage() {
           <MessMenuTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,18 +88,18 @@ export default function GroupFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, description: values.description?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="grp-name">Group name</Label>
-            <Input id="grp-name" placeholder="e.g. Grade 10 Parents" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="grp-name" required>Group name</Label>
+            <Input id="grp-name" placeholder="e.g. Grade 10 Parents" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="grp-description">Description (optional)</Label>
+            <Label htmlFor="grp-description" optional>Description</Label>
             <Input id="grp-description" placeholder="e.g. Parents/guardians of all Grade 10 students" {...register("description")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="grp-audienceType">Audience</Label>
+            <Label htmlFor="grp-audienceType" required>Audience</Label>
             <Controller
               control={control}
               name="audienceType"
@@ -139,14 +139,13 @@ export default function GroupFormDialog({
               />
             )}
           />
-          {errors.memberIds && <p className="text-xs text-red-600">{errors.memberIds.message}</p>}
+          {errors.memberIds && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.memberIds.message}</p>}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create group"}
             </Button>
           </DialogFooter>

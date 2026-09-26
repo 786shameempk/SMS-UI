@@ -1,9 +1,16 @@
 
 export interface Role {
   id: string;
+  /** Only meaningful for custom (non-system) roles — system roles are shared across every tenant. */
+  tenantId: string;
   name: string;
   description: string;
   isSystem: boolean;
+  /** Whether a user with this role isn't locked to one branch (mirrors admin/superAdmin's
+   *  AuthUser.branchId === null) — used by the Users form to decide whether a branch field is
+   *  required, instead of a fragile match on a specific role id. Only ever true for the
+   *  built-in Administrator role. */
+  grantsAllBranchAccess: boolean;
   createdAt: string;
 }
 
@@ -26,6 +33,7 @@ export type RolePermissionMap = Record<string, string[]>;
 
 export interface Policy {
   id: string;
+  tenantId: string;
   name: string;
   description: string;
   module: string;
@@ -44,6 +52,7 @@ export interface PolicyFormValues {
 
 export interface FeatureToggle {
   id: string;
+  tenantId: string;
   key: string;
   label: string;
   description: string;
