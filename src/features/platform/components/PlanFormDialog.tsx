@@ -8,8 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/utils/cn";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AVAILABLE_MODULE_LABELS, PLAN_TIER_OPTIONS } from "../constants";
+import { ALWAYS_INCLUDED_PLAN_MODULES, AVAILABLE_MODULE_LABELS, PLAN_TIER_OPTIONS } from "../constants";
 import type { Plan, PlanFormValues, PlanTier } from "../types";
 
 const planSchema = z.object({
@@ -24,7 +25,13 @@ const planSchema = z.object({
 
 type FormValues = z.infer<typeof planSchema>;
 
-const emptyValues: FormValues = { tier: "starter", name: "", monthlyPriceInr: 0, maxStudents: 0, maxStaff: 0, storageGb: 0, includedModules: [] };
+const emptyValues: FormValues = { tier: "starter", name: "", monthlyPriceInr: 0, maxStudents: 0, maxStaff: 0, storageGb: 0, includedModules: ALWAYS_INCLUDED_PLAN_MODULES };
+
+/** Keeps only catalog modules (in catalog order) and always adds the locked ones. */
+function normalizeModules(modules: string[]): string[] {
+  const wanted = new Set([...ALWAYS_INCLUDED_PLAN_MODULES, ...modules]);
+  return AVAILABLE_MODULE_LABELS.filter((m) => wanted.has(m));
+}
 
 export default function PlanFormDialog({
   open,
@@ -61,7 +68,7 @@ export default function PlanFormDialog({
             maxStudents: plan.maxStudents,
             maxStaff: plan.maxStaff,
             storageGb: plan.storageGb,
-            includedModules: plan.includedModules,
+            includedModules: normalizeModules(plan.includedModules),
           }
         : emptyValues,
     );
@@ -71,7 +78,7 @@ export default function PlanFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
+      <DialogContent className="max-h-[85vh] overflow-y-auto max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit plan" : "New plan"}</DialogTitle>
           <DialogDescription>Defines the limits and modules tenants on this plan get.</DialogDescription>
@@ -131,23 +138,45 @@ export default function PlanFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <Label>Included modules</Label>
-              <span className="text-xs text-muted-foreground">{includedModules.length} selected</span>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-muted-foreground">
+                  {includedModules.length} of {AVAILABLE_MODULE_LABELS.length} selected
+                </span>
+                <button type="button" className="font-medium text-brand-600 hover:underline cursor-pointer" onClick={() => setValue("includedModules", [...AVAILABLE_MODULE_LABELS])}>
+                  Select all
+                </button>
+                <button type="button" className="font-medium text-muted-foreground hover:underline cursor-pointer" onClick={() => setValue("includedModules", normalizeModules([]))}>
+                  Clear
+                </button>
+              </div>
             </div>
-            <div className="max-h-48 overflow-y-auto rounded-lg border border-border divide-y divide-border">
-              {AVAILABLE_MODULE_LABELS.map((label) => (
-                <label key={label} className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-secondary/40">
-                  <Checkbox
-                    checked={includedModules.includes(label)}
-                    onCheckedChange={(v) =>
-                      setValue("includedModules", v ? [...includedModules, label] : includedModules.filter((m) => m !== label))
-                    }
-                  />
-                  <span className="text-sm text-slate-700">{label}</span>
-                </label>
-              ))}
+            <div className="max-h-72 overflow-y-auto rounded-lg border border-border grid grid-cols-1 sm:grid-cols-2">
+              {AVAILABLE_MODULE_LABELS.map((label) => {
+                const locked = ALWAYS_INCLUDED_PLAN_MODULES.includes(label);
+                return (
+                  <label
+                    key={label}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2 border-b border-border",
+                      locked ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-secondary/40",
+                    )}
+                  >
+                    <Checkbox
+                      checked={locked || includedModules.includes(label)}
+                      disabled={locked}
+                      onCheckedChange={(v) =>
+                        setValue("includedModules", v ? normalizeModules([...includedModules, label]) : includedModules.filter((m) => m !== label))
+                      }
+                    />
+                    <span className="text-sm text-foreground">{label}</span>
+                    {locked && <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Always</span>}
+                  </label>
+                );
+              })}
             </div>
+            <p className="text-xs text-muted-foreground">School admins can only grant these modules to roles in Roles &amp; Permissions.</p>
             {errors.includedModules && <p className="text-xs text-red-600">{errors.includedModules.message}</p>}
           </div>
 

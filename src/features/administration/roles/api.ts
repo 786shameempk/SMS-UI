@@ -77,6 +77,19 @@ export async function listPermissions(): Promise<Permission[]> {
   return [...PERMISSION_CATALOG];
 }
 
+/** Which matrix modules this user may see and grant: their school's plan, or every module for superAdmin. */
+export interface MatrixModuleScope {
+  restricted: boolean;
+  planName: string | null;
+  modules: string[];
+}
+
+export async function getMatrixModules(): Promise<MatrixModuleScope> {
+  return unwrap(authHttpClient.get<MatrixModuleScope>("/api/school-roles/matrix/modules"));
+}
+
+export const MATRIX_MODULES_QUERY_KEY = ["admin", "matrix-modules"] as const;
+
 export async function getRolePermissions(): Promise<RolePermissionMap> {
   return unwrap(authHttpClient.get<RolePermissionMap>("/api/school-roles/matrix"));
 }

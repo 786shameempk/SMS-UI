@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
@@ -18,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/authStore";
-import { cn } from "@/utils/cn";
+import { QuickActionGrid, timeOfDayGreeting, WelcomeHero, type QuickAction } from "@/components/common/WelcomeHero";
 import { getMyChildren } from "../api";
 import ChildSwitcher from "../components/ChildSwitcher";
 import OverviewTab from "../components/OverviewTab";
@@ -43,50 +42,8 @@ const TABS: { value: string; label: string; icon: LucideIcon }[] = [
   { value: "notifications", label: "Notifications", icon: Bell },
 ];
 
-function greeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
-}
-
-interface QuickAction {
-  label: string;
-  hint: string;
-  icon: LucideIcon;
-  tint: string;
-  to?: string;
-  tab?: string;
-}
-
-function QuickActionTile({ action, onTab }: { action: QuickAction; onTab: (tab: string) => void }) {
-  const body = (
-    <>
-      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", action.tint)}>
-        <action.icon className="h-[18px] w-[18px]" />
-      </span>
-      <span className="min-w-0 text-left">
-        <span className="block text-sm font-semibold text-foreground truncate lg:whitespace-normal">{action.label}</span>
-        <span className="block text-xs text-muted-foreground truncate lg:whitespace-normal">{action.hint}</span>
-      </span>
-    </>
-  );
-  const className =
-    "group flex items-center gap-3 lg:flex-col lg:items-start rounded-2xl border border-border bg-card p-3.5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md hover:border-brand-300 cursor-pointer";
-
-  return action.to ? (
-    <Link to={action.to} className={className}>
-      {body}
-    </Link>
-  ) : (
-    <button type="button" onClick={() => onTab(action.tab!)} className={className}>
-      {body}
-    </button>
-  );
 }
 
 export default function ParentPortalPage() {
@@ -126,33 +83,20 @@ export default function ParentPortalPage() {
     ...(can("talents")
       ? [{ label: "Talent Showcase", hint: "Share & cheer on talents", icon: Star, tint: "bg-violet-500/12 text-violet-600 dark:text-violet-300", to: "/talents" }]
       : []),
-    { label: "Pay fees", hint: "Invoices & online payment", icon: Wallet, tint: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300", tab: "fees" },
-    { label: "Apply for leave", hint: "Request a day off", icon: CalendarOff, tint: "bg-rose-500/12 text-rose-600 dark:text-rose-300", tab: "leave" },
-    { label: "Message teacher", hint: "Talk to the class teacher", icon: MessageSquareText, tint: "bg-brand-500/15 text-brand-700 dark:text-brand-300", tab: "messages" },
+    { label: "Pay fees", hint: "Invoices & online payment", icon: Wallet, tint: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300", onClick: () => setActiveTab("fees") },
+    { label: "Apply for leave", hint: "Request a day off", icon: CalendarOff, tint: "bg-rose-500/12 text-rose-600 dark:text-rose-300", onClick: () => setActiveTab("leave") },
+    { label: "Message teacher", hint: "Talk to the class teacher", icon: MessageSquareText, tint: "bg-brand-500/15 text-brand-700 dark:text-brand-300", onClick: () => setActiveTab("messages") },
   ];
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-[1100px]">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 px-5 py-6 sm:px-8 sm:py-8 text-white shadow-lg">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-brand-500/30 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-sky-500/20 blur-3xl" />
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-300">Parent portal</p>
-            <h1 className="mt-1.5 text-2xl sm:text-3xl font-bold tracking-tight">
-              {greeting()}
-              {firstName ? `, ${firstName}` : ""} 👋
-            </h1>
-            <p className="mt-1.5 max-w-lg text-sm text-white/70">
-              Everything about your {children.length === 1 ? "child's" : "children's"} school day in one place — attendance, homework, results, fees and more.
-            </p>
-            <p className="mt-3 text-xs text-white/50">
-              {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-            </p>
-          </div>
-
-          {children.length > 0 && (
+      <WelcomeHero
+        eyebrow="Parent portal"
+        title={`${timeOfDayGreeting()}${firstName ? `, ${firstName}` : ""} 👋`}
+        subtitle={`Everything about your ${children.length === 1 ? "child's" : "children's"} school day in one place — attendance, homework, results, fees and more.`}
+        aside={
+          children.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {children.map((child) => (
                 <button
@@ -177,16 +121,11 @@ export default function ParentPortalPage() {
                 </button>
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          )
+        }
+      />
 
-      {/* Quick actions */}
-      <section className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-5 gap-3">
-        {quickActions.map((action) => (
-          <QuickActionTile key={action.label} action={action} onTab={setActiveTab} />
-        ))}
-      </section>
+      <QuickActionGrid actions={quickActions} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto -mx-1 px-1 pb-1">

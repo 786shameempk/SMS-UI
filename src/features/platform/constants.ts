@@ -1,3 +1,4 @@
+import { PERMISSION_MODULES } from "@/features/administration/roles/constants";
 import type { PlanTier, TenantStatus } from "./types";
 
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "neutral";
@@ -21,42 +22,14 @@ export const PLAN_TIER_OPTIONS: Array<{ value: PlanTier; label: string }> = (Obj
 }));
 
 /**
- * Illustrative catalog of module labels a plan can include — mirrors this app's own nav
- * sections. AuthService's plan seed (ApplicationDbContextInitializer) slices this list *by position* to build each seeded
- * tier (Starter = first 8, Growth = first 16, Enterprise = all), so new modules are appended at
- * the end rather than inserted in the middle — that keeps every existing plan's composition
- * exactly as it was and only ever grows what Enterprise includes. Administration-only screens
- * (User Management, Roles & Permissions, Settings) and the Platform Console itself aren't listed
- * here — they aren't customer-facing modules a school subscribes to, they're how the school (or
- * the platform operator) administers whichever modules they do have.
+ * What a subscription plan can include: every Roles & Permissions matrix module (the same names, so a
+ * school's plan directly decides which matrix rows its admins can grant) except the Platform Console,
+ * which is the platform operator's own screen. Mirrors AuthService's PermissionMatrix.PlanModules.
  */
-export const AVAILABLE_MODULE_LABELS = [
-  "Dashboard",
-  "Student Management",
-  "Academics",
-  "Attendance",
-  "Staff & Teachers",
-  "Timetable",
-  "Examinations",
-  "Homework",
-  "Fee Management",
-  "Accounting",
-  "Payroll",
-  "Inventory",
-  "Certificates",
-  "Health & Medical",
-  "Visitor Management",
-  "Help Desk",
-  "Surveys & Feedback",
-  "Library",
-  "Transport",
-  "Hostel",
-  "Communication",
-  "Reports & Analytics",
-  "AI Features",
-  "Parent Portal",
-  "Branch Management",
-];
+export const AVAILABLE_MODULE_LABELS: string[] = PERMISSION_MODULES.filter((m) => m !== "Platform Console");
+
+/** Part of every plan, so a school admin can never be locked out of administering their school. */
+export const ALWAYS_INCLUDED_PLAN_MODULES = ["Dashboard", "User Management", "Roles & Permissions", "Settings"];
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 

@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Layers, SplitSquareHorizontal } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useUiStore } from "@/store/useUiStore";
-import { Badge } from "@/components/ui/badge";
+import { QuickActionGrid, timeOfDayGreeting, WelcomeHero } from "@/components/common/WelcomeHero";
 import { cn } from "@/utils/cn";
 import { fetchDashboardData } from "../api";
 import { canSwitchScopeView, fetchScopeSummary } from "../scopeApi";
 import { describeDateRange, resolveDateRange } from "../dateRange";
+import { quickActionsFor, ROLE_TAGLINE } from "../quickActions";
 import { widgetsForRole, type DashboardWidgetId } from "../widgets";
 import type { DashboardScopeView } from "../types";
 import StatCards from "../components/StatCards";
@@ -70,16 +71,11 @@ function ScopeViewToggle({ value, onChange }: { value: DashboardScopeView; onCha
   );
 }
 
-function greeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const role = user?.role ?? "admin";
+  const modulePermissions = useAuthStore((s) => s.modulePermissions);
   const activeTenantId = useAuthStore((s) => s.activeTenantId);
   const activeBranchId = useAuthStore((s) => s.activeBranchId);
   const scopeView = useUiStore((s) => s.dashboardScopeView);
@@ -114,25 +110,21 @@ export default function DashboardPage() {
   const nothingShown = availableWidgets.every((w) => !show(w.id));
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px]">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold text-foreground">
-              {greeting()}, {user?.name.split(" ")[0] ?? "there"}
-            </h1>
-            <Badge variant="info">{ROLE_LABEL[role] ?? role}</Badge>
+    <div className="p-4 sm:p-6 space-y-6 max-w-[1600px]">
+      <WelcomeHero
+        eyebrow={`${ROLE_LABEL[role] ?? role} dashboard`}
+        title={`${timeOfDayGreeting()}, ${user?.name.split(" ")[0] ?? "there"} 👋`}
+        subtitle={ROLE_TAGLINE[role]}
+        aside={
+          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:justify-end text-foreground">
+            {scopeEnabled && show("scopeOverview") && <ScopeViewToggle value={scopeView} onChange={setScopeView} />}
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
+            <ManageWidgetsDialog available={availableWidgets} hidden={hiddenWidgets} onChange={setHiddenWidgets} />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {scopeEnabled && show("scopeOverview") && <ScopeViewToggle value={scopeView} onChange={setScopeView} />}
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
-          <ManageWidgetsDialog available={availableWidgets} hidden={hiddenWidgets} onChange={setHiddenWidgets} />
-        </div>
-      </div>
+        }
+      />
+
+      <QuickActionGrid actions={quickActionsFor(role, modulePermissions)} />
 
       {nothingShown && (
         <div className="rounded-xl border border-dashed border-border py-16 text-center">

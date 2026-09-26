@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { listPlans } from "@/features/platform/api";
+import { AVAILABLE_MODULE_LABELS } from "@/features/platform/constants";
 import { formatCurrency } from "@/utils/format";
 
 export interface FeatureItem {
@@ -165,7 +166,7 @@ export async function getPricingTiers(): Promise<PricingTier[]> {
       `Up to ${plan.maxStudents.toLocaleString("en-IN")} students`,
       `Up to ${plan.maxStaff.toLocaleString("en-IN")} staff accounts`,
       `${plan.storageGb} GB document storage`,
-      `${plan.includedModules.length} of 29 modules included`,
+      `${plan.includedModules.length} of ${AVAILABLE_MODULE_LABELS.length} modules included`,
     ],
   }));
 }

@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
 import { PERMISSION_MODULES } from "../constants";
+import { getMatrixModules, MATRIX_MODULES_QUERY_KEY } from "../api";
 import type { Policy, PolicyFormValues, Role } from "../types";
 
 const policyFormSchema = z.object({
@@ -32,6 +34,9 @@ interface PolicyFormDialogProps {
 
 export default function PolicyFormDialog({ open, onOpenChange, policy, roles, onSubmit, submitting }: PolicyFormDialogProps) {
   const isEdit = Boolean(policy);
+  const { data: scope } = useQuery({ queryKey: MATRIX_MODULES_QUERY_KEY, queryFn: getMatrixModules, enabled: open });
+  // Plan modules only - but an existing policy keeps showing its own module even if the plan dropped it.
+  const moduleOptions = PERMISSION_MODULES.filter((m) => !scope || scope.modules.includes(m) || m === policy?.module);
   const {
     register,
     handleSubmit,
@@ -93,7 +98,7 @@ export default function PolicyFormDialog({ open, onOpenChange, policy, roles, on
                     <SelectValue placeholder="Select a module" />
                   </SelectTrigger>
                   <SelectContent>
-                    {PERMISSION_MODULES.map((m) => (
+                    {moduleOptions.map((m) => (
                       <SelectItem key={m} value={m}>
                         {m}
                       </SelectItem>
