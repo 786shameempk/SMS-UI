@@ -70,10 +70,10 @@ export default function AssignClassTeacherDialog({
             {sections.map((section) => (
               <div key={section.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {classNameOf(section.classId)} &middot; {section.name}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {section.classTeacherName ? `Class teacher: ${section.classTeacherName}` : "No class teacher assigned"}
                   </p>
                 </div>

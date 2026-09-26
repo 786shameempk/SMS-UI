@@ -40,8 +40,8 @@ export default function TrialBalanceTab() {
                   const config = ACCOUNT_TYPE_CONFIG[row.type];
                   return (
                     <tr key={row.accountId} className="border-b border-border last:border-0">
-                      <td className="py-2.5 pr-3 tabular-nums text-slate-600">{row.accountCode}</td>
-                      <td className="py-2.5 pr-3 text-slate-800">{row.accountName}</td>
+                      <td className="py-2.5 pr-3 tabular-nums text-secondary-foreground">{row.accountCode}</td>
+                      <td className="py-2.5 pr-3 text-foreground">{row.accountName}</td>
                       <td className="py-2.5 pr-3">
                         <Badge variant={config.variant}>{config.label}</Badge>
                       </td>

@@ -35,23 +35,23 @@ function ChildOverviewCard({ student, onView }: { student: Student; onView: () =
       label: "Attendance",
       value: attendancePct !== null ? `${attendancePct}%` : "—",
       icon: CalendarCheck,
-      tint: attendancePct === null ? "text-muted-foreground" : attendancePct >= 85 ? "text-emerald-600 dark:text-emerald-400" : attendancePct >= 75 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400",
+      tint: attendancePct === null ? "text-muted-foreground" : attendancePct >= 85 ? "text-success-strong" : attendancePct >= 75 ? "text-warning-strong" : "text-destructive-strong",
     },
-    { label: "Homework due", value: String(pendingHomework), icon: ClipboardList, tint: pendingHomework > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400" },
-    { label: "Fees due", value: feesDue > 0 ? formatCurrency(feesDue) : "Paid", icon: Wallet, tint: feesDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400" },
+    { label: "Homework due", value: String(pendingHomework), icon: ClipboardList, tint: pendingHomework > 0 ? "text-warning-strong" : "text-success-strong" },
+    { label: "Fees due", value: feesDue > 0 ? formatCurrency(feesDue) : "Paid", icon: Wallet, tint: feesDue > 0 ? "text-destructive-strong" : "text-success-strong" },
   ];
 
   return (
-    <Card className="overflow-hidden rounded-2xl transition-shadow hover:shadow-md">
-      <div className="h-16 bg-gradient-to-r from-brand-400 via-brand-300 to-sky-300 dark:from-brand-700 dark:via-brand-800 dark:to-sky-900" />
+    <Card interactive className="overflow-hidden">
+      <div className="h-14 border-b border-border bg-accent/70" aria-hidden="true" />
       <CardContent className="-mt-10 p-5 pt-0 space-y-4">
         <button type="button" onClick={onView} className="flex items-start gap-3 cursor-pointer group w-full text-left">
           <Avatar className="w-16 h-16 ring-4 ring-card shadow-sm">
             {student.photoUrl && <AvatarImage src={student.photoUrl} alt={student.firstName} />}
-            <AvatarFallback className="bg-brand-100 text-brand-800 text-lg font-bold">{initialsOf(student.firstName, student.lastName)}</AvatarFallback>
+            <AvatarFallback className="bg-brand-100 text-accent-foreground text-lg font-bold">{initialsOf(student.firstName, student.lastName)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1 mt-11">
-            <p className="text-base font-semibold text-foreground group-hover:text-brand-600 transition-colors truncate">
+            <p className="text-base font-semibold text-foreground group-hover:text-primary-text transition-colors truncate">
               {student.firstName} {student.lastName}
             </p>
             <p className="text-xs text-muted-foreground truncate">
@@ -74,7 +74,7 @@ function ChildOverviewCard({ student, onView }: { student: Student; onView: () =
         {attendancePct !== null && (
           <div className="space-y-1">
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-              <div className="h-full rounded-full bg-gradient-to-r from-brand-400 to-emerald-500" style={{ width: `${attendancePct}%` }} />
+              <div className="h-full rounded-full bg-success" style={{ width: `${attendancePct}%` }} />
             </div>
             <p className="text-[11px] text-muted-foreground">
               Present {attendance!.presentDays} of {attendance!.totalDays} school days

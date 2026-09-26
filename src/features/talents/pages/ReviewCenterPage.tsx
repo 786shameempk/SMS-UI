@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { EyeOff, Loader2, ShieldCheck, ThumbsUp } from "lucide-react";
+import { EyeOff, ShieldCheck, ThumbsUp } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -329,8 +329,7 @@ function SettingsForm() {
       </section>
 
       <div className="lg:col-span-2 flex justify-end">
-        <Button type="submit" className="cc-gradient-bg text-white" disabled={save.isPending}>
-          {save.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+        <Button type="submit" className="cc-gradient-bg text-white" loading={save.isPending}>
           Save settings
         </Button>
       </div>

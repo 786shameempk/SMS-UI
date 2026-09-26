@@ -15,7 +15,7 @@ import type { Refund } from "../types";
 export default function RefundsTab() {
   const queryClient = useQueryClient();
 
-  const { data: refunds = [], isLoading } = useQuery({ queryKey: ["fees", "refunds"], queryFn: listRefunds });
+  const { data: refunds = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "refunds"], queryFn: listRefunds });
   const { data: invoices = [] } = useQuery({ queryKey: ["fees", "invoices"], queryFn: listInvoices });
   const { data: students = [] } = useQuery({ queryKey: ["students", "all"], queryFn: listStudents });
 
@@ -40,8 +40,8 @@ export default function RefundsTab() {
         const student = invoice ? studentById.get(invoice.studentId) : undefined;
         return (
           <div>
-            <p className="text-sm font-medium text-slate-800">{student ? `${student.firstName} ${student.lastName}` : "—"}</p>
-            <p className="text-xs text-slate-500">{invoice ? `${invoice.term} · ${invoice.feeType}` : ""}</p>
+            <p className="text-sm font-medium text-foreground">{student ? `${student.firstName} ${student.lastName}` : "—"}</p>
+            <p className="text-xs text-muted-foreground">{invoice ? `${invoice.term} · ${invoice.feeType}` : ""}</p>
           </div>
         );
       },
@@ -49,13 +49,13 @@ export default function RefundsTab() {
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{formatCurrency(row.original.amount)}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.amount)}</span>,
     },
-    { accessorKey: "reason", header: "Reason", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.reason}</span> },
+    { accessorKey: "reason", header: "Reason", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.reason}</span> },
     {
       accessorKey: "refundedOn",
       header: "Date",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.refundedOn).toLocaleDateString()}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.refundedOn).toLocaleDateString()}</span>,
     },
     {
       accessorKey: "status",
@@ -85,7 +85,7 @@ export default function RefundsTab() {
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">Refund requests raised from student invoices.</p>
       </DataTableToolbar>
-      <DataTable columns={columns} data={sorted} isLoading={isLoading} emptyMessage="No refunds recorded yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No refunds recorded yet." />
     </div>
   );
 }

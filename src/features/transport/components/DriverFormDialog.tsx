@@ -75,7 +75,7 @@ export default function DriverFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="drv-staffId">Staff member</Label>
+            <Label htmlFor="drv-staffId" required>Staff member</Label>
             <Controller
               control={control}
               name="staffId"
@@ -104,30 +104,30 @@ export default function DriverFormDialog({
                 No eligible staff. Add a staff member with designation "Driver" in Staff Management first.
               </p>
             )}
-            {errors.staffId && <p className="text-xs text-red-600">{errors.staffId.message}</p>}
+            {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.staffId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="drv-licenseNumber">License number</Label>
-              <Input id="drv-licenseNumber" placeholder="e.g. KA-05-2019-0044211" {...register("licenseNumber")} />
-              {errors.licenseNumber && <p className="text-xs text-red-600">{errors.licenseNumber.message}</p>}
+              <Label htmlFor="drv-licenseNumber" required>License number</Label>
+              <Input id="drv-licenseNumber" placeholder="e.g. KA-05-2019-0044211" aria-invalid={errors.licenseNumber ? true : undefined} {...register("licenseNumber")} />
+              {errors.licenseNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.licenseNumber.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="drv-licenseExpiryDate">License expiry</Label>
-              <Input id="drv-licenseExpiryDate" type="date" {...register("licenseExpiryDate")} />
-              {errors.licenseExpiryDate && <p className="text-xs text-red-600">{errors.licenseExpiryDate.message}</p>}
+              <Label htmlFor="drv-licenseExpiryDate" required>License expiry</Label>
+              <Input id="drv-licenseExpiryDate" type="date" aria-invalid={errors.licenseExpiryDate ? true : undefined} {...register("licenseExpiryDate")} />
+              {errors.licenseExpiryDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.licenseExpiryDate.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="drv-experienceYears">Experience (years)</Label>
-              <Input id="drv-experienceYears" type="number" min="0" step="1" {...register("experienceYears")} />
-              {errors.experienceYears && <p className="text-xs text-red-600">{errors.experienceYears.message}</p>}
+              <Label htmlFor="drv-experienceYears" required>Experience (years)</Label>
+              <Input id="drv-experienceYears" type="number" min="0" step="1" aria-invalid={errors.experienceYears ? true : undefined} {...register("experienceYears")} />
+              {errors.experienceYears && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.experienceYears.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="drv-status">Status</Label>
+              <Label htmlFor="drv-status" required>Status</Label>
               <Controller
                 control={control}
                 name="status"

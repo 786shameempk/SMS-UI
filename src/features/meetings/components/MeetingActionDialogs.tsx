@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,8 +109,7 @@ export function RescheduleDialog({ meeting, open, onOpenChange }: { meeting: Mee
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Keep current time</Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Button type="submit" loading={mutation.isPending}>
               Reschedule
             </Button>
           </DialogFooter>
@@ -167,8 +166,7 @@ export function CancelMeetingDialog({ meeting, open, onOpenChange }: { meeting: 
           {s.isSeries && <ScopePicker value={scope} onChange={setScope} noun={noun} />}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Keep it</Button>
-            <Button type="submit" variant="destructive" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Button type="submit" variant="destructive" loading={mutation.isPending}>
               Cancel {scope === "This" ? noun : "sessions"}
             </Button>
           </DialogFooter>

@@ -19,7 +19,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Active students</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.totalActiveStudents}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
               <Activity className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -30,7 +30,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Students with allergies</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.studentsWithAllergies}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-warning-soft text-warning-strong flex items-center justify-center shrink-0">
               <AlertTriangle className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -41,7 +41,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Overdue vaccinations</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.overdueVaccinations.length}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-destructive-soft text-destructive-strong flex items-center justify-center shrink-0">
               <Syringe className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -52,7 +52,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Infirmary visits (30 days)</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.visitsLast30Days}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-info-soft text-info-strong flex items-center justify-center shrink-0">
               <ShieldAlert className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -70,10 +70,10 @@ export default function ReportsTab() {
             {summary?.overdueVaccinations.map((v) => (
               <div key={v.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {v.student.firstName} {v.student.lastName}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {v.vaccineName} (dose {v.doseNumber}) &middot; due {formatRelativeDay(v.dueDate)}
                   </p>
                 </div>
@@ -95,10 +95,10 @@ export default function ReportsTab() {
             {summary?.upcomingVaccinations.map((v) => (
               <div key={v.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {v.student.firstName} {v.student.lastName}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {v.vaccineName} (dose {v.doseNumber})
                   </p>
                 </div>
@@ -119,8 +119,8 @@ export default function ReportsTab() {
             {!isLoading && summary?.visitsByOutcome.length === 0 && <p className="text-sm text-muted-foreground">No visits logged yet.</p>}
             {summary?.visitsByOutcome.map((row) => (
               <div key={row.outcome} className="flex items-center justify-between text-sm">
-                <span className="text-slate-700">{VISIT_OUTCOME_CONFIG[row.outcome].label}</span>
-                <span className="tabular-nums text-slate-800 font-medium">{row.count}</span>
+                <span className="text-foreground">{VISIT_OUTCOME_CONFIG[row.outcome].label}</span>
+                <span className="tabular-nums text-foreground font-medium">{row.count}</span>
               </div>
             ))}
           </CardContent>
@@ -136,7 +136,7 @@ export default function ReportsTab() {
             {summary?.bmiDistribution.map((row) => (
               <div key={row.category} className="flex items-center justify-between text-sm">
                 <Badge variant={BMI_CATEGORY_CONFIG[row.category as BmiCategory].variant}>{BMI_CATEGORY_CONFIG[row.category as BmiCategory].label}</Badge>
-                <span className="tabular-nums text-slate-800 font-medium">{row.count}</span>
+                <span className="tabular-nums text-foreground font-medium">{row.count}</span>
               </div>
             ))}
           </CardContent>

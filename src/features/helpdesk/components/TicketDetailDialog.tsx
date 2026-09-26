@@ -133,33 +133,33 @@ export default function TicketDetailDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div>
               <p className="text-xs text-muted-foreground">Raised by</p>
-              <p className="text-slate-700">{t.raisedByLabel}</p>
+              <p className="text-foreground">{t.raisedByLabel}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Assigned to</p>
-              <p className="text-slate-700">{t.assignedTo ? `${t.assignedTo.firstName} ${t.assignedTo.lastName} (${t.assignedTo.designation})` : "Unassigned"}</p>
+              <p className="text-foreground">{t.assignedTo ? `${t.assignedTo.firstName} ${t.assignedTo.lastName} (${t.assignedTo.designation})` : "Unassigned"}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Created</p>
-              <p className="text-slate-700">{formatDateTime(t.createdAt)}</p>
+              <p className="text-foreground">{formatDateTime(t.createdAt)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Last updated</p>
-              <p className="text-slate-700">{formatDateTime(t.updatedAt)}</p>
+              <p className="text-foreground">{formatDateTime(t.updatedAt)}</p>
             </div>
           </div>
 
           <div className="rounded-lg border border-border p-3 bg-secondary/30">
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">{t.description}</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{t.description}</p>
           </div>
 
           {t.resolutionNotes && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-              <p className="text-xs font-medium text-green-700 mb-1">Resolution notes</p>
-              <p className="text-sm text-green-800 whitespace-pre-wrap">{t.resolutionNotes}</p>
+            <div className="rounded-lg border border-success/30 bg-success-soft p-3">
+              <p className="text-xs font-medium text-success-strong mb-1">Resolution notes</p>
+              <p className="text-sm text-success-strong whitespace-pre-wrap">{t.resolutionNotes}</p>
             </div>
           )}
 
@@ -201,7 +201,7 @@ export default function TicketDetailDialog({
                 Reopen
               </Button>
             )}
-            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(t.id)}>
+            <Button variant="ghost" size="sm" className="text-destructive-strong hover:text-destructive-strong" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(t.id)}>
               Delete
             </Button>
           </div>
@@ -227,18 +227,18 @@ export default function TicketDetailDialog({
           )}
 
           <div className="space-y-3">
-            <p className="text-sm font-medium text-slate-800">Comments &amp; timeline</p>
+            <p className="text-sm font-medium text-foreground">Comments &amp; timeline</p>
             {t.comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
             {t.comments.map((c) => (
               <div key={c.id} className="rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-slate-800">{c.authorLabel}</p>
+                  <p className="text-sm font-medium text-foreground">{c.authorLabel}</p>
                   <div className="flex items-center gap-1.5">
                     {!c.visibleToSubmitter && <Badge variant="neutral">Internal only</Badge>}
-                    <span className="text-xs text-slate-400">{formatDateTime(c.createdAt)}</span>
+                    <span className="text-xs text-muted-foreground">{formatDateTime(c.createdAt)}</span>
                   </div>
                 </div>
-                <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap">{c.message}</p>
+                <p className="text-sm text-foreground mt-1 whitespace-pre-wrap">{c.message}</p>
               </div>
             ))}
 
@@ -260,7 +260,7 @@ export default function TicketDetailDialog({
                   </Select>
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <Checkbox checked={commentVisible} onCheckedChange={(v) => setCommentVisible(v === true)} />
-                    <span className="text-xs text-slate-600">Visible to submitter</span>
+                    <span className="text-xs text-secondary-foreground">Visible to submitter</span>
                   </label>
                 </div>
                 <Button

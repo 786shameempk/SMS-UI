@@ -38,7 +38,7 @@ export default function GraduationPanel() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <GraduationCap className="w-4 h-4 text-slate-400" />
+          <GraduationCap className="w-4 h-4 text-muted-foreground" />
           Graduate students
         </CardTitle>
         <CardDescription>Move all active students in a class to alumni status at the end of their final year.</CardDescription>
@@ -58,7 +58,7 @@ export default function GraduationPanel() {
         </Select>
 
         {className && (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-secondary-foreground">
             <span className="font-semibold tabular-nums">{eligible.length}</span> active student(s) in {className} will graduate.
           </p>
         )}

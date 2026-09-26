@@ -232,9 +232,9 @@ function TimetableGridRoom({
         const section = sections.find((s) => s.id === slot.sectionId);
         return (
           <div>
-            <p className="text-sm font-medium text-slate-800">{sectionFullLabel(section, classes)}</p>
-            <p className="text-xs text-slate-500">{subject?.name ?? "Subject"}</p>
-            <p className="text-xs text-slate-400">{teacher ? `${teacher.firstName} ${teacher.lastName}` : "No teacher"}</p>
+            <p className="text-sm font-medium text-foreground">{sectionFullLabel(section, classes)}</p>
+            <p className="text-xs text-muted-foreground">{subject?.name ?? "Subject"}</p>
+            <p className="text-xs text-muted-foreground">{teacher ? `${teacher.firstName} ${teacher.lastName}` : "No teacher"}</p>
           </div>
         );
       }}

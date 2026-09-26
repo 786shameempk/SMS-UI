@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { Pencil, Plus, Star, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createAcademicYear, deleteAcademicYear, listAcademicYears, updateAcademicYear } from "../api";
 import { statusBadgeVariant } from "../constants";
 import type { AcademicYear, AcademicYearFormValues } from "../types";
 import AcademicYearFormDialog from "./AcademicYearFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function AcademicYearsTab() {
   const queryClient = useQueryClient();
-  const { data: academicYears = [], isLoading } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
+  const { data: academicYears = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<AcademicYear | null>(null);
@@ -56,7 +57,7 @@ export default function AcademicYearsTab() {
       accessorKey: "name",
       header: "Academic year",
       cell: ({ row }) => (
-        <span className="flex items-center gap-1.5 text-sm font-medium text-slate-800">
+        <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
           {row.original.name}
           {row.original.isCurrent && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />}
         </span>
@@ -66,7 +67,7 @@ export default function AcademicYearsTab() {
       id: "duration",
       header: "Duration",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.startDate} &rarr; {row.original.endDate}
         </span>
       ),
@@ -82,28 +83,21 @@ export default function AcademicYearsTab() {
       cell: ({ row }) => {
         const year = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(year);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(year)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(year);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(year)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -112,7 +106,7 @@ export default function AcademicYearsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-slate-500">Define academic years to anchor terms, classes, and the calendar.</p>
+        <p className="text-sm text-muted-foreground">Define academic years to anchor terms, classes, and the calendar.</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -124,7 +118,7 @@ export default function AcademicYearsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={academicYears} isLoading={isLoading} emptyMessage="No academic years yet." />
+      <DataTable searchable columns={columns} data={academicYears} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No academic years yet." />
 
       <AcademicYearFormDialog
         open={formOpen}

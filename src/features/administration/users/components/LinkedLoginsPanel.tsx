@@ -147,7 +147,7 @@ export default function LinkedLoginsPanel({ kind, personId }: { kind: "student" 
       </CardHeader>
       <CardContent className="space-y-2">
         {(person.isLoading || users.isLoading) && <p className="text-sm text-muted-foreground">Loading…</p>}
-        {users.isError && <p className="text-sm text-red-600">Couldn't load logins: {(users.error as Error).message}</p>}
+        {users.isError && <p className="text-sm text-destructive-strong">Couldn't load logins: {(users.error as Error).message}</p>}
         {!person.isLoading && !users.isLoading && rows.map((row) => (
           <LinkRow key={`${row.kind}-${row.personId}-${row.userId}`} row={row} users={users.data ?? []} onLinked={() => void queryClient.invalidateQueries({ queryKey: key })} />
         ))}

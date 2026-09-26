@@ -41,12 +41,12 @@ export default function DiscussionThread({
         {comments.map((c) => (
           <div key={c.id} className="rounded-lg border border-border p-2.5">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-foreground">
                 {c.authorName} <span className="text-xs text-muted-foreground font-normal">· {c.authorRole}</span>
               </p>
               <p className="text-xs text-muted-foreground shrink-0">{formatDateTime(c.postedAt)}</p>
             </div>
-            <p className="text-sm text-slate-600 mt-1">{c.text}</p>
+            <p className="text-sm text-secondary-foreground mt-1">{c.text}</p>
           </div>
         ))}
       </div>

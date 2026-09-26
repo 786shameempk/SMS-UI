@@ -42,12 +42,12 @@ export default function NotificationBell() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="relative w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer"
+          className="relative w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
           aria-label="Notifications"
         >
           <Bell className="w-4.5 h-4.5" />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-white text-[10px] font-semibold flex items-center justify-center">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -55,7 +55,7 @@ export default function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-3.5 py-3 border-b border-border">
-          <p className="text-sm font-semibold text-slate-800">Notifications</p>
+          <p className="text-sm font-semibold text-foreground">Notifications</p>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -78,17 +78,17 @@ export default function NotificationBell() {
                 key={n.id}
                 type="button"
                 onClick={() => handleOpen(n)}
-                className={cn("flex w-full items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-secondary/50 cursor-pointer", !n.read && "bg-brand-50/50")}
+                className={cn("flex w-full items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-secondary/50 cursor-pointer", !n.read && "bg-accent/50")}
               >
-                <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
-                  <Icon className="w-3.5 h-3.5 text-slate-500" />
+                <div className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center shrink-0 mt-0.5">
+                  <Icon className="w-3.5 h-3.5 text-muted-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-800 truncate">{n.title}</p>
-                  <p className="text-xs text-slate-500 line-clamp-2">{n.body}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className="text-[11px] text-slate-400">{formatRelativeDay(n.createdAt)}</span>
+                  <span className="text-[11px] text-muted-foreground">{formatRelativeDay(n.createdAt)}</span>
                   {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />}
                 </div>
               </button>

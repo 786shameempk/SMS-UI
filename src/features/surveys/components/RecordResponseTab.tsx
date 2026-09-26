@@ -143,7 +143,7 @@ export default function RecordResponseTab() {
                     <Input id="resp-parentName" value={respondentName} onChange={(e) => setRespondentName(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="resp-parentChild">Child (optional)</Label>
+                    <Label htmlFor="resp-parentChild" optional>Child</Label>
                     <Select value={respondentStudentId} onValueChange={setRespondentStudentId}>
                       <SelectTrigger id="resp-parentChild">
                         <SelectValue placeholder="Select a student" />
@@ -165,7 +165,7 @@ export default function RecordResponseTab() {
                   <div key={question.id} className="space-y-1.5">
                     <Label>
                       {question.text}
-                      {question.required && <span className="text-red-500 ml-0.5">*</span>}
+                      {question.required && <span className="text-destructive-strong ml-0.5">*</span>}
                     </Label>
 
                     {question.type === "rating" && (
@@ -177,7 +177,7 @@ export default function RecordResponseTab() {
                             onClick={() => setAnswers((prev) => ({ ...prev, [question.id]: String(n) }))}
                             className={cn(
                               "w-9 h-9 rounded-full border flex items-center justify-center transition-colors",
-                              Number(answers[question.id]) >= n ? "border-amber-400 bg-amber-50 text-amber-500" : "border-border text-slate-300",
+                              Number(answers[question.id]) >= n ? "border-amber-400 bg-warning-soft text-amber-500" : "border-border text-muted-foreground/70",
                             )}
                           >
                             <Star className={cn("w-4 h-4", Number(answers[question.id]) >= n && "fill-amber-400")} />

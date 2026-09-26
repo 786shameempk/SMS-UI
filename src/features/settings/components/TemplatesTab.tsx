@@ -39,7 +39,7 @@ export default function TemplatesTab() {
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between gap-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
-                  {template.channel === "email" ? <Mail className="w-4 h-4 text-slate-400" /> : <MessageSquare className="w-4 h-4 text-slate-400" />}
+                  {template.channel === "email" ? <Mail className="w-4 h-4 text-muted-foreground" /> : <MessageSquare className="w-4 h-4 text-muted-foreground" />}
                   {template.name}
                 </CardTitle>
                 <Button
@@ -57,7 +57,7 @@ export default function TemplatesTab() {
               {template.subject && <CardDescription>{template.subject}</CardDescription>}
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 line-clamp-3">{template.body}</p>
+              <p className="text-sm text-secondary-foreground line-clamp-3">{template.body}</p>
             </CardContent>
           </Card>
         ))}

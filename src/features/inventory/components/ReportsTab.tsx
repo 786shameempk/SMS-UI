@@ -20,7 +20,7 @@ export default function ReportsTab() {
                 {valuationLoading || !valuation ? "—" : formatCurrency(valuation.totalValue)}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
               <Wallet className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -31,7 +31,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Items tracked</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{valuationLoading || !valuation ? "—" : valuation.totalItems}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-info-soft text-info-strong flex items-center justify-center shrink-0">
               <PackageSearch className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -42,7 +42,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Items below reorder level</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{lowStockLoading ? "—" : lowStock.length}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-warning-soft text-warning-strong flex items-center justify-center shrink-0">
               <AlertTriangle className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -60,8 +60,8 @@ export default function ReportsTab() {
             {lowStock.map((item) => (
               <div key={item.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{item.name}</p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {item.code} &middot; {item.quantityInStock} in stock, reorder at {item.reorderLevel}
                   </p>
                 </div>
@@ -83,12 +83,12 @@ export default function ReportsTab() {
             {valuation?.rows.map((row) => (
               <div key={row.categoryId} className="flex items-center justify-between text-sm">
                 <div>
-                  <span className="text-slate-700">{row.categoryName}</span>
-                  <span className="text-xs text-slate-400 ml-1.5">
+                  <span className="text-foreground">{row.categoryName}</span>
+                  <span className="text-xs text-muted-foreground ml-1.5">
                     ({row.itemCount} item{row.itemCount === 1 ? "" : "s"}, {row.totalQuantity} units)
                   </span>
                 </div>
-                <span className="tabular-nums text-slate-800 font-medium">{formatCurrency(row.totalValue)}</span>
+                <span className="tabular-nums text-foreground font-medium">{formatCurrency(row.totalValue)}</span>
               </div>
             ))}
             {valuation && valuation.rows.length > 0 && (

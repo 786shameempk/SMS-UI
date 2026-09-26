@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Globe, LogOut, Menu, Monitor, Moon, Settings, Sun, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { cn } from "@/utils/cn";
+import { ChevronRight, LogOut, Menu, Monitor, Moon, ShieldCheck, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -11,14 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { listTenants } from "@/features/platform/api";
-import { listBranches } from "@/features/administration/branches/api";
-import { getBrandPreset, getDensityPreset, getRadiusPreset } from "@/features/settings/api";
-import { applyBrandPreset, applyDensityPreset, applyRadiusPreset, type ThemeMode } from "@/features/settings/theme";
+import type { ThemeMode } from "@/features/settings/theme";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import { useMobileNav } from "@/components/layouts/mobileNav";
+import { findNavEntry } from "@/constants/nav";
+import { BranchSwitcher, TenantSwitcher } from "./ScopeSwitchers";
+import CommandMenu from "./CommandMenu";
 
 const THEME_MODE_SEQUENCE: ThemeMode[] = ["light", "dark", "system"];
 const THEME_MODE_ICON: Record<ThemeMode, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
@@ -42,7 +41,7 @@ function ThemeModeToggle() {
             type="button"
             onClick={cycle}
             aria-label={`Theme: ${THEME_MODE_LABEL[themeMode]} (click to change)`}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Icon className="w-4 h-4" />
           </button>
@@ -50,84 +49,6 @@ function ThemeModeToggle() {
         <TooltipContent side="bottom">{THEME_MODE_LABEL[themeMode]}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
-}
-
-function TenantSwitcher() {
-  const queryClient = useQueryClient();
-  const activeTenantId = useAuthStore((s) => s.activeTenantId);
-  const setActiveTenantId = useAuthStore((s) => s.setActiveTenantId);
-  const { data: tenants = [] } = useQuery({ queryKey: ["platform", "tenants"], queryFn: listTenants });
-
-  return (
-    <Select
-      value={activeTenantId}
-      onValueChange={async (id) => {
-        if (id === activeTenantId) return;
-        setActiveTenantId(id);
-        // A hard cache clear (not invalidate) is deliberate: this is a tenant isolation boundary,
-        // and invalidate would leave the previous tenant's data rendered during the background
-        // refetch — exactly the cross-tenant flash this switch must never produce.
-        queryClient.clear();
-        // Appearance (brand/corner/density) is tenant-scoped too, but lives outside react-query's
-        // cache entirely (live CSS variables) — queryClient.clear() alone won't re-paint it, so
-        // the newly active tenant's own saved combination has to be fetched and applied here.
-        // (Settings > Appearance's own display of these three, if that tab happens to already be
-        // open during the switch, is handled separately — SettingsPage keys that tab by
-        // activeTenantId so it fully remounts on switch, rather than relying on any react-query
-        // refetch timing here.)
-        const [brand, radius, density] = await Promise.all([getBrandPreset(), getRadiusPreset(), getDensityPreset()]);
-        applyBrandPreset(brand);
-        applyRadiusPreset(radius);
-        applyDensityPreset(density);
-      }}
-    >
-      <SelectTrigger className="w-64 h-9">
-        <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-        <SelectValue placeholder="Select a tenant" />
-      </SelectTrigger>
-      <SelectContent>
-        {tenants.map((t) => (
-          <SelectItem key={t.id} value={t.id}>
-            {t.schoolName}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
-function BranchSwitcher() {
-  const queryClient = useQueryClient();
-  const activeTenantId = useAuthStore((s) => s.activeTenantId);
-  const activeBranchId = useAuthStore((s) => s.activeBranchId);
-  const setActiveBranchId = useAuthStore((s) => s.setActiveBranchId);
-  const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches", activeTenantId], queryFn: listBranches });
-
-  return (
-    <Select
-      value={activeBranchId}
-      onValueChange={(id) => {
-        if (id === activeBranchId) return;
-        setActiveBranchId(id);
-        // Same hard cache clear as TenantSwitcher, for the same reason: this is a branch
-        // isolation boundary, and invalidate would flash the previous branch's data on screen
-        // during the background refetch.
-        queryClient.clear();
-      }}
-    >
-      <SelectTrigger className="w-48 h-9">
-        <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-        <SelectValue placeholder="Select a branch" />
-      </SelectTrigger>
-      <SelectContent>
-        {branches.map((b) => (
-          <SelectItem key={b.id} value={b.id}>
-            {b.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   );
 }
 
@@ -141,10 +62,60 @@ function initialsOf(name: string | undefined | null) {
     .slice(0, 2);
 }
 
+/** "Section › Page" for where the user is, plus a trailing crumb on detail routes (e.g. a student profile). */
+function Breadcrumbs() {
+  const { pathname } = useLocation();
+  const entry = findNavEntry(pathname);
+  if (!entry) return null;
+  const isDetail = pathname !== entry.item.to && !pathname.startsWith("/talents");
+  const crumbs: Array<{ label: string; to?: string }> = [];
+  if (entry.section) crumbs.push({ label: entry.section.title });
+  crumbs.push({ label: entry.item.label, to: isDetail ? entry.item.to : undefined });
+  if (isDetail) crumbs.push({ label: "Details" });
+
+  return (
+    <nav aria-label="Breadcrumb" className="min-w-0">
+      <ol className="flex min-w-0 items-center gap-1.5 text-sm">
+        {crumbs.map((c, i) => {
+          const last = i === crumbs.length - 1;
+          return (
+            <li key={i} className={cn("flex min-w-0 items-center gap-1.5", !last && "hidden md:flex")}>
+              {c.to ? (
+                <Link to={c.to} className="truncate text-muted-foreground transition-colors hover:text-foreground">
+                  {c.label}
+                </Link>
+              ) : (
+                <span className={cn("truncate", last ? "font-medium text-foreground" : "text-muted-foreground")} aria-current={last ? "page" : undefined}>
+                  {c.label}
+                </span>
+              )}
+              {!last && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" aria-hidden="true" />}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+const ROLE_LABEL: Record<string, string> = {
+  superAdmin: "Super admin",
+  admin: "Administrator",
+  principal: "Principal",
+  teacher: "Teacher",
+  accountant: "Accountant",
+  librarian: "Librarian",
+  receptionist: "Receptionist",
+  parent: "Parent",
+  student: "Student",
+};
+
 export default function Header() {
   const { user, clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const openMobileNav = useMobileNav((s) => s.setOpen);
+  const isSuperAdmin = user?.role === "superAdmin";
+  const isAdmin = user?.role === "admin" || isSuperAdmin;
 
   const handleLogout = () => {
     clearAuth();
@@ -153,66 +124,67 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-14 flex items-center gap-2 sm:gap-4 px-3 sm:px-6 border-b border-border bg-card/80 backdrop-blur-md shadow-sm shrink-0">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-card/75 sm:gap-3 sm:px-5">
       <button
         type="button"
         onClick={() => openMobileNav(true)}
         aria-label="Open menu"
-        className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"
+        className="md:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"
       >
         <Menu className="h-5 w-5" />
       </button>
-      <div className="flex-1 min-w-0" />
 
-      {user?.role === "superAdmin" && <TenantSwitcher />}
-      {(user?.role === "admin" || user?.role === "superAdmin") && <BranchSwitcher />}
+      <div className="min-w-0 flex-1">
+        <Breadcrumbs />
+      </div>
 
-      <ThemeModeToggle />
-      <NotificationBell />
+      <CommandMenu />
+
+      {/* School/branch scope: header on tablet+, phone nav drawer below md. */}
+      {isSuperAdmin && <TenantSwitcher className="hidden md:flex md:w-44 xl:w-56" />}
+      {isAdmin && <BranchSwitcher className="hidden md:flex md:w-40 xl:w-48" />}
+
+      <div className="flex items-center gap-0.5">
+        <ThemeModeToggle />
+        <NotificationBell />
+      </div>
+
+      <div className="mx-0.5 hidden h-6 w-px bg-border sm:block" aria-hidden="true" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-2.5 pl-1 pr-2.5 py-1 rounded-xl hover:bg-secondary transition-colors cursor-pointer"
+            aria-label="Account menu"
+            className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:pr-2.5"
           >
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
               {initialsOf(user?.name)}
             </div>
-            <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold text-foreground leading-tight">{user?.name ?? "User"}</p>
+            <div className="hidden text-left lg:block">
+              <p className="max-w-[140px] truncate text-[13px] font-medium leading-tight text-foreground">{user?.name ?? "User"}</p>
+              <p className="text-[11px] leading-tight text-muted-foreground">{ROLE_LABEL[user?.role ?? ""] ?? user?.role}</p>
             </div>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-60">
-          <div className="px-3 py-3 border-b border-border mb-1">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm">
-                {initialsOf(user?.name)}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{user?.name ?? "User"}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email ?? ""}</p>
-              </div>
+        <DropdownMenuContent align="end" className="w-64">
+          <div className="flex items-center gap-3 px-2.5 py-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+              {initialsOf(user?.name)}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{user?.name ?? "User"}</p>
+              <p className="truncate text-xs text-muted-foreground">{user?.email ?? ""}</p>
             </div>
           </div>
-          <DropdownMenuItem className="gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center">
-              <User className="w-3.5 h-3.5 text-muted-foreground" />
-            </div>
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem className="gap-2.5" onClick={() => navigate("/account/security")}>
-            <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center">
-              <Settings className="w-3.5 h-3.5 text-muted-foreground" />
-            </div>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => navigate("/account/security")}>
+            <ShieldCheck />
             Security settings
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout} className="gap-2.5 text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40 dark:focus:text-red-300">
-            <div className="w-6 h-6 rounded-md bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
-              <LogOut className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
-            </div>
+          <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+            <LogOut />
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>

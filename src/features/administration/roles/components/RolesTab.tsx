@@ -1,25 +1,21 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createRole, deleteRole, getRoleUserCounts, listRoles, updateRole } from "../api";
 import type { Role, RoleFormValues } from "../types";
 import RoleFormDialog from "./RoleFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function RolesTab() {
   const queryClient = useQueryClient();
-  const { data: roles = [], isLoading } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
+  const { data: roles = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
   const { data: userCounts = {} } = useQuery({ queryKey: ["admin", "roles", "user-counts"], queryFn: getRoleUserCounts });
 
   const [formOpen, setFormOpen] = useState(false);
@@ -65,7 +61,7 @@ export default function RolesTab() {
       header: "Role",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800">{row.original.name}</span>
+          <span className="text-sm font-medium text-foreground">{row.original.name}</span>
           {row.original.isSystem && (
             <Badge variant="info" className="gap-1">
               <ShieldCheck className="w-3 h-3" />
@@ -78,12 +74,12 @@ export default function RolesTab() {
     {
       accessorKey: "description",
       header: "Description",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.description}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.description}</span>,
     },
     {
       id: "users",
       header: "Users",
-      cell: ({ row }) => <span className="text-sm text-slate-600 tabular-nums">{userCounts[row.original.id] ?? 0}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{userCounts[row.original.id] ?? 0}</span>,
     },
     {
       id: "actions",
@@ -93,31 +89,24 @@ export default function RolesTab() {
         // Built-in roles are shared by every school on the platform, so they're read-only here.
         if (role.isSystem) return null;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingRole(role);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit role
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeleteTarget(role)}
-                className="text-red-600 focus:bg-red-50 focus:text-red-700"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete role
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingRole(role);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit role
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setDeleteTarget(role)}
+              variant="destructive"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete role
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -138,7 +127,7 @@ export default function RolesTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={roles} isLoading={isLoading} emptyMessage="No roles yet." />
+      <DataTable searchable columns={columns} data={roles} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No roles yet." />
 
       <RoleFormDialog
         open={formOpen}

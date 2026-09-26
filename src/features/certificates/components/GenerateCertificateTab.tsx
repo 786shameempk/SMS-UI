@@ -175,7 +175,7 @@ export default function GenerateCertificateTab() {
                     </Select>
                   )}
                 />
-                {errors.studentId && <p className="text-xs text-red-600">{errors.studentId.message}</p>}
+                {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -198,14 +198,14 @@ export default function GenerateCertificateTab() {
                     </Select>
                   )}
                 />
-                {errors.staffId && <p className="text-xs text-red-600">{errors.staffId.message}</p>}
+                {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.staffId.message}</p>}
               </div>
             )}
 
             {type === "transfer" && studentId && (
               <p
                 className={`text-xs rounded-md border px-2.5 py-2 ${
-                  selectedStudent?.transferRecord ? "border-blue-200 bg-blue-50 text-blue-700" : "border-amber-200 bg-amber-50 text-amber-800"
+                  selectedStudent?.transferRecord ? "border-info/30 bg-info-soft text-info-strong" : "border-warning/30 bg-warning-soft text-warning-strong"
                 }`}
               >
                 {selectedStudent?.transferRecord
@@ -216,7 +216,7 @@ export default function GenerateCertificateTab() {
 
             {(type === "bonafide" || type === "character" || type === "study" || type === "staff_service") && (
               <div className="space-y-1.5">
-                <Label htmlFor="cert-purpose">Purpose (optional)</Label>
+                <Label htmlFor="cert-purpose" optional>Purpose</Label>
                 <Input id="cert-purpose" placeholder="e.g. passport application" {...register("purpose")} />
               </div>
             )}
@@ -225,13 +225,13 @@ export default function GenerateCertificateTab() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="cert-fromDate">From</Label>
-                  <Input id="cert-fromDate" type="date" {...register("fromDate")} />
-                  {errors.fromDate && <p className="text-xs text-red-600">{errors.fromDate.message}</p>}
+                  <Input id="cert-fromDate" type="date" aria-invalid={errors.fromDate ? true : undefined} {...register("fromDate")} />
+                  {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromDate.message}</p>}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="cert-toDate">To</Label>
-                  <Input id="cert-toDate" type="date" {...register("toDate")} />
-                  {errors.toDate && <p className="text-xs text-red-600">{errors.toDate.message}</p>}
+                  <Input id="cert-toDate" type="date" aria-invalid={errors.toDate ? true : undefined} {...register("toDate")} />
+                  {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toDate.message}</p>}
                 </div>
               </div>
             )}
@@ -240,19 +240,19 @@ export default function GenerateCertificateTab() {
               <>
                 <div className="space-y-1.5">
                   <Label htmlFor="cert-event">Event</Label>
-                  <Input id="cert-event" placeholder="e.g. Inter-school Science Fair 2026" {...register("event")} />
-                  {errors.event && <p className="text-xs text-red-600">{errors.event.message}</p>}
+                  <Input id="cert-event" placeholder="e.g. Inter-school Science Fair 2026" aria-invalid={errors.event ? true : undefined} {...register("event")} />
+                  {errors.event && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.event.message}</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="cert-achievement">Achievement</Label>
-                    <Input id="cert-achievement" placeholder="e.g. 1st place" {...register("achievement")} />
-                    {errors.achievement && <p className="text-xs text-red-600">{errors.achievement.message}</p>}
+                    <Input id="cert-achievement" placeholder="e.g. 1st place" aria-invalid={errors.achievement ? true : undefined} {...register("achievement")} />
+                    {errors.achievement && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.achievement.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="cert-eventDate">Event date</Label>
-                    <Input id="cert-eventDate" type="date" {...register("eventDate")} />
-                    {errors.eventDate && <p className="text-xs text-red-600">{errors.eventDate.message}</p>}
+                    <Input id="cert-eventDate" type="date" aria-invalid={errors.eventDate ? true : undefined} {...register("eventDate")} />
+                    {errors.eventDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.eventDate.message}</p>}
                   </div>
                 </div>
               </>

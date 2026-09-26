@@ -33,14 +33,14 @@ export default function JournalEntryDetailDialog({
           <DialogDescription>{entry.narration}</DialogDescription>
         </DialogHeader>
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
-            <dt className="text-xs text-slate-400">Date</dt>
-            <dd className="text-slate-800 font-medium">{formatDateTime(entry.date)}</dd>
+            <dt className="text-xs text-muted-foreground">Date</dt>
+            <dd className="text-foreground font-medium">{formatDateTime(entry.date)}</dd>
           </div>
           <div>
-            <dt className="text-xs text-slate-400">Reference</dt>
-            <dd className="text-slate-800 font-medium">{entry.reference || "—"}</dd>
+            <dt className="text-xs text-muted-foreground">Reference</dt>
+            <dd className="text-foreground font-medium">{entry.reference || "—"}</dd>
           </div>
         </dl>
 
@@ -50,14 +50,14 @@ export default function JournalEntryDetailDialog({
             return (
               <div key={line.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {account ? `${account.code} · ${account.name}` : "Unknown account"}
                   </p>
-                  {line.description && <p className="text-xs text-slate-500 truncate">{line.description}</p>}
+                  {line.description && <p className="text-xs text-muted-foreground truncate">{line.description}</p>}
                 </div>
                 <div className="text-right shrink-0 text-sm tabular-nums">
-                  {line.debit > 0 && <p className="text-slate-800">{formatCurrency(line.debit)}</p>}
-                  {line.credit > 0 && <p className="text-slate-500">{formatCurrency(line.credit)}</p>}
+                  {line.debit > 0 && <p className="text-foreground">{formatCurrency(line.debit)}</p>}
+                  {line.credit > 0 && <p className="text-muted-foreground">{formatCurrency(line.credit)}</p>}
                 </div>
               </div>
             );
@@ -65,7 +65,7 @@ export default function JournalEntryDetailDialog({
         </div>
 
         <div className="flex items-center justify-between border-t border-border pt-3 text-sm font-medium">
-          <span className="text-slate-600">Total</span>
+          <span className="text-secondary-foreground">Total</span>
           <span className="tabular-nums">
             Dr {formatCurrency(totalDebit)} &middot; Cr {formatCurrency(totalCredit)}
           </span>

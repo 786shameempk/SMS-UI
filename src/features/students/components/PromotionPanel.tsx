@@ -57,7 +57,7 @@ export default function PromotionPanel() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-slate-400" />
+          <TrendingUp className="w-4 h-4 text-muted-foreground" />
           Promote students
         </CardTitle>
         <CardDescription>Move an entire class-section of active students to the next class for a new academic year.</CardDescription>
@@ -91,7 +91,7 @@ export default function PromotionPanel() {
             </Select>
           </div>
 
-          <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+          <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
 
           <div className="flex items-center gap-2">
             <Select
@@ -127,10 +127,10 @@ export default function PromotionPanel() {
           </div>
         </div>
 
-        {sameSection && <p className="text-sm text-amber-700">Source and target sections must differ.</p>}
+        {sameSection && <p className="text-sm text-warning-strong">Source and target sections must differ.</p>}
 
         {fromClass && fromSection && (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-secondary-foreground">
             <span className="font-semibold tabular-nums">{eligible.length}</span> active student(s) in {fromClass} - {fromSection}{" "}
             {eligible.length > 0 ? "will be promoted." : "found."}
           </p>

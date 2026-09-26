@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,9 +84,9 @@ export default function QuizFormDialog({
           onSubmit={handleSubmit(({ createdByStaffId, ...values }) => onSubmit(values, createdByStaffId))}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-classId">Class</Label>
+              <Label htmlFor="quiz-classId" required>Class</Label>
               <Controller
                 control={control}
                 name="classId"
@@ -105,10 +105,10 @@ export default function QuizFormDialog({
                   </Select>
                 )}
               />
-              {errors.classId && <p className="text-xs text-red-600">{errors.classId.message}</p>}
+              {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-subjectId">Subject</Label>
+              <Label htmlFor="quiz-subjectId" required>Subject</Label>
               <Controller
                 control={control}
                 name="subjectId"
@@ -127,18 +127,18 @@ export default function QuizFormDialog({
                   </Select>
                 )}
               />
-              {errors.subjectId && <p className="text-xs text-red-600">{errors.subjectId.message}</p>}
+              {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-title">Quiz title</Label>
-              <Input id="quiz-title" {...register("title")} />
-              {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+              <Label htmlFor="quiz-title" required>Quiz title</Label>
+              <Input id="quiz-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
+              {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-createdByStaffId">Created by</Label>
+              <Label htmlFor="quiz-createdByStaffId" required>Created by</Label>
               <Controller
                 control={control}
                 name="createdByStaffId"
@@ -157,7 +157,7 @@ export default function QuizFormDialog({
                   </Select>
                 )}
               />
-              {errors.createdByStaffId && <p className="text-xs text-red-600">{errors.createdByStaffId.message}</p>}
+              {errors.createdByStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.createdByStaffId.message}</p>}
             </div>
           </div>
 
@@ -173,7 +173,7 @@ export default function QuizFormDialog({
                   )}
                 </div>
                 <Input id={`quiz-q-${qIndex}`} placeholder="Question text" {...register(`questions.${qIndex}.text`)} />
-                {errors.questions?.[qIndex]?.text && <p className="text-xs text-red-600">{errors.questions[qIndex]?.text?.message}</p>}
+                {errors.questions?.[qIndex]?.text && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.questions[qIndex]?.text?.message}</p>}
 
                 <div className="space-y-1.5">
                   {Array.from({ length: QUIZ_OPTION_COUNT }).map((_, oIndex) => (
@@ -191,7 +191,7 @@ export default function QuizFormDialog({
                 </div>
               </div>
             ))}
-            {typeof errors.questions?.message === "string" && <p className="text-xs text-red-600">{errors.questions.message}</p>}
+            {typeof errors.questions?.message === "string" && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.questions.message}</p>}
           </div>
 
           <Button
@@ -209,8 +209,7 @@ export default function QuizFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Create quiz
             </Button>
           </DialogFooter>

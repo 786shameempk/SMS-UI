@@ -15,7 +15,7 @@ export default function VisitorRegisterTab() {
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
 
-  const { data: logs = [], isLoading } = useQuery({ queryKey: ["hostel", "visitor-logs"], queryFn: listVisitorLogs });
+  const { data: logs = [], isLoading, isError, refetch } = useQuery({ queryKey: ["hostel", "visitor-logs"], queryFn: listVisitorLogs });
   const { data: hostels = [] } = useQuery({ queryKey: ["hostel", "hostels"], queryFn: listHostels });
   const { data: residents = [] } = useQuery({ queryKey: ["hostel", "active-residents"], queryFn: listActiveResidents });
 
@@ -46,7 +46,7 @@ export default function VisitorRegisterTab() {
       header: "Visitor",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.visitorName}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.visitorName}</p>
           <p className="text-xs text-muted-foreground capitalize">{row.original.relation} · {row.original.phone}</p>
         </div>
       ),
@@ -55,7 +55,7 @@ export default function VisitorRegisterTab() {
       id: "student",
       header: "Visiting",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.student.firstName} {row.original.student.lastName} · {row.original.hostel.name}
         </span>
       ),
@@ -63,18 +63,18 @@ export default function VisitorRegisterTab() {
     {
       id: "purpose",
       header: "Purpose",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.purpose ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.purpose ?? "—"}</span>,
     },
     {
       id: "checkIn",
       header: "Check-in",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.checkInAt).toLocaleString()}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.checkInAt).toLocaleString()}</span>,
     },
     {
       id: "checkOut",
       header: "Check-out",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">{row.original.checkOutAt ? new Date(row.original.checkOutAt).toLocaleString() : "—"}</span>
+        <span className="text-sm text-secondary-foreground">{row.original.checkOutAt ? new Date(row.original.checkOutAt).toLocaleString() : "—"}</span>
       ),
     },
     {
@@ -108,7 +108,7 @@ export default function VisitorRegisterTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={logs} isLoading={isLoading} emptyMessage="No visitors logged yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={logs} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No visitors logged yet." pageSize={10} />
 
       <VisitorCheckInDialog
         open={formOpen}

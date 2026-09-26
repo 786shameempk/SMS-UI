@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Eye, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Eye, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatCurrency, formatRelativeDay } from "@/utils/format";
 import { JOURNAL_STATUS_CONFIG } from "../constants";
@@ -15,10 +15,11 @@ import { createJournalEntry, deleteJournalEntry, listAccounts, listJournalEntrie
 import type { JournalEntry, JournalEntryFormValues } from "../types";
 import JournalEntryFormDialog from "./JournalEntryFormDialog";
 import JournalEntryDetailDialog from "./JournalEntryDetailDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function JournalTab() {
   const queryClient = useQueryClient();
-  const { data: entries = [], isLoading } = useQuery({ queryKey: ["accounting", "entries"], queryFn: listJournalEntries });
+  const { data: entries = [], isLoading, isError, refetch } = useQuery({ queryKey: ["accounting", "entries"], queryFn: listJournalEntries });
   const { data: accounts = [] } = useQuery({ queryKey: ["accounting", "accounts"], queryFn: listAccounts });
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -72,8 +73,8 @@ export default function JournalTab() {
       header: "Entry",
       cell: ({ row }) => (
         <button type="button" onClick={() => setDetailEntry(row.original)} className="text-left cursor-pointer group">
-          <p className="text-sm font-medium text-slate-800 group-hover:text-brand-600 transition-colors">{row.original.entryNumber}</p>
-          <p className="text-xs text-slate-500">{formatRelativeDay(row.original.date)}</p>
+          <p className="text-sm font-medium text-foreground group-hover:text-primary-text transition-colors">{row.original.entryNumber}</p>
+          <p className="text-xs text-muted-foreground">{formatRelativeDay(row.original.date)}</p>
         </button>
       ),
     },
@@ -82,8 +83,8 @@ export default function JournalTab() {
       header: "Narration",
       cell: ({ row }) => (
         <div className="min-w-0 max-w-xs">
-          <p className="text-sm text-slate-700 truncate">{row.original.narration}</p>
-          {row.original.reference && <p className="text-xs text-slate-400 truncate">Ref: {row.original.reference}</p>}
+          <p className="text-sm text-foreground truncate">{row.original.narration}</p>
+          {row.original.reference && <p className="text-xs text-muted-foreground truncate">Ref: {row.original.reference}</p>}
         </div>
       ),
     },
@@ -91,7 +92,7 @@ export default function JournalTab() {
       id: "amount",
       header: "Amount",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-700 tabular-nums">
+        <span className="text-sm text-foreground tabular-nums">
           {formatCurrency(row.original.lines.reduce((sum, l) => sum + l.debit, 0))}
         </span>
       ),
@@ -99,7 +100,7 @@ export default function JournalTab() {
     {
       id: "gst",
       header: "GST",
-      cell: ({ row }) => (row.original.gstApplicable ? <Badge variant="info">Yes</Badge> : <span className="text-sm text-slate-400">—</span>),
+      cell: ({ row }) => (row.original.gstApplicable ? <Badge variant="info">Yes</Badge> : <span className="text-sm text-muted-foreground">—</span>),
     },
     {
       accessorKey: "status",
@@ -115,29 +116,22 @@ export default function JournalTab() {
       cell: ({ row }) => {
         const entry = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setDetailEntry(entry)}>
-                <Eye className="w-3.5 h-3.5" />
-                View
+          <RowActions>
+            <DropdownMenuItem onClick={() => setDetailEntry(entry)}>
+              <Eye className="w-3.5 h-3.5" />
+              View
+            </DropdownMenuItem>
+            {entry.status === "draft" && (
+              <DropdownMenuItem onClick={() => postMutation.mutate(entry.id)}>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Post to ledger
               </DropdownMenuItem>
-              {entry.status === "draft" && (
-                <DropdownMenuItem onClick={() => postMutation.mutate(entry.id)}>
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Post to ledger
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => setDeleteTarget(entry)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuItem onClick={() => setDeleteTarget(entry)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -162,7 +156,7 @@ export default function JournalTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No journal entries yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No journal entries yet." pageSize={10} />
 
       <JournalEntryFormDialog
         open={formOpen}

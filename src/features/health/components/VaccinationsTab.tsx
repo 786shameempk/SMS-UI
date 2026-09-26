@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatRelativeDay } from "@/utils/format";
 import { VACCINATION_STATUS_CONFIG } from "../constants";
@@ -15,10 +15,11 @@ import { createVaccination, deleteVaccination, listVaccinations, markVaccination
 import type { VaccinationRow } from "../types";
 import VaccinationFormDialog from "./VaccinationFormDialog";
 import MarkVaccinationAdministeredDialog from "./MarkVaccinationAdministeredDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function VaccinationsTab() {
   const queryClient = useQueryClient();
-  const { data: vaccinations = [], isLoading } = useQuery({ queryKey: ["health", "vaccinations"], queryFn: () => listVaccinations() });
+  const { data: vaccinations = [], isLoading, isError, refetch } = useQuery({ queryKey: ["health", "vaccinations"], queryFn: () => listVaccinations() });
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [markTarget, setMarkTarget] = useState<VaccinationRow | null>(null);
@@ -66,10 +67,10 @@ export default function VaccinationsTab() {
       header: "Student",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.student.firstName} {row.original.student.lastName}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {row.original.student.className} - {row.original.student.section}
           </p>
         </div>
@@ -79,21 +80,21 @@ export default function VaccinationsTab() {
       id: "vaccine",
       header: "Vaccine",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-700">
-          {row.original.vaccineName} <span className="text-slate-400">(dose {row.original.doseNumber})</span>
+        <span className="text-sm text-foreground">
+          {row.original.vaccineName} <span className="text-muted-foreground">(dose {row.original.doseNumber})</span>
         </span>
       ),
     },
     {
       id: "dueDate",
       header: "Due date",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatRelativeDay(row.original.dueDate)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.dueDate)}</span>,
     },
     {
       id: "administered",
       header: "Administered on",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.dateAdministered ? new Date(row.original.dateAdministered).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—"}
         </span>
       ),
@@ -109,25 +110,18 @@ export default function VaccinationsTab() {
       cell: ({ row }) => {
         const v = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {v.status !== "completed" && (
-                <DropdownMenuItem onClick={() => setMarkTarget(v)}>
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Mark administered
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => setDeleteTarget(v)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
+          <RowActions>
+            {v.status !== "completed" && (
+              <DropdownMenuItem onClick={() => setMarkTarget(v)}>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Mark administered
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuItem onClick={() => setDeleteTarget(v)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -155,7 +149,7 @@ export default function VaccinationsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No vaccination records match your filter." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No vaccination records match your filter." pageSize={10} />
 
       <VaccinationFormDialog
         open={formOpen}

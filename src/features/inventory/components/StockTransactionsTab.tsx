@@ -17,7 +17,7 @@ import StockAdjustmentDialog from "./StockAdjustmentDialog";
 
 export default function StockTransactionsTab() {
   const queryClient = useQueryClient();
-  const { data: transactions = [], isLoading } = useQuery({ queryKey: ["inventory", "transactions"], queryFn: () => listTransactions() });
+  const { data: transactions = [], isLoading, isError, refetch } = useQuery({ queryKey: ["inventory", "transactions"], queryFn: () => listTransactions() });
   const { data: items = [] } = useQuery({ queryKey: ["inventory", "items"], queryFn: listItems });
   const { data: vendors = [] } = useQuery({ queryKey: ["inventory", "vendors"], queryFn: listVendors });
 
@@ -69,8 +69,8 @@ export default function StockTransactionsTab() {
       header: "Item",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.item.name}</p>
-          <p className="text-xs text-slate-500">{row.original.item.code}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.item.name}</p>
+          <p className="text-xs text-muted-foreground">{row.original.item.code}</p>
         </div>
       ),
     },
@@ -88,7 +88,7 @@ export default function StockTransactionsTab() {
       cell: ({ row }) => {
         const delta = row.original.quantityDelta;
         return (
-          <span className={`text-sm font-medium tabular-nums ${delta > 0 ? "text-green-700" : "text-red-600"}`}>
+          <span className={`text-sm font-medium tabular-nums ${delta > 0 ? "text-success-strong" : "text-destructive-strong"}`}>
             {delta > 0 ? `+${delta}` : delta}
           </span>
         );
@@ -99,15 +99,15 @@ export default function StockTransactionsTab() {
       header: "Detail",
       cell: ({ row }) => {
         const t = row.original;
-        if (t.type === "purchase") return <span className="text-sm text-slate-600">{t.vendor?.name ?? "—"}</span>;
-        if (t.type === "issue") return <span className="text-sm text-slate-600">{t.issuedTo}</span>;
-        return <span className="text-sm text-slate-600 truncate max-w-xs block">{t.reason}</span>;
+        if (t.type === "purchase") return <span className="text-sm text-secondary-foreground">{t.vendor?.name ?? "—"}</span>;
+        if (t.type === "issue") return <span className="text-sm text-secondary-foreground">{t.issuedTo}</span>;
+        return <span className="text-sm text-secondary-foreground truncate max-w-xs block">{t.reason}</span>;
       },
     },
     {
       accessorKey: "date",
       header: "Date",
-      cell: ({ row }) => <span className="text-sm text-slate-500">{formatRelativeDay(row.original.date)}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatRelativeDay(row.original.date)}</span>,
     },
   ];
 
@@ -141,7 +141,7 @@ export default function StockTransactionsTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No stock transactions yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No stock transactions yet." pageSize={10} />
 
       <StockInDialog
         open={stockInOpen}

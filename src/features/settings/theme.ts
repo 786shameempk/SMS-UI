@@ -53,23 +53,29 @@ function shadesFor(hue: number): Shades {
 /** Which shade each semantic token takes, per mode. */
 interface BrandRoles {
   primary: ShadeKey;
+  /** Hover shade for primary buttons. */
+  primaryHover: ShadeKey;
+  /** Readable brand-coloured text/links on the page surface. */
+  primaryText: ShadeKey;
+  /** Ink on a primary fill: "light" (white) or "dark" (brand-900-ish), whichever passes contrast. */
+  onPrimary: "light" | "dark";
   ring: ShadeKey;
   accent: ShadeKey;
   accentForeground: ShadeKey;
 }
 
 const DEFAULT_ROLES: Record<"light" | "dark", BrandRoles> = {
-  light: { primary: 600, ring: 500, accent: 100, accentForeground: 700 },
+  light: { primary: 600, primaryHover: 700, primaryText: 700, onPrimary: "light", ring: 500, accent: 100, accentForeground: 700 },
   // A dark background needs a lighter, more saturated-looking shade to read as "primary" —
   // the same 600/500/100/700 indices used in light mode would look muddy and low-contrast here.
-  dark: { primary: 400, ring: 400, accent: 800, accentForeground: 200 },
+  dark: { primary: 400, primaryHover: 300, primaryText: 300, onPrimary: "dark", ring: 400, accent: 800, accentForeground: 200 },
 };
 
 /** Yellow's combination: primary and ring are #ECA427 itself in both modes, with a
  *  barely-tinted 50 accent and 700 amber-brown text for active nav/menu items in light mode. */
 const YELLOW_ROLES: Record<"light" | "dark", BrandRoles> = {
-  light: { primary: 500, ring: 500, accent: 50, accentForeground: 700 },
-  dark: { primary: 500, ring: 500, accent: 800, accentForeground: 200 },
+  light: { primary: 500, primaryHover: 600, primaryText: 700, onPrimary: "dark", ring: 500, accent: 50, accentForeground: 700 },
+  dark: { primary: 500, primaryHover: 400, primaryText: 300, onPrimary: "dark", ring: 500, accent: 900, accentForeground: 200 },
 };
 
 export const BRAND_PRESETS: Record<BrandPresetKey, { label: string; shades: Shades; roles: Record<"light" | "dark", BrandRoles> }> = {
@@ -131,6 +137,13 @@ export function applyBrandPreset(preset: BrandPresetKey): void {
   });
   const r = roles[isDarkActive() ? "dark" : "light"];
   root.setProperty("--color-primary", shades[r.primary]);
+  root.setProperty("--color-primary-hover", shades[r.primaryHover]);
+  root.setProperty("--color-primary-text", shades[r.primaryText]);
+  // Dark ink is the 900 shade darkened further, so it stays warm-tinted but passes contrast.
+  root.setProperty(
+    "--color-primary-foreground",
+    r.onPrimary === "light" ? "#ffffff" : `color-mix(in oklab, ${shades[900]} 70%, black)`,
+  );
   root.setProperty("--color-ring", shades[r.ring]);
   root.setProperty("--color-accent", shades[r.accent]);
   root.setProperty("--color-accent-foreground", shades[r.accentForeground]);
@@ -182,7 +195,7 @@ export function applyRadiusPreset(preset: RadiusPresetKey): void {
 export type DensityPresetKey = "comfortable" | "compact";
 
 export const DENSITY_PRESETS: Record<DensityPresetKey, { label: string; cardPadding: string; rowPaddingY: string; rowPaddingX: string }> = {
-  comfortable: { label: "Comfortable", cardPadding: "1.25rem", rowPaddingY: "0.625rem", rowPaddingX: "1rem" },
+  comfortable: { label: "Comfortable", cardPadding: "1.25rem", rowPaddingY: "0.75rem", rowPaddingX: "1rem" },
   compact: { label: "Compact", cardPadding: "0.875rem", rowPaddingY: "0.375rem", rowPaddingX: "0.75rem" },
 };
 

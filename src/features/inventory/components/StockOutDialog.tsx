@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +63,7 @@ export default function StockOutDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, issuedTo: values.issuedTo.trim(), reason: values.reason?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="so-itemId">Item</Label>
+            <Label htmlFor="so-itemId" required>Item</Label>
             <Controller
               control={control}
               name="itemId"
@@ -82,30 +82,30 @@ export default function StockOutDialog({
                 </Select>
               )}
             />
-            {errors.itemId && <p className="text-xs text-red-600">{errors.itemId.message}</p>}
+            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.itemId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="so-quantity">Quantity</Label>
-              <Input id="so-quantity" type="number" min="1" step="1" max={selectedItem?.quantityInStock} {...register("quantity")} />
-              {errors.quantity && <p className="text-xs text-red-600">{errors.quantity.message}</p>}
+              <Label htmlFor="so-quantity" required>Quantity</Label>
+              <Input id="so-quantity" type="number" min="1" step="1" max={selectedItem?.quantityInStock} aria-invalid={errors.quantity ? true : undefined} {...register("quantity")} />
+              {errors.quantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.quantity.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="so-date">Date</Label>
-              <Input id="so-date" type="date" {...register("date")} />
-              {errors.date && <p className="text-xs text-red-600">{errors.date.message}</p>}
+              <Label htmlFor="so-date" required>Date</Label>
+              <Input id="so-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="so-issuedTo">Issued to</Label>
-            <Input id="so-issuedTo" placeholder="e.g. Science department, Grade 8 - A" {...register("issuedTo")} />
-            {errors.issuedTo && <p className="text-xs text-red-600">{errors.issuedTo.message}</p>}
+            <Label htmlFor="so-issuedTo" required>Issued to</Label>
+            <Input id="so-issuedTo" placeholder="e.g. Science department, Grade 8 - A" aria-invalid={errors.issuedTo ? true : undefined} {...register("issuedTo")} />
+            {errors.issuedTo && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.issuedTo.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="so-reason">Purpose (optional)</Label>
+            <Label htmlFor="so-reason" optional>Purpose</Label>
             <Input id="so-reason" placeholder="e.g. Term 2 lab practicals" {...register("reason")} />
           </div>
 
@@ -113,8 +113,7 @@ export default function StockOutDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Issue stock
             </Button>
           </DialogFooter>

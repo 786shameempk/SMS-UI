@@ -87,22 +87,22 @@ export default function DocumentsTab({ student }: { student: Student }) {
             <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-slate-500" />
+                  <FileText className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
                   {doc.fileDataUrl ? (
-                    <a href={doc.fileDataUrl} download={doc.name} className="text-sm font-medium text-brand-700 hover:underline truncate block">
+                    <a href={doc.fileDataUrl} download={doc.name} className="text-sm font-medium text-primary-text hover:underline truncate block">
                       {doc.name}
                     </a>
                   ) : (
-                    <p className="text-sm font-medium text-slate-800 truncate">{doc.name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
                   )}
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {categoryLabel(doc.category)} &middot; {new Date(doc.uploadedAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 shrink-0" onClick={() => setDeleteTarget(doc)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong shrink-0" onClick={() => setDeleteTarget(doc)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>

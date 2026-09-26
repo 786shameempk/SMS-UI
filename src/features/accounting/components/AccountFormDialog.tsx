@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,14 +61,14 @@ export default function AccountFormDialog({
           onSubmit={handleSubmit((values) => onSubmit({ ...values, description: values.description?.trim() || undefined }))}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="acc-code">Code</Label>
-              <Input id="acc-code" placeholder="e.g. 5060" {...register("code")} />
-              {errors.code && <p className="text-xs text-red-600">{errors.code.message}</p>}
+              <Label htmlFor="acc-code" required>Code</Label>
+              <Input id="acc-code" placeholder="e.g. 5060" aria-invalid={errors.code ? true : undefined} {...register("code")} />
+              {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="acc-type">Type</Label>
+              <Label htmlFor="acc-type" required>Type</Label>
               <Controller
                 control={control}
                 name="type"
@@ -91,13 +91,13 @@ export default function AccountFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="acc-name">Name</Label>
-            <Input id="acc-name" placeholder="e.g. Sports Equipment Expense" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="acc-name" required>Name</Label>
+            <Input id="acc-name" placeholder="e.g. Sports Equipment Expense" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="acc-description">Description (optional)</Label>
+            <Label htmlFor="acc-description" optional>Description</Label>
             <Textarea id="acc-description" rows={2} {...register("description")} />
           </div>
 
@@ -105,8 +105,7 @@ export default function AccountFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create account"}
             </Button>
           </DialogFooter>

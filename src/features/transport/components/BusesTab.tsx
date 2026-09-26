@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { BUS_STATUS_CONFIG } from "../constants";
 import { createBus, deleteBus, listBuses, updateBus } from "../api";
 import type { Bus, BusFormValues } from "../types";
 import BusFormDialog from "./BusFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function BusesTab() {
   const queryClient = useQueryClient();
@@ -19,7 +20,7 @@ export default function BusesTab() {
   const [editing, setEditing] = useState<Bus | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Bus | null>(null);
 
-  const { data: buses = [], isLoading } = useQuery({ queryKey: ["transport", "buses"], queryFn: listBuses });
+  const { data: buses = [], isLoading, isError, refetch } = useQuery({ queryKey: ["transport", "buses"], queryFn: listBuses });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["transport"] });
 
@@ -60,7 +61,7 @@ export default function BusesTab() {
       header: "Registration",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.regNumber}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.regNumber}</p>
           <p className="text-xs text-muted-foreground">{row.original.model}</p>
         </div>
       ),
@@ -68,17 +69,17 @@ export default function BusesTab() {
     {
       id: "capacity",
       header: "Capacity",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.capacity} seats</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.capacity} seats</span>,
     },
     {
       id: "year",
       header: "Manufacture year",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.manufactureYear}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.manufactureYear}</span>,
     },
     {
       id: "gps",
       header: "GPS device",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.gpsDeviceId ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.gpsDeviceId ?? "—"}</span>,
     },
     {
       id: "status",
@@ -94,28 +95,21 @@ export default function BusesTab() {
       cell: ({ row }) => {
         const bus = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(bus);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(bus)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(bus);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(bus)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -136,7 +130,7 @@ export default function BusesTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={buses} isLoading={isLoading} emptyMessage="No buses in the fleet yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={buses} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No buses in the fleet yet." pageSize={8} />
 
       <BusFormDialog
         open={formOpen}

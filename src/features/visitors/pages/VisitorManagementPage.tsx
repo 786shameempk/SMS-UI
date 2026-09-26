@@ -3,17 +3,18 @@ import VisitorLogTab from "../components/VisitorLogTab";
 import PreApprovedVisitsTab from "../components/PreApprovedVisitsTab";
 import WatchlistTab from "../components/WatchlistTab";
 import ReportsTab from "../components/ReportsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function VisitorManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Visitor Management</h1>
-        <p className="text-sm text-muted-foreground mt-1">Front-desk visitor check-in/out, scheduled appointments, and a security watchlist.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Visitor Management"
+        description="Front-desk visitor check-in/out, scheduled appointments, and a security watchlist."
+      />
 
       <Tabs defaultValue="log">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="log">Visitor Log</TabsTrigger>
           <TabsTrigger value="preapproved">Pre-Approved Visits</TabsTrigger>
           <TabsTrigger value="watchlist">Watchlist</TabsTrigger>
@@ -32,6 +33,6 @@ export default function VisitorManagementPage() {
           <ReportsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

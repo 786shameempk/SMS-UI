@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,17 +54,16 @@ export default function MessMenuCellDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values.items.trim()))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="menu-items">Menu items</Label>
-            <Textarea id="menu-items" rows={3} placeholder="e.g. Idli & sambar" {...register("items")} />
-            {errors.items && <p className="text-xs text-red-600">{errors.items.message}</p>}
+            <Label htmlFor="menu-items" required>Menu items</Label>
+            <Textarea id="menu-items" rows={3} placeholder="e.g. Idli & sambar" aria-invalid={errors.items ? true : undefined} {...register("items")} />
+            {errors.items && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.items.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save
             </Button>
           </DialogFooter>

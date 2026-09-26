@@ -8,6 +8,7 @@ import { cn } from "@/utils/cn";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "../constants";
 import { listAggregatedCalendarEvents } from "../api";
 import type { AggregatedCalendarEvent, CalendarEventCategory } from "../types";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -73,13 +74,11 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="p-6 space-y-5 max-w-[1200px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Calendar</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Holidays, exams, the academic calendar, homework due dates, staff leave, and birthdays — all in one place.
-        </p>
-      </div>
+    <PageContainer width="medium">
+      <PageHeader
+        title="Calendar"
+        description="Holidays, exams, the academic calendar, homework due dates, staff leave, and birthdays — all in one place."
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
         <Card>
@@ -129,7 +128,7 @@ export default function CalendarPage() {
                         isSelected ? "bg-brand-500 text-white" : "hover:bg-secondary",
                       )}
                     >
-                      <span className={cn("text-sm", isToday && !isSelected && "font-bold text-brand-600")}>{day.getDate()}</span>
+                      <span className={cn("text-sm", isToday && !isSelected && "font-bold text-primary-text")}>{day.getDate()}</span>
                       <div className="flex gap-0.5 h-1.5">
                         {categoriesToday.slice(0, 4).map((c) => (
                           <span key={c} className={cn("w-1.5 h-1.5 rounded-full", isSelected ? "bg-card" : CATEGORY_CONFIG[c].dotClass)} />
@@ -184,6 +183,6 @@ export default function CalendarPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { listStudents } from "@/features/students/api";
 import MyHomeworkListTab from "../components/MyHomeworkListTab";
 import MyResourcesTab from "../components/MyResourcesTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function MyHomeworkPage() {
   const { data: students = [], isLoading } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -16,31 +17,33 @@ export default function MyHomeworkPage() {
   }, [activeStudents, studentId]);
 
   return (
-    <div className="p-6 space-y-5 max-w-[1000px]">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">My homework</h1>
-          <p className="text-sm text-muted-foreground mt-1">Assigned homework, learning resources, and quizzes for the selected student.</p>
-        </div>
-        <div className="w-56">
-          <Select value={studentId} onValueChange={setStudentId} disabled={isLoading || activeStudents.length === 0}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a student" />
-            </SelectTrigger>
-            <SelectContent>
-              {activeStudents.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.firstName} {s.lastName} · {s.className}-{s.section}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+    <PageContainer width="narrow">
+      <PageHeader
+        title="My homework"
+        description="Assigned homework, learning resources, and quizzes for the selected student."
+        actions={
+          <>
+            <div className="w-56">
+              <Select value={studentId} onValueChange={setStudentId} disabled={isLoading || activeStudents.length === 0}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a student" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeStudents.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.firstName} {s.lastName} · {s.className}-{s.section}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        }
+      />
 
       {studentId ? (
         <Tabs defaultValue="homework">
-          <TabsList>
+          <TabsList variant="line">
             <TabsTrigger value="homework">My Homework</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
           </TabsList>
@@ -54,6 +57,6 @@ export default function MyHomeworkPage() {
       ) : (
         !isLoading && <p className="text-sm text-muted-foreground">No students found.</p>
       )}
-    </div>
+    </PageContainer>
   );
 }

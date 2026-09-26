@@ -50,7 +50,7 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-slate-400" />
+          <BookOpen className="w-4 h-4 text-muted-foreground" />
           Subjects &amp; classes
         </CardTitle>
         <Button size="sm" onClick={() => setFormOpen(true)}>
@@ -67,10 +67,10 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
           assignments.map((a) => (
             <div key={a.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
-                <p className="text-sm font-medium text-slate-800">{subjectName(a.subjectId)}</p>
-                <p className="text-xs text-slate-500">{className(a.classId)}</p>
+                <p className="text-sm font-medium text-foreground">{subjectName(a.subjectId)}</p>
+                <p className="text-xs text-muted-foreground">{className(a.classId)}</p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => setRemoveId(a.id)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setRemoveId(a.id)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>

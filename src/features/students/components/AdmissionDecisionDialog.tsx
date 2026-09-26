@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,7 +64,7 @@ export default function AdmissionDecisionDialog({
         </DialogHeader>
 
         {seats && (
-          <p className={`text-xs rounded-md border px-2.5 py-2 ${seats.availableSeats > 0 ? "bg-secondary/40 border-border text-slate-600" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
+          <p className={`text-xs rounded-md border px-2.5 py-2 ${seats.availableSeats > 0 ? "bg-secondary/40 border-border text-secondary-foreground" : "bg-warning-soft border-warning/30 text-warning-strong"}`}>
             {seats.availableSeats > 0
               ? `${seats.availableSeats} of ${seats.capacity} seats currently available in ${seats.className}.`
               : `${seats.className} currently has no seats available (${seats.currentStrength}/${seats.capacity}) — consider waitlisting.`}
@@ -73,7 +73,7 @@ export default function AdmissionDecisionDialog({
 
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, decisionRemarks: values.decisionRemarks?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="dec-decision">Decision</Label>
+            <Label htmlFor="dec-decision" required>Decision</Label>
             <Controller
               control={control}
               name="decision"
@@ -95,7 +95,7 @@ export default function AdmissionDecisionDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="dec-remarks">Remarks (optional)</Label>
+            <Label htmlFor="dec-remarks" optional>Remarks</Label>
             <Textarea id="dec-remarks" rows={3} {...register("decisionRemarks")} />
           </div>
 
@@ -103,8 +103,7 @@ export default function AdmissionDecisionDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Record decision
             </Button>
           </DialogFooter>

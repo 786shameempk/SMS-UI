@@ -39,15 +39,15 @@ export default function NextUpCard({ meeting }: { meeting: MeetingSummary | unde
       className={cn(
         "group relative overflow-hidden rounded-2xl border p-5 sm:p-6 transition-shadow hover:shadow-md has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring",
         live
-          ? "border-green-200 bg-gradient-to-br from-green-50 via-card to-card dark:border-green-900 dark:from-green-950/40"
-          : "border-brand-200 bg-gradient-to-br from-brand-50 via-card to-card dark:border-border dark:from-brand-900/30",
+          ? "border-success/30 bg-gradient-to-br from-green-50 via-card to-card dark:from-green-950/40"
+          : "border-primary/30 bg-gradient-to-br from-brand-50 via-card to-card dark:border-border dark:from-brand-900/30",
       )}
     >
       <Link to={`/online-classes/${meeting.id}`} className="absolute inset-0 focus-visible:outline-none" aria-label={`Open ${meeting.title}`} />
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <div className="flex items-center gap-4 sm:w-40 sm:shrink-0 sm:flex-col sm:items-start sm:gap-1 sm:border-r sm:border-border sm:pr-5">
           <p className="text-3xl font-extrabold tabular-nums tracking-tight text-foreground">{formatTime(meeting.startUtc)}</p>
-          <p className={cn("text-sm font-medium", live ? "text-green-700 dark:text-green-400" : "text-brand-700 dark:text-brand-300")}>
+          <p className={cn("text-sm font-medium", live ? "text-success-strong" : "text-primary-text dark:text-brand-300")}>
             {live ? "Happening now" : clock ? `Starts in ${clock}` : `${formatDayLabel(meeting.startUtc)} · ${relativeStart(meeting.startUtc, now)}`}
           </p>
         </div>

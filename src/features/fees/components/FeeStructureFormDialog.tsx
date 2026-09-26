@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,14 +101,14 @@ export default function FeeStructureFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="fs-name">Name</Label>
-            <Input id="fs-name" placeholder="e.g. Grade 8 Tuition Fee" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="fs-name" required>Name</Label>
+            <Input id="fs-name" placeholder="e.g. Grade 8 Tuition Fee" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fs-academicYearId">Academic year</Label>
+              <Label htmlFor="fs-academicYearId" required>Academic year</Label>
               <Controller
                 control={control}
                 name="academicYearId"
@@ -127,10 +127,10 @@ export default function FeeStructureFormDialog({
                   </Select>
                 )}
               />
-              {errors.academicYearId && <p className="text-xs text-red-600">{errors.academicYearId.message}</p>}
+              {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.academicYearId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fs-classId">Class (optional)</Label>
+              <Label htmlFor="fs-classId" optional>Class</Label>
               <Controller
                 control={control}
                 name="classId"
@@ -153,9 +153,9 @@ export default function FeeStructureFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fs-feeType">Fee type</Label>
+              <Label htmlFor="fs-feeType" required>Fee type</Label>
               <Controller
                 control={control}
                 name="feeType"
@@ -176,7 +176,7 @@ export default function FeeStructureFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fs-frequency">Frequency</Label>
+              <Label htmlFor="fs-frequency" required>Frequency</Label>
               <Controller
                 control={control}
                 name="frequency"
@@ -199,18 +199,18 @@ export default function FeeStructureFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="fs-amount">Amount (per cycle)</Label>
-            <Input id="fs-amount" type="number" step="1" min="0" {...register("amount")} />
-            {errors.amount && <p className="text-xs text-red-600">{errors.amount.message}</p>}
+            <Label htmlFor="fs-amount" required>Amount (per cycle)</Label>
+            <Input id="fs-amount" type="number" step="1" min="0" aria-invalid={errors.amount ? true : undefined} {...register("amount")} />
+            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.amount.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fs-lateFineFlat">Flat late fine (optional)</Label>
+              <Label htmlFor="fs-lateFineFlat" optional>Flat late fine</Label>
               <Input id="fs-lateFineFlat" type="number" step="1" min="0" {...register("lateFineFlat")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fs-lateFinePerDay">Per-day late fine (optional)</Label>
+              <Label htmlFor="fs-lateFinePerDay" optional>Per-day late fine</Label>
               <Input id="fs-lateFinePerDay" type="number" step="1" min="0" {...register("lateFinePerDay")} />
             </div>
           </div>
@@ -219,8 +219,7 @@ export default function FeeStructureFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create structure"}
             </Button>
           </DialogFooter>

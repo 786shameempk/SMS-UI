@@ -13,7 +13,7 @@ export default function SeatAvailabilityCard() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Armchair className="w-4 h-4 text-slate-400" />
+          <Armchair className="w-4 h-4 text-muted-foreground" />
           Seat availability by class
         </CardTitle>
         <CardDescription>Live capacity vs. current enrollment from Academic Management's sections.</CardDescription>
@@ -25,8 +25,8 @@ export default function SeatAvailabilityCard() {
             <div className="flex gap-2 min-w-max pb-1">
               {trackedSeats.map((s) => (
                 <div key={s.className} className="flex flex-col items-center gap-1 rounded-lg border border-border px-3 py-2 min-w-[92px]">
-                  <span className="text-xs font-medium text-slate-600">{s.className}</span>
-                  <span className="text-sm font-semibold text-slate-800">
+                  <span className="text-xs font-medium text-secondary-foreground">{s.className}</span>
+                  <span className="text-sm font-semibold text-foreground">
                     {s.currentStrength}/{s.capacity}
                   </span>
                   <Badge variant={s.availableSeats > 0 ? "success" : "danger"}>

@@ -14,7 +14,7 @@ export default function TodayClassesCard({ classes }: { classes: ClassSession[] 
         {classes.map((session) => (
           <div key={session.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
             <div className="w-11 text-center shrink-0">
-              <p className="text-xs font-semibold text-brand-600 tabular-nums">{session.startTime}</p>
+              <p className="text-xs font-semibold text-primary-text tabular-nums">{session.startTime}</p>
               <p className="text-[10px] text-muted-foreground tabular-nums">{session.endTime}</p>
             </div>
             <div className="w-px h-8 bg-secondary shrink-0" />

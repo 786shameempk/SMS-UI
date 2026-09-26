@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -60,7 +60,7 @@ export default function AssignSubjectDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="assign-classId">Class</Label>
+            <Label htmlFor="assign-classId" required>Class</Label>
             <Controller
               control={control}
               name="classId"
@@ -79,11 +79,11 @@ export default function AssignSubjectDialog({
                 </Select>
               )}
             />
-            {errors.classId && <p className="text-xs text-red-600">{errors.classId.message}</p>}
+            {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="assign-subjectId">Subject</Label>
+            <Label htmlFor="assign-subjectId" required>Subject</Label>
             <Controller
               control={control}
               name="subjectId"
@@ -102,15 +102,14 @@ export default function AssignSubjectDialog({
                 </Select>
               )}
             />
-            {errors.subjectId && <p className="text-xs text-red-600">{errors.subjectId.message}</p>}
+            {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Assign
             </Button>
           </DialogFooter>

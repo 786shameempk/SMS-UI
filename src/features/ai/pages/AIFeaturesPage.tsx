@@ -2,17 +2,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InsightsTab from "../components/InsightsTab";
 import AtRiskStudentsTab from "../components/AtRiskStudentsTab";
 import ContentAssistantTab from "../components/ContentAssistantTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function AIFeaturesPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">AI Features</h1>
-        <p className="text-sm text-muted-foreground mt-1">Rule-based insights, at-risk flagging, and drafting — all computed from this school's real data, not a live model.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="AI Features"
+        description="Rule-based insights, at-risk flagging, and drafting — all computed from this school's real data, not a live model."
+      />
 
       <Tabs defaultValue="insights">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="insights">Insights</TabsTrigger>
           <TabsTrigger value="at-risk">At-Risk Students</TabsTrigger>
           <TabsTrigger value="assistant">Content Assistant</TabsTrigger>
@@ -27,6 +28,6 @@ export default function AIFeaturesPage() {
           <ContentAssistantTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

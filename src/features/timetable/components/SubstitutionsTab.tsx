@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listSections, listSubjects } from "@/features/academics/api";
 import { listTeachers } from "@/features/teachers/api";
@@ -13,10 +13,11 @@ import { createSubstitution, deleteSubstitution, listSlots, listSubstitutions } 
 import { DAY_DEFINITIONS } from "../constants";
 import type { TimetableSubstitution } from "../types";
 import SubstitutionFormDialog from "./SubstitutionFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function SubstitutionsTab() {
   const queryClient = useQueryClient();
-  const { data: substitutions = [], isLoading } = useQuery({ queryKey: ["timetable", "substitutions"], queryFn: listSubstitutions });
+  const { data: substitutions = [], isLoading, isError, refetch } = useQuery({ queryKey: ["timetable", "substitutions"], queryFn: listSubstitutions });
   const { data: sections = [] } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
   const { data: subjects = [] } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
   const { data: teachers = [] } = useQuery({ queryKey: ["teachers", "directory"], queryFn: listTeachers });
@@ -53,44 +54,37 @@ export default function SubstitutionsTab() {
   const sectionLabel = (id: string) => sections.find((s) => s.id === id)?.name ?? id;
 
   const columns: ColumnDef<TimetableSubstitution, unknown>[] = [
-    { accessorKey: "date", header: "Date", cell: ({ row }) => <span className="text-sm text-slate-700">{row.original.date}</span> },
+    { accessorKey: "date", header: "Date", cell: ({ row }) => <span className="text-sm text-foreground">{row.original.date}</span> },
     {
       id: "day-period",
       header: "Day / period",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {DAY_DEFINITIONS.find((d) => d.value === row.original.dayOfWeek)?.label} &middot; Period {row.original.periodNumber}
         </span>
       ),
     },
-    { id: "section", header: "Section", cell: ({ row }) => <span className="text-sm text-slate-700">{sectionLabel(row.original.sectionId)}</span> },
+    { id: "section", header: "Section", cell: ({ row }) => <span className="text-sm text-foreground">{sectionLabel(row.original.sectionId)}</span> },
     {
       id: "teachers",
       header: "Covering",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {teacherName(row.original.originalStaffId)} &rarr; {teacherName(row.original.substituteStaffId)}
         </span>
       ),
     },
-    { accessorKey: "reason", header: "Reason", cell: ({ row }) => <span className="text-sm text-slate-500">{row.original.reason ?? "—"}</span> },
+    { accessorKey: "reason", header: "Reason", cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.reason ?? "—"}</span> },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-              <Trash2 className="w-3.5 h-3.5" />
-              Remove
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <RowActions>
+          <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} variant="destructive">
+            <Trash2 className="w-3.5 h-3.5" />
+            Remove
+          </DropdownMenuItem>
+        </RowActions>
       ),
     },
   ];
@@ -107,7 +101,7 @@ export default function SubstitutionsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={sorted} isLoading={isLoading} emptyMessage="No substitutions recorded yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No substitutions recorded yet." />
 
       <SubstitutionFormDialog
         open={formOpen}

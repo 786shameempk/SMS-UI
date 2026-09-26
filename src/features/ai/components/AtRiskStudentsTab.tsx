@@ -66,22 +66,22 @@ export default function AtRiskStudentsTab() {
             <Card key={row.student.id} className={isDismissed ? "opacity-60" : undefined}>
               <CardContent className="p-4 flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-destructive-soft text-destructive-strong flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-[18px] h-[18px]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
                       {row.student.firstName} {row.student.lastName}
                       <Badge variant={risk.variant}>{risk.label}</Badge>
                       {isDismissed && <Badge variant="neutral">Reviewed</Badge>}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       {row.student.className} - {row.student.section} &middot; {row.student.admissionNumber}
                     </p>
                     <ul className="mt-1.5 space-y-1">
                       {row.flags.map((f) => (
-                        <li key={f.reason} className="text-sm text-slate-600">
-                          <span className="font-medium text-slate-700">{RISK_REASON_CONFIG[f.reason].label}:</span> {f.detail}
+                        <li key={f.reason} className="text-sm text-secondary-foreground">
+                          <span className="font-medium text-foreground">{RISK_REASON_CONFIG[f.reason].label}:</span> {f.detail}
                         </li>
                       ))}
                     </ul>

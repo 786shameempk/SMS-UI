@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,9 +84,9 @@ export default function CheckupFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-studentId">Student</Label>
+              <Label htmlFor="checkup-studentId" required>Student</Label>
               <Controller
                 control={control}
                 name="studentId"
@@ -105,53 +105,53 @@ export default function CheckupFormDialog({
                   </Select>
                 )}
               />
-              {errors.studentId && <p className="text-xs text-red-600">{errors.studentId.message}</p>}
+              {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="checkup-date">Checkup date</Label>
-              <Input id="checkup-date" type="date" {...register("checkupDate")} />
-              {errors.checkupDate && <p className="text-xs text-red-600">{errors.checkupDate.message}</p>}
+              <Input id="checkup-date" type="date" aria-invalid={errors.checkupDate ? true : undefined} {...register("checkupDate")} />
+              {errors.checkupDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.checkupDate.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="checkup-height">Height (cm)</Label>
-              <Input id="checkup-height" type="number" min="30" max="250" step="0.1" {...register("heightCm")} />
-              {errors.heightCm && <p className="text-xs text-red-600">{errors.heightCm.message}</p>}
+              <Input id="checkup-height" type="number" min="30" max="250" step="0.1" aria-invalid={errors.heightCm ? true : undefined} {...register("heightCm")} />
+              {errors.heightCm && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.heightCm.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="checkup-weight">Weight (kg)</Label>
-              <Input id="checkup-weight" type="number" min="5" max="200" step="0.1" {...register("weightKg")} />
-              {errors.weightKg && <p className="text-xs text-red-600">{errors.weightKg.message}</p>}
+              <Input id="checkup-weight" type="number" min="5" max="200" step="0.1" aria-invalid={errors.weightKg ? true : undefined} {...register("weightKg")} />
+              {errors.weightKg && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.weightKg.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-visionLeft">Vision (left eye)</Label>
-              <Input id="checkup-visionLeft" placeholder="e.g. 6/6" {...register("visionLeft")} />
-              {errors.visionLeft && <p className="text-xs text-red-600">{errors.visionLeft.message}</p>}
+              <Label htmlFor="checkup-visionLeft" required>Vision (left eye)</Label>
+              <Input id="checkup-visionLeft" placeholder="e.g. 6/6" aria-invalid={errors.visionLeft ? true : undefined} {...register("visionLeft")} />
+              {errors.visionLeft && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visionLeft.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-visionRight">Vision (right eye)</Label>
-              <Input id="checkup-visionRight" placeholder="e.g. 6/6" {...register("visionRight")} />
-              {errors.visionRight && <p className="text-xs text-red-600">{errors.visionRight.message}</p>}
+              <Label htmlFor="checkup-visionRight" required>Vision (right eye)</Label>
+              <Input id="checkup-visionRight" placeholder="e.g. 6/6" aria-invalid={errors.visionRight ? true : undefined} {...register("visionRight")} />
+              {errors.visionRight && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visionRight.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="checkup-dental">Dental remarks (optional)</Label>
+            <Label htmlFor="checkup-dental" optional>Dental remarks</Label>
             <Textarea id="checkup-dental" rows={2} {...register("dentalRemarks")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="checkup-general">General remarks (optional)</Label>
+            <Label htmlFor="checkup-general" optional>General remarks</Label>
             <Textarea id="checkup-general" rows={2} {...register("generalRemarks")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="checkup-examinedBy">Examined by (optional)</Label>
+            <Label htmlFor="checkup-examinedBy" optional>Examined by</Label>
             <Controller
               control={control}
               name="examinedByStaffId"
@@ -176,8 +176,7 @@ export default function CheckupFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save checkup
             </Button>
           </DialogFooter>

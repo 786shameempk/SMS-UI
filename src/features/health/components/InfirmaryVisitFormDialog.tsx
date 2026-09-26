@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -89,9 +89,9 @@ export default function InfirmaryVisitFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-studentId">Student</Label>
+              <Label htmlFor="visit-studentId" required>Student</Label>
               <Controller
                 control={control}
                 name="studentId"
@@ -110,42 +110,42 @@ export default function InfirmaryVisitFormDialog({
                   </Select>
                 )}
               />
-              {errors.studentId && <p className="text-xs text-red-600">{errors.studentId.message}</p>}
+              {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-visitedAt">Visit date/time</Label>
-              <Input id="visit-visitedAt" type="datetime-local" {...register("visitedAt")} />
-              {errors.visitedAt && <p className="text-xs text-red-600">{errors.visitedAt.message}</p>}
+              <Label htmlFor="visit-visitedAt" required>Visit date/time</Label>
+              <Input id="visit-visitedAt" type="datetime-local" aria-invalid={errors.visitedAt ? true : undefined} {...register("visitedAt")} />
+              {errors.visitedAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitedAt.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-symptoms">Symptoms</Label>
-              <Input id="visit-symptoms" placeholder="e.g. Headache, mild fever" {...register("symptoms")} />
-              {errors.symptoms && <p className="text-xs text-red-600">{errors.symptoms.message}</p>}
+              <Label htmlFor="visit-symptoms" required>Symptoms</Label>
+              <Input id="visit-symptoms" placeholder="e.g. Headache, mild fever" aria-invalid={errors.symptoms ? true : undefined} {...register("symptoms")} />
+              {errors.symptoms && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.symptoms.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-temperature">Temperature °C (optional)</Label>
-              <Input id="visit-temperature" type="number" min="30" max="45" step="0.1" {...register("temperatureC")} />
-              {errors.temperatureC && <p className="text-xs text-red-600">{errors.temperatureC.message}</p>}
+              <Label htmlFor="visit-temperature" optional>Temperature °C</Label>
+              <Input id="visit-temperature" type="number" min="30" max="45" step="0.1" aria-invalid={errors.temperatureC ? true : undefined} {...register("temperatureC")} />
+              {errors.temperatureC && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.temperatureC.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="visit-treatment">Treatment given</Label>
-            <Textarea id="visit-treatment" rows={2} {...register("treatmentGiven")} />
-            {errors.treatmentGiven && <p className="text-xs text-red-600">{errors.treatmentGiven.message}</p>}
+            <Textarea id="visit-treatment" rows={2} aria-invalid={errors.treatmentGiven ? true : undefined} {...register("treatmentGiven")} />
+            {errors.treatmentGiven && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.treatmentGiven.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="visit-medicine">Medicine given (optional)</Label>
+            <Label htmlFor="visit-medicine" optional>Medicine given</Label>
             <Input id="visit-medicine" {...register("medicineGiven")} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-outcome">Outcome</Label>
+              <Label htmlFor="visit-outcome" required>Outcome</Label>
               <Controller
                 control={control}
                 name="outcome"
@@ -166,7 +166,7 @@ export default function InfirmaryVisitFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-attendedBy">Attended by (optional)</Label>
+              <Label htmlFor="visit-attendedBy" optional>Attended by</Label>
               <Controller
                 control={control}
                 name="attendedByStaffId"
@@ -190,15 +190,14 @@ export default function InfirmaryVisitFormDialog({
 
           <label className="flex items-center gap-2 cursor-pointer">
             <Checkbox checked={watch("parentNotified")} onCheckedChange={(v) => setValue("parentNotified", v === true)} />
-            <span className="text-sm text-slate-600">Parent/guardian notified</span>
+            <span className="text-sm text-secondary-foreground">Parent/guardian notified</span>
           </label>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Log visit
             </Button>
           </DialogFooter>

@@ -3,19 +3,18 @@ import ItemsTab from "../components/ItemsTab";
 import StockTransactionsTab from "../components/StockTransactionsTab";
 import VendorsCategoriesTab from "../components/VendorsCategoriesTab";
 import ReportsTab from "../components/ReportsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function InventoryManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Inventory management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Track items and stock levels, record purchases and issues, and manage vendors and categories.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Inventory management"
+        description="Track items and stock levels, record purchases and issues, and manage vendors and categories."
+      />
 
       <Tabs defaultValue="items">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="items">Items</TabsTrigger>
           <TabsTrigger value="transactions">Stock Transactions</TabsTrigger>
           <TabsTrigger value="vendors">Vendors & Categories</TabsTrigger>
@@ -34,6 +33,6 @@ export default function InventoryManagementPage() {
           <ReportsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

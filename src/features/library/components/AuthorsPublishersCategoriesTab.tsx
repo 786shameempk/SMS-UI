@@ -59,7 +59,7 @@ function EntityList<T extends { id: string; name: string }>({
         {!isLoading &&
           items.map((item) => (
             <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
-              <span className="text-sm text-slate-700 truncate">{item.name}</span>
+              <span className="text-sm text-foreground truncate">{item.name}</span>
               <div className="flex items-center gap-1 shrink-0">
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(item)}>
                   <Pencil className="w-3.5 h-3.5" />

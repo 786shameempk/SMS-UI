@@ -20,8 +20,8 @@ export default function PushReminderBanner() {
   if (state !== "off" || dismissed) return null;
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm dark:border-brand-800 dark:bg-brand-900/20">
-      <BellRing className="h-5 w-5 shrink-0 text-brand-600" aria-hidden />
+    <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-accent px-4 py-3 text-sm dark:border-brand-800 dark:bg-brand-900/20">
+      <BellRing className="h-5 w-5 shrink-0 text-primary-text" aria-hidden />
       <p className="min-w-0 flex-1 text-foreground">
         <span className="font-medium">Get a reminder before each class</span>
         <span className="hidden text-muted-foreground sm:inline"> on this device, even when EduCore isn't open.</span>

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Info, Link2, Loader2, MonitorPlay, Repeat } from "lucide-react";
+import { Info, Link2, MonitorPlay, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -165,7 +165,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
       const what = result.sessionsPlanned > 1 ? `${result.sessionsPlanned} sessions scheduled` : input.saveAsDraft ? "Draft saved" : `${MEETING_TYPES[input.meetingType].label} scheduled`;
       toast.success(what);
       if (result.unlinkedCount > 0) {
-        toast(`${result.unlinkedCount} ${result.unlinkedCount === 1 ? "person has" : "people have"} no login yet, so ${result.unlinkedCount === 1 ? "wasn't" : "weren't"} invited. Link their accounts in Student or Staff profiles.`, { icon: <Info className="h-4 w-4 shrink-0 text-blue-600" />, duration: 7000 });
+        toast(`${result.unlinkedCount} ${result.unlinkedCount === 1 ? "person has" : "people have"} no login yet, so ${result.unlinkedCount === 1 ? "wasn't" : "weren't"} invited. Link their accounts in Student or Staff profiles.`, { icon: <Info className="h-4 w-4 shrink-0 text-info-strong" />, duration: 7000 });
       }
       onOpenChange(false);
       navigate(`/online-classes/${result.firstSession.id}`);
@@ -212,7 +212,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
       mutation.mutate(input);
     });
 
-  const fieldError = (message?: string) => (message ? <p className="text-xs text-red-600">{message}</p> : null);
+  const fieldError = (message?: string) => (message ? <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{message}</p> : null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -296,7 +296,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
 
           <div className="space-y-1.5">
             <Label htmlFor="meeting-title">Title</Label>
-            <Input id="meeting-title" placeholder={meetingType === "OnlineClass" ? "e.g. Mathematics: Fractions" : "e.g. Term planning"} {...register("title")} />
+            <Input id="meeting-title" placeholder={meetingType === "OnlineClass" ? "e.g. Mathematics: Fractions" : "e.g. Term planning"} aria-invalid={errors.title ? true : undefined} {...register("title")} />
             {fieldError(errors.title?.message)}
           </div>
 
@@ -304,12 +304,12 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-[1.3fr_1fr_1fr]">
             <div className="col-span-2 space-y-1.5 sm:col-span-1">
               <Label htmlFor="meeting-date">{repeats ? "First class" : "Date"}</Label>
-              <Input id="meeting-date" type="date" {...register("date")} />
+              <Input id="meeting-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
               {fieldError(errors.date?.message)}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="meeting-time">Starts</Label>
-              <Input id="meeting-time" type="time" step={300} {...register("time")} />
+              <Input id="meeting-time" type="time" step={300} aria-invalid={errors.time ? true : undefined} {...register("time")} />
               {fieldError(errors.time?.message)}
             </div>
             <div className="space-y-1.5">
@@ -369,7 +369,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                 {fieldError(errors.days?.message)}
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <Label htmlFor="meeting-until" className="font-normal text-muted-foreground">Until</Label>
-                  <Input id="meeting-until" type="date" className="w-44" {...register("endDate")} />
+                  <Input id="meeting-until" type="date" className="w-44" aria-invalid={errors.endDate ? true : undefined} {...register("endDate")} />
                   {sessions > 0 && <span className="text-muted-foreground">· {sessions} sessions</span>}
                 </div>
                 {fieldError(errors.endDate?.message)}
@@ -415,7 +415,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label>Where</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {([
                       { value: "LiveKit", label: "Built-in video room", hint: "Attendance is taken for you", icon: MonitorPlay },
                       { value: "ExternalLink", label: "Paste a link", hint: "Zoom, Meet or Teams", icon: Link2 },
@@ -440,7 +440,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                   </div>
                   {provider === "ExternalLink" && (
                     <>
-                      <Input id="meeting-link" placeholder="https://…" {...register("externalJoinUrl")} />
+                      <Input id="meeting-link" placeholder="https://…" aria-invalid={errors.externalJoinUrl ? true : undefined} {...register("externalJoinUrl")} />
                       {fieldError(errors.externalJoinUrl?.message)}
                       <p className="text-xs text-muted-foreground">The link stays hidden until someone joins, and only invited people get it.</p>
                     </>
@@ -484,8 +484,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
             <Button type="button" variant="ghost" onClick={submit(true)} disabled={mutation.isPending}>
               Save as draft
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Button type="submit" loading={mutation.isPending}>
               {repeats && sessions > 1 ? `Schedule ${sessions} sessions` : `Schedule ${noun}`}
             </Button>
           </DialogFooter>

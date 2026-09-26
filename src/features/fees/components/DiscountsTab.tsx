@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listStudents } from "@/features/students/api";
 import { createDiscount, deleteDiscount, listDiscounts, updateDiscount } from "../api";
 import type { FeeDiscount, FeeDiscountFormValues } from "../types";
 import DiscountFormDialog from "./DiscountFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function DiscountsTab() {
   const queryClient = useQueryClient();
@@ -20,7 +21,7 @@ export default function DiscountsTab() {
   const [editing, setEditing] = useState<FeeDiscount | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FeeDiscount | null>(null);
 
-  const { data: discounts = [], isLoading } = useQuery({ queryKey: ["fees", "discounts"], queryFn: listDiscounts });
+  const { data: discounts = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "discounts"], queryFn: listDiscounts });
   const { data: students = [] } = useQuery({ queryKey: ["students", "all"], queryFn: listStudents });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["fees"] });
@@ -57,12 +58,12 @@ export default function DiscountsTab() {
   });
 
   const columns: ColumnDef<FeeDiscount, unknown>[] = [
-    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.name}</span> },
+    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "value",
       header: "Value",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-700 tabular-nums">
+        <span className="text-sm text-foreground tabular-nums">
           {row.original.type === "percentage" ? `${row.original.value}%` : `₹${row.original.value.toLocaleString("en-IN")}`}
         </span>
       ),
@@ -79,7 +80,7 @@ export default function DiscountsTab() {
     {
       accessorKey: "description",
       header: "Description",
-      cell: ({ row }) => <span className="text-sm text-slate-500">{row.original.description ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.description ?? "—"}</span>,
     },
     {
       id: "actions",
@@ -87,28 +88,21 @@ export default function DiscountsTab() {
       cell: ({ row }) => {
         const discount = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(discount);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(discount)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(discount);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(discount)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -129,7 +123,7 @@ export default function DiscountsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={discounts} isLoading={isLoading} emptyMessage="No discounts configured yet." />
+      <DataTable searchable columns={columns} data={discounts} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No discounts configured yet." />
 
       <DiscountFormDialog
         open={formOpen}

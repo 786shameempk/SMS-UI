@@ -16,7 +16,7 @@ import PayslipView from "./PayslipView";
 export default function PayslipsTab() {
   const queryClient = useQueryClient();
   const { data: runs = [] } = useQuery({ queryKey: ["payroll", "runs"], queryFn: listPayrollRuns });
-  const { data: payslips = [], isLoading } = useQuery({ queryKey: ["payroll", "payslips"], queryFn: () => listPayslips() });
+  const { data: payslips = [], isLoading, isError, refetch } = useQuery({ queryKey: ["payroll", "payslips"], queryFn: () => listPayslips() });
 
   const [monthFilter, setMonthFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -49,10 +49,10 @@ export default function PayslipsTab() {
       header: "Staff",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.staff.firstName} {row.original.staff.lastName}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {row.original.staff.employeeId} &middot; {row.original.staff.designation}
           </p>
         </div>
@@ -61,12 +61,12 @@ export default function PayslipsTab() {
     {
       accessorKey: "month",
       header: "Month",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{monthLabel(row.original.month)}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{monthLabel(row.original.month)}</span>,
     },
     {
       accessorKey: "netPay",
       header: "Net pay",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{formatCurrency(row.original.netPay)}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.netPay)}</span>,
     },
     {
       accessorKey: "paid",
@@ -125,7 +125,7 @@ export default function PayslipsTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No payslips match your filters." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No payslips match your filters." pageSize={10} />
 
       <PayslipView open={Boolean(viewing)} onOpenChange={(v) => !v && setViewing(null)} payslip={viewing} />
     </div>

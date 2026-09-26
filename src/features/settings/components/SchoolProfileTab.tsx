@@ -77,32 +77,32 @@ export default function SchoolProfileTab() {
         <CardContent>
           <form onSubmit={handleSubmit((values) => saveMutation.mutate(values))} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="sp-name">School name</Label>
-              <Input id="sp-name" {...register("name")} />
-              {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+              <Label htmlFor="sp-name" required>School name</Label>
+              <Input id="sp-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+              {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="sp-tagline">Tagline (optional)</Label>
+              <Label htmlFor="sp-tagline" optional>Tagline</Label>
               <Input id="sp-tagline" {...register("tagline")} />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="sp-address">Address</Label>
-              <Input id="sp-address" {...register("address")} />
-              {errors.address && <p className="text-xs text-red-600">{errors.address.message}</p>}
+              <Label htmlFor="sp-address" required>Address</Label>
+              <Input id="sp-address" aria-invalid={errors.address ? true : undefined} {...register("address")} />
+              {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.address.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="sp-phone">Phone</Label>
-                <Input id="sp-phone" {...register("phone")} />
-                {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
+                <Label htmlFor="sp-phone" required>Phone</Label>
+                <Input id="sp-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
+                {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sp-email">Email</Label>
-                <Input id="sp-email" type="email" {...register("email")} />
-                {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+                <Label htmlFor="sp-email" required>Email</Label>
+                <Input id="sp-email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
+                {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.email.message}</p>}
               </div>
             </div>
 
@@ -113,8 +113,8 @@ export default function SchoolProfileTab() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sp-establishedYear">Established year</Label>
-                <Input id="sp-establishedYear" type="number" {...register("establishedYear")} />
-                {errors.establishedYear && <p className="text-xs text-red-600">{errors.establishedYear.message}</p>}
+                <Input id="sp-establishedYear" type="number" aria-invalid={errors.establishedYear ? true : undefined} {...register("establishedYear")} />
+                {errors.establishedYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.establishedYear.message}</p>}
               </div>
             </div>
 

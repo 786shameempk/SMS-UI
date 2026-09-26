@@ -24,9 +24,9 @@ type RoleAction = QuickAction & { permissionKey?: keyof ModulePermissions };
 const TINT = {
   sky: "bg-sky-500/12 text-sky-600 dark:text-sky-300",
   violet: "bg-violet-500/12 text-violet-600 dark:text-violet-300",
-  emerald: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
-  rose: "bg-rose-500/12 text-rose-600 dark:text-rose-300",
-  brand: "bg-brand-500/15 text-brand-700 dark:text-brand-300",
+  emerald: "bg-emerald-500/12 text-success-strong",
+  rose: "bg-rose-500/12 text-destructive-strong",
+  brand: "bg-brand-500/15 text-primary-text dark:text-brand-300",
   indigo: "bg-indigo-500/12 text-indigo-600 dark:text-indigo-300",
 };
 

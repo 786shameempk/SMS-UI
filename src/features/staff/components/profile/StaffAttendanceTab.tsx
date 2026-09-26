@@ -4,10 +4,10 @@ import { cn } from "@/utils/cn";
 import { getStaffAttendance } from "../../api";
 
 const STATUS_STYLE: Record<string, string> = {
-  present: "bg-green-500",
-  absent: "bg-red-500",
-  late: "bg-amber-500",
-  holiday: "bg-slate-200",
+  present: "bg-success",
+  absent: "bg-destructive",
+  late: "bg-warning",
+  holiday: "bg-border",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -40,21 +40,21 @@ export default function StaffAttendanceTab({ staffId }: { staffId: string }) {
       <CardContent className="space-y-5">
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
-            <p className="text-lg font-bold text-slate-800 tabular-nums">{data.presentDays}</p>
-            <p className="text-[11px] text-slate-500">Present</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{data.presentDays}</p>
+            <p className="text-[11px] text-muted-foreground">Present</p>
           </div>
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
-            <p className="text-lg font-bold text-slate-800 tabular-nums">{data.lateDays}</p>
-            <p className="text-[11px] text-slate-500">Late</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{data.lateDays}</p>
+            <p className="text-[11px] text-muted-foreground">Late</p>
           </div>
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
-            <p className="text-lg font-bold text-slate-800 tabular-nums">{data.absentDays}</p>
-            <p className="text-[11px] text-slate-500">Absent</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{data.absentDays}</p>
+            <p className="text-[11px] text-muted-foreground">Absent</p>
           </div>
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-slate-500 mb-2">Last 14 days</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">Last 14 days</p>
           <div className="flex gap-1.5 flex-wrap">
             {data.recent.map((day) => (
               <div

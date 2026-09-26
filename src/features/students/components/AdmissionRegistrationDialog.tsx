@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,20 +56,19 @@ export default function AdmissionRegistrationDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="reg-address">Address</Label>
-            <Input id="reg-address" {...register("address")} />
-            {errors.address && <p className="text-xs text-red-600">{errors.address.message}</p>}
+            <Label htmlFor="reg-address" required>Address</Label>
+            <Input id="reg-address" aria-invalid={errors.address ? true : undefined} {...register("address")} />
+            {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.address.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="reg-previousSchool">Previous school (optional)</Label>
+            <Label htmlFor="reg-previousSchool" optional>Previous school</Label>
             <Input id="reg-previousSchool" {...register("previousSchool")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Register application
             </Button>
           </DialogFooter>

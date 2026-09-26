@@ -16,20 +16,20 @@ interface CapacityRow extends Section {
 
 function UtilizationBar({ utilization }: { utilization: number }) {
   const pct = Math.min(100, Math.round(utilization * 100));
-  const color = utilization >= 0.95 ? "bg-red-500" : utilization >= 0.75 ? "bg-amber-500" : "bg-green-500";
+  const color = utilization >= 0.95 ? "bg-destructive" : utilization >= 0.75 ? "bg-warning" : "bg-success";
   return (
     <div className="flex items-center gap-2 min-w-[140px]">
-      <div className="h-2 w-28 rounded-full bg-slate-100 overflow-hidden">
+      <div className="h-2 w-28 rounded-full bg-secondary overflow-hidden">
         <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-xs text-slate-500 tabular-nums">{pct}%</span>
+      <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
     </div>
   );
 }
 
 export default function ClassCapacityTab() {
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
-  const { data: sections = [], isLoading } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
+  const { data: sections = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
   const [classFilter, setClassFilter] = useState("all");
 
   const rows: CapacityRow[] = useMemo(
@@ -59,20 +59,20 @@ export default function ClassCapacityTab() {
       header: "Section",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.className}</p>
-          <p className="text-xs text-slate-500">{row.original.name}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.className}</p>
+          <p className="text-xs text-muted-foreground">{row.original.name}</p>
         </div>
       ),
     },
     {
       id: "strength",
       header: "Enrolled",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{row.original.currentStrength}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.currentStrength}</span>,
     },
     {
       accessorKey: "capacity",
       header: "Capacity",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{row.original.capacity}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.capacity}</span>,
     },
     {
       id: "utilization",
@@ -101,18 +101,18 @@ export default function ClassCapacityTab() {
         <CardContent>
           <div className="flex items-center gap-6">
             <div>
-              <p className="text-2xl font-bold text-slate-900 tabular-nums">{totals.strength}</p>
-              <p className="text-xs text-slate-500">Enrolled</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{totals.strength}</p>
+              <p className="text-xs text-muted-foreground">Enrolled</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900 tabular-nums">{totals.capacity}</p>
-              <p className="text-xs text-slate-500">Total capacity</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{totals.capacity}</p>
+              <p className="text-xs text-muted-foreground">Total capacity</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900 tabular-nums">
+              <p className="text-2xl font-bold text-foreground tabular-nums">
                 {totals.capacity > 0 ? Math.round((totals.strength / totals.capacity) * 100) : 0}%
               </p>
-              <p className="text-xs text-slate-500">Utilization</p>
+              <p className="text-xs text-muted-foreground">Utilization</p>
             </div>
           </div>
         </CardContent>
@@ -134,7 +134,7 @@ export default function ClassCapacityTab() {
         </Select>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={rows} isLoading={isLoading} emptyMessage="No sections match this filter." />
+      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No sections match this filter." />
     </div>
   );
 }

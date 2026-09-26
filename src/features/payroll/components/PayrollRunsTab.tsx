@@ -1,39 +1,28 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, MoreHorizontal, Plus, Trash2, Users, Wallet, WalletCards } from "lucide-react";
+import { CheckCircle2, Plus, Trash2, Users, Wallet, WalletCards } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatCurrency } from "@/utils/format";
 import { PAYROLL_RUN_STATUS_CONFIG, monthLabel } from "../constants";
 import { deletePayrollRun, finalizePayrollRun, generatePayrollRun, listPayrollRuns } from "../api";
 import type { PayrollRunSummary } from "../types";
 import GeneratePayrollDialog from "./GeneratePayrollDialog";
+import { StatCard } from "@/components/ui/stat-card";
+import { RowActions } from "@/components/ui/row-actions";
 
-function StatBlock({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Wallet }) {
-  return (
-    <Card>
-      <CardContent className="p-5 flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{value}</p>
-        </div>
-        <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-          <Icon className="w-[18px] h-[18px]" />
-        </div>
-      </CardContent>
-    </Card>
-  );
+function StatBlock({ label, value, icon }: { label: string; value: string; icon: typeof Wallet }) {
+  return <StatCard label={label} value={value} icon={icon} />;
 }
 
 export default function PayrollRunsTab() {
   const queryClient = useQueryClient();
-  const { data: runs = [], isLoading } = useQuery({ queryKey: ["payroll", "runs"], queryFn: listPayrollRuns });
+  const { data: runs = [], isLoading, isError, refetch } = useQuery({ queryKey: ["payroll", "runs"], queryFn: listPayrollRuns });
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PayrollRunSummary | null>(null);
@@ -78,23 +67,23 @@ export default function PayrollRunsTab() {
     {
       accessorKey: "month",
       header: "Month",
-      cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{monthLabel(row.original.month)}</span>,
+      cell: ({ row }) => <span className="text-sm font-medium text-foreground">{monthLabel(row.original.month)}</span>,
     },
     {
       accessorKey: "staffCount",
       header: "Staff",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.staffCount}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.staffCount}</span>,
     },
     {
       accessorKey: "totalNetPay",
       header: "Total net pay",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{formatCurrency(row.original.totalNetPay)}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.totalNetPay)}</span>,
     },
     {
       id: "paid",
       header: "Paid",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600 tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.paidCount}/{row.original.staffCount}
         </span>
       ),
@@ -114,23 +103,16 @@ export default function PayrollRunsTab() {
         const run = row.original;
         if (run.status !== "draft") return null;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => finalizeMutation.mutate(run.id)}>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Finalize
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(run)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem onClick={() => finalizeMutation.mutate(run.id)}>
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Finalize
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(run)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -152,7 +134,7 @@ export default function PayrollRunsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={runs} isLoading={isLoading} emptyMessage="No payroll runs yet." />
+      <DataTable searchable columns={columns} data={runs} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No payroll runs yet." />
 
       <GeneratePayrollDialog
         open={formOpen}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { KeyRound, Lock, MoreHorizontal, Pencil, Plus, Search, Trash2, Unlock, UserCog, UserX } from "lucide-react";
+import { KeyRound, Lock, Pencil, Plus, Search, Trash2, Unlock, UserCog, UserX } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,13 +10,7 @@ import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import {
   createUser,
   deleteUser,
@@ -30,6 +24,8 @@ import UserStatusBadge from "../components/UserStatusBadge";
 import UserFormDialog from "../components/UserFormDialog";
 import UserProfileDialog from "../components/UserProfileDialog";
 import type { SystemUser, UserFormValues } from "../types";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { RowActions } from "@/components/ui/row-actions";
 
 function initialsOf(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
@@ -37,7 +33,7 @@ function initialsOf(name: string) {
 
 export default function UserManagementPage() {
   const queryClient = useQueryClient();
-  const { data: users = [], isLoading } = useQuery({ queryKey: ["admin", "users"], queryFn: listUsers });
+  const { data: users = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "users"], queryFn: listUsers });
   const { data: roles = [] } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
 
   const [search, setSearch] = useState("");
@@ -127,7 +123,7 @@ export default function UserManagementPage() {
               <AvatarFallback className="text-[11px]">{initialsOf(u.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate group-hover:text-brand-600 transition-colors">{u.name}</p>
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary-text transition-colors">{u.name}</p>
               <p className="text-xs text-muted-foreground truncate">{u.email}</p>
             </div>
           </button>
@@ -169,82 +165,77 @@ export default function UserManagementPage() {
       cell: ({ row }) => {
         const u = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingUser(u);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit user
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingUser(u);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit user
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setProfileUserId(u.id)}>
+              <UserCog className="w-3.5 h-3.5" />
+              View profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setResetTarget(u)}>
+              <KeyRound className="w-3.5 h-3.5" />
+              Reset password
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {u.status === "active" ? (
+              <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "inactive" })}>
+                <UserX className="w-3.5 h-3.5" />
+                Deactivate
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setProfileUserId(u.id)}>
+            ) : (
+              <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "active" })}>
                 <UserCog className="w-3.5 h-3.5" />
-                View profile
+                Activate
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setResetTarget(u)}>
-                <KeyRound className="w-3.5 h-3.5" />
-                Reset password
+            )}
+            {u.status === "locked" ? (
+              <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "active" })}>
+                <Unlock className="w-3.5 h-3.5" />
+                Unlock account
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {u.status === "active" ? (
-                <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "inactive" })}>
-                  <UserX className="w-3.5 h-3.5" />
-                  Deactivate
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "active" })}>
-                  <UserCog className="w-3.5 h-3.5" />
-                  Activate
-                </DropdownMenuItem>
-              )}
-              {u.status === "locked" ? (
-                <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "active" })}>
-                  <Unlock className="w-3.5 h-3.5" />
-                  Unlock account
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "locked" })}>
-                  <Lock className="w-3.5 h-3.5" />
-                  Lock account
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setDeleteTarget(u)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete user
+            ) : (
+              <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "locked" })}>
+                <Lock className="w-3.5 h-3.5" />
+                Lock account
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setDeleteTarget(u)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete user
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
   ];
 
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">User management</h1>
-          <p className="text-sm text-muted-foreground mt-1">Create and manage staff and administrator accounts.</p>
-        </div>
-        <Button
-          onClick={() => {
-            setEditingUser(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          Add user
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="User management"
+        description="Create and manage staff and administrator accounts."
+        actions={
+          <>
+            <Button
+              onClick={() => {
+                setEditingUser(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add user
+            </Button>
+          </>
+        }
+      />
 
       <DataTableToolbar>
         <div className="relative w-full max-w-xs">
@@ -284,7 +275,7 @@ export default function UserManagementPage() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filteredUsers} isLoading={isLoading} emptyMessage="No users match your filters." />
+      <DataTable columns={columns} data={filteredUsers} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No users match your filters." />
 
       <UserFormDialog
         open={formOpen}
@@ -335,6 +326,6 @@ export default function UserManagementPage() {
           if (resetTarget) resetMutation.mutate(resetTarget.id);
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

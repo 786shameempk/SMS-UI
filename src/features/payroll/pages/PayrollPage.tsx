@@ -1,17 +1,18 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PayrollRunsTab from "../components/PayrollRunsTab";
 import PayslipsTab from "../components/PayslipsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function PayrollPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Payroll</h1>
-        <p className="text-sm text-muted-foreground mt-1">Run monthly payroll for staff, then track and pay out individual payslips.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Payroll"
+        description="Run monthly payroll for staff, then track and pay out individual payslips."
+      />
 
       <Tabs defaultValue="runs">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="runs">Payroll Runs</TabsTrigger>
           <TabsTrigger value="payslips">Payslips</TabsTrigger>
         </TabsList>
@@ -22,6 +23,6 @@ export default function PayrollPage() {
           <PayslipsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

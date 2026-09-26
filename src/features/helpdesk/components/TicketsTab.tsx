@@ -18,7 +18,7 @@ export default function TicketsTab() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data: tickets = [], isLoading } = useQuery({
+  const { data: tickets = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["helpdesk", "tickets", statusFilter, categoryFilter, priorityFilter],
     queryFn: () =>
       listTickets({
@@ -34,18 +34,18 @@ export default function TicketsTab() {
       header: "Ticket",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
+          <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
             {row.original.ticketNumber}
-            {row.original.isOverdue && <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
+            {row.original.isOverdue && <AlertTriangle className="w-3.5 h-3.5 text-destructive-strong" />}
           </p>
-          <p className="text-xs text-slate-500 truncate max-w-xs">{row.original.subject}</p>
+          <p className="text-xs text-muted-foreground truncate max-w-xs">{row.original.subject}</p>
         </div>
       ),
     },
     {
       id: "category",
       header: "Category",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{CATEGORY_CONFIG[row.original.category].label}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{CATEGORY_CONFIG[row.original.category].label}</span>,
     },
     {
       id: "priority",
@@ -55,17 +55,17 @@ export default function TicketsTab() {
     {
       id: "raisedBy",
       header: "Raised by",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.raisedByLabel}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.raisedByLabel}</span>,
     },
     {
       id: "assignedTo",
       header: "Assigned to",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.assignedTo ? `${row.original.assignedTo.firstName} ${row.original.assignedTo.lastName}` : "Unassigned"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.assignedTo ? `${row.original.assignedTo.firstName} ${row.original.assignedTo.lastName}` : "Unassigned"}</span>,
     },
     {
       accessorKey: "createdAt",
       header: "Raised",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatRelativeDay(row.original.createdAt)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.createdAt)}</span>,
     },
     {
       id: "status",
@@ -130,10 +130,12 @@ export default function TicketsTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable
+      <DataTable searchable
         columns={columns}
         data={tickets}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
         emptyMessage="No tickets match your filters."
         pageSize={10}
       />

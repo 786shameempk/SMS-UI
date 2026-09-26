@@ -52,14 +52,14 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-slate-400" />
+            <Wallet className="w-4 h-4 text-muted-foreground" />
             Salary structure
           </CardTitle>
           <CardDescription>Net monthly salary: {formatCurrency(net)}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit((values) => salaryMutation.mutate(values))} className="space-y-4 max-w-lg">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <Label htmlFor="basic">Basic</Label>
                 <Input id="basic" type="number" {...register("basic", { valueAsNumber: true })} />
@@ -106,8 +106,8 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
           {staff.salaryHistory.length === 0 && <p className="text-sm text-muted-foreground">No payments recorded yet.</p>}
           {staff.salaryHistory.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-              <p className="text-sm font-medium text-slate-800">{p.month}</p>
-              <p className="text-sm text-slate-600 tabular-nums">
+              <p className="text-sm font-medium text-foreground">{p.month}</p>
+              <p className="text-sm text-secondary-foreground tabular-nums">
                 {formatCurrency(p.amountPaid)} &middot; paid {new Date(p.paidOn).toLocaleDateString()}
               </p>
             </div>

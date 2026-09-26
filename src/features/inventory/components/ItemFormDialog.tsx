@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,11 +81,11 @@ export default function ItemFormDialog({
           onSubmit={handleSubmit((values) => onSubmit({ ...values, location: values.location?.trim() || undefined }))}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="item-code">Code</Label>
-              <Input id="item-code" placeholder="e.g. STA-004" {...register("code")} />
-              {errors.code && <p className="text-xs text-red-600">{errors.code.message}</p>}
+              <Label htmlFor="item-code" required>Code</Label>
+              <Input id="item-code" placeholder="e.g. STA-004" aria-invalid={errors.code ? true : undefined} {...register("code")} />
+              {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="item-category">Category</Label>
@@ -107,19 +107,19 @@ export default function ItemFormDialog({
                   </Select>
                 )}
               />
-              {errors.categoryId && <p className="text-xs text-red-600">{errors.categoryId.message}</p>}
+              {errors.categoryId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.categoryId.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="item-name">Name</Label>
-            <Input id="item-name" placeholder="e.g. A4 Paper Ream" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="item-name" required>Name</Label>
+            <Input id="item-name" placeholder="e.g. A4 Paper Ream" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="item-unit">Unit</Label>
+              <Label htmlFor="item-unit" required>Unit</Label>
               <Controller
                 control={control}
                 name="unit"
@@ -140,19 +140,19 @@ export default function ItemFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="item-unitCost">Unit cost</Label>
-              <Input id="item-unitCost" type="number" min="0" step="1" {...register("unitCost")} />
-              {errors.unitCost && <p className="text-xs text-red-600">{errors.unitCost.message}</p>}
+              <Label htmlFor="item-unitCost" required>Unit cost</Label>
+              <Input id="item-unitCost" type="number" min="0" step="1" aria-invalid={errors.unitCost ? true : undefined} {...register("unitCost")} />
+              {errors.unitCost && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.unitCost.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="item-reorderLevel">Reorder level</Label>
-              <Input id="item-reorderLevel" type="number" min="0" step="1" {...register("reorderLevel")} />
-              {errors.reorderLevel && <p className="text-xs text-red-600">{errors.reorderLevel.message}</p>}
+              <Label htmlFor="item-reorderLevel" required>Reorder level</Label>
+              <Input id="item-reorderLevel" type="number" min="0" step="1" aria-invalid={errors.reorderLevel ? true : undefined} {...register("reorderLevel")} />
+              {errors.reorderLevel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reorderLevel.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="item-location">Storage location (optional)</Label>
+            <Label htmlFor="item-location" optional>Storage location</Label>
             <Input id="item-location" placeholder="e.g. Store Room A" {...register("location")} />
           </div>
 
@@ -160,8 +160,7 @@ export default function ItemFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create item"}
             </Button>
           </DialogFooter>

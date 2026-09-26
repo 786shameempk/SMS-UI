@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,7 +69,7 @@ export default function StockInDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="si-itemId">Item</Label>
+            <Label htmlFor="si-itemId" required>Item</Label>
             <Controller
               control={control}
               name="itemId"
@@ -95,25 +95,25 @@ export default function StockInDialog({
                 </Select>
               )}
             />
-            {errors.itemId && <p className="text-xs text-red-600">{errors.itemId.message}</p>}
+            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.itemId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="si-quantity">Quantity</Label>
-              <Input id="si-quantity" type="number" min="1" step="1" {...register("quantity")} />
-              {errors.quantity && <p className="text-xs text-red-600">{errors.quantity.message}</p>}
+              <Label htmlFor="si-quantity" required>Quantity</Label>
+              <Input id="si-quantity" type="number" min="1" step="1" aria-invalid={errors.quantity ? true : undefined} {...register("quantity")} />
+              {errors.quantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.quantity.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="si-unitCost">Unit cost</Label>
-              <Input id="si-unitCost" type="number" min="0" step="1" {...register("unitCost")} />
-              {errors.unitCost && <p className="text-xs text-red-600">{errors.unitCost.message}</p>}
+              <Label htmlFor="si-unitCost" required>Unit cost</Label>
+              <Input id="si-unitCost" type="number" min="0" step="1" aria-invalid={errors.unitCost ? true : undefined} {...register("unitCost")} />
+              {errors.unitCost && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.unitCost.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="si-vendorId">Vendor (optional)</Label>
+              <Label htmlFor="si-vendorId" optional>Vendor</Label>
               <Controller
                 control={control}
                 name="vendorId"
@@ -135,14 +135,14 @@ export default function StockInDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="si-date">Date</Label>
-              <Input id="si-date" type="date" {...register("date")} />
-              {errors.date && <p className="text-xs text-red-600">{errors.date.message}</p>}
+              <Label htmlFor="si-date" required>Date</Label>
+              <Input id="si-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="si-reference">Reference (optional)</Label>
+            <Label htmlFor="si-reference" optional>Reference</Label>
             <Input id="si-reference" placeholder="e.g. invoice or PO number" {...register("reference")} />
           </div>
 
@@ -150,8 +150,7 @@ export default function StockInDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Record stock in
             </Button>
           </DialogFooter>

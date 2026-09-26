@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listStudents } from "@/features/students/api";
@@ -14,6 +14,7 @@ import { AUDIENCE_TYPE_OPTIONS } from "../constants";
 import { createGroup, deleteGroup, listGroups, updateGroup } from "../api";
 import type { ContactGroup, ContactGroupFormValues } from "../types";
 import GroupFormDialog from "./GroupFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function GroupsTab() {
   const queryClient = useQueryClient();
@@ -21,7 +22,7 @@ export default function GroupsTab() {
   const [editing, setEditing] = useState<ContactGroup | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ContactGroup | null>(null);
 
-  const { data: groups = [], isLoading } = useQuery({ queryKey: ["communication", "groups"], queryFn: listGroups });
+  const { data: groups = [], isLoading, isError, refetch } = useQuery({ queryKey: ["communication", "groups"], queryFn: listGroups });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
@@ -64,7 +65,7 @@ export default function GroupsTab() {
       header: "Group",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.name}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.name}</p>
           {row.original.description && <p className="text-xs text-muted-foreground line-clamp-1">{row.original.description}</p>}
         </div>
       ),
@@ -77,7 +78,7 @@ export default function GroupsTab() {
     {
       id: "members",
       header: "Members",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.memberIds.length}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.memberIds.length}</span>,
     },
     {
       id: "actions",
@@ -85,28 +86,21 @@ export default function GroupsTab() {
       cell: ({ row }) => {
         const group = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(group);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(group)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(group);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(group)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -127,7 +121,7 @@ export default function GroupsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={groups} isLoading={isLoading} emptyMessage="No groups yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={groups} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No groups yet." pageSize={8} />
 
       <GroupFormDialog
         open={formOpen}

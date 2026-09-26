@@ -5,19 +5,18 @@ import FinesTab from "../components/FinesTab";
 import IssueReturnTab from "../components/IssueReturnTab";
 import MembersTab from "../components/MembersTab";
 import ReservationsTab from "../components/ReservationsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function LibraryManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Library management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Maintain the book catalog, manage members, issue and return books, track fines, and handle reservations.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Library management"
+        description="Maintain the book catalog, manage members, issue and return books, track fines, and handle reservations."
+      />
 
       <Tabs defaultValue="books">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="books">Books</TabsTrigger>
           <TabsTrigger value="catalog">Authors & Publishers & Categories</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
@@ -44,6 +43,6 @@ export default function LibraryManagementPage() {
           <ReservationsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

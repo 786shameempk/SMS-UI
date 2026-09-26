@@ -18,7 +18,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Open tickets</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.openCount}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-warning-soft text-warning-strong flex items-center justify-center shrink-0">
               <CircleAlert className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -29,7 +29,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">In progress</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.inProgressCount}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-info-soft text-info-strong flex items-center justify-center shrink-0">
               <ListChecks className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -40,7 +40,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Resolved this month</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.resolvedThisMonth}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-success-soft text-success-strong flex items-center justify-center shrink-0">
               <AlarmClockCheck className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -53,7 +53,7 @@ export default function ReportsTab() {
                 {isLoading || !summary ? "—" : summary.avgResolutionHours === null ? "—" : `${summary.avgResolutionHours}h`}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
               <Clock className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -71,8 +71,8 @@ export default function ReportsTab() {
             {summary?.overdueTickets.map((t) => (
               <div key={t.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{t.subject}</p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">{t.subject}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {t.ticketNumber} &middot; raised {formatRelativeDay(t.createdAt)}
                   </p>
                 </div>
@@ -92,8 +92,8 @@ export default function ReportsTab() {
           <CardContent className="space-y-2">
             {summary?.byCategory.map((row) => (
               <div key={row.category} className="flex items-center justify-between text-sm">
-                <span className="text-slate-700">{CATEGORY_CONFIG[row.category].label}</span>
-                <span className="tabular-nums text-slate-800 font-medium">{row.count}</span>
+                <span className="text-foreground">{CATEGORY_CONFIG[row.category].label}</span>
+                <span className="tabular-nums text-foreground font-medium">{row.count}</span>
               </div>
             ))}
           </CardContent>
@@ -108,7 +108,7 @@ export default function ReportsTab() {
             {summary?.byPriority.map((row) => (
               <div key={row.priority} className="flex items-center justify-between text-sm">
                 <Badge variant={PRIORITY_CONFIG[row.priority].variant}>{PRIORITY_CONFIG[row.priority].label}</Badge>
-                <span className="tabular-nums text-slate-800 font-medium">{row.count}</span>
+                <span className="tabular-nums text-foreground font-medium">{row.count}</span>
               </div>
             ))}
           </CardContent>

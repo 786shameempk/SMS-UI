@@ -79,10 +79,10 @@ export default function ProfileOverviewTab({ student }: { student: Student }) {
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </div>
           <div>
-            <p className="text-base font-semibold text-slate-900">
+            <p className="text-base font-semibold text-foreground">
               {student.firstName} {student.lastName}
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               {student.className} - {student.section} &middot; Roll {student.rollNumber || "—"}
             </p>
           </div>
@@ -90,26 +90,26 @@ export default function ProfileOverviewTab({ student }: { student: Student }) {
 
         <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-4 text-sm">
           <div>
-            <dt className="text-xs text-slate-400">Admission number</dt>
-            <dd className="text-slate-800 font-medium">{student.admissionNumber}</dd>
+            <dt className="text-xs text-muted-foreground">Admission number</dt>
+            <dd className="text-foreground font-medium">{student.admissionNumber}</dd>
           </div>
           <div>
-            <dt className="text-xs text-slate-400">Date of birth</dt>
-            <dd className="text-slate-800 font-medium">
+            <dt className="text-xs text-muted-foreground">Date of birth</dt>
+            <dd className="text-foreground font-medium">
               {new Date(student.dateOfBirth).toLocaleDateString()} ({calculateAge(student.dateOfBirth)} yrs)
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-slate-400">Gender</dt>
-            <dd className="text-slate-800 font-medium capitalize">{student.gender}</dd>
+            <dt className="text-xs text-muted-foreground">Gender</dt>
+            <dd className="text-foreground font-medium capitalize">{student.gender}</dd>
           </div>
           <div>
-            <dt className="text-xs text-slate-400">Admission date</dt>
-            <dd className="text-slate-800 font-medium">{new Date(student.admissionDate).toLocaleDateString()}</dd>
+            <dt className="text-xs text-muted-foreground">Admission date</dt>
+            <dd className="text-foreground font-medium">{new Date(student.admissionDate).toLocaleDateString()}</dd>
           </div>
           <div className="col-span-2 sm:col-span-2">
-            <dt className="text-xs text-slate-400">Address</dt>
-            <dd className="text-slate-800 font-medium">{student.address || "—"}</dd>
+            <dt className="text-xs text-muted-foreground">Address</dt>
+            <dd className="text-foreground font-medium">{student.address || "—"}</dd>
           </div>
         </dl>
       </CardContent>

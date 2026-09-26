@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,39 +81,39 @@ export default function BusFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bus-regNumber">Registration number</Label>
-              <Input id="bus-regNumber" placeholder="e.g. KA-05-AB-1234" {...register("regNumber")} />
-              {errors.regNumber && <p className="text-xs text-red-600">{errors.regNumber.message}</p>}
+              <Label htmlFor="bus-regNumber" required>Registration number</Label>
+              <Input id="bus-regNumber" placeholder="e.g. KA-05-AB-1234" aria-invalid={errors.regNumber ? true : undefined} {...register("regNumber")} />
+              {errors.regNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.regNumber.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bus-model">Model</Label>
-              <Input id="bus-model" placeholder="e.g. Tata Starbus 40-seater" {...register("model")} />
-              {errors.model && <p className="text-xs text-red-600">{errors.model.message}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="bus-capacity">Seating capacity</Label>
-              <Input id="bus-capacity" type="number" min="1" step="1" {...register("capacity")} />
-              {errors.capacity && <p className="text-xs text-red-600">{errors.capacity.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="bus-manufactureYear">Manufacture year</Label>
-              <Input id="bus-manufactureYear" type="number" step="1" {...register("manufactureYear")} />
-              {errors.manufactureYear && <p className="text-xs text-red-600">{errors.manufactureYear.message}</p>}
+              <Label htmlFor="bus-model" required>Model</Label>
+              <Input id="bus-model" placeholder="e.g. Tata Starbus 40-seater" aria-invalid={errors.model ? true : undefined} {...register("model")} />
+              {errors.model && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.model.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bus-gpsDeviceId">GPS device ID (optional)</Label>
+              <Label htmlFor="bus-capacity" required>Seating capacity</Label>
+              <Input id="bus-capacity" type="number" min="1" step="1" aria-invalid={errors.capacity ? true : undefined} {...register("capacity")} />
+              {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.capacity.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="bus-manufactureYear" required>Manufacture year</Label>
+              <Input id="bus-manufactureYear" type="number" step="1" aria-invalid={errors.manufactureYear ? true : undefined} {...register("manufactureYear")} />
+              {errors.manufactureYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.manufactureYear.message}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="bus-gpsDeviceId" optional>GPS device ID</Label>
               <Input id="bus-gpsDeviceId" placeholder="e.g. GPS-TRK-1001" {...register("gpsDeviceId")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bus-status">Status</Label>
+              <Label htmlFor="bus-status" required>Status</Label>
               <Controller
                 control={control}
                 name="status"
@@ -137,8 +137,7 @@ export default function BusFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Add bus"}
             </Button>
           </DialogFooter>

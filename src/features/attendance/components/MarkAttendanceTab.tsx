@@ -243,10 +243,10 @@ export default function MarkAttendanceTab() {
                 roster.map((student) => (
                   <div key={student.id} className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3">
                     <div className="min-w-[180px]">
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {student.firstName} {student.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">Roll {student.rollNumber}</p>
+                      <p className="text-xs text-muted-foreground">Roll {student.rollNumber}</p>
                     </div>
                     <div className="sm:ml-auto">
                       <StatusToggleGroup

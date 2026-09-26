@@ -1,65 +1,69 @@
+// Lazy page constants are not components defined here, so the fast-refresh rule does not apply to this file.
+/* oxlint-disable react/only-export-components */
+import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
+import RouteError from "./RouteError";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import AppLayout from "@/layouts/AppLayout";
-import LandingPage from "@/features/marketing/pages/LandingPage";
-import LoginPage from "@/features/authentication/pages/LoginPage";
-import ForgotPasswordPage from "@/features/authentication/pages/ForgotPasswordPage";
-import ResetPasswordPage from "@/features/authentication/pages/ResetPasswordPage";
-import SecuritySettingsPage from "@/features/authentication/pages/SecuritySettingsPage";
-import DashboardPage from "@/features/dashboard/pages/DashboardPage";
-import UserManagementPage from "@/features/administration/users/pages/UserManagementPage";
-import RolePermissionManagementPage from "@/features/administration/roles/pages/RolePermissionManagementPage";
-import BranchManagementPage from "@/features/administration/branches/pages/BranchManagementPage";
-import StudentManagementPage from "@/features/students/pages/StudentManagementPage";
-import StudentProfilePage from "@/features/students/pages/StudentProfilePage";
-import AcademicManagementPage from "@/features/academics/pages/AcademicManagementPage";
-import AttendanceManagementPage from "@/features/attendance/pages/AttendanceManagementPage";
-import ParentPortalPage from "@/features/parent-portal/pages/ParentPortalPage";
-import StaffManagementPage from "@/features/staff/pages/StaffManagementPage";
-import StaffProfilePage from "@/features/staff/pages/StaffProfilePage";
-import TeachersManagementPage from "@/features/teachers/pages/TeachersManagementPage";
-import TeacherProfilePage from "@/features/teachers/pages/TeacherProfilePage";
-import TimetableManagementPage from "@/features/timetable/pages/TimetableManagementPage";
-import ExaminationManagementPage from "@/features/examinations/pages/ExaminationManagementPage";
-import HomeworkManagementPage from "@/features/homework/pages/HomeworkManagementPage";
-import MyHomeworkPage from "@/features/homework/pages/MyHomeworkPage";
-import FeeManagementPage from "@/features/fees/pages/FeeManagementPage";
-import AccountingPage from "@/features/accounting/pages/AccountingPage";
-import PayrollPage from "@/features/payroll/pages/PayrollPage";
-import InventoryManagementPage from "@/features/inventory/pages/InventoryManagementPage";
-import CertificatesPage from "@/features/certificates/pages/CertificatesPage";
-import HealthMedicalPage from "@/features/health/pages/HealthMedicalPage";
-import VisitorManagementPage from "@/features/visitors/pages/VisitorManagementPage";
-import HelpDeskPage from "@/features/helpdesk/pages/HelpDeskPage";
-import SurveysFeedbackPage from "@/features/surveys/pages/SurveysFeedbackPage";
-import PlatformConsolePage from "@/features/platform/pages/PlatformConsolePage";
-import AIFeaturesPage from "@/features/ai/pages/AIFeaturesPage";
-import LibraryManagementPage from "@/features/library/pages/LibraryManagementPage";
-import TransportManagementPage from "@/features/transport/pages/TransportManagementPage";
-import HostelManagementPage from "@/features/hostel/pages/HostelManagementPage";
-import CommunicationCenterPage from "@/features/communication/pages/CommunicationCenterPage";
-import NotificationCenterPage from "@/features/notifications/pages/NotificationCenterPage";
-import CalendarPage from "@/features/calendar/pages/CalendarPage";
-import ReportsPage from "@/features/reports/pages/ReportsPage";
-import SettingsPage from "@/features/settings/pages/SettingsPage";
-import CreativeCampusLayout from "@/features/talents/components/CreativeCampusLayout";
-import DiscoverPage from "@/features/talents/pages/DiscoverPage";
-import ExplorePage from "@/features/talents/pages/ExplorePage";
-import TalentDetailPage from "@/features/talents/pages/TalentDetailPage";
-import TalentComposerPage from "@/features/talents/pages/TalentComposerPage";
-import MyTalentsPage from "@/features/talents/pages/MyTalentsPage";
-import ReviewCenterPage from "@/features/talents/pages/ReviewCenterPage";
-import CreatorProfilePage from "@/features/talents/pages/CreatorProfilePage";
-import SchoolShowcasePage from "@/features/talents/pages/SchoolShowcasePage";
-import MeetingsHomePage from "@/features/meetings/pages/MeetingsHomePage";
-import MeetingCalendarPage from "@/features/meetings/pages/MeetingCalendarPage";
-import MeetingDetailsPage from "@/features/meetings/pages/MeetingDetailsPage";
-import MeetingReportsPage from "@/features/meetings/pages/MeetingReportsPage";
-import MeetingRoomPage from "@/features/meetings/pages/MeetingRoomPage";
+const LandingPage = lazy(() => import("@/features/marketing/pages/LandingPage"));
+const LoginPage = lazy(() => import("@/features/authentication/pages/LoginPage"));
+const ForgotPasswordPage = lazy(() => import("@/features/authentication/pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("@/features/authentication/pages/ResetPasswordPage"));
+const SecuritySettingsPage = lazy(() => import("@/features/authentication/pages/SecuritySettingsPage"));
+const DashboardPage = lazy(() => import("@/features/dashboard/pages/DashboardPage"));
+const UserManagementPage = lazy(() => import("@/features/administration/users/pages/UserManagementPage"));
+const RolePermissionManagementPage = lazy(() => import("@/features/administration/roles/pages/RolePermissionManagementPage"));
+const BranchManagementPage = lazy(() => import("@/features/administration/branches/pages/BranchManagementPage"));
+const StudentManagementPage = lazy(() => import("@/features/students/pages/StudentManagementPage"));
+const StudentProfilePage = lazy(() => import("@/features/students/pages/StudentProfilePage"));
+const AcademicManagementPage = lazy(() => import("@/features/academics/pages/AcademicManagementPage"));
+const AttendanceManagementPage = lazy(() => import("@/features/attendance/pages/AttendanceManagementPage"));
+const ParentPortalPage = lazy(() => import("@/features/parent-portal/pages/ParentPortalPage"));
+const StaffManagementPage = lazy(() => import("@/features/staff/pages/StaffManagementPage"));
+const StaffProfilePage = lazy(() => import("@/features/staff/pages/StaffProfilePage"));
+const TeachersManagementPage = lazy(() => import("@/features/teachers/pages/TeachersManagementPage"));
+const TeacherProfilePage = lazy(() => import("@/features/teachers/pages/TeacherProfilePage"));
+const TimetableManagementPage = lazy(() => import("@/features/timetable/pages/TimetableManagementPage"));
+const ExaminationManagementPage = lazy(() => import("@/features/examinations/pages/ExaminationManagementPage"));
+const HomeworkManagementPage = lazy(() => import("@/features/homework/pages/HomeworkManagementPage"));
+const MyHomeworkPage = lazy(() => import("@/features/homework/pages/MyHomeworkPage"));
+const FeeManagementPage = lazy(() => import("@/features/fees/pages/FeeManagementPage"));
+const AccountingPage = lazy(() => import("@/features/accounting/pages/AccountingPage"));
+const PayrollPage = lazy(() => import("@/features/payroll/pages/PayrollPage"));
+const InventoryManagementPage = lazy(() => import("@/features/inventory/pages/InventoryManagementPage"));
+const CertificatesPage = lazy(() => import("@/features/certificates/pages/CertificatesPage"));
+const HealthMedicalPage = lazy(() => import("@/features/health/pages/HealthMedicalPage"));
+const VisitorManagementPage = lazy(() => import("@/features/visitors/pages/VisitorManagementPage"));
+const HelpDeskPage = lazy(() => import("@/features/helpdesk/pages/HelpDeskPage"));
+const SurveysFeedbackPage = lazy(() => import("@/features/surveys/pages/SurveysFeedbackPage"));
+const PlatformConsolePage = lazy(() => import("@/features/platform/pages/PlatformConsolePage"));
+const AIFeaturesPage = lazy(() => import("@/features/ai/pages/AIFeaturesPage"));
+const LibraryManagementPage = lazy(() => import("@/features/library/pages/LibraryManagementPage"));
+const TransportManagementPage = lazy(() => import("@/features/transport/pages/TransportManagementPage"));
+const HostelManagementPage = lazy(() => import("@/features/hostel/pages/HostelManagementPage"));
+const CommunicationCenterPage = lazy(() => import("@/features/communication/pages/CommunicationCenterPage"));
+const NotificationCenterPage = lazy(() => import("@/features/notifications/pages/NotificationCenterPage"));
+const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage"));
+const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
+const SettingsPage = lazy(() => import("@/features/settings/pages/SettingsPage"));
+const CreativeCampusLayout = lazy(() => import("@/features/talents/components/CreativeCampusLayout"));
+const DiscoverPage = lazy(() => import("@/features/talents/pages/DiscoverPage"));
+const ExplorePage = lazy(() => import("@/features/talents/pages/ExplorePage"));
+const TalentDetailPage = lazy(() => import("@/features/talents/pages/TalentDetailPage"));
+const TalentComposerPage = lazy(() => import("@/features/talents/pages/TalentComposerPage"));
+const MyTalentsPage = lazy(() => import("@/features/talents/pages/MyTalentsPage"));
+const ReviewCenterPage = lazy(() => import("@/features/talents/pages/ReviewCenterPage"));
+const CreatorProfilePage = lazy(() => import("@/features/talents/pages/CreatorProfilePage"));
+const SchoolShowcasePage = lazy(() => import("@/features/talents/pages/SchoolShowcasePage"));
+const MeetingsHomePage = lazy(() => import("@/features/meetings/pages/MeetingsHomePage"));
+const MeetingCalendarPage = lazy(() => import("@/features/meetings/pages/MeetingCalendarPage"));
+const MeetingDetailsPage = lazy(() => import("@/features/meetings/pages/MeetingDetailsPage"));
+const MeetingReportsPage = lazy(() => import("@/features/meetings/pages/MeetingReportsPage"));
+const MeetingRoomPage = lazy(() => import("@/features/meetings/pages/MeetingRoomPage"));
 
 export const router = createBrowserRouter([
-  { path: "/", element: <LandingPage /> },
-  { path: "/login", element: <LoginPage /> },
+  { path: "/", element: <LandingPage />, errorElement: <RouteError /> },
+  { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
   {
@@ -80,6 +84,7 @@ export const router = createBrowserRouter([
         <AppLayout />
       </ProtectedRoute>
     ),
+    errorElement: <RouteError />,
     children: [
       { path: "dashboard", element: <DashboardPage /> },
       { path: "account/security", element: <SecuritySettingsPage /> },

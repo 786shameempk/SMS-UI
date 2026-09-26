@@ -88,8 +88,8 @@ export default function ContentAssistantTab() {
                 <p className="text-sm text-muted-foreground">{draft.notApplicableReason}</p>
               ) : (
                 <>
-                  {draft.subject && <p className="text-sm font-semibold text-slate-800">{draft.subject}</p>}
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{draft.body}</p>
+                  {draft.subject && <p className="text-sm font-semibold text-foreground">{draft.subject}</p>}
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{draft.body}</p>
                   <Button variant="outline" size="sm" onClick={copyDraft}>
                     {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied ? "Copied" : "Copy"}

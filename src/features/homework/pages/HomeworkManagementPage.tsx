@@ -2,19 +2,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HomeworkListTab from "../components/HomeworkListTab";
 import LearningResourcesTab from "../components/LearningResourcesTab";
 import ProgressOverviewTab from "../components/ProgressOverviewTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function HomeworkManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Homework &amp; assignments</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Assign homework, grade submissions, share learning resources and quizzes, and track engagement across classes.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Homework &amp; assignments"
+        description="Assign homework, grade submissions, share learning resources and quizzes, and track engagement across classes."
+      />
 
       <Tabs defaultValue="homework">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="homework">Homework</TabsTrigger>
           <TabsTrigger value="resources">Learning Resources</TabsTrigger>
           <TabsTrigger value="progress">Progress Overview</TabsTrigger>
@@ -29,6 +28,6 @@ export default function HomeworkManagementPage() {
           <ProgressOverviewTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

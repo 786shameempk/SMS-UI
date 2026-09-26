@@ -98,28 +98,28 @@ export default function JournalEntryFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="je-date">Date</Label>
-              <Input id="je-date" type="date" {...register("date")} />
-              {errors.date && <p className="text-xs text-red-600">{errors.date.message}</p>}
+              <Label htmlFor="je-date" required>Date</Label>
+              <Input id="je-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="je-reference">Reference (optional)</Label>
+              <Label htmlFor="je-reference" optional>Reference</Label>
               <Input id="je-reference" placeholder="e.g. invoice or voucher no." {...register("reference")} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="je-narration">Narration</Label>
-            <Textarea id="je-narration" rows={2} {...register("narration")} />
-            {errors.narration && <p className="text-xs text-red-600">{errors.narration.message}</p>}
+            <Label htmlFor="je-narration" required>Narration</Label>
+            <Textarea id="je-narration" rows={2} aria-invalid={errors.narration ? true : undefined} {...register("narration")} />
+            {errors.narration && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.narration.message}</p>}
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <p className="text-sm font-medium text-slate-800">GST applicable</p>
-              <p className="text-xs text-slate-500">Tag this entry for the GST summary report.</p>
+              <p className="text-sm font-medium text-foreground">GST applicable</p>
+              <p className="text-xs text-muted-foreground">Tag this entry for the GST summary report.</p>
             </div>
             <Controller control={control} name="gstApplicable" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />} />
           </div>
@@ -128,7 +128,7 @@ export default function JournalEntryFormDialog({
             <div className="space-y-1.5">
               <Label htmlFor="je-gstAmount">Tax amount</Label>
               <Input id="je-gstAmount" type="number" min="0" step="1" {...register("gstAmount")} />
-              <p className="text-xs text-slate-500">Include this amount as one of the lines below (e.g. GST Payable or GST Input Credit).</p>
+              <p className="text-xs text-muted-foreground">Include this amount as one of the lines below (e.g. GST Payable or GST Input Credit).</p>
             </div>
           )}
 
@@ -168,7 +168,7 @@ export default function JournalEntryFormDialog({
                 </Button>
               </div>
             ))}
-            {typeof errors.lines?.message === "string" && <p className="text-xs text-red-600">{errors.lines.message}</p>}
+            {typeof errors.lines?.message === "string" && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.lines.message}</p>}
 
             <Button type="button" variant="outline" size="sm" onClick={() => append({ ...emptyLine })}>
               <Plus className="w-3.5 h-3.5" />
@@ -176,11 +176,11 @@ export default function JournalEntryFormDialog({
             </Button>
           </div>
 
-          <div className={`flex items-center justify-between rounded-lg border p-3 text-sm ${isBalanced ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
-            <span className="text-slate-600">
+          <div className={`flex items-center justify-between rounded-lg border p-3 text-sm ${isBalanced ? "border-success/30 bg-success-soft" : "border-warning/30 bg-warning-soft"}`}>
+            <span className="text-secondary-foreground">
               Debit {formatCurrency(totalDebit)} &middot; Credit {formatCurrency(totalCredit)}
             </span>
-            <span className={isBalanced ? "text-green-700 font-medium" : "text-amber-700 font-medium"}>
+            <span className={isBalanced ? "text-success-strong font-medium" : "text-warning-strong font-medium"}>
               {isBalanced ? "Balanced" : "Not balanced"}
             </span>
           </div>

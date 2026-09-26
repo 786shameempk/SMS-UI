@@ -3,17 +3,18 @@ import TenantsTab from "../components/TenantsTab";
 import PlansTab from "../components/PlansTab";
 import AnnouncementsTab from "../components/AnnouncementsTab";
 import ReportsTab from "../components/ReportsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function PlatformConsolePage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Platform Console</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage tenant schools, subscription plans, and platform-wide announcements.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Platform Console"
+        description="Manage tenant schools, subscription plans, and platform-wide announcements."
+      />
 
       <Tabs defaultValue="tenants">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="tenants">Tenants</TabsTrigger>
           <TabsTrigger value="plans">Plans</TabsTrigger>
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
@@ -32,6 +33,6 @@ export default function PlatformConsolePage() {
           <ReportsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

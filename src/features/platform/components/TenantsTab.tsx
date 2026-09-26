@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CreditCard, MoreHorizontal, PauseCircle, PlayCircle, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
+import { CreditCard, PauseCircle, PlayCircle, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatRelativeDay } from "@/utils/format";
 import { TENANT_STATUS_CONFIG } from "../constants";
@@ -14,10 +14,11 @@ import { activateTenant, cancelTenant, createTenant, deleteTenant, listTenants, 
 import type { TenantRow } from "../types";
 import TenantFormDialog from "./TenantFormDialog";
 import ChangePlanDialog from "./ChangePlanDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function TenantsTab() {
   const queryClient = useQueryClient();
-  const { data: tenants = [], isLoading } = useQuery({ queryKey: ["platform", "tenants"], queryFn: listTenants });
+  const { data: tenants = [], isLoading, isError, refetch } = useQuery({ queryKey: ["platform", "tenants"], queryFn: listTenants });
   const [formOpen, setFormOpen] = useState(false);
   const [planTarget, setPlanTarget] = useState<TenantRow | null>(null);
   const [cancelTarget, setCancelTarget] = useState<TenantRow | null>(null);
@@ -88,15 +89,15 @@ export default function TenantsTab() {
       header: "School",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
+          <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
             {row.original.schoolName}
             {row.original.isCurrentEnvironment && (
               <span title="The tenant you currently have selected">
-                <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
+                <ShieldCheck className="w-3.5 h-3.5 text-primary-text" />
               </span>
             )}
           </p>
-          <p className="text-xs text-slate-500">{row.original.subdomain}.educore.app</p>
+          <p className="text-xs text-muted-foreground">{row.original.subdomain}.educore.app</p>
         </div>
       ),
     },
@@ -108,18 +109,18 @@ export default function TenantsTab() {
     {
       id: "students",
       header: "Students",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{row.original.studentCount}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.studentCount}</span>,
     },
     {
       id: "staff",
       header: "Staff",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{row.original.staffCount}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.staffCount}</span>,
     },
     {
       id: "storage",
       header: "Storage",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600 tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.plan.storageGb} GB quota
         </span>
       ),
@@ -127,7 +128,7 @@ export default function TenantsTab() {
     {
       accessorKey: "createdAt",
       header: "Onboarded",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatRelativeDay(row.original.createdAt)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.createdAt)}</span>,
     },
     {
       id: "status",
@@ -140,43 +141,36 @@ export default function TenantsTab() {
       cell: ({ row }) => {
         const t = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setPlanTarget(t)}>
-                <CreditCard className="w-3.5 h-3.5" />
-                Change plan
+          <RowActions>
+            <DropdownMenuItem onClick={() => setPlanTarget(t)}>
+              <CreditCard className="w-3.5 h-3.5" />
+              Change plan
+            </DropdownMenuItem>
+            {(t.status === "trial" || t.status === "suspended") && (
+              <DropdownMenuItem onClick={() => activateMutation.mutate(t.id)}>
+                <PlayCircle className="w-3.5 h-3.5" />
+                Activate
               </DropdownMenuItem>
-              {(t.status === "trial" || t.status === "suspended") && (
-                <DropdownMenuItem onClick={() => activateMutation.mutate(t.id)}>
-                  <PlayCircle className="w-3.5 h-3.5" />
-                  Activate
-                </DropdownMenuItem>
-              )}
-              {t.status === "active" && !t.isCurrentEnvironment && (
-                <DropdownMenuItem onClick={() => suspendMutation.mutate(t.id)}>
-                  <PauseCircle className="w-3.5 h-3.5" />
-                  Suspend
-                </DropdownMenuItem>
-              )}
-              {!t.isCurrentEnvironment && t.status !== "cancelled" && (
-                <DropdownMenuItem onClick={() => setCancelTarget(t)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                  <XCircle className="w-3.5 h-3.5" />
-                  Cancel subscription
-                </DropdownMenuItem>
-              )}
-              {!t.isCurrentEnvironment && (
-                <DropdownMenuItem onClick={() => setDeleteTarget(t)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete tenant
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            {t.status === "active" && !t.isCurrentEnvironment && (
+              <DropdownMenuItem onClick={() => suspendMutation.mutate(t.id)}>
+                <PauseCircle className="w-3.5 h-3.5" />
+                Suspend
+              </DropdownMenuItem>
+            )}
+            {!t.isCurrentEnvironment && t.status !== "cancelled" && (
+              <DropdownMenuItem onClick={() => setCancelTarget(t)} variant="destructive">
+                <XCircle className="w-3.5 h-3.5" />
+                Cancel subscription
+              </DropdownMenuItem>
+            )}
+            {!t.isCurrentEnvironment && (
+              <DropdownMenuItem onClick={() => setDeleteTarget(t)} variant="destructive">
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete tenant
+              </DropdownMenuItem>
+            )}
+          </RowActions>
         );
       },
     },
@@ -194,7 +188,7 @@ export default function TenantsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={tenants} isLoading={isLoading} emptyMessage="No tenants yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={tenants} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No tenants yet." pageSize={10} />
 
       <TenantFormDialog
         open={formOpen}

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,11 +88,11 @@ export default function ExamFormDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="e.g. Mid-term Examination" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Input id="name" placeholder="e.g. Mid-term Examination" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="examType">Exam type</Label>
               <Controller
@@ -137,7 +137,7 @@ export default function ExamFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="classId">Class</Label>
               <Controller
@@ -158,7 +158,7 @@ export default function ExamFormDialog({
                   </Select>
                 )}
               />
-              {errors.classId && <p className="text-xs text-red-600">{errors.classId.message}</p>}
+              {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="termId">Term</Label>
@@ -180,20 +180,20 @@ export default function ExamFormDialog({
                   </Select>
                 )}
               />
-              {errors.termId && <p className="text-xs text-red-600">{errors.termId.message}</p>}
+              {errors.termId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.termId.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="startDate">Start date</Label>
-              <Input id="startDate" type="date" {...register("startDate")} />
-              {errors.startDate && <p className="text-xs text-red-600">{errors.startDate.message}</p>}
+              <Input id="startDate" type="date" aria-invalid={errors.startDate ? true : undefined} {...register("startDate")} />
+              {errors.startDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="endDate">End date</Label>
-              <Input id="endDate" type="date" {...register("endDate")} />
-              {errors.endDate && <p className="text-xs text-red-600">{errors.endDate.message}</p>}
+              <Input id="endDate" type="date" aria-invalid={errors.endDate ? true : undefined} {...register("endDate")} />
+              {errors.endDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endDate.message}</p>}
             </div>
           </div>
 
@@ -201,8 +201,7 @@ export default function ExamFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create exam"}
             </Button>
           </DialogFooter>

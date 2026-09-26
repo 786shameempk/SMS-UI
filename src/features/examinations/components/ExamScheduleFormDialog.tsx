@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,40 +96,40 @@ export default function ExamScheduleFormDialog({
                 </Select>
               )}
             />
-            {errors.subjectId && <p className="text-xs text-red-600">{errors.subjectId.message}</p>}
+            {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="date">Date</Label>
-              <Input id="date" type="date" {...register("date")} />
-              {errors.date && <p className="text-xs text-red-600">{errors.date.message}</p>}
+              <Input id="date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="startTime">Start time</Label>
-              <Input id="startTime" type="time" {...register("startTime")} />
-              {errors.startTime && <p className="text-xs text-red-600">{errors.startTime.message}</p>}
+              <Input id="startTime" type="time" aria-invalid={errors.startTime ? true : undefined} {...register("startTime")} />
+              {errors.startTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startTime.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="endTime">End time</Label>
-              <Input id="endTime" type="time" {...register("endTime")} />
-              {errors.endTime && <p className="text-xs text-red-600">{errors.endTime.message}</p>}
+              <Input id="endTime" type="time" aria-invalid={errors.endTime ? true : undefined} {...register("endTime")} />
+              {errors.endTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endTime.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="maxMarks">Max marks</Label>
-              <Input id="maxMarks" type="number" min={1} {...register("maxMarks")} />
-              {errors.maxMarks && <p className="text-xs text-red-600">{errors.maxMarks.message}</p>}
+              <Input id="maxMarks" type="number" min={1} aria-invalid={errors.maxMarks ? true : undefined} {...register("maxMarks")} />
+              {errors.maxMarks && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.maxMarks.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="passMarks">Pass marks</Label>
-              <Input id="passMarks" type="number" min={0} {...register("passMarks")} />
-              {errors.passMarks && <p className="text-xs text-red-600">{errors.passMarks.message}</p>}
+              <Input id="passMarks" type="number" min={0} aria-invalid={errors.passMarks ? true : undefined} {...register("passMarks")} />
+              {errors.passMarks && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.passMarks.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="room">Room (optional)</Label>
+              <Label htmlFor="room" optional>Room</Label>
               <Input id="room" placeholder="e.g. Room 101" {...register("room")} />
             </div>
           </div>
@@ -138,8 +138,7 @@ export default function ExamScheduleFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Add subject schedule"}
             </Button>
           </DialogFooter>

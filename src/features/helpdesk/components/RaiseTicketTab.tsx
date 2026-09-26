@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LifeBuoy, Loader2 } from "lucide-react";
+import { LifeBuoy } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,7 +86,7 @@ export default function RaiseTicketTab() {
         </CardHeader>
         <CardContent>
           {lastTicketNumber && (
-            <p className="text-xs rounded-md border border-green-200 bg-green-50 text-green-700 px-2.5 py-2 mb-4">
+            <p className="text-xs rounded-md border border-success/30 bg-success-soft text-success-strong px-2.5 py-2 mb-4">
               Ticket <strong>{lastTicketNumber}</strong> was raised successfully.
             </p>
           )}
@@ -149,14 +149,14 @@ export default function RaiseTicketTab() {
 
             <div className="space-y-1.5">
               <Label htmlFor="hd-subject">Subject</Label>
-              <Input id="hd-subject" placeholder="Short summary of the issue" {...register("subject")} />
-              {errors.subject && <p className="text-xs text-red-600">{errors.subject.message}</p>}
+              <Input id="hd-subject" placeholder="Short summary of the issue" aria-invalid={errors.subject ? true : undefined} {...register("subject")} />
+              {errors.subject && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subject.message}</p>}
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="hd-description">Description</Label>
-              <Textarea id="hd-description" rows={4} placeholder="What happened, and any relevant details" {...register("description")} />
-              {errors.description && <p className="text-xs text-red-600">{errors.description.message}</p>}
+              <Textarea id="hd-description" rows={4} placeholder="What happened, and any relevant details" aria-invalid={errors.description ? true : undefined} {...register("description")} />
+              {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -202,7 +202,7 @@ export default function RaiseTicketTab() {
                     </Select>
                   )}
                 />
-                {errors.raisedByStudentId && <p className="text-xs text-red-600">{errors.raisedByStudentId.message}</p>}
+                {errors.raisedByStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.raisedByStudentId.message}</p>}
               </div>
             )}
 
@@ -227,7 +227,7 @@ export default function RaiseTicketTab() {
                     </Select>
                   )}
                 />
-                {errors.raisedByStaffId && <p className="text-xs text-red-600">{errors.raisedByStaffId.message}</p>}
+                {errors.raisedByStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.raisedByStaffId.message}</p>}
               </div>
             )}
 
@@ -235,18 +235,17 @@ export default function RaiseTicketTab() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="hd-parentName">Parent/guardian name</Label>
-                  <Input id="hd-parentName" {...register("raisedByName")} />
-                  {errors.raisedByName && <p className="text-xs text-red-600">{errors.raisedByName.message}</p>}
+                  <Input id="hd-parentName" aria-invalid={errors.raisedByName ? true : undefined} {...register("raisedByName")} />
+                  {errors.raisedByName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.raisedByName.message}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="hd-parentContact">Contact (optional)</Label>
+                  <Label htmlFor="hd-parentContact" optional>Contact</Label>
                   <Input id="hd-parentContact" placeholder="Phone or email" {...register("raisedByContact")} />
                 </div>
               </div>
             )}
 
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={mutation.isPending}>
               <LifeBuoy className="w-4 h-4" />
               Raise ticket
             </Button>

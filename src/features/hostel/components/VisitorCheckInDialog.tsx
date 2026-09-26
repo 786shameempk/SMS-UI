@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,7 +67,7 @@ export default function VisitorCheckInDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="vis-hostelId">Hostel</Label>
+            <Label htmlFor="vis-hostelId" required>Hostel</Label>
             <Controller
               control={control}
               name="hostelId"
@@ -86,11 +86,11 @@ export default function VisitorCheckInDialog({
                 </Select>
               )}
             />
-            {errors.hostelId && <p className="text-xs text-red-600">{errors.hostelId.message}</p>}
+            {errors.hostelId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostelId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vis-studentId">Resident student</Label>
+            <Label htmlFor="vis-studentId" required>Resident student</Label>
             <Controller
               control={control}
               name="studentId"
@@ -109,30 +109,30 @@ export default function VisitorCheckInDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p className="text-xs text-red-600">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="vis-visitorName">Visitor name</Label>
-              <Input id="vis-visitorName" placeholder="e.g. Rajesh Kumar" {...register("visitorName")} />
-              {errors.visitorName && <p className="text-xs text-red-600">{errors.visitorName.message}</p>}
+              <Label htmlFor="vis-visitorName" required>Visitor name</Label>
+              <Input id="vis-visitorName" placeholder="e.g. Rajesh Kumar" aria-invalid={errors.visitorName ? true : undefined} {...register("visitorName")} />
+              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitorName.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="vis-relation">Relation</Label>
-              <Input id="vis-relation" placeholder="e.g. Father" {...register("relation")} />
-              {errors.relation && <p className="text-xs text-red-600">{errors.relation.message}</p>}
+              <Label htmlFor="vis-relation" required>Relation</Label>
+              <Input id="vis-relation" placeholder="e.g. Father" aria-invalid={errors.relation ? true : undefined} {...register("relation")} />
+              {errors.relation && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.relation.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vis-phone">Phone</Label>
-            <Input id="vis-phone" placeholder="e.g. +91 98450 12345" {...register("phone")} />
-            {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
+            <Label htmlFor="vis-phone" required>Phone</Label>
+            <Input id="vis-phone" placeholder="e.g. +91 98450 12345" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
+            {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vis-purpose">Purpose (optional)</Label>
+            <Label htmlFor="vis-purpose" optional>Purpose</Label>
             <Input id="vis-purpose" placeholder="e.g. Weekly visit" {...register("purpose")} />
           </div>
 
@@ -140,8 +140,7 @@ export default function VisitorCheckInDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Check in
             </Button>
           </DialogFooter>

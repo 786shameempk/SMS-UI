@@ -13,7 +13,7 @@ function Bar({ label, count, total }: { label: string; count: number; total: num
   const pct = total === 0 ? 0 : Math.round((count / total) * 100);
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs text-slate-600">
+      <div className="flex items-center justify-between text-xs text-secondary-foreground">
         <span>{label}</span>
         <span className="tabular-nums">
           {count} ({pct}%)
@@ -30,7 +30,7 @@ function QuestionResultCard({ result }: { result: QuestionResult }) {
   return (
     <div className="rounded-lg border border-border p-3 space-y-2.5">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-slate-800">{result.questionText}</p>
+        <p className="text-sm font-medium text-foreground">{result.questionText}</p>
         <Badge variant="info" className="shrink-0">
           {QUESTION_TYPE_CONFIG[result.type].label}
         </Badge>
@@ -39,7 +39,7 @@ function QuestionResultCard({ result }: { result: QuestionResult }) {
 
       {result.type === "rating" && result.ratingDistribution && (
         <div className="space-y-2">
-          <p className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+          <p className="text-sm font-semibold text-foreground flex items-center gap-1">
             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
             {result.ratingAverage ?? 0} average
           </p>
@@ -68,7 +68,7 @@ function QuestionResultCard({ result }: { result: QuestionResult }) {
         <div className="space-y-1.5">
           {(result.textResponses ?? []).length === 0 && <p className="text-sm text-muted-foreground">No responses yet.</p>}
           {result.textResponses?.map((text, i) => (
-            <p key={i} className="text-sm text-slate-700 rounded-md bg-secondary/50 px-2.5 py-1.5">
+            <p key={i} className="text-sm text-foreground rounded-md bg-secondary/50 px-2.5 py-1.5">
               "{text}"
             </p>
           ))}
@@ -122,16 +122,16 @@ export default function SurveyResultsDialog({ surveyId, open, onOpenChange }: { 
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-800">Respondents</p>
+            <p className="text-sm font-medium text-foreground">Respondents</p>
             {respondents.length === 0 && <p className="text-sm text-muted-foreground">No responses yet.</p>}
             {respondents.map((r) => (
               <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
                 <div className="min-w-0">
-                  <p className="text-sm text-slate-700 truncate">{r.respondentLabel}</p>
-                  <p className="text-xs text-slate-400">{formatDateTime(r.submittedAt)}</p>
+                  <p className="text-sm text-foreground truncate">{r.respondentLabel}</p>
+                  <p className="text-xs text-muted-foreground">{formatDateTime(r.submittedAt)}</p>
                 </div>
                 <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => deleteMutation.mutate(r.id)}>
-                  <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                  <Trash2 className="w-3.5 h-3.5 text-destructive-strong" />
                 </Button>
               </div>
             ))}

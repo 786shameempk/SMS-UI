@@ -121,7 +121,7 @@ export default function MeetingDetailsPage() {
                 {meeting.recurrence && !meeting.recurrence.isEnded && meeting.can.edit && (
                   <DropdownMenuItem onSelect={() => setDialog("endSeries")}><Repeat className="h-4 w-4" /> End the whole series</DropdownMenuItem>
                 )}
-                {meeting.can.delete && <DropdownMenuItem onSelect={() => setDialog("delete")} className="text-red-600 focus:text-red-600"><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>}
+                {meeting.can.delete && <DropdownMenuItem onSelect={() => setDialog("delete")} className="text-destructive-strong focus:text-destructive-strong" variant="destructive"><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -129,7 +129,7 @@ export default function MeetingDetailsPage() {
       </header>
 
       {s.status === "Cancelled" && (
-        <div role="status" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <div role="status" className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive-soft px-4 py-3 text-sm text-red-800 dark:text-red-200">
           <CalendarX2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <span>This {type.noun} was cancelled.{meeting.cancelReason && <> Reason: {meeting.cancelReason}</>}</span>
         </div>

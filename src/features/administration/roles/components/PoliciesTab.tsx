@@ -1,22 +1,18 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { DataTableToolbar } from "@/components/tables/DataTable";
 import { createPolicy, deletePolicy, listPolicies, listRoles, setPolicyEnabled, updatePolicy } from "../api";
 import type { Policy, PolicyFormValues } from "../types";
 import PolicyFormDialog from "./PolicyFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function PoliciesTab() {
   const queryClient = useQueryClient();
@@ -89,11 +85,11 @@ export default function PoliciesTab() {
             <CardContent className="p-4 flex items-start justify-between gap-4">
               <div className="min-w-0 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-slate-900">{policy.name}</p>
+                  <p className="text-sm font-semibold text-foreground">{policy.name}</p>
                   <Badge variant="neutral">{policy.module}</Badge>
                 </div>
-                <p className="text-sm text-slate-600">{policy.description}</p>
-                <code className="inline-block text-[11px] bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-600">
+                <p className="text-sm text-secondary-foreground">{policy.description}</p>
+                <code className="inline-block text-[11px] bg-muted border border-border rounded px-2 py-1 text-secondary-foreground">
                   {policy.condition}
                 </code>
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
@@ -110,31 +106,24 @@ export default function PoliciesTab() {
                   onCheckedChange={(v) => toggleMutation.mutate({ id: policy.id, enabled: v })}
                   aria-label={`Enable ${policy.name}`}
                 />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setEditingPolicy(policy);
-                        setFormOpen(true);
-                      }}
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      Edit policy
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setDeleteTarget(policy)}
-                      className="text-red-600 focus:bg-red-50 focus:text-red-700"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Delete policy
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <RowActions>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setEditingPolicy(policy);
+                      setFormOpen(true);
+                    }}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit policy
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setDeleteTarget(policy)}
+                    variant="destructive"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete policy
+                  </DropdownMenuItem>
+                </RowActions>
               </div>
             </CardContent>
           </Card>

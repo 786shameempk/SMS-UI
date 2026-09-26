@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -8,6 +9,7 @@ import { getReviewQueue } from "../api";
 import { MODULE_NAME } from "../constants";
 import { useTalentRole } from "../hooks";
 import { EmptyState } from "./Bits";
+import { LoadingState } from "@/components/ui/states";
 import "../talents.css";
 
 /** Wraps every /talents route: module identity, sub-navigation, and the create entry point. */
@@ -97,7 +99,10 @@ export default function CreativeCampusLayout() {
         </div>
       </div>
 
-      <Outlet />
+      {/* Keeps the module nav on screen while a talents page chunk loads. */}
+      <Suspense fallback={<LoadingState />}>
+        <Outlet />
+      </Suspense>
 
       {/* Mobile bottom bar */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]" aria-label="Talent Showcase">

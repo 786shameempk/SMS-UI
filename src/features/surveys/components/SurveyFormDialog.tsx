@@ -3,7 +3,7 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -110,19 +110,19 @@ export default function SurveyFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="survey-title">Title</Label>
-            <Input id="survey-title" {...register("title")} />
-            {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+            <Label htmlFor="survey-title" required>Title</Label>
+            <Input id="survey-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="survey-description">Description (optional)</Label>
+            <Label htmlFor="survey-description" optional>Description</Label>
             <Textarea id="survey-description" rows={2} {...register("description")} />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="survey-audience">Audience</Label>
+              <Label htmlFor="survey-audience" required>Audience</Label>
               <Controller
                 control={control}
                 name="audience"
@@ -143,7 +143,7 @@ export default function SurveyFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="survey-createdBy">Created by (optional)</Label>
+              <Label htmlFor="survey-createdBy" optional>Created by</Label>
               <Controller
                 control={control}
                 name="createdByStaffId"
@@ -165,14 +165,14 @@ export default function SurveyFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="survey-opensAt">Opens</Label>
-              <Input id="survey-opensAt" type="date" {...register("opensAt")} />
-              {errors.opensAt && <p className="text-xs text-red-600">{errors.opensAt.message}</p>}
+              <Label htmlFor="survey-opensAt" required>Opens</Label>
+              <Input id="survey-opensAt" type="date" aria-invalid={errors.opensAt ? true : undefined} {...register("opensAt")} />
+              {errors.opensAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.opensAt.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="survey-closesAt">Closes (optional)</Label>
+              <Label htmlFor="survey-closesAt" optional>Closes</Label>
               <Input id="survey-closesAt" type="date" {...register("closesAt")} />
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function SurveyFormDialog({
               name="anonymousAllowed"
               render={({ field }) => <Checkbox checked={field.value} onCheckedChange={(v) => field.onChange(v === true)} />}
             />
-            <span className="text-sm text-slate-600">Allow anonymous responses</span>
+            <span className="text-sm text-secondary-foreground">Allow anonymous responses</span>
           </label>
 
           <div className="space-y-3">
@@ -200,9 +200,9 @@ export default function SurveyFormDialog({
                     )}
                   </div>
                   <Input id={`survey-q-${qIndex}`} placeholder="Question text" {...register(`questions.${qIndex}.text`)} />
-                  {errors.questions?.[qIndex]?.text && <p className="text-xs text-red-600">{errors.questions[qIndex]?.text?.message}</p>}
+                  {errors.questions?.[qIndex]?.text && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.questions[qIndex]?.text?.message}</p>}
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Controller
                       control={control}
                       name={`questions.${qIndex}.type`}
@@ -227,7 +227,7 @@ export default function SurveyFormDialog({
                         name={`questions.${qIndex}.required`}
                         render={({ field: reqField }) => <Checkbox checked={reqField.value} onCheckedChange={(v) => reqField.onChange(v === true)} />}
                       />
-                      <span className="text-sm text-slate-600">Required</span>
+                      <span className="text-sm text-secondary-foreground">Required</span>
                     </label>
                   </div>
 
@@ -248,7 +248,7 @@ export default function SurveyFormDialog({
                 </div>
               );
             })}
-            {typeof errors.questions?.message === "string" && <p className="text-xs text-red-600">{errors.questions.message}</p>}
+            {typeof errors.questions?.message === "string" && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.questions.message}</p>}
           </div>
 
           <Button
@@ -266,8 +266,7 @@ export default function SurveyFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save as draft
             </Button>
           </DialogFooter>
@@ -312,7 +311,7 @@ function QuestionOptions({
           )}
         </div>
       ))}
-      {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
+      {errorMessage && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errorMessage}</p>}
       <Button type="button" variant="ghost" size="sm" disabled={options.length >= MAX_CHOICE_OPTIONS} onClick={onAdd}>
         <Plus className="w-3 h-3" />
         Add option

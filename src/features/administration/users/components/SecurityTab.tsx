@@ -33,18 +33,18 @@ export default function SecurityTab({ user }: { user: SystemUser }) {
       <div className="flex items-center justify-between rounded-lg border border-border p-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-            {user.mfaEnabled ? <ShieldCheck className="w-4 h-4 text-green-600" /> : <ShieldOff className="w-4 h-4 text-slate-400" />}
+            {user.mfaEnabled ? <ShieldCheck className="w-4 h-4 text-success-strong" /> : <ShieldOff className="w-4 h-4 text-muted-foreground" />}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-800">Two-factor authentication</p>
-            <p className="text-xs text-slate-500">This user must verify with a 6-digit code at every sign-in.</p>
+            <p className="text-sm font-medium text-foreground">Two-factor authentication</p>
+            <p className="text-xs text-muted-foreground">This user must verify with a 6-digit code at every sign-in.</p>
           </div>
         </div>
         <Switch checked={user.mfaEnabled} onCheckedChange={(v) => mfaMutation.mutate(v)} disabled={mfaMutation.isPending} />
       </div>
 
       <div>
-        <p className="text-sm font-medium text-slate-800 mb-2">Login history</p>
+        <p className="text-sm font-medium text-foreground mb-2">Login history</p>
         <div className="space-y-2">
           {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
           {!isLoading && history.length === 0 && <p className="text-sm text-muted-foreground">No login activity recorded.</p>}
@@ -54,13 +54,13 @@ export default function SecurityTab({ user }: { user: SystemUser }) {
               <div key={entry.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="flex items-center gap-3 min-w-0">
                   {entry.outcome === "success" ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-success-strong shrink-0" />
                   ) : (
-                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <XCircle className="w-4 h-4 text-destructive-strong shrink-0" />
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{entry.browser}</p>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">{entry.browser}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       {entry.location} &middot; {entry.ipAddress} &middot; {formatDateTime(entry.at)}
                     </p>
                   </div>

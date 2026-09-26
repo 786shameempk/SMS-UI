@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,13 +79,13 @@ export default function ClassFormDialog({
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="e.g. Grade 8" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="name" required>Name</Label>
+            <Input id="name" placeholder="e.g. Grade 8" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="academicYearId">Academic year</Label>
+            <Label htmlFor="academicYearId" required>Academic year</Label>
             <Controller
               control={control}
               name="academicYearId"
@@ -104,11 +104,11 @@ export default function ClassFormDialog({
                 </Select>
               )}
             />
-            {errors.academicYearId && <p className="text-xs text-red-600">{errors.academicYearId.message}</p>}
+            {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.academicYearId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="departmentId">Department / stream (optional)</Label>
+            <Label htmlFor="departmentId" optional>Department / stream</Label>
             <Controller
               control={control}
               name="departmentId"
@@ -134,8 +134,7 @@ export default function ClassFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create class"}
             </Button>
           </DialogFooter>

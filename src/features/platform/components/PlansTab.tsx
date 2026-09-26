@@ -77,7 +77,7 @@ export default function PlansTab() {
               <CardDescription>{formatCurrency(plan.monthlyPriceInr)} / month</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="text-sm text-slate-600 space-y-1">
+              <div className="text-sm text-secondary-foreground space-y-1">
                 <p>Up to {plan.maxStudents.toLocaleString()} students</p>
                 <p>Up to {plan.maxStaff.toLocaleString()} staff</p>
                 <p>{plan.storageGb} GB storage</p>
@@ -95,7 +95,7 @@ export default function PlansTab() {
                   <Pencil className="w-3.5 h-3.5" />
                   Edit
                 </Button>
-                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => setDeleteTarget(plan)}>
+                <Button variant="ghost" size="sm" className="text-destructive-strong hover:text-destructive-strong" onClick={() => setDeleteTarget(plan)}>
                   <Trash2 className="w-3.5 h-3.5" />
                   Delete
                 </Button>

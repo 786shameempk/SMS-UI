@@ -62,7 +62,7 @@ export default function MeetingCalendarPage() {
         {!arg.view.type.startsWith("timeGrid") && (
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: arg.event.backgroundColor }} aria-hidden />
         )}
-        {status === "Live" && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-green-500" aria-label="Live" />}
+        {status === "Live" && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-success" aria-label="Live" />}
         {arg.timeText && <span className="shrink-0 font-semibold">{arg.timeText}</span>}
         <span className="truncate">{arg.event.title}</span>
       </div>

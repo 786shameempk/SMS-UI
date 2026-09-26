@@ -31,9 +31,9 @@ export default function SectionScheduleGrid({
         const room = rooms.find((r) => r.id === slot.room);
         return (
           <div>
-            <p className="text-sm font-medium text-slate-800">{subject?.name ?? "Subject"}</p>
-            <p className="text-xs text-slate-500">{teacher ? `${teacher.firstName} ${teacher.lastName}` : "No teacher"}</p>
-            {room && <p className="text-xs text-slate-400">{room.name}</p>}
+            <p className="text-sm font-medium text-foreground">{subject?.name ?? "Subject"}</p>
+            <p className="text-xs text-muted-foreground">{teacher ? `${teacher.firstName} ${teacher.lastName}` : "No teacher"}</p>
+            {room && <p className="text-xs text-muted-foreground">{room.name}</p>}
           </div>
         );
       }}

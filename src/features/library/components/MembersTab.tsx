@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listStudents } from "@/features/students/api";
@@ -14,6 +14,7 @@ import { createMember, deleteMember, listMembers, updateMember } from "../api";
 import { MEMBER_STATUS_CONFIG } from "../constants";
 import type { LibraryMember, LibraryMemberFormValues } from "../types";
 import MemberFormDialog from "./MemberFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function MembersTab() {
   const queryClient = useQueryClient();
@@ -22,7 +23,7 @@ export default function MembersTab() {
   const [editing, setEditing] = useState<LibraryMember | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LibraryMember | null>(null);
 
-  const { data: members = [], isLoading } = useQuery({ queryKey: ["library", "members"], queryFn: listMembers });
+  const { data: members = [], isLoading, isError, refetch } = useQuery({ queryKey: ["library", "members"], queryFn: listMembers });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
@@ -72,8 +73,8 @@ export default function MembersTab() {
   });
 
   const columns: ColumnDef<LibraryMember, unknown>[] = [
-    { accessorKey: "membershipId", header: "Membership ID", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.membershipId}</span> },
-    { id: "name", header: "Name", cell: ({ row }) => <span className="text-sm text-slate-700">{personName(row.original)}</span> },
+    { accessorKey: "membershipId", header: "Membership ID", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.membershipId}</span> },
+    { id: "name", header: "Name", cell: ({ row }) => <span className="text-sm text-foreground">{personName(row.original)}</span> },
     {
       id: "personType",
       header: "Type",
@@ -82,7 +83,7 @@ export default function MembersTab() {
     {
       id: "joinedOn",
       header: "Joined",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.joinedOn).toLocaleDateString()}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.joinedOn).toLocaleDateString()}</span>,
     },
     {
       id: "status",
@@ -98,28 +99,21 @@ export default function MembersTab() {
       cell: ({ row }) => {
         const member = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(member);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(member)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(member);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(member)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Remove
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -140,7 +134,7 @@ export default function MembersTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={members} isLoading={isLoading} emptyMessage="No library members yet." />
+      <DataTable searchable columns={columns} data={members} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No library members yet." />
 
       <MemberFormDialog
         open={formOpen}

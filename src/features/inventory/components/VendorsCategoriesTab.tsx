@@ -100,8 +100,8 @@ export default function VendorsCategoriesTab() {
               categories.map((c) => (
                 <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-sm text-slate-700 truncate">{c.name}</p>
-                    {c.description && <p className="text-xs text-slate-400 truncate">{c.description}</p>}
+                    <p className="text-sm text-foreground truncate">{c.name}</p>
+                    {c.description && <p className="text-xs text-muted-foreground truncate">{c.description}</p>}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCategoryForm({ open: true, editing: c })}>
@@ -134,8 +134,8 @@ export default function VendorsCategoriesTab() {
               vendors.map((v) => (
                 <div key={v.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-sm text-slate-700 truncate">{v.name}</p>
-                    <p className="text-xs text-slate-400 truncate">
+                    <p className="text-sm text-foreground truncate">{v.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       {[v.contactPerson, v.phone].filter(Boolean).join(" · ") || "—"}
                     </p>
                   </div>

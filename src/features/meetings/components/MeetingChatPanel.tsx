@@ -104,10 +104,10 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
       </div>
 
       {pinned.length > 0 && (
-        <div className="space-y-1 border-b border-border bg-brand-50 px-4 py-2 dark:bg-brand-900/20">
+        <div className="space-y-1 border-b border-border bg-accent px-4 py-2 dark:bg-brand-900/20">
           {pinned.map((m) => (
             <p key={m.id} className="flex items-start gap-2 text-xs text-foreground">
-              <Pin className="mt-0.5 h-3 w-3 shrink-0 text-brand-600" aria-hidden />
+              <Pin className="mt-0.5 h-3 w-3 shrink-0 text-primary-text" aria-hidden />
               <span><strong>{m.senderName}:</strong> {m.body}</span>
             </p>
           ))}
@@ -123,7 +123,7 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
               className={cn(
                 "max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words",
                 m.kind === "Announcement"
-                  ? "border border-brand-300 bg-brand-100 text-brand-900 dark:border-brand-700 dark:bg-brand-900/40 dark:text-brand-100"
+                  ? "border border-primary/40 bg-brand-100 text-brand-900 dark:border-brand-700 dark:bg-brand-900/40 dark:text-brand-100"
                   : m.isMine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
               )}
             >
@@ -136,7 +136,7 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
                   onClick={() => pinChat(meetingId, m.id, !m.isPinned).catch((err: Error) => toast.error(err.message))}>
                   {m.isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
                 </button>
-                <button type="button" className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-red-600 cursor-pointer" aria-label="Delete message"
+                <button type="button" className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-destructive-strong cursor-pointer" aria-label="Delete message"
                   onClick={() => deleteChat(meetingId, m.id).catch((err: Error) => toast.error(err.message))}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

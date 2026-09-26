@@ -13,6 +13,7 @@ import { CATEGORY_CONFIG } from "../constants";
 import { deleteNotification, listMyNotifications, markAllReadForCurrentUser, markRead, postAnnouncement } from "../api";
 import type { Notification, NotificationCategory } from "../types";
 import AnnouncementFormDialog from "../components/AnnouncementFormDialog";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
   announcement: Megaphone,
@@ -71,29 +72,29 @@ export default function NotificationCenterPage() {
   };
 
   return (
-    <div className="p-6 space-y-5 max-w-[900px]">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Notification center</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "You're all caught up."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <Button variant="outline" onClick={() => markAllReadMutation.mutate()} disabled={markAllReadMutation.isPending}>
-              <Check className="w-4 h-4" />
-              Mark all read
-            </Button>
-          )}
-          {canAnnounce && (
-            <Button onClick={() => setFormOpen(true)}>
-              <Plus className="w-4 h-4" />
-              Post announcement
-            </Button>
-          )}
-        </div>
-      </div>
+    <PageContainer width="narrow">
+      <PageHeader
+        title="Notification center"
+        description={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "You're all caught up."}
+        actions={
+          <>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <Button variant="outline" onClick={() => markAllReadMutation.mutate()} disabled={markAllReadMutation.isPending}>
+                  <Check className="w-4 h-4" />
+                  Mark all read
+                </Button>
+              )}
+              {canAnnounce && (
+                <Button onClick={() => setFormOpen(true)}>
+                  <Plus className="w-4 h-4" />
+                  Post announcement
+                </Button>
+              )}
+            </div>
+          </>
+        }
+      />
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {isLoading && <p className="px-4 py-8 text-sm text-muted-foreground text-center">Loading…</p>}
@@ -145,6 +146,6 @@ export default function NotificationCenterPage() {
           await postMutation.mutateAsync(values);
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

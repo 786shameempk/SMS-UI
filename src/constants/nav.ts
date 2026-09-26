@@ -94,64 +94,33 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Inventory",
-    permissionKey: "inventory",
-    items: [{ label: "Inventory Management", to: "/inventory", icon: PackageSearch }],
+    // Single-module areas grouped by what the school is doing, instead of one-item sections each.
+    // Each item carries the permission its old one-item section had, so visibility is unchanged.
+    title: "Campus Operations",
+    items: [
+      { label: "Library", to: "/library", icon: Library, permissionKey: "library" },
+      { label: "Transport", to: "/transport", icon: Bus, permissionKey: "transport" },
+      { label: "Hostel", to: "/hostel", icon: Building2, permissionKey: "hostel" },
+      { label: "Inventory", to: "/inventory", icon: PackageSearch, permissionKey: "inventory" },
+      { label: "Visitors", to: "/visitors", icon: IdCard, permissionKey: "visitors" },
+      { label: "Health & Medical", to: "/health", icon: HeartPulse, permissionKey: "health" },
+    ],
   },
   {
-    title: "Certificates",
-    permissionKey: "certificates",
-    items: [{ label: "Certificate Generator", to: "/certificates", icon: ScrollText }],
+    title: "Engagement",
+    items: [
+      { label: "Communication Center", to: "/communication", icon: Megaphone, permissionKey: "communication" },
+      { label: "Surveys & Feedback", to: "/surveys", icon: Vote, permissionKey: "surveys" },
+      { label: "Help Desk", to: "/helpdesk", icon: LifeBuoy, permissionKey: "helpdesk" },
+      { label: "Certificates", to: "/certificates", icon: ScrollText, permissionKey: "certificates" },
+    ],
   },
   {
-    title: "Health",
-    permissionKey: "health",
-    items: [{ label: "Health & Medical", to: "/health", icon: HeartPulse }],
-  },
-  {
-    title: "Visitors",
-    permissionKey: "visitors",
-    items: [{ label: "Visitor Management", to: "/visitors", icon: IdCard }],
-  },
-  {
-    title: "Help Desk",
-    permissionKey: "helpdesk",
-    items: [{ label: "Complaint / Help Desk", to: "/helpdesk", icon: LifeBuoy }],
-  },
-  {
-    title: "Surveys",
-    permissionKey: "surveys",
-    items: [{ label: "Surveys & Feedback", to: "/surveys", icon: Vote }],
-  },
-  {
-    title: "Library",
-    permissionKey: "library",
-    items: [{ label: "Library Management", to: "/library", icon: Library }],
-  },
-  {
-    title: "Transport",
-    permissionKey: "transport",
-    items: [{ label: "Transport Management", to: "/transport", icon: Bus }],
-  },
-  {
-    title: "Hostel",
-    permissionKey: "hostel",
-    items: [{ label: "Hostel Management", to: "/hostel", icon: Building2 }],
-  },
-  {
-    title: "Communication",
-    permissionKey: "communication",
-    items: [{ label: "Communication Center", to: "/communication", icon: Megaphone }],
-  },
-  {
-    title: "Reports",
-    permissionKey: "reports",
-    items: [{ label: "Reports & Analytics", to: "/reports", icon: ChartColumn }],
-  },
-  {
-    title: "AI Features",
-    permissionKey: "aiFeatures",
-    items: [{ label: "AI Features", to: "/ai", icon: Sparkles }],
+    title: "Insights",
+    items: [
+      { label: "Reports & Analytics", to: "/reports", icon: ChartColumn, permissionKey: "reports" },
+      { label: "AI Features", to: "/ai", icon: Sparkles, permissionKey: "aiFeatures" },
+    ],
   },
   {
     title: "Administration",
@@ -169,3 +138,20 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [{ label: "Platform Console", to: "/platform", icon: Globe }],
   },
 ];
+
+/** Every navigable destination with its section, for breadcrumbs and the command menu. */
+export const ALL_NAV_ENTRIES: Array<{ item: NavItem; section?: NavSection }> = [
+  ...CORE_NAV_ITEMS.map((item) => ({ item })),
+  ...NAV_SECTIONS.flatMap((section) => section.items.map((item) => ({ item, section }))),
+];
+
+/** Longest-prefix match of a pathname against the nav, e.g. "/students/42" → Academics › Students. */
+export function findNavEntry(pathname: string) {
+  let best: (typeof ALL_NAV_ENTRIES)[number] | undefined;
+  for (const entry of ALL_NAV_ENTRIES) {
+    const to = entry.item.to;
+    const hit = pathname === to || pathname.startsWith(to + "/");
+    if (hit && (!best || to.length > best.item.to.length)) best = entry;
+  }
+  return best;
+}

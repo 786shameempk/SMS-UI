@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Merge, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Merge, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import {
@@ -26,6 +26,7 @@ import type { SchoolClass, SchoolClassFormValues, Section, SectionFormValues } f
 import ClassFormDialog from "./ClassFormDialog";
 import SectionFormDialog from "./SectionFormDialog";
 import MergeSectionsDialog from "./MergeSectionsDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function ClassesSectionsTab() {
   const queryClient = useQueryClient();
@@ -120,21 +121,21 @@ export default function ClassesSectionsTab() {
   );
 
   const classColumns: ColumnDef<SchoolClass, unknown>[] = [
-    { accessorKey: "name", header: "Class", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.name}</span> },
+    { accessorKey: "name", header: "Class", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "department",
       header: "Department / stream",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{departmentName(row.original.departmentId)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{departmentName(row.original.departmentId)}</span>,
     },
     {
       id: "academicYear",
       header: "Academic year",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{academicYearName(row.original.academicYearId)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{academicYearName(row.original.academicYearId)}</span>,
     },
     {
       id: "sections",
       header: "Sections",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{sectionCount(row.original.id)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{sectionCount(row.original.id)}</span>,
     },
     {
       id: "actions",
@@ -142,63 +143,56 @@ export default function ClassesSectionsTab() {
       cell: ({ row }) => {
         const schoolClass = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setSectionDefaultClassId(schoolClass.id);
-                  setEditingSection(null);
-                  setSectionFormOpen(true);
-                }}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add section
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingClass(schoolClass);
-                  setClassFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit class
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeleteClassTarget(schoolClass)}
-                className="text-red-600 focus:bg-red-50 focus:text-red-700"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete class
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setSectionDefaultClassId(schoolClass.id);
+                setEditingSection(null);
+                setSectionFormOpen(true);
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add section
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingClass(schoolClass);
+                setClassFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit class
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setDeleteClassTarget(schoolClass)}
+              variant="destructive"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete class
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
   ];
 
   const sectionColumns: ColumnDef<Section, unknown>[] = [
-    { accessorKey: "name", header: "Section", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.name}</span> },
+    { accessorKey: "name", header: "Section", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "class",
       header: "Class",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{classes.find((c) => c.id === row.original.classId)?.name ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{classes.find((c) => c.id === row.original.classId)?.name ?? "—"}</span>,
     },
     {
       accessorKey: "classTeacherName",
       header: "Class teacher",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.classTeacherName || "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.classTeacherName || "—"}</span>,
     },
     {
       id: "strength",
       header: "Strength / capacity",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600 tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.currentStrength} / {row.original.capacity}
         </span>
       ),
@@ -209,29 +203,22 @@ export default function ClassesSectionsTab() {
       cell: ({ row }) => {
         const section = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingSection(section);
-                  setSectionDefaultClassId(undefined);
-                  setSectionFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteSectionTarget(section)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingSection(section);
+                setSectionDefaultClassId(undefined);
+                setSectionFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteSectionTarget(section)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -241,7 +228,7 @@ export default function ClassesSectionsTab() {
     <div className="space-y-6">
       <div className="space-y-4">
         <DataTableToolbar>
-          <p className="text-sm text-slate-500">Classes belong to an academic year and, optionally, a department or stream.</p>
+          <p className="text-sm text-muted-foreground">Classes belong to an academic year and, optionally, a department or stream.</p>
           <Button
             onClick={() => {
               setEditingClass(null);
@@ -252,7 +239,7 @@ export default function ClassesSectionsTab() {
             New class
           </Button>
         </DataTableToolbar>
-        <DataTable columns={classColumns} data={classes} isLoading={classesLoading} emptyMessage="No classes yet." />
+        <DataTable searchable columns={classColumns} data={classes} isLoading={classesLoading} emptyMessage="No classes yet." />
       </div>
 
       <Card>
@@ -292,7 +279,7 @@ export default function ClassesSectionsTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable columns={sectionColumns} data={filteredSections} isLoading={sectionsLoading} emptyMessage="No sections match this filter." />
+          <DataTable searchable columns={sectionColumns} data={filteredSections} isLoading={sectionsLoading} emptyMessage="No sections match this filter." />
         </CardContent>
       </Card>
 

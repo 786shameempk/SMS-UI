@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,10 +78,10 @@ export default function LeaveRequestFormDialog({
                 </Select>
               )}
             />
-            {errors.staffId && <p className="text-xs text-red-600">{errors.staffId.message}</p>}
+            {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.staffId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5 col-span-1">
               <Label htmlFor="leaveType">Type</Label>
               <Controller
@@ -105,28 +105,27 @@ export default function LeaveRequestFormDialog({
             </div>
             <div className="space-y-1.5 col-span-1">
               <Label htmlFor="fromDate">From</Label>
-              <Input id="fromDate" type="date" {...register("fromDate")} />
-              {errors.fromDate && <p className="text-xs text-red-600">{errors.fromDate.message}</p>}
+              <Input id="fromDate" type="date" aria-invalid={errors.fromDate ? true : undefined} {...register("fromDate")} />
+              {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromDate.message}</p>}
             </div>
             <div className="space-y-1.5 col-span-1">
               <Label htmlFor="toDate">To</Label>
-              <Input id="toDate" type="date" {...register("toDate")} />
-              {errors.toDate && <p className="text-xs text-red-600">{errors.toDate.message}</p>}
+              <Input id="toDate" type="date" aria-invalid={errors.toDate ? true : undefined} {...register("toDate")} />
+              {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toDate.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="reason">Reason</Label>
-            <Textarea id="reason" rows={2} {...register("reason")} />
-            {errors.reason && <p className="text-xs text-red-600">{errors.reason.message}</p>}
+            <Textarea id="reason" rows={2} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Submit request
             </Button>
           </DialogFooter>

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,9 +56,9 @@ export default function AdmissionFeePaymentDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="fee-amount">Amount</Label>
-            <Input id="fee-amount" type="number" min="0" step="1" {...register("amount")} />
-            {errors.amount && <p className="text-xs text-red-600">{errors.amount.message}</p>}
+            <Label htmlFor="fee-amount" required>Amount</Label>
+            <Input id="fee-amount" type="number" min="0" step="1" aria-invalid={errors.amount ? true : undefined} {...register("amount")} />
+            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.amount.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -81,15 +81,14 @@ export default function AdmissionFeePaymentDialog({
                 </Select>
               )}
             />
-            {errors.paymentMode && <p className="text-xs text-red-600">{errors.paymentMode.message}</p>}
+            {errors.paymentMode && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.paymentMode.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Record payment
             </Button>
           </DialogFooter>

@@ -19,7 +19,7 @@ export default function ReportsTab() {
                 {summary ? `${summary.activeTenants} active · ${summary.trialTenants} trial · ${summary.suspendedTenants} suspended` : ""}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
               <Building2 className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -30,7 +30,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Monthly recurring revenue</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : formatCurrency(summary.mrrInr)}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-success-soft text-success-strong flex items-center justify-center shrink-0">
               <Wallet className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -41,7 +41,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Students across tenants</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.totalStudentsAcrossTenants.toLocaleString()}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-info-soft text-info-strong flex items-center justify-center shrink-0">
               <GraduationCap className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -52,7 +52,7 @@ export default function ReportsTab() {
               <p className="text-xs font-medium text-muted-foreground">Staff across tenants</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.totalStaffAcrossTenants.toLocaleString()}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-warning-soft text-warning-strong flex items-center justify-center shrink-0">
               <TrendingUp className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -68,8 +68,8 @@ export default function ReportsTab() {
           {!isLoading && summary?.tenantsByPlan.length === 0 && <p className="text-sm text-muted-foreground">No tenants yet.</p>}
           {summary?.tenantsByPlan.map((row) => (
             <div key={row.planId} className="flex items-center justify-between text-sm">
-              <span className="text-slate-700">{row.planName}</span>
-              <span className="tabular-nums text-slate-800 font-medium">{row.count}</span>
+              <span className="text-foreground">{row.planName}</span>
+              <span className="tabular-nums text-foreground font-medium">{row.count}</span>
             </div>
           ))}
         </CardContent>

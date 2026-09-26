@@ -131,8 +131,8 @@ export default function MonthlyAttendanceReport() {
               {rows.map((row) => (
                 <tr key={row.studentId} className="border-b border-border last:border-0">
                   <td className="px-3 py-2 whitespace-nowrap sticky left-0 bg-card">
-                    <p className="text-sm font-medium text-slate-800">{row.name}</p>
-                    <p className="text-xs text-slate-500">Roll {row.rollNumber}</p>
+                    <p className="text-sm font-medium text-foreground">{row.name}</p>
+                    <p className="text-xs text-muted-foreground">Roll {row.rollNumber}</p>
                   </td>
                   {days.map((d) => {
                     const status = row.statusByDay[d];
@@ -141,12 +141,12 @@ export default function MonthlyAttendanceReport() {
                         {status ? (
                           <span title={status} className={cn("inline-block w-4 h-4 rounded-sm", statusToggleActiveClass(status))} />
                         ) : (
-                          <span className="inline-block w-4 h-4 rounded-sm bg-slate-100" />
+                          <span className="inline-block w-4 h-4 rounded-sm bg-secondary" />
                         )}
                       </td>
                     );
                   })}
-                  <td className="px-3 py-2 text-right font-semibold text-slate-800 tabular-nums">{row.percentPresent}%</td>
+                  <td className="px-3 py-2 text-right font-semibold text-foreground tabular-nums">{row.percentPresent}%</td>
                 </tr>
               ))}
             </tbody>

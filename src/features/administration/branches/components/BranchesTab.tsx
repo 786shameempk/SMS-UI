@@ -1,26 +1,22 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Building2, MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
+import { Building2, Pencil, Trash2, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { defaultBranchIdForTenant, getCurrentTenantId } from "@/utils/tenant";
 import { createBranch, deleteBranch, listBranches, updateBranch } from "../api";
 import type { Branch, BranchFormValues } from "../types";
 import BranchFormDialog from "./BranchFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function BranchesTab() {
   const queryClient = useQueryClient();
-  const { data: branches = [], isLoading } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
+  const { data: branches = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
@@ -68,13 +64,13 @@ export default function BranchesTab() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-sm font-medium text-slate-800">{row.original.name}</span>
+          <span className="text-sm font-medium text-foreground">{row.original.name}</span>
           {row.original.id === mainBranchId && <Badge variant="info">Main campus</Badge>}
         </div>
       ),
     },
-    { accessorKey: "code", header: "Code", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.code}</span> },
-    { accessorKey: "address", header: "Address", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.address || "—"}</span> },
+    { accessorKey: "code", header: "Code", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.code}</span> },
+    { accessorKey: "address", header: "Address", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.address || "—"}</span> },
     {
       accessorKey: "status",
       header: "Status",
@@ -87,32 +83,25 @@ export default function BranchesTab() {
         const branch = row.original;
         const isMain = branch.id === mainBranchId;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingBranch(branch);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit branch
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={isMain}
-                onClick={() => setDeleteTarget(branch)}
-                className="text-red-600 focus:bg-red-50 focus:text-red-700 data-[disabled]:text-slate-300"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete branch
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingBranch(branch);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit branch
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={isMain}
+              onClick={() => setDeleteTarget(branch)}
+              variant="destructive" className="data-[disabled]:text-muted-foreground/70"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete branch
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -133,7 +122,7 @@ export default function BranchesTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={branches} isLoading={isLoading} emptyMessage="No branches yet." />
+      <DataTable searchable columns={columns} data={branches} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No branches yet." />
 
       <BranchFormDialog
         open={formOpen}

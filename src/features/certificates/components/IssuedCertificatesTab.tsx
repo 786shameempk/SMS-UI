@@ -1,23 +1,23 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatRelativeDay } from "@/utils/format";
 import { CERTIFICATE_TYPE_CONFIG, CERTIFICATE_TYPE_OPTIONS } from "../constants";
 import { deleteIssuedCertificate, listIssuedCertificates } from "../api";
 import type { IssuedCertificate } from "../types";
 import CertificateView from "./CertificateView";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function IssuedCertificatesTab() {
   const queryClient = useQueryClient();
-  const { data: certificates = [], isLoading } = useQuery({ queryKey: ["certificates"], queryFn: listIssuedCertificates });
+  const { data: certificates = [], isLoading, isError, refetch } = useQuery({ queryKey: ["certificates"], queryFn: listIssuedCertificates });
 
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [viewing, setViewing] = useState<IssuedCertificate | null>(null);
@@ -44,8 +44,8 @@ export default function IssuedCertificatesTab() {
       header: "Certificate #",
       cell: ({ row }) => (
         <button type="button" onClick={() => setViewing(row.original)} className="text-left cursor-pointer group">
-          <p className="text-sm font-medium text-slate-800 group-hover:text-brand-600 transition-colors">{row.original.certificateNumber}</p>
-          <p className="text-xs text-slate-500">{formatRelativeDay(row.original.issuedOn)}</p>
+          <p className="text-sm font-medium text-foreground group-hover:text-primary-text transition-colors">{row.original.certificateNumber}</p>
+          <p className="text-xs text-muted-foreground">{formatRelativeDay(row.original.issuedOn)}</p>
         </button>
       ),
     },
@@ -59,8 +59,8 @@ export default function IssuedCertificatesTab() {
       header: "Recipient",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm text-slate-800">{row.original.recipientName}</p>
-          <p className="text-xs text-slate-500">{row.original.recipientSubtitle}</p>
+          <p className="text-sm text-foreground">{row.original.recipientName}</p>
+          <p className="text-xs text-muted-foreground">{row.original.recipientSubtitle}</p>
         </div>
       ),
     },
@@ -70,23 +70,16 @@ export default function IssuedCertificatesTab() {
       cell: ({ row }) => {
         const cert = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setViewing(cert)}>
-                <Eye className="w-3.5 h-3.5" />
-                View / print
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(cert)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem onClick={() => setViewing(cert)}>
+              <Eye className="w-3.5 h-3.5" />
+              View / print
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(cert)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -110,7 +103,7 @@ export default function IssuedCertificatesTab() {
         </Select>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No certificates issued yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No certificates issued yet." pageSize={10} />
 
       <CertificateView open={Boolean(viewing)} onOpenChange={(v) => !v && setViewing(null)} certificate={viewing} />
 

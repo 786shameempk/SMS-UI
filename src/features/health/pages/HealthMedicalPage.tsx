@@ -4,17 +4,18 @@ import CheckupsTab from "../components/CheckupsTab";
 import VaccinationsTab from "../components/VaccinationsTab";
 import InfirmaryVisitsTab from "../components/InfirmaryVisitsTab";
 import ReportsTab from "../components/ReportsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function HealthMedicalPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Health & Medical</h1>
-        <p className="text-sm text-muted-foreground mt-1">Student health records, checkups, vaccinations, and infirmary visits.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Health & Medical"
+        description="Student health records, checkups, vaccinations, and infirmary visits."
+      />
 
       <Tabs defaultValue="records">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="records">Health Records</TabsTrigger>
           <TabsTrigger value="checkups">Checkups</TabsTrigger>
           <TabsTrigger value="vaccinations">Vaccinations</TabsTrigger>
@@ -37,6 +38,6 @@ export default function HealthMedicalPage() {
           <ReportsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

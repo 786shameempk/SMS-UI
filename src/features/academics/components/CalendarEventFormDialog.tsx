@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,14 +95,14 @@ export default function CalendarEventFormDialog({
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" placeholder="e.g. Winter break" {...register("title")} />
-            {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+            <Label htmlFor="title" required>Title</Label>
+            <Input id="title" placeholder="e.g. Winter break" aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="type">Type</Label>
+              <Label htmlFor="type" required>Type</Label>
               <Controller
                 control={control}
                 name="type"
@@ -146,20 +146,20 @@ export default function CalendarEventFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="startDate">Start date</Label>
-              <Input id="startDate" type="date" {...register("startDate")} />
-              {errors.startDate && <p className="text-xs text-red-600">{errors.startDate.message}</p>}
+              <Label htmlFor="startDate" required>Start date</Label>
+              <Input id="startDate" type="date" aria-invalid={errors.startDate ? true : undefined} {...register("startDate")} />
+              {errors.startDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endDate">End date (optional)</Label>
+              <Label htmlFor="endDate" optional>End date</Label>
               <Input id="endDate" type="date" {...register("endDate")} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description" optional>Description</Label>
             <Textarea id="description" rows={2} {...register("description")} />
           </div>
 
@@ -167,8 +167,7 @@ export default function CalendarEventFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Add event"}
             </Button>
           </DialogFooter>

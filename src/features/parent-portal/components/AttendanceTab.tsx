@@ -5,10 +5,10 @@ import { getAttendanceSummary } from "../api";
 import type { AttendanceDayStatus } from "../types";
 
 const STATUS_STYLE: Record<AttendanceDayStatus, string> = {
-  present: "bg-green-500",
-  absent: "bg-red-500",
-  late: "bg-amber-500",
-  holiday: "bg-slate-200",
+  present: "bg-success",
+  absent: "bg-destructive",
+  late: "bg-warning",
+  holiday: "bg-border",
 };
 
 const STATUS_LABEL: Record<AttendanceDayStatus, string> = {
@@ -37,21 +37,21 @@ export default function AttendanceTab({ studentId }: { studentId: string }) {
       <CardContent className="space-y-5">
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
-            <p className="text-lg font-bold text-slate-800 tabular-nums">{data.presentDays}</p>
-            <p className="text-[11px] text-slate-500">Present</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{data.presentDays}</p>
+            <p className="text-[11px] text-muted-foreground">Present</p>
           </div>
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
-            <p className="text-lg font-bold text-slate-800 tabular-nums">{data.lateDays}</p>
-            <p className="text-[11px] text-slate-500">Late</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{data.lateDays}</p>
+            <p className="text-[11px] text-muted-foreground">Late</p>
           </div>
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
-            <p className="text-lg font-bold text-slate-800 tabular-nums">{data.absentDays}</p>
-            <p className="text-[11px] text-slate-500">Absent</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{data.absentDays}</p>
+            <p className="text-[11px] text-muted-foreground">Absent</p>
           </div>
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-slate-500 mb-2">Last 14 days</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">Last 14 days</p>
           <div className="flex gap-1.5 flex-wrap">
             {data.recent.map((day) => (
               <div
@@ -67,7 +67,7 @@ export default function AttendanceTab({ studentId }: { studentId: string }) {
             {(["present", "late", "absent", "holiday"] as AttendanceDayStatus[]).map((s) => (
               <div key={s} className="flex items-center gap-1.5">
                 <span className={cn("w-2.5 h-2.5 rounded-sm", STATUS_STYLE[s])} />
-                <span className="text-[11px] text-slate-500">{STATUS_LABEL[s]}</span>
+                <span className="text-[11px] text-muted-foreground">{STATUS_LABEL[s]}</span>
               </div>
             ))}
           </div>

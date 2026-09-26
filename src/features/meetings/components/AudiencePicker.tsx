@@ -143,7 +143,7 @@ export default function AudiencePicker({ meetingType, sectionId, sectionLabel, v
         {debounced.length >= 2 && (
           <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
             {isFetching && <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>}
-            {isError && <p className="px-3 py-2 text-sm text-red-600">The school directory isn't available right now.</p>}
+            {isError && <p className="px-3 py-2 text-sm text-destructive-strong">The school directory isn't available right now.</p>}
             {!isFetching && !isError && results.length === 0 && (
               <p className="px-3 py-2 text-sm text-muted-foreground">No one with a login matches “{debounced}”.</p>
             )}
@@ -177,7 +177,7 @@ export default function AudiencePicker({ meetingType, sectionId, sectionLabel, v
       {value.length > 0 && (
         <ul className="flex flex-wrap gap-1.5" aria-label="Invited">
           {value.map((v) => (
-            <li key={v.key} className="inline-flex items-center gap-1 rounded-full bg-brand-100 py-1 pl-3 pr-1 text-xs font-semibold text-brand-800 dark:bg-brand-900/40 dark:text-brand-200">
+            <li key={v.key} className="inline-flex items-center gap-1 rounded-full bg-brand-100 py-1 pl-3 pr-1 text-xs font-semibold text-accent-foreground dark:bg-brand-900/40 dark:text-brand-200">
               {v.label}
               <button
                 type="button"

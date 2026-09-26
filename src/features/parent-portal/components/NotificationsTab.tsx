@@ -24,7 +24,7 @@ export default function NotificationsTab() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-slate-400" />
+          <Bell className="w-4 h-4 text-muted-foreground" />
           Notifications
         </CardTitle>
         <CardDescription>{unreadCount} unread</CardDescription>
@@ -32,11 +32,11 @@ export default function NotificationsTab() {
       <CardContent className="space-y-1">
         {isLoading && <p className="text-sm text-muted-foreground">Loading notifications…</p>}
         {notifications.map((n) => (
-          <div key={n.id} className={cn("flex items-start justify-between gap-3 rounded-lg p-3", !n.read && "bg-brand-50/50")}>
+          <div key={n.id} className={cn("flex items-start justify-between gap-3 rounded-lg p-3", !n.read && "bg-accent/50")}>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-800">{n.title}</p>
-              <p className="text-xs text-slate-500">{n.body}</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">{formatRelativeDay(n.createdAt)}</p>
+              <p className="text-sm font-medium text-foreground">{n.title}</p>
+              <p className="text-xs text-muted-foreground">{n.body}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{formatRelativeDay(n.createdAt)}</p>
             </div>
             {!n.read && (
               <Button variant="ghost" size="sm" onClick={() => readMutation.mutate(n.id)} className="shrink-0">

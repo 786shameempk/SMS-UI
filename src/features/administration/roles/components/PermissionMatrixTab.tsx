@@ -47,8 +47,8 @@ export default function PermissionMatrixTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="max-w-md">
-          <p className="text-sm font-medium text-slate-800">{CATEGORY_LABEL[category]} permissions</p>
-          <p className="text-xs text-slate-500 mt-0.5">{CATEGORY_DESCRIPTION[category]}</p>
+          <p className="text-sm font-medium text-foreground">{CATEGORY_LABEL[category]} permissions</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{CATEGORY_DESCRIPTION[category]}</p>
         </div>
         <Select value={category} onValueChange={(v) => setCategory(v as PermissionCategory)}>
           <SelectTrigger className="w-44">
@@ -65,8 +65,8 @@ export default function PermissionMatrixTab() {
       </div>
 
       {scope?.restricted && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-brand-200 bg-brand-500/10 px-4 py-3 text-sm">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+        <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-brand-500/10 px-4 py-3 text-sm">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" />
           <p className="text-foreground">
             Your school is on the <span className="font-semibold">{scope.planName}</span> plan, which includes{" "}
             <span className="font-semibold">{scope.modules.length}</span> modules. Only those modules can be granted here. Contact the platform
@@ -100,7 +100,7 @@ export default function PermissionMatrixTab() {
               <tbody>
                 {rowsForCategory.map((perm) => (
                   <tr key={perm.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-2.5 text-sm text-slate-700 font-medium sticky left-0 bg-card">{perm.module}</td>
+                    <td className="px-4 py-2.5 text-sm text-foreground font-medium sticky left-0 bg-card">{perm.module}</td>
                     {roles.map((role) => {
                       const granted = (rolePermissions[role.id] ?? []).includes(perm.id);
                       return (

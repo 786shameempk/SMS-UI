@@ -62,7 +62,7 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
-          <ClipboardList className="w-4 h-4 text-slate-400" />
+          <ClipboardList className="w-4 h-4 text-muted-foreground" />
           Lesson plans
         </CardTitle>
         <Button
@@ -84,16 +84,16 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
             <div key={plan.id} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-medium text-slate-800">{plan.title}</p>
+                  <p className="text-sm font-medium text-foreground">{plan.title}</p>
                   <Badge variant={plan.status === "published" ? "success" : "neutral"}>{plan.status}</Badge>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {subjectName(plan.subjectId)} &middot; {className(plan.classId)} &middot; Week of{" "}
                   {new Date(plan.weekOf).toLocaleDateString()}
                 </p>
-                <p className="text-sm text-slate-600 mt-1.5">{plan.description}</p>
+                <p className="text-sm text-secondary-foreground mt-1.5">{plan.description}</p>
                 {plan.attachmentNote && (
-                  <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                     <Paperclip className="w-3 h-3" />
                     {plan.attachmentNote}
                   </p>
@@ -111,7 +111,7 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => setDeleteId(plan.id)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setDeleteId(plan.id)}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>

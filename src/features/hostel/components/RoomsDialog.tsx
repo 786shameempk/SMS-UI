@@ -141,7 +141,7 @@ export default function RoomsDialog({
                   return (
                     <li key={room.id} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-slate-800">
+                        <p className="text-sm font-medium text-foreground">
                           {room.roomNumber} <span className="text-xs text-muted-foreground font-normal">· {room.floor}</span>
                         </p>
                         <p className="text-xs text-muted-foreground capitalize">
@@ -180,27 +180,27 @@ export default function RoomsDialog({
               })}
               className="space-y-4"
             >
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-roomNumber">Room number</Label>
-                  <Input id="room-roomNumber" placeholder="e.g. 1-101" {...register("roomNumber")} />
-                  {errors.roomNumber && <p className="text-xs text-red-600">{errors.roomNumber.message}</p>}
+                  <Label htmlFor="room-roomNumber" required>Room number</Label>
+                  <Input id="room-roomNumber" placeholder="e.g. 1-101" aria-invalid={errors.roomNumber ? true : undefined} {...register("roomNumber")} />
+                  {errors.roomNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.roomNumber.message}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-floor">Floor</Label>
-                  <Input id="room-floor" placeholder="e.g. 1st Floor" {...register("floor")} />
-                  {errors.floor && <p className="text-xs text-red-600">{errors.floor.message}</p>}
+                  <Label htmlFor="room-floor" required>Floor</Label>
+                  <Input id="room-floor" placeholder="e.g. 1st Floor" aria-invalid={errors.floor ? true : undefined} {...register("floor")} />
+                  {errors.floor && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.floor.message}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-capacity">Capacity (beds)</Label>
-                  <Input id="room-capacity" type="number" min="1" step="1" {...register("capacity")} />
-                  {errors.capacity && <p className="text-xs text-red-600">{errors.capacity.message}</p>}
+                  <Label htmlFor="room-capacity" required>Capacity (beds)</Label>
+                  <Input id="room-capacity" type="number" min="1" step="1" aria-invalid={errors.capacity ? true : undefined} {...register("capacity")} />
+                  {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.capacity.message}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-roomType">Room type</Label>
+                  <Label htmlFor="room-roomType" required>Room type</Label>
                   <Controller
                     control={control}
                     name="roomType"
@@ -223,7 +223,7 @@ export default function RoomsDialog({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="room-status">Status</Label>
+                <Label htmlFor="room-status" required>Status</Label>
                 <Controller
                   control={control}
                   name="status"

@@ -78,7 +78,7 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
           Back to homework
         </Button>
         <div>
-          <h2 className="text-base font-semibold text-slate-900">{homework.title}</h2>
+          <h2 className="text-base font-semibold text-foreground">{homework.title}</h2>
           <p className="text-xs text-muted-foreground">Due {new Date(homework.dueDate).toLocaleDateString()}</p>
         </div>
       </div>
@@ -120,11 +120,11 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
                   const busy = gradeMutation.isPending || resubmitMutation.isPending;
                   return (
                     <tr key={s.id} className="border-b border-border last:border-0 align-top">
-                      <td className="px-4 py-3 font-medium text-slate-800 whitespace-nowrap">{studentName(s.studentId)}</td>
+                      <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{studentName(s.studentId)}</td>
                       <td className="px-4 py-3 max-w-xs">
                         {hasContent ? (
                           <>
-                            <p className="text-slate-600 line-clamp-2">{s.content}</p>
+                            <p className="text-secondary-foreground line-clamp-2">{s.content}</p>
                             {s.submittedAt && <p className="text-xs text-muted-foreground mt-1">Submitted {formatDateTime(s.submittedAt)}</p>}
                           </>
                         ) : (

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +57,7 @@ export default function PromoteStaffDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="toDesignation">New designation</Label>
+            <Label htmlFor="toDesignation" required>New designation</Label>
             <Controller
               control={control}
               name="toDesignation"
@@ -78,20 +78,19 @@ export default function PromoteStaffDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="effectiveDate">Effective date</Label>
-            <Input id="effectiveDate" type="date" {...register("effectiveDate")} />
-            {errors.effectiveDate && <p className="text-xs text-red-600">{errors.effectiveDate.message}</p>}
+            <Label htmlFor="effectiveDate" required>Effective date</Label>
+            <Input id="effectiveDate" type="date" aria-invalid={errors.effectiveDate ? true : undefined} {...register("effectiveDate")} />
+            {errors.effectiveDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.effectiveDate.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="remarks">Remarks (optional)</Label>
+            <Label htmlFor="remarks" optional>Remarks</Label>
             <Textarea id="remarks" rows={2} {...register("remarks")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Promote
             </Button>
           </DialogFooter>

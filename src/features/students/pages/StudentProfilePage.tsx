@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getStudent } from "../api";
@@ -13,6 +13,8 @@ import DocumentsTab from "../components/profile/DocumentsTab";
 import IdCardTab from "../components/profile/IdCardTab";
 import LinkedLoginsPanel from "@/features/administration/users/components/LinkedLoginsPanel";
 import { useAuthStore } from "@/store/authStore";
+import { PageContainer } from "@/components/ui/page";
+import { EmptyState, PageSkeleton } from "@/components/ui/states";
 
 export default function StudentProfilePage() {
   const { studentId } = useParams<{ studentId: string }>();
@@ -32,34 +34,37 @@ export default function StudentProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center gap-2 text-muted-foreground text-sm">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        Loading student profile…
-      </div>
+      <PageSkeleton />
     );
   }
 
   if (isError || !student) {
     return (
-      <div className="p-6">
-        <p className="text-sm text-muted-foreground">That student record could not be found.</p>
-        <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/students")}>
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to students
-        </Button>
-      </div>
+      <PageContainer width="narrow">
+        <EmptyState
+          icon={SearchX}
+          title="Record not found"
+          description="That student record could not be found. It may have been removed, or you may not have access to it."
+          action={
+            <Button variant="outline" size="sm" onClick={() => navigate("/students")}>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to students
+            </Button>
+          }
+        />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-6 space-y-5 max-w-[1000px]">
+    <PageContainer width="narrow">
       <div>
         <Button variant="ghost" size="sm" onClick={() => navigate("/students")} className="-ml-2 mb-2">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to students
         </Button>
         <div className="flex items-center gap-2.5 flex-wrap">
-          <h1 className="text-xl font-bold text-foreground">
+          <h1 className="text-page-title">
             {student.firstName} {student.lastName}
           </h1>
           <StudentStatusBadge status={student.status} />
@@ -70,7 +75,7 @@ export default function StudentProfilePage() {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="guardian">Guardian &amp; Emergency</TabsTrigger>
           <TabsTrigger value="medical">Medical</TabsTrigger>
@@ -103,6 +108,6 @@ export default function StudentProfilePage() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +84,7 @@ export default function AllocateStudentDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="hal-studentId">Student</Label>
+            <Label htmlFor="hal-studentId" required>Student</Label>
             <Controller
               control={control}
               name="studentId"
@@ -103,11 +103,11 @@ export default function AllocateStudentDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p className="text-xs text-red-600">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hal-hostelId">Hostel</Label>
+            <Label htmlFor="hal-hostelId" required>Hostel</Label>
             <Controller
               control={control}
               name="hostelId"
@@ -126,11 +126,11 @@ export default function AllocateStudentDialog({
                 </Select>
               )}
             />
-            {errors.hostelId && <p className="text-xs text-red-600">{errors.hostelId.message}</p>}
+            {errors.hostelId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostelId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hal-roomId">Room</Label>
+            <Label htmlFor="hal-roomId" required>Room</Label>
             <Controller
               control={control}
               name="roomId"
@@ -152,11 +152,11 @@ export default function AllocateStudentDialog({
             {hostelId && availableRooms.length === 0 && (
               <p className="text-xs text-muted-foreground">No rooms with a free bed in this hostel.</p>
             )}
-            {errors.roomId && <p className="text-xs text-red-600">{errors.roomId.message}</p>}
+            {errors.roomId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.roomId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hal-monthlyFee">Monthly fee (optional)</Label>
+            <Label htmlFor="hal-monthlyFee" optional>Monthly fee</Label>
             <Input id="hal-monthlyFee" type="number" min="0" step="1" placeholder="e.g. 4500" {...register("monthlyFee")} />
           </div>
 
@@ -164,8 +164,7 @@ export default function AllocateStudentDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Allocate
             </Button>
           </DialogFooter>

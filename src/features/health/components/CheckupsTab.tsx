@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { BMI_CATEGORY_CONFIG } from "../constants";
 import { createHealthCheckup, deleteHealthCheckup, listHealthCheckups } from "../api";
 import type { HealthCheckupRow } from "../types";
 import CheckupFormDialog from "./CheckupFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function CheckupsTab() {
   const queryClient = useQueryClient();
-  const { data: checkups = [], isLoading } = useQuery({ queryKey: ["health", "checkups"], queryFn: () => listHealthCheckups() });
+  const { data: checkups = [], isLoading, isError, refetch } = useQuery({ queryKey: ["health", "checkups"], queryFn: () => listHealthCheckups() });
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<HealthCheckupRow | null>(null);
 
@@ -50,10 +51,10 @@ export default function CheckupsTab() {
       header: "Student",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.student.firstName} {row.original.student.lastName}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {row.original.student.className} - {row.original.student.section}
           </p>
         </div>
@@ -62,13 +63,13 @@ export default function CheckupsTab() {
     {
       accessorKey: "checkupDate",
       header: "Date",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.checkupDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.checkupDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>,
     },
     {
       id: "vitals",
       header: "Height / Weight",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-700 tabular-nums">
+        <span className="text-sm text-foreground tabular-nums">
           {row.original.heightCm} cm / {row.original.weightKg} kg
         </span>
       ),
@@ -86,7 +87,7 @@ export default function CheckupsTab() {
       id: "vision",
       header: "Vision (L/R)",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.visionLeft} / {row.original.visionRight}
         </span>
       ),
@@ -94,25 +95,18 @@ export default function CheckupsTab() {
     {
       id: "examinedBy",
       header: "Examined by",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.examinedBy ? `${row.original.examinedBy.firstName} ${row.original.examinedBy.lastName}` : "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.examinedBy ? `${row.original.examinedBy.firstName} ${row.original.examinedBy.lastName}` : "—"}</span>,
     },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <RowActions>
+          <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} variant="destructive">
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </DropdownMenuItem>
+        </RowActions>
       ),
     },
   ];
@@ -127,7 +121,7 @@ export default function CheckupsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={checkups} isLoading={isLoading} emptyMessage="No checkups recorded yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={checkups} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No checkups recorded yet." pageSize={10} />
 
       <CheckupFormDialog
         open={formOpen}

@@ -14,37 +14,37 @@ export default function TranscriptTab() {
   const { data: students = [] } = useQuery({ queryKey: ["examinations", "all-students"], queryFn: listStudents });
   const [studentId, setStudentId] = useState<string | undefined>();
 
-  const { data: transcript, isLoading } = useQuery({
+  const { data: transcript, isLoading, isError, refetch } = useQuery({
     queryKey: ["examinations", "transcript", studentId],
     queryFn: () => getTranscript(studentId as string),
     enabled: Boolean(studentId),
   });
 
   const columns: ColumnDef<TranscriptRow, unknown>[] = [
-    { accessorKey: "examName", header: "Exam", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.examName}</span> },
+    { accessorKey: "examName", header: "Exam", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.examName}</span> },
     {
       id: "type",
       header: "Type",
       cell: ({ row }) => <Badge variant="info">{EXAM_TYPE_LABELS[row.original.examType]}</Badge>,
     },
-    { accessorKey: "termName", header: "Term", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.termName}</span> },
-    { accessorKey: "academicYearName", header: "Academic year", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.academicYearName}</span> },
+    { accessorKey: "termName", header: "Term", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.termName}</span> },
+    { accessorKey: "academicYearName", header: "Academic year", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.academicYearName}</span> },
     {
       id: "total",
       header: "Total",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600 tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.totalObtained} / {row.original.totalMax}
         </span>
       ),
     },
-    { accessorKey: "percentage", header: "Percentage", cell: ({ row }) => <span className="text-sm text-slate-600 tabular-nums">{row.original.percentage}%</span> },
+    { accessorKey: "percentage", header: "Percentage", cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.percentage}%</span> },
     {
       accessorKey: "grade",
       header: "Grade",
       cell: ({ row }) => <Badge variant={gradeBadgeVariant(row.original.grade)}>{row.original.grade}</Badge>,
     },
-    { accessorKey: "gpa", header: "GPA", cell: ({ row }) => <span className="text-sm text-slate-600 tabular-nums">{row.original.gpa.toFixed(2)}</span> },
+    { accessorKey: "gpa", header: "GPA", cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.gpa.toFixed(2)}</span> },
   ];
 
   return (
@@ -59,7 +59,7 @@ export default function TranscriptTab() {
             {transcript && (
               <div className="text-right">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">CGPA (current academic year)</p>
-                <p className="text-lg font-bold text-slate-900 tabular-nums">{transcript.cgpa.toFixed(2)}</p>
+                <p className="text-lg font-bold text-foreground tabular-nums">{transcript.cgpa.toFixed(2)}</p>
               </div>
             )}
             <Select value={studentId} onValueChange={setStudentId}>
@@ -77,10 +77,12 @@ export default function TranscriptTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable
+          <DataTable searchable
             columns={columns}
             data={transcript?.rows ?? []}
             isLoading={isLoading}
+            isError={isError}
+            onRetry={() => refetch()}
             emptyMessage={studentId ? "No exam results recorded for this student yet." : "Select a student to view their transcript."}
           />
         </CardContent>

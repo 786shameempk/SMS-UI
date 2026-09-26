@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,11 +68,11 @@ export default function AdmissionExamDialog({
         <form onSubmit={handleSubmit((values) => onSubmit(values))} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="exam-date">Exam date</Label>
-            <Input id="exam-date" type="date" {...register("examDate")} />
-            {errors.examDate && <p className="text-xs text-red-600">{errors.examDate.message}</p>}
+            <Input id="exam-date" type="date" aria-invalid={errors.examDate ? true : undefined} {...register("examDate")} />
+            {errors.examDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.examDate.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="exam-status">Status</Label>
               <Controller
@@ -96,8 +96,8 @@ export default function AdmissionExamDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="exam-score">Score (0-100, optional)</Label>
-              <Input id="exam-score" type="number" min="0" max="100" {...register("examScore")} />
-              {errors.examScore && <p className="text-xs text-red-600">{errors.examScore.message}</p>}
+              <Input id="exam-score" type="number" min="0" max="100" aria-invalid={errors.examScore ? true : undefined} {...register("examScore")} />
+              {errors.examScore && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.examScore.message}</p>}
             </div>
           </div>
 
@@ -105,8 +105,7 @@ export default function AdmissionExamDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save
             </Button>
           </DialogFooter>

@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,11 +58,11 @@ export default function MarkVaccinationAdministeredDialog({
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, administeredByStaffId: values.administeredByStaffId || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="mark-vax-date">Date administered</Label>
-            <Input id="mark-vax-date" type="date" {...register("dateAdministered")} />
-            {errors.dateAdministered && <p className="text-xs text-red-600">{errors.dateAdministered.message}</p>}
+            <Input id="mark-vax-date" type="date" aria-invalid={errors.dateAdministered ? true : undefined} {...register("dateAdministered")} />
+            {errors.dateAdministered && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dateAdministered.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="mark-vax-staff">Administered by (optional)</Label>
+            <Label htmlFor="mark-vax-staff" optional>Administered by</Label>
             <Controller
               control={control}
               name="administeredByStaffId"
@@ -86,8 +86,7 @@ export default function MarkVaccinationAdministeredDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Mark administered
             </Button>
           </DialogFooter>

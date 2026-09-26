@@ -34,13 +34,13 @@ export default function ScopeOverview({
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <TitleIcon className="w-4 h-4 text-brand-600 dark:text-brand-300" />
+            <TitleIcon className="w-4 h-4 text-primary-text dark:text-brand-300" />
             {isLoading ? <Skeleton className="h-5 w-32" /> : title}
           </CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
         {total?.failed && (
-          <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400 shrink-0">
+          <span className="flex items-center gap-1 text-xs text-warning-strong shrink-0">
             <AlertTriangle className="w-3.5 h-3.5" /> Some data could not be loaded
           </span>
         )}
@@ -94,7 +94,7 @@ function Metric({
         <Icon className="w-3.5 h-3.5" />
         {label}
       </div>
-      <p className={`text-lg font-bold mt-1 tabular-nums ${tone === "danger" ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>{value}</p>
+      <p className={`text-lg font-bold mt-1 tabular-nums ${tone === "danger" ? "text-destructive-strong" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }

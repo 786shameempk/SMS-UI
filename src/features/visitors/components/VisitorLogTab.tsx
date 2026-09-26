@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, LogOut, MoreHorizontal, Trash2, UserPlus } from "lucide-react";
+import { AlertTriangle, LogOut, Trash2, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/utils/format";
@@ -15,10 +15,11 @@ import { PURPOSE_CONFIG, VISITOR_STATUS_CONFIG } from "../constants";
 import { checkInVisitor, checkOutVisitor, deleteVisitorEntry, listVisitorEntries } from "../api";
 import type { VisitorEntryRow } from "../types";
 import CheckInDialog from "./CheckInDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function VisitorLogTab() {
   const queryClient = useQueryClient();
-  const { data: entries = [], isLoading } = useQuery({ queryKey: ["visitors", "entries"], queryFn: () => listVisitorEntries() });
+  const { data: entries = [], isLoading, isError, refetch } = useQuery({ queryKey: ["visitors", "entries"], queryFn: () => listVisitorEntries() });
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<VisitorEntryRow | null>(null);
@@ -66,11 +67,11 @@ export default function VisitorLogTab() {
       header: "Visitor",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
+          <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
             {row.original.visitorName}
-            {row.original.onWatchlist && <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
+            {row.original.onWatchlist && <AlertTriangle className="w-3.5 h-3.5 text-destructive-strong" />}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {row.original.badgeNumber} &middot; {row.original.phone}
           </p>
         </div>
@@ -79,22 +80,22 @@ export default function VisitorLogTab() {
     {
       id: "purpose",
       header: "Purpose",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{PURPOSE_CONFIG[row.original.purpose].label}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{PURPOSE_CONFIG[row.original.purpose].label}</span>,
     },
     {
       id: "host",
       header: "Here to see",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.hostLabel}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.hostLabel}</span>,
     },
     {
       accessorKey: "checkInAt",
       header: "Check-in",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatDateTime(row.original.checkInAt)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatDateTime(row.original.checkInAt)}</span>,
     },
     {
       id: "checkOutAt",
       header: "Check-out",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.checkOutAt ? formatDateTime(row.original.checkOutAt) : "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.checkOutAt ? formatDateTime(row.original.checkOutAt) : "—"}</span>,
     },
     {
       id: "status",
@@ -107,25 +108,18 @@ export default function VisitorLogTab() {
       cell: ({ row }) => {
         const e = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {e.status === "checked-in" && (
-                <DropdownMenuItem onClick={() => checkOutMutation.mutate(e.id)}>
-                  <LogOut className="w-3.5 h-3.5" />
-                  Check out
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => setDeleteTarget(e)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
+          <RowActions>
+            {e.status === "checked-in" && (
+              <DropdownMenuItem onClick={() => checkOutMutation.mutate(e.id)}>
+                <LogOut className="w-3.5 h-3.5" />
+                Check out
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuItem onClick={() => setDeleteTarget(e)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -165,7 +159,7 @@ export default function VisitorLogTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No visitor entries match your filter." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No visitor entries match your filter." pageSize={10} />
 
       <CheckInDialog
         open={formOpen}

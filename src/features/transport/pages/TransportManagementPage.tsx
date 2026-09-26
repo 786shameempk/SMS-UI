@@ -4,19 +4,18 @@ import DriversTab from "../components/DriversTab";
 import LiveTrackingTab from "../components/LiveTrackingTab";
 import RoutesTab from "../components/RoutesTab";
 import StudentAssignmentsTab from "../components/StudentAssignmentsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function TransportManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Transport management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage the bus fleet, drivers, routes and stops, student transport assignments, and live GPS tracking.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Transport management"
+        description="Manage the bus fleet, drivers, routes and stops, student transport assignments, and live GPS tracking."
+      />
 
       <Tabs defaultValue="routes">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="routes">Routes & Stops</TabsTrigger>
           <TabsTrigger value="buses">Buses</TabsTrigger>
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
@@ -39,6 +38,6 @@ export default function TransportManagementPage() {
           <LiveTrackingTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

@@ -40,8 +40,8 @@ export default function MyHomeworkListTab({ studentId }: { studentId: string }) 
           <Card key={row.homework.id}>
             <CardContent className="flex items-center justify-between gap-3 p-4">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{row.homework.title}</p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-sm font-medium text-foreground truncate">{row.homework.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {subjectById.get(row.homework.subjectId)?.name ?? "—"} · {classById.get(row.homework.classId)?.name ?? "—"} · Due{" "}
                   {formatRelativeDay(row.homework.dueDate)}
                   {row.submission.grade !== undefined ? ` · Grade: ${row.submission.grade}` : ""}

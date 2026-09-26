@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,21 +76,21 @@ export default function AdmissionInterviewDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="int-date">Interview date</Label>
-              <Input id="int-date" type="date" {...register("interviewDate")} />
-              {errors.interviewDate && <p className="text-xs text-red-600">{errors.interviewDate.message}</p>}
+              <Input id="int-date" type="date" aria-invalid={errors.interviewDate ? true : undefined} {...register("interviewDate")} />
+              {errors.interviewDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.interviewDate.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="int-interviewer">Interviewer</Label>
-              <Input id="int-interviewer" {...register("interviewerName")} />
-              {errors.interviewerName && <p className="text-xs text-red-600">{errors.interviewerName.message}</p>}
+              <Input id="int-interviewer" aria-invalid={errors.interviewerName ? true : undefined} {...register("interviewerName")} />
+              {errors.interviewerName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.interviewerName.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="int-rating">Rating (optional)</Label>
+            <Label htmlFor="int-rating" optional>Rating</Label>
             <Controller
               control={control}
               name="interviewRating"
@@ -113,7 +113,7 @@ export default function AdmissionInterviewDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="int-remarks">Remarks (optional)</Label>
+            <Label htmlFor="int-remarks" optional>Remarks</Label>
             <Textarea id="int-remarks" rows={3} {...register("interviewRemarks")} />
           </div>
 
@@ -121,8 +121,7 @@ export default function AdmissionInterviewDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save
             </Button>
           </DialogFooter>

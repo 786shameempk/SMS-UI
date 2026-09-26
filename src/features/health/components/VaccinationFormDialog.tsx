@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,7 +59,7 @@ export default function VaccinationFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, notes: values.notes?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="vax-studentId">Student</Label>
+            <Label htmlFor="vax-studentId" required>Student</Label>
             <Controller
               control={control}
               name="studentId"
@@ -78,30 +78,30 @@ export default function VaccinationFormDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p className="text-xs text-red-600">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="vax-name">Vaccine name</Label>
-              <Input id="vax-name" placeholder="e.g. Tdap Booster" {...register("vaccineName")} />
-              {errors.vaccineName && <p className="text-xs text-red-600">{errors.vaccineName.message}</p>}
+              <Input id="vax-name" placeholder="e.g. Tdap Booster" aria-invalid={errors.vaccineName ? true : undefined} {...register("vaccineName")} />
+              {errors.vaccineName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.vaccineName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="vax-dose">Dose number</Label>
-              <Input id="vax-dose" type="number" min="1" step="1" {...register("doseNumber")} />
-              {errors.doseNumber && <p className="text-xs text-red-600">{errors.doseNumber.message}</p>}
+              <Input id="vax-dose" type="number" min="1" step="1" aria-invalid={errors.doseNumber ? true : undefined} {...register("doseNumber")} />
+              {errors.doseNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.doseNumber.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vax-dueDate">Due date</Label>
-            <Input id="vax-dueDate" type="date" {...register("dueDate")} />
-            {errors.dueDate && <p className="text-xs text-red-600">{errors.dueDate.message}</p>}
+            <Label htmlFor="vax-dueDate" required>Due date</Label>
+            <Input id="vax-dueDate" type="date" aria-invalid={errors.dueDate ? true : undefined} {...register("dueDate")} />
+            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dueDate.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vax-notes">Notes (optional)</Label>
+            <Label htmlFor="vax-notes" optional>Notes</Label>
             <Textarea id="vax-notes" rows={2} {...register("notes")} />
           </div>
 
@@ -109,8 +109,7 @@ export default function VaccinationFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Schedule vaccination
             </Button>
           </DialogFooter>

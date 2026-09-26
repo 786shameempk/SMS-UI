@@ -20,7 +20,7 @@ export default function PendingAssignmentsCard({ assignments }: { assignments: P
             <div key={assignment.id} className="rounded-lg border border-border p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium text-foreground truncate">{assignment.title}</p>
-                <span className="text-xs font-medium text-amber-600 shrink-0">{formatRelativeDay(assignment.dueDate)}</span>
+                <span className="text-xs font-medium text-warning-strong shrink-0">{formatRelativeDay(assignment.dueDate)}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {assignment.subject} &middot; {assignment.className}

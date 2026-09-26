@@ -16,7 +16,7 @@ function pctVariant(pct: number): "success" | "warning" | "danger" {
 }
 
 export default function ProgressOverviewTab() {
-  const { data: rows = [], isLoading } = useQuery({ queryKey: ["homework", "progress"], queryFn: getLearningProgress });
+  const { data: rows = [], isLoading, isError, refetch } = useQuery({ queryKey: ["homework", "progress"], queryFn: getLearningProgress });
   const [classFilter, setClassFilter] = useState(ALL_CLASSES);
 
   const classNames = useMemo(() => Array.from(new Set(rows.map((r) => r.className))).sort(), [rows]);
@@ -83,7 +83,7 @@ export default function ProgressOverviewTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No active students found." pageSize={15} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No active students found." pageSize={15} />
     </div>
   );
 }

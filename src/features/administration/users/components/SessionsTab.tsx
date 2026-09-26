@@ -43,7 +43,7 @@ export default function SessionsTab({ user }: { user: SystemUser }) {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-sm font-medium text-slate-800 mb-2">Active sessions</p>
+        <p className="text-sm font-medium text-foreground mb-2">Active sessions</p>
         <div className="space-y-2">
           {sessionsLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
           {!sessionsLoading && sessions.length === 0 && <p className="text-sm text-muted-foreground">No active sessions.</p>}
@@ -51,11 +51,11 @@ export default function SessionsTab({ user }: { user: SystemUser }) {
             <div key={session.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                  <Monitor className="w-4 h-4 text-slate-500" />
+                  <Monitor className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{session.browser}</p>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">{session.browser}</p>
+                  <p className="text-xs text-muted-foreground truncate">
                     {session.location} &middot; last active {new Date(session.lastActiveAt).toLocaleString()}
                   </p>
                 </div>
@@ -75,7 +75,7 @@ export default function SessionsTab({ user }: { user: SystemUser }) {
       </div>
 
       <div>
-        <p className="text-sm font-medium text-slate-800 mb-2">Trusted devices</p>
+        <p className="text-sm font-medium text-foreground mb-2">Trusted devices</p>
         <div className="space-y-2">
           {devicesLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
           {!devicesLoading && devices.length === 0 && <p className="text-sm text-muted-foreground">No trusted devices.</p>}
@@ -85,11 +85,11 @@ export default function SessionsTab({ user }: { user: SystemUser }) {
               <div key={device.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-slate-500" />
+                    <Icon className="w-4 h-4 text-muted-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{device.name}</p>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">{device.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
                       {device.os} &middot; last used {new Date(device.lastUsedAt).toLocaleString()}
                     </p>
                   </div>

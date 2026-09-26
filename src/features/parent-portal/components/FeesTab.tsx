@@ -48,8 +48,8 @@ export default function FeesTab({ studentId }: { studentId: string }) {
           return (
             <div key={invoice.id} className="flex items-center justify-between rounded-lg border border-border p-3 gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800">{invoice.term}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm font-medium text-foreground">{invoice.term}</p>
+                <p className="text-xs text-muted-foreground">
                   {formatCurrency(invoice.amount)} &middot;{" "}
                   {invoice.status === "paid"
                     ? `Paid on ${new Date(invoice.paidOn!).toLocaleDateString()}`

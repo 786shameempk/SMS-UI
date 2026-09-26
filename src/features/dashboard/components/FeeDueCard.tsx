@@ -10,7 +10,7 @@ export default function FeeDueCard({ fees }: { fees: FeeDueSummary }) {
         <CardTitle>Fee due</CardTitle>
         <CardDescription>
           {formatCurrency(fees.totalPending, fees.currency)} pending
-          {fees.totalOverdue > 0 && <span className="text-red-600"> &middot; {formatCurrency(fees.totalOverdue, fees.currency)} overdue</span>}
+          {fees.totalOverdue > 0 && <span className="text-destructive-strong"> &middot; {formatCurrency(fees.totalOverdue, fees.currency)} overdue</span>}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

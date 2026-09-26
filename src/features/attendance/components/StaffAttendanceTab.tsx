@@ -137,10 +137,10 @@ export default function StaffAttendanceTab() {
                       <AvatarFallback className="text-[11px]">{initialsOf(member.firstName, member.lastName)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {member.firstName} {member.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {member.designation} · {member.employeeId}
                       </p>
                     </div>

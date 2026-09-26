@@ -173,11 +173,11 @@ export default function MarksEntryTab() {
                       const draft = drafts[student.id] ?? { marksObtained: "", isAbsent: false };
                       return (
                         <tr key={student.id} className="border-b border-border last:border-0">
-                          <td className="px-4 py-2.5 text-slate-600">{student.admissionNumber}</td>
-                          <td className="px-4 py-2.5 font-medium text-slate-800">
+                          <td className="px-4 py-2.5 text-secondary-foreground">{student.admissionNumber}</td>
+                          <td className="px-4 py-2.5 font-medium text-foreground">
                             {student.firstName} {student.lastName}
                           </td>
-                          <td className="px-4 py-2.5 text-slate-600">{student.section}</td>
+                          <td className="px-4 py-2.5 text-secondary-foreground">{student.section}</td>
                           <td className="px-4 py-2.5">
                             <Input
                               type="number"

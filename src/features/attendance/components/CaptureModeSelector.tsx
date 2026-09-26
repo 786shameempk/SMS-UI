@@ -35,7 +35,7 @@ export default function CaptureModeSelector({
               onClick={() => onChange(mode.value)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors cursor-pointer",
-                active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-slate-600 hover:bg-secondary",
+                active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-secondary-foreground hover:bg-secondary",
               )}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -45,7 +45,7 @@ export default function CaptureModeSelector({
         })}
       </div>
       {selected?.simulated && (
-        <p className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-2 text-xs text-amber-800">
+        <p className="flex items-start gap-1.5 rounded-md bg-warning-soft border border-warning/30 px-2.5 py-2 text-xs text-warning-strong">
           <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           Simulated — {selected.label} hardware integration is not available in this demo. Use the manual grid below to record attendance.
         </p>

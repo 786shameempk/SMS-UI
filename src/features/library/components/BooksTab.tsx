@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, QrCode, Trash2 } from "lucide-react";
+import { Pencil, Plus, QrCode, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createBook, deleteBook, listAuthors, listBooks, listCategories, listPublishers, updateBook } from "../api";
 import type { Book, BookFormValues } from "../types";
 import BookFormDialog from "./BookFormDialog";
 import BookCodesDialog from "./BookCodesDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function BooksTab() {
   const queryClient = useQueryClient();
@@ -21,7 +22,7 @@ export default function BooksTab() {
   const [deleteTarget, setDeleteTarget] = useState<Book | null>(null);
   const [codesTarget, setCodesTarget] = useState<Book | null>(null);
 
-  const { data: books = [], isLoading } = useQuery({ queryKey: ["library", "books"], queryFn: listBooks });
+  const { data: books = [], isLoading, isError, refetch } = useQuery({ queryKey: ["library", "books"], queryFn: listBooks });
   const { data: authors = [] } = useQuery({ queryKey: ["library", "authors"], queryFn: listAuthors });
   const { data: publishers = [] } = useQuery({ queryKey: ["library", "publishers"], queryFn: listPublishers });
   const { data: categories = [] } = useQuery({ queryKey: ["library", "categories"], queryFn: listCategories });
@@ -69,7 +70,7 @@ export default function BooksTab() {
       header: "Title",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.title}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.title}</p>
           <p className="text-xs text-muted-foreground">{row.original.isbn}</p>
         </div>
       ),
@@ -77,12 +78,12 @@ export default function BooksTab() {
     {
       id: "author",
       header: "Author",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{authorById.get(row.original.authorId)?.name ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{authorById.get(row.original.authorId)?.name ?? "—"}</span>,
     },
     {
       id: "publisher",
       header: "Publisher",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{publisherById.get(row.original.publisherId)?.name ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{publisherById.get(row.original.publisherId)?.name ?? "—"}</span>,
     },
     {
       id: "category",
@@ -104,7 +105,7 @@ export default function BooksTab() {
     {
       id: "shelfLocation",
       header: "Shelf",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.shelfLocation ?? "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.shelfLocation ?? "—"}</span>,
     },
     {
       id: "actions",
@@ -112,32 +113,25 @@ export default function BooksTab() {
       cell: ({ row }) => {
         const book = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setCodesTarget(book)}>
-                <QrCode className="w-3.5 h-3.5" />
-                View barcode / QR
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(book);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(book)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem onClick={() => setCodesTarget(book)}>
+              <QrCode className="w-3.5 h-3.5" />
+              View barcode / QR
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(book);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(book)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -158,7 +152,7 @@ export default function BooksTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={books} isLoading={isLoading} emptyMessage="No books in the catalog yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={books} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No books in the catalog yet." pageSize={8} />
 
       <BookFormDialog
         open={formOpen}

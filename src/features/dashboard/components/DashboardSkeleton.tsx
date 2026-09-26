@@ -1,21 +1,29 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/components/ui/page";
 
 export default function DashboardSkeleton() {
   return (
-    <div className="p-6 space-y-6">
+    <PageContainer width="wide" role="status" aria-label="Loading dashboard">
       <div className="space-y-2">
-        <Skeleton className="h-6 w-64" />
-        <Skeleton className="h-4 w-96" />
+        <Skeleton className="h-3.5 w-48" />
+        <Skeleton className="h-7 w-72" />
+        <Skeleton className="h-4 w-96 max-w-full" />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-[104px] w-full" />
+          <Skeleton key={i} className="h-[62px] rounded-xl" />
         ))}
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Skeleton className="h-72 w-full xl:col-span-2" />
-        <Skeleton className="h-72 w-full" />
+      <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[112px] rounded-xl" />
+        ))}
       </div>
-    </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <Skeleton className="h-80 rounded-xl xl:col-span-2" />
+        <Skeleton className="h-80 rounded-xl" />
+      </div>
+      <span className="sr-only">Loading…</span>
+    </PageContainer>
   );
 }

@@ -20,7 +20,7 @@ export default function IssueReturnTab() {
   const [issueOpen, setIssueOpen] = useState(false);
   const [returnTarget, setReturnTarget] = useState<BookLoan | null>(null);
 
-  const { data: loans = [], isLoading } = useQuery({ queryKey: ["library", "loans"], queryFn: listLoans });
+  const { data: loans = [], isLoading, isError, refetch } = useQuery({ queryKey: ["library", "loans"], queryFn: listLoans });
   const { data: books = [] } = useQuery({ queryKey: ["library", "books"], queryFn: listBooks });
   const { data: members = [] } = useQuery({ queryKey: ["library", "members"], queryFn: listMembers });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -62,17 +62,17 @@ export default function IssueReturnTab() {
   const sorted = [...loans].sort((a, b) => new Date(b.issuedOn).getTime() - new Date(a.issuedOn).getTime());
 
   const columns: ColumnDef<BookLoan, unknown>[] = [
-    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
+    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
     {
       id: "member",
       header: "Member",
       cell: ({ row }) => {
         const member = memberById.get(row.original.memberId);
-        return <span className="text-sm text-slate-700">{member ? memberLabel(member) : "—"}</span>;
+        return <span className="text-sm text-foreground">{member ? memberLabel(member) : "—"}</span>;
       },
     },
-    { id: "issuedOn", header: "Issued", cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.issuedOn).toLocaleDateString()}</span> },
-    { id: "dueDate", header: "Due", cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.dueDate).toLocaleDateString()}</span> },
+    { id: "issuedOn", header: "Issued", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.issuedOn).toLocaleDateString()}</span> },
+    { id: "dueDate", header: "Due", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.dueDate).toLocaleDateString()}</span> },
     {
       id: "status",
       header: "Status",
@@ -118,7 +118,7 @@ export default function IssueReturnTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={sorted} isLoading={isLoading} emptyMessage="No loans recorded yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No loans recorded yet." />
 
       <IssueBookDialog
         open={issueOpen}

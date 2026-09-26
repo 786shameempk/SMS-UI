@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, RotateCcw, Search, TrendingUp, UserCog, UserMinus } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Search, TrendingUp, UserCog, UserMinus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DESIGNATIONS } from "../constants";
 import { createStaff, listStaff, promoteStaff, reactivateStaff, resignStaff, updateStaff } from "../api";
 import StaffStatusBadge from "../components/StaffStatusBadge";
@@ -25,6 +20,8 @@ import PromoteStaffDialog from "../components/PromoteStaffDialog";
 import ResignStaffDialog from "../components/ResignStaffDialog";
 import LeaveRequestsTab from "../components/LeaveRequestsTab";
 import type { PromoteStaffFormValues, ResignStaffFormValues, StaffFormValues, StaffMember } from "../types";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { RowActions } from "@/components/ui/row-actions";
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
@@ -33,7 +30,7 @@ function initialsOf(first: string, last: string) {
 function StaffDirectoryTab() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: staffList = [], isLoading } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
+  const { data: staffList = [], isLoading, isError, refetch } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
   const [search, setSearch] = useState("");
   const [designationFilter, setDesignationFilter] = useState("all");
@@ -121,7 +118,7 @@ function StaffDirectoryTab() {
               <AvatarFallback className="text-[11px]">{initialsOf(s.firstName, s.lastName)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate group-hover:text-brand-600 transition-colors">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary-text transition-colors">
                 {s.firstName} {s.lastName}
               </p>
               <p className="text-xs text-muted-foreground truncate">{s.employeeId}</p>
@@ -157,52 +154,45 @@ function StaffDirectoryTab() {
         const s = row.original;
         const canEdit = s.status !== "resigned" && s.status !== "terminated";
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/staff/${s.id}`)}>
-                <UserCog className="w-3.5 h-3.5" />
-                View profile
+          <RowActions>
+            <DropdownMenuItem onClick={() => navigate(`/staff/${s.id}`)}>
+              <UserCog className="w-3.5 h-3.5" />
+              View profile
+            </DropdownMenuItem>
+            {canEdit && (
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditingStaff(s);
+                  setFormOpen(true);
+                }}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit details
               </DropdownMenuItem>
-              {canEdit && (
+            )}
+            {canEdit && (
+              <DropdownMenuItem onClick={() => setPromoteTarget(s)}>
+                <TrendingUp className="w-3.5 h-3.5" />
+                Promote
+              </DropdownMenuItem>
+            )}
+            {s.status === "resigned" ? (
+              <DropdownMenuItem onClick={() => reactivateMutation.mutate(s.id)}>
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reactivate
+              </DropdownMenuItem>
+            ) : (
+              canEdit && (
                 <DropdownMenuItem
-                  onClick={() => {
-                    setEditingStaff(s);
-                    setFormOpen(true);
-                  }}
+                  onClick={() => setResignTarget(s)}
+                  variant="destructive"
                 >
-                  <Pencil className="w-3.5 h-3.5" />
-                  Edit details
+                  <UserMinus className="w-3.5 h-3.5" />
+                  Record resignation
                 </DropdownMenuItem>
-              )}
-              {canEdit && (
-                <DropdownMenuItem onClick={() => setPromoteTarget(s)}>
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  Promote
-                </DropdownMenuItem>
-              )}
-              {s.status === "resigned" ? (
-                <DropdownMenuItem onClick={() => reactivateMutation.mutate(s.id)}>
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Reactivate
-                </DropdownMenuItem>
-              ) : (
-                canEdit && (
-                  <DropdownMenuItem
-                    onClick={() => setResignTarget(s)}
-                    className="text-red-600 focus:bg-red-50 focus:text-red-700"
-                  >
-                    <UserMinus className="w-3.5 h-3.5" />
-                    Record resignation
-                  </DropdownMenuItem>
-                )
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              )
+            )}
+          </RowActions>
         );
       },
     },
@@ -258,7 +248,7 @@ function StaffDirectoryTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No staff match your filters." />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No staff match your filters." />
 
       <StaffFormDialog
         open={formOpen}
@@ -299,14 +289,14 @@ function StaffDirectoryTab() {
 
 export default function StaffManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Staff management</h1>
-        <p className="text-sm text-muted-foreground mt-1">Joining, promotions, resignations, and leave across all staff.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Staff management"
+        description="Joining, promotions, resignations, and leave across all staff."
+      />
 
       <Tabs defaultValue="staff">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="staff">Staff</TabsTrigger>
           <TabsTrigger value="leave">Leave Requests</TabsTrigger>
         </TabsList>
@@ -317,6 +307,6 @@ export default function StaffManagementPage() {
           <LeaveRequestsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

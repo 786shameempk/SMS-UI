@@ -1,17 +1,18 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GenerateCertificateTab from "../components/GenerateCertificateTab";
 import IssuedCertificatesTab from "../components/IssuedCertificatesTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function CertificatesPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Certificate generator</h1>
-        <p className="text-sm text-muted-foreground mt-1">Generate bonafide, transfer, character, study, achievement, and staff service certificates.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Certificate generator"
+        description="Generate bonafide, transfer, character, study, achievement, and staff service certificates."
+      />
 
       <Tabs defaultValue="generate">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="issued">Issued Certificates</TabsTrigger>
         </TabsList>
@@ -22,6 +23,6 @@ export default function CertificatesPage() {
           <IssuedCertificatesTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

@@ -38,7 +38,7 @@ export default function InsightsTab() {
             <Card key={insight.area}>
               <CardHeader>
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
                     <Icon className="w-[18px] h-[18px]" />
                   </div>
                   <div>
@@ -50,7 +50,7 @@ export default function InsightsTab() {
               <CardContent>
                 <ul className="space-y-1.5">
                   {insight.bullets.map((b, i) => (
-                    <li key={i} className="text-sm text-slate-600 pl-3 relative before:content-['·'] before:absolute before:left-0 before:text-slate-400">
+                    <li key={i} className="text-sm text-secondary-foreground pl-3 relative before:content-['·'] before:absolute before:left-0 before:text-slate-400">
                       {b}
                     </li>
                   ))}

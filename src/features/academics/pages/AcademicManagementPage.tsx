@@ -6,20 +6,18 @@ import ClassesSectionsTab from "../components/ClassesSectionsTab";
 import SubjectsTab from "../components/SubjectsTab";
 import ClassCapacityTab from "../components/ClassCapacityTab";
 import AcademicCalendarTab from "../components/AcademicCalendarTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function AcademicManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Academic management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Foundational master data — academic years, terms, departments, classes, sections, and subjects — used across attendance,
-          timetable, and examinations.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Academic management"
+        description="Foundational master data — academic years, terms, departments, classes, sections, and subjects — used across attendance, timetable, and examinations."
+      />
 
       <Tabs defaultValue="academic-years">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="academic-years">Academic Years</TabsTrigger>
           <TabsTrigger value="terms">Terms</TabsTrigger>
           <TabsTrigger value="departments">Departments</TabsTrigger>
@@ -50,6 +48,6 @@ export default function AcademicManagementPage() {
           <AcademicCalendarTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

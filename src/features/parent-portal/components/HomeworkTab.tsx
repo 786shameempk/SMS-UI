@@ -32,8 +32,8 @@ export default function HomeworkTab({ studentId }: { studentId: string }) {
           return (
             <div key={hw.id} className="flex items-center justify-between rounded-lg border border-border p-3 gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{hw.title}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm font-medium text-foreground truncate">{hw.title}</p>
+                <p className="text-xs text-muted-foreground">
                   {hw.subject} &middot; Due {formatRelativeDay(hw.dueDate)}
                   {hw.grade ? ` · Grade: ${hw.grade}` : ""}
                 </p>

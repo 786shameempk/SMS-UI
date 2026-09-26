@@ -1,22 +1,23 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatDateTime } from "@/utils/format";
 import { VISIT_OUTCOME_CONFIG } from "../constants";
 import { createInfirmaryVisit, deleteInfirmaryVisit, listInfirmaryVisits } from "../api";
 import type { InfirmaryVisitRow } from "../types";
 import InfirmaryVisitFormDialog from "./InfirmaryVisitFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function InfirmaryVisitsTab() {
   const queryClient = useQueryClient();
-  const { data: visits = [], isLoading } = useQuery({ queryKey: ["health", "visits"], queryFn: () => listInfirmaryVisits() });
+  const { data: visits = [], isLoading, isError, refetch } = useQuery({ queryKey: ["health", "visits"], queryFn: () => listInfirmaryVisits() });
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<InfirmaryVisitRow | null>(null);
 
@@ -51,10 +52,10 @@ export default function InfirmaryVisitsTab() {
       header: "Student",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.student.firstName} {row.original.student.lastName}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {row.original.student.className} - {row.original.student.section}
           </p>
         </div>
@@ -63,15 +64,15 @@ export default function InfirmaryVisitsTab() {
     {
       accessorKey: "visitedAt",
       header: "Visited",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatDateTime(row.original.visitedAt)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatDateTime(row.original.visitedAt)}</span>,
     },
     {
       id: "symptoms",
       header: "Symptoms",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm text-slate-700">{row.original.symptoms}</p>
-          {row.original.temperatureC !== undefined && <p className="text-xs text-slate-500">{row.original.temperatureC}°C</p>}
+          <p className="text-sm text-foreground">{row.original.symptoms}</p>
+          {row.original.temperatureC !== undefined && <p className="text-xs text-muted-foreground">{row.original.temperatureC}°C</p>}
         </div>
       ),
     },
@@ -80,8 +81,8 @@ export default function InfirmaryVisitsTab() {
       header: "Treatment",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm text-slate-700">{row.original.treatmentGiven}</p>
-          {row.original.medicineGiven && <p className="text-xs text-slate-500">{row.original.medicineGiven}</p>}
+          <p className="text-sm text-foreground">{row.original.treatmentGiven}</p>
+          {row.original.medicineGiven && <p className="text-xs text-muted-foreground">{row.original.medicineGiven}</p>}
         </div>
       ),
     },
@@ -93,25 +94,18 @@ export default function InfirmaryVisitsTab() {
     {
       id: "parentNotified",
       header: "Parent notified",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.parentNotified ? "Yes" : "No"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.parentNotified ? "Yes" : "No"}</span>,
     },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <RowActions>
+          <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} variant="destructive">
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </DropdownMenuItem>
+        </RowActions>
       ),
     },
   ];
@@ -126,7 +120,7 @@ export default function InfirmaryVisitsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={visits} isLoading={isLoading} emptyMessage="No infirmary visits logged yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={visits} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No infirmary visits logged yet." pageSize={10} />
 
       <InfirmaryVisitFormDialog
         open={formOpen}

@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listClasses, listSubjects, listTerms } from "@/features/academics/api";
@@ -25,6 +25,7 @@ import { EXAM_TYPE_LABELS, examStatusBadgeVariant } from "../constants";
 import type { Exam, ExamFormValues, ExamSchedule, ExamScheduleFormValues } from "../types";
 import ExamFormDialog from "./ExamFormDialog";
 import ExamScheduleFormDialog from "./ExamScheduleFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function ExamsTab() {
   const queryClient = useQueryClient();
@@ -114,19 +115,19 @@ export default function ExamsTab() {
   );
 
   const examColumns: ColumnDef<Exam, unknown>[] = [
-    { accessorKey: "name", header: "Exam", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.name}</span> },
+    { accessorKey: "name", header: "Exam", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "type",
       header: "Type",
       cell: ({ row }) => <Badge variant="info">{EXAM_TYPE_LABELS[row.original.examType]}</Badge>,
     },
-    { id: "class", header: "Class", cell: ({ row }) => <span className="text-sm text-slate-600">{className(row.original.classId)}</span> },
-    { id: "term", header: "Term", cell: ({ row }) => <span className="text-sm text-slate-600">{termName(row.original.termId)}</span> },
+    { id: "class", header: "Class", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{className(row.original.classId)}</span> },
+    { id: "term", header: "Term", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{termName(row.original.termId)}</span> },
     {
       id: "duration",
       header: "Duration",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.startDate} &rarr; {row.original.endDate}
         </span>
       ),
@@ -146,45 +147,38 @@ export default function ExamsTab() {
       cell: ({ row }) => {
         const exam = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setScheduleFilter(exam.id)}>
-                <Plus className="w-3.5 h-3.5" />
-                View schedule
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingExam(exam);
-                  setExamFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteExamTarget(exam)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem onClick={() => setScheduleFilter(exam.id)}>
+              <Plus className="w-3.5 h-3.5" />
+              View schedule
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingExam(exam);
+                setExamFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteExamTarget(exam)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
   ];
 
   const scheduleColumns: ColumnDef<ExamSchedule, unknown>[] = [
-    { id: "subject", header: "Subject", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{subjectName(row.original.subjectId)}</span> },
+    { id: "subject", header: "Subject", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{subjectName(row.original.subjectId)}</span> },
     { accessorKey: "date", header: "Date" },
     {
       id: "time",
       header: "Time",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600 tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.startTime} &ndash; {row.original.endTime}
         </span>
       ),
@@ -193,40 +187,33 @@ export default function ExamsTab() {
       id: "marks",
       header: "Max / pass marks",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600 tabular-nums">
+        <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.maxMarks} / {row.original.passMarks}
         </span>
       ),
     },
-    { id: "room", header: "Room", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.room || "—"}</span> },
+    { id: "room", header: "Room", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.room || "—"}</span> },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => {
         const schedule = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingSchedule(schedule);
-                  setScheduleFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteScheduleTarget(schedule)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingSchedule(schedule);
+                setScheduleFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteScheduleTarget(schedule)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -236,7 +223,7 @@ export default function ExamsTab() {
     <div className="space-y-6">
       <div className="space-y-4">
         <DataTableToolbar>
-          <p className="text-sm text-slate-500">Exams are scoped to a class and term; add subject schedules below once created.</p>
+          <p className="text-sm text-muted-foreground">Exams are scoped to a class and term; add subject schedules below once created.</p>
           <Button
             onClick={() => {
               setEditingExam(null);
@@ -247,7 +234,7 @@ export default function ExamsTab() {
             New exam
           </Button>
         </DataTableToolbar>
-        <DataTable columns={examColumns} data={exams} isLoading={examsLoading} emptyMessage="No exams yet." />
+        <DataTable searchable columns={examColumns} data={exams} isLoading={examsLoading} emptyMessage="No exams yet." />
       </div>
 
       <Card>
@@ -282,7 +269,7 @@ export default function ExamsTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable
+          <DataTable searchable
             columns={scheduleColumns}
             data={filteredSchedules}
             isLoading={schedulesLoading}

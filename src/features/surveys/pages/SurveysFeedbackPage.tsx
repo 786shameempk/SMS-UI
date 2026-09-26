@@ -2,17 +2,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SurveysTab from "../components/SurveysTab";
 import RecordResponseTab from "../components/RecordResponseTab";
 import ReportsTab from "../components/ReportsTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function SurveysFeedbackPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Surveys & Feedback</h1>
-        <p className="text-sm text-muted-foreground mt-1">Build surveys, collect responses, and review results.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Surveys & Feedback"
+        description="Build surveys, collect responses, and review results."
+      />
 
       <Tabs defaultValue="surveys">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
           <TabsTrigger value="respond">Record a Response</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -27,6 +28,6 @@ export default function SurveysFeedbackPage() {
           <ReportsTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

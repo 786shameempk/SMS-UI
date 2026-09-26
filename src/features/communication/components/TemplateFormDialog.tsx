@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,11 +83,11 @@ export default function TemplateFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="tpl-name">Template name</Label>
-              <Input id="tpl-name" placeholder="e.g. Fee due reminder" {...register("name")} />
-              {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+              <Label htmlFor="tpl-name" required>Template name</Label>
+              <Input id="tpl-name" placeholder="e.g. Fee due reminder" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+              {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tpl-category">Category</Label>
@@ -119,23 +119,22 @@ export default function TemplateFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-body">Message body</Label>
-            <Textarea id="tpl-body" rows={5} placeholder="Write the reusable message content…" {...register("body")} />
-            {errors.body && <p className="text-xs text-red-600">{errors.body.message}</p>}
+            <Label htmlFor="tpl-body" required>Message body</Label>
+            <Textarea id="tpl-body" rows={5} placeholder="Write the reusable message content…" aria-invalid={errors.body ? true : undefined} {...register("body")} />
+            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label>Default channels</Label>
             <Controller control={control} name="channels" render={({ field }) => <ChannelSelector value={field.value} onChange={field.onChange} />} />
-            {errors.channels && <p className="text-xs text-red-600">{errors.channels.message}</p>}
+            {errors.channels && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.channels.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create template"}
             </Button>
           </DialogFooter>

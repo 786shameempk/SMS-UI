@@ -59,16 +59,16 @@ export default function AnnouncementsTab() {
           <Card key={a.id}>
             <CardContent className="p-4 flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
                   <Megaphone className="w-[18px] h-[18px]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                     {a.title}
                     <Badge variant={a.active ? "success" : "neutral"}>{a.active ? "Active" : "Inactive"}</Badge>
                   </p>
-                  <p className="text-sm text-slate-600 mt-1">{a.body}</p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-sm text-secondary-foreground mt-1">{a.body}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     Posted {formatRelativeDay(a.createdAt)}
                     {a.expiresAt && ` · Expires ${formatRelativeDay(a.expiresAt)}`}
                   </p>
@@ -79,7 +79,7 @@ export default function AnnouncementsTab() {
                   {a.active ? "Deactivate" : "Activate"}
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteMutation.mutate(a.id)}>
-                  <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                  <Trash2 className="w-3.5 h-3.5 text-destructive-strong" />
                 </Button>
               </div>
             </CardContent>

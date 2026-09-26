@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { RouterProvider } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import {
   applyBrandPreset,
   applyDensityPreset,
@@ -20,5 +22,12 @@ applyRadiusPreset(getStoredRadiusPreset());
 applyDensityPreset(getStoredDensityPreset());
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  // reducedMotion="user": every framer-motion animation honours the OS "reduce motion" setting.
+  return (
+    <MotionConfig reducedMotion="user">
+      <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+        <RouterProvider router={router} />
+      </Suspense>
+    </MotionConfig>
+  );
 }

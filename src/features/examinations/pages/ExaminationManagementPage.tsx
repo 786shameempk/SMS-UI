@@ -4,19 +4,18 @@ import MarksEntryTab from "../components/MarksEntryTab";
 import ResultsRankingTab from "../components/ResultsRankingTab";
 import ReportCardTab from "../components/ReportCardTab";
 import TranscriptTab from "../components/TranscriptTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function ExaminationManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Examination management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Schedule exams, enter marks, and review grades, rankings, report cards, and transcripts.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Examination management"
+        description="Schedule exams, enter marks, and review grades, rankings, report cards, and transcripts."
+      />
 
       <Tabs defaultValue="exams">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="exams">Exams</TabsTrigger>
           <TabsTrigger value="marks-entry">Marks Entry</TabsTrigger>
           <TabsTrigger value="results-ranking">Results &amp; Ranking</TabsTrigger>
@@ -39,6 +38,6 @@ export default function ExaminationManagementPage() {
           <TranscriptTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

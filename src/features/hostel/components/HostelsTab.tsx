@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { BedDouble, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { HOSTEL_STATUS_CONFIG, HOSTEL_TYPE_OPTIONS } from "../constants";
@@ -13,6 +13,7 @@ import { createHostel, deleteHostel, listEligibleWardenStaff, listHostels, updat
 import type { HostelFormValues, HostelRow } from "../types";
 import HostelFormDialog from "./HostelFormDialog";
 import RoomsDialog from "./RoomsDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function HostelsTab() {
   const queryClient = useQueryClient();
@@ -22,7 +23,7 @@ export default function HostelsTab() {
   const [roomsHostel, setRoomsHostel] = useState<HostelRow | null>(null);
   const [roomsOpen, setRoomsOpen] = useState(false);
 
-  const { data: hostels = [], isLoading } = useQuery({ queryKey: ["hostel", "hostels"], queryFn: listHostels });
+  const { data: hostels = [], isLoading, isError, refetch } = useQuery({ queryKey: ["hostel", "hostels"], queryFn: listHostels });
   const { data: eligibleWardens = [] } = useQuery({
     queryKey: ["hostel", "eligible-wardens", editing?.id],
     queryFn: () => listEligibleWardenStaff(editing?.id),
@@ -67,7 +68,7 @@ export default function HostelsTab() {
       header: "Hostel",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.name}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.name}</p>
           <p className="text-xs text-muted-foreground">
             {HOSTEL_TYPE_OPTIONS.find((o) => o.value === row.original.type)?.label ?? row.original.type} ·{" "}
             {row.original.address ?? "No address on file"}
@@ -79,7 +80,7 @@ export default function HostelsTab() {
       id: "warden",
       header: "Warden",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.warden ? `${row.original.warden.firstName} ${row.original.warden.lastName}` : "Unassigned"}
         </span>
       ),
@@ -88,7 +89,7 @@ export default function HostelsTab() {
       id: "occupancy",
       header: "Occupancy",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.occupiedCount} / {row.original.bedCount} beds · {row.original.roomCount} rooms
         </span>
       ),
@@ -107,37 +108,30 @@ export default function HostelsTab() {
       cell: ({ row }) => {
         const hostel = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setRoomsHostel(hostel);
-                  setRoomsOpen(true);
-                }}
-              >
-                <BedDouble className="w-3.5 h-3.5" />
-                Manage rooms
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(hostel);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(hostel)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setRoomsHostel(hostel);
+                setRoomsOpen(true);
+              }}
+            >
+              <BedDouble className="w-3.5 h-3.5" />
+              Manage rooms
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(hostel);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(hostel)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -158,7 +152,7 @@ export default function HostelsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={hostels} isLoading={isLoading} emptyMessage="No hostels yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={hostels} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No hostels yet." pageSize={8} />
 
       <HostelFormDialog
         open={formOpen}

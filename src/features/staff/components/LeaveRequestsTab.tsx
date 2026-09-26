@@ -19,7 +19,7 @@ const STATUS_CONFIG: Record<LeaveStatus, { label: string; variant: "success" | "
 
 export default function LeaveRequestsTab() {
   const queryClient = useQueryClient();
-  const { data: requests = [], isLoading } = useQuery({ queryKey: ["staff", "leave"], queryFn: listLeaveRequests });
+  const { data: requests = [], isLoading, isError, refetch } = useQuery({ queryKey: ["staff", "leave"], queryFn: listLeaveRequests });
   const { data: staffList = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
   const [formOpen, setFormOpen] = useState(false);
 
@@ -52,20 +52,20 @@ export default function LeaveRequestsTab() {
     {
       id: "staff",
       header: "Staff member",
-      cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{staffOf(row.original.staffId)}</span>,
+      cell: ({ row }) => <span className="text-sm font-medium text-foreground">{staffOf(row.original.staffId)}</span>,
     },
     {
       accessorKey: "leaveType",
       header: "Type",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">{LEAVE_TYPES.find((t) => t.value === row.original.leaveType)?.label}</span>
+        <span className="text-sm text-secondary-foreground">{LEAVE_TYPES.find((t) => t.value === row.original.leaveType)?.label}</span>
       ),
     },
     {
       id: "dates",
       header: "Dates",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {new Date(row.original.fromDate).toLocaleDateString()} - {new Date(row.original.toDate).toLocaleDateString()}
         </span>
       ),
@@ -73,7 +73,7 @@ export default function LeaveRequestsTab() {
     {
       accessorKey: "reason",
       header: "Reason",
-      cell: ({ row }) => <span className="text-sm text-slate-600 truncate block max-w-[220px]">{row.original.reason}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground truncate block max-w-[220px]">{row.original.reason}</span>,
     },
     {
       accessorKey: "status",
@@ -94,7 +94,7 @@ export default function LeaveRequestsTab() {
             <Button
               size="sm"
               variant="outline"
-              className="text-green-700 border-green-200 hover:bg-green-50"
+              className="text-success-strong border-success/30 hover:bg-success-soft"
               onClick={() => statusMutation.mutate({ id: req.id, status: "approved" })}
             >
               <Check className="w-3.5 h-3.5" />
@@ -103,7 +103,7 @@ export default function LeaveRequestsTab() {
             <Button
               size="sm"
               variant="outline"
-              className="text-red-700 border-red-200 hover:bg-red-50"
+              className="text-destructive-strong border-destructive/30 hover:bg-destructive-soft"
               onClick={() => statusMutation.mutate({ id: req.id, status: "rejected" })}
             >
               <X className="w-3.5 h-3.5" />
@@ -125,7 +125,7 @@ export default function LeaveRequestsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={requests} isLoading={isLoading} emptyMessage="No leave requests." />
+      <DataTable searchable columns={columns} data={requests} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No leave requests." />
 
       <LeaveRequestFormDialog
         open={formOpen}

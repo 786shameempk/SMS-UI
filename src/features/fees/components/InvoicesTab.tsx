@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CreditCard, ListPlus, MoreHorizontal, Percent, RotateCcw } from "lucide-react";
+import { CreditCard, ListPlus, Percent, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listStudents } from "@/features/students/api";
@@ -24,6 +23,7 @@ import type { FeeInvoice, FeeInvoiceStatus, RecordPaymentParams, RefundFormValue
 import ApplyDiscountDialog from "./ApplyDiscountDialog";
 import RecordPaymentDialog from "./RecordPaymentDialog";
 import RefundDialog from "./RefundDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 const ALL_FILTER = "__all__";
 const INSTALLMENT_COUNT = 3;
@@ -37,7 +37,7 @@ export default function InvoicesTab() {
   const [refundTarget, setRefundTarget] = useState<FeeInvoice | null>(null);
   const [discountTarget, setDiscountTarget] = useState<FeeInvoice | null>(null);
 
-  const { data: invoices = [], isLoading } = useQuery({ queryKey: ["fees", "invoices"], queryFn: listInvoices });
+  const { data: invoices = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "invoices"], queryFn: listInvoices });
   const { data: students = [] } = useQuery({ queryKey: ["students", "all"], queryFn: listStudents });
   const { data: structures = [] } = useQuery({ queryKey: ["fees", "structures"], queryFn: listFeeStructures });
   const { data: discounts = [] } = useQuery({ queryKey: ["fees", "discounts"], queryFn: listDiscounts });
@@ -102,8 +102,8 @@ export default function InvoicesTab() {
         const student = studentById.get(row.original.studentId);
         return (
           <div>
-            <p className="text-sm font-medium text-slate-800">{student ? `${student.firstName} ${student.lastName}` : "Unknown student"}</p>
-            <p className="text-xs text-slate-500">{student ? `${student.className} - ${student.section}` : ""}</p>
+            <p className="text-sm font-medium text-foreground">{student ? `${student.firstName} ${student.lastName}` : "Unknown student"}</p>
+            <p className="text-xs text-muted-foreground">{student ? `${student.className} - ${student.section}` : ""}</p>
           </div>
         );
       },
@@ -113,7 +113,7 @@ export default function InvoicesTab() {
       header: "Fee type",
       cell: ({ row }) => <Badge variant="info">{FEE_TYPE_OPTIONS.find((o) => o.value === row.original.feeType)?.label}</Badge>,
     },
-    { accessorKey: "term", header: "Term", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.term}</span> },
+    { accessorKey: "term", header: "Term", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.term}</span> },
     {
       id: "amount",
       header: "Amount",
@@ -121,15 +121,15 @@ export default function InvoicesTab() {
         const inv = row.original;
         return (
           <div>
-            <p className="text-sm font-medium text-slate-800 tabular-nums">{formatCurrency(inv.netAmount)}</p>
+            <p className="text-sm font-medium text-foreground tabular-nums">{formatCurrency(inv.netAmount)}</p>
             {(inv.discountAmount > 0 || inv.fineAmount > 0) && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {inv.discountAmount > 0 ? `-${formatCurrency(inv.discountAmount)} discount` : ""}
                 {inv.discountAmount > 0 && inv.fineAmount > 0 ? " · " : ""}
                 {inv.fineAmount > 0 ? `+${formatCurrency(inv.fineAmount)} fine` : ""}
               </p>
             )}
-            {inv.paidAmount ? <p className="text-xs text-green-600">{formatCurrency(inv.paidAmount)} paid</p> : null}
+            {inv.paidAmount ? <p className="text-xs text-success-strong">{formatCurrency(inv.paidAmount)} paid</p> : null}
           </div>
         );
       },
@@ -137,7 +137,7 @@ export default function InvoicesTab() {
     {
       accessorKey: "dueDate",
       header: "Due date",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.dueDate).toLocaleDateString()}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.dueDate).toLocaleDateString()}</span>,
     },
     {
       accessorKey: "status",
@@ -155,37 +155,30 @@ export default function InvoicesTab() {
         const structure = structureById.get(invoice.feeStructureId);
         const canInstallments = structure && structure.frequency !== "one_time" && !invoice.installments && invoice.status !== "paid";
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {invoice.status !== "paid" && (
-                <DropdownMenuItem onClick={() => setPayTarget(invoice)}>
-                  <CreditCard className="w-3.5 h-3.5" />
-                  Record payment
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => setDiscountTarget(invoice)}>
-                <Percent className="w-3.5 h-3.5" />
-                Apply discount
+          <RowActions>
+            {invoice.status !== "paid" && (
+              <DropdownMenuItem onClick={() => setPayTarget(invoice)}>
+                <CreditCard className="w-3.5 h-3.5" />
+                Record payment
               </DropdownMenuItem>
-              {canInstallments && (
-                <DropdownMenuItem onClick={() => installmentMutation.mutate(invoice.id)}>
-                  <ListPlus className="w-3.5 h-3.5" />
-                  Generate installments
-                </DropdownMenuItem>
-              )}
-              {(invoice.paidAmount ?? 0) > 0 && (
-                <DropdownMenuItem onClick={() => setRefundTarget(invoice)}>
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Refund
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuItem onClick={() => setDiscountTarget(invoice)}>
+              <Percent className="w-3.5 h-3.5" />
+              Apply discount
+            </DropdownMenuItem>
+            {canInstallments && (
+              <DropdownMenuItem onClick={() => installmentMutation.mutate(invoice.id)}>
+                <ListPlus className="w-3.5 h-3.5" />
+                Generate installments
+              </DropdownMenuItem>
+            )}
+            {(invoice.paidAmount ?? 0) > 0 && (
+              <DropdownMenuItem onClick={() => setRefundTarget(invoice)}>
+                <RotateCcw className="w-3.5 h-3.5" />
+                Refund
+              </DropdownMenuItem>
+            )}
+          </RowActions>
         );
       },
     },
@@ -225,7 +218,7 @@ export default function InvoicesTab() {
         <p className="text-sm text-muted-foreground">{filtered.length} invoice(s)</p>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No invoices match the selected filters." />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No invoices match the selected filters." />
 
       <RecordPaymentDialog
         open={Boolean(payTarget)}

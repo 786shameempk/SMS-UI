@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,9 +92,9 @@ export default function LessonPlanFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="lp-classId">Class</Label>
+              <Label htmlFor="lp-classId" required>Class</Label>
               <Controller
                 control={control}
                 name="classId"
@@ -113,10 +113,10 @@ export default function LessonPlanFormDialog({
                   </Select>
                 )}
               />
-              {errors.classId && <p className="text-xs text-red-600">{errors.classId.message}</p>}
+              {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lp-subjectId">Subject</Label>
+              <Label htmlFor="lp-subjectId" required>Subject</Label>
               <Controller
                 control={control}
                 name="subjectId"
@@ -135,30 +135,30 @@ export default function LessonPlanFormDialog({
                   </Select>
                 )}
               />
-              {errors.subjectId && <p className="text-xs text-red-600">{errors.subjectId.message}</p>}
+              {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lp-title">Title</Label>
-            <Input id="lp-title" {...register("title")} />
-            {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+            <Label htmlFor="lp-title" required>Title</Label>
+            <Input id="lp-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lp-description">Description</Label>
-            <Textarea id="lp-description" rows={3} {...register("description")} />
-            {errors.description && <p className="text-xs text-red-600">{errors.description.message}</p>}
+            <Label htmlFor="lp-description" required>Description</Label>
+            <Textarea id="lp-description" rows={3} aria-invalid={errors.description ? true : undefined} {...register("description")} />
+            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="lp-weekOf">Week of</Label>
-              <Input id="lp-weekOf" type="date" {...register("weekOf")} />
-              {errors.weekOf && <p className="text-xs text-red-600">{errors.weekOf.message}</p>}
+              <Label htmlFor="lp-weekOf" required>Week of</Label>
+              <Input id="lp-weekOf" type="date" aria-invalid={errors.weekOf ? true : undefined} {...register("weekOf")} />
+              {errors.weekOf && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.weekOf.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lp-status">Status</Label>
+              <Label htmlFor="lp-status" required>Status</Label>
               <Controller
                 control={control}
                 name="status"
@@ -181,7 +181,7 @@ export default function LessonPlanFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lp-attachmentNote">Attachment note (optional)</Label>
+            <Label htmlFor="lp-attachmentNote" optional>Attachment note</Label>
             <Input id="lp-attachmentNote" placeholder="e.g. Worksheet: chapter-3.pdf" {...register("attachmentNote")} />
           </div>
 
@@ -189,8 +189,7 @@ export default function LessonPlanFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create lesson plan"}
             </Button>
           </DialogFooter>

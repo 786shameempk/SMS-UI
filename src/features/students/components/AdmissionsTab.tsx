@@ -2,25 +2,13 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  CalendarCheck,
-  CheckCircle2,
-  Clock,
-  GraduationCap,
-  MoreHorizontal,
-  Plus,
-  UserCheck,
-  UserPlus,
-  Users,
-  Wallet,
-  X,
-} from "lucide-react";
+import { CalendarCheck, CheckCircle2, Clock, GraduationCap, Plus, UserCheck, UserPlus, Users, Wallet, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatRelativeDay } from "@/utils/format";
 import { ADMISSION_STAGE_CONFIG } from "../constants";
@@ -45,13 +33,14 @@ import AdmissionInterviewDialog from "./AdmissionInterviewDialog";
 import AdmissionDecisionDialog from "./AdmissionDecisionDialog";
 import AdmissionFeePaymentDialog from "./AdmissionFeePaymentDialog";
 import SeatAvailabilityCard from "./SeatAvailabilityCard";
+import { RowActions } from "@/components/ui/row-actions";
 
 type DialogKey = "create" | "register" | "exam" | "interview" | "decision" | "fee";
 
 export default function AdmissionsTab() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: applications = [], isLoading } = useQuery({ queryKey: ["students", "admissions"], queryFn: listAdmissions });
+  const { data: applications = [], isLoading, isError, refetch } = useQuery({ queryKey: ["students", "admissions"], queryFn: listAdmissions });
 
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [openDialog, setOpenDialog] = useState<DialogKey | null>(null);
@@ -192,10 +181,10 @@ export default function AdmissionsTab() {
       header: "Applicant",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.applicantFirstName} {row.original.applicantLastName}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {row.original.applicationNumber} &middot; {row.original.guardianName}
           </p>
         </div>
@@ -204,13 +193,13 @@ export default function AdmissionsTab() {
     {
       accessorKey: "appliedClass",
       header: "Applied class",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{row.original.appliedClass}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{row.original.appliedClass}</span>,
     },
     {
       accessorKey: "submittedAt",
       header: "Submitted",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-500 flex items-center gap-1.5">
+        <span className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5" />
           {formatRelativeDay(row.original.submittedAt)}
         </span>
@@ -266,7 +255,7 @@ export default function AdmissionsTab() {
             {app.stage === "fee_collection" && app.admissionFeePaid && (
               <Button
                 size="sm"
-                className="text-green-700 border-green-200 hover:bg-green-50"
+                className="text-success-strong border-success/30 hover:bg-success-soft"
                 variant="outline"
                 onClick={() => setConfirmTarget({ app, action: "enroll" })}
               >
@@ -287,60 +276,46 @@ export default function AdmissionsTab() {
             )}
 
             {(app.stage === "entrance_exam" || app.stage === "interview" || app.stage === "fee_collection") && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {app.stage === "entrance_exam" && (
-                    <DropdownMenuItem onClick={() => openFor("exam", app)}>
-                      <CalendarCheck className="w-3.5 h-3.5" />
-                      Edit exam details
+              <RowActions>
+                {app.stage === "entrance_exam" && (
+                  <DropdownMenuItem onClick={() => openFor("exam", app)}>
+                    <CalendarCheck className="w-3.5 h-3.5" />
+                    Edit exam details
+                  </DropdownMenuItem>
+                )}
+                {app.stage === "interview" && (
+                  <DropdownMenuItem onClick={() => openFor("interview", app)}>
+                    <Users className="w-3.5 h-3.5" />
+                    Edit interview details
+                  </DropdownMenuItem>
+                )}
+                {canRejectOrWithdraw && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => setConfirmTarget({ app, action: "reject" })}
+                      variant="destructive"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Reject
                     </DropdownMenuItem>
-                  )}
-                  {app.stage === "interview" && (
-                    <DropdownMenuItem onClick={() => openFor("interview", app)}>
-                      <Users className="w-3.5 h-3.5" />
-                      Edit interview details
+                    <DropdownMenuItem onClick={() => setConfirmTarget({ app, action: "withdraw" })}>
+                      Withdraw
                     </DropdownMenuItem>
-                  )}
-                  {canRejectOrWithdraw && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => setConfirmTarget({ app, action: "reject" })}
-                        className="text-red-600 focus:bg-red-50 focus:text-red-700"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        Reject
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setConfirmTarget({ app, action: "withdraw" })}>
-                        Withdraw
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </>
+                )}
+              </RowActions>
             )}
             {canRejectOrWithdraw && app.stage !== "entrance_exam" && app.stage !== "interview" && app.stage !== "fee_collection" && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => setConfirmTarget({ app, action: "reject" })}
-                    className="text-red-600 focus:bg-red-50 focus:text-red-700"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    Reject
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setConfirmTarget({ app, action: "withdraw" })}>Withdraw</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RowActions>
+                <DropdownMenuItem
+                  onClick={() => setConfirmTarget({ app, action: "reject" })}
+                  variant="destructive"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Reject
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setConfirmTarget({ app, action: "withdraw" })}>Withdraw</DropdownMenuItem>
+              </RowActions>
             )}
           </div>
         );
@@ -372,7 +347,7 @@ export default function AdmissionsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No admission applications." />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No admission applications." />
 
       <AdmissionFormDialog
         open={openDialog === "create"}

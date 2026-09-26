@@ -28,14 +28,14 @@ export default function ChildSwitcher({
             onClick={() => onSelect(child.id)}
             className={cn(
               "flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border transition-colors cursor-pointer",
-              active ? "border-brand-300 bg-brand-500/10 shadow-sm" : "border-border bg-card hover:bg-secondary",
+              active ? "border-primary/40 bg-brand-500/10 shadow-sm" : "border-border bg-card hover:bg-secondary",
             )}
           >
             <Avatar className="w-6 h-6">
               {child.photoUrl && <AvatarImage src={child.photoUrl} alt={child.firstName} />}
               <AvatarFallback className="text-[10px]">{initialsOf(child.firstName, child.lastName)}</AvatarFallback>
             </Avatar>
-            <span className={cn("text-sm font-medium", active ? "text-brand-700 dark:text-brand-300" : "text-muted-foreground")}>
+            <span className={cn("text-sm font-medium", active ? "text-primary-text dark:text-brand-300" : "text-muted-foreground")}>
               {child.firstName} {child.lastName}
             </span>
           </button>

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -82,7 +82,7 @@ export default function MemberFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="mem-personType">Person type</Label>
+            <Label htmlFor="mem-personType" required>Person type</Label>
             <Controller
               control={control}
               name="personType"
@@ -110,7 +110,7 @@ export default function MemberFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="mem-personId">{personType === "student" ? "Student" : "Staff member"}</Label>
+            <Label htmlFor="mem-personId" required>{personType === "student" ? "Student" : "Staff member"}</Label>
             <Controller
               control={control}
               name="personId"
@@ -129,11 +129,11 @@ export default function MemberFormDialog({
                 </Select>
               )}
             />
-            {errors.personId && <p className="text-xs text-red-600">{errors.personId.message}</p>}
+            {errors.personId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.personId.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="mem-status">Status</Label>
+            <Label htmlFor="mem-status" required>Status</Label>
             <Controller
               control={control}
               name="status"
@@ -155,8 +155,7 @@ export default function MemberFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Add member"}
             </Button>
           </DialogFooter>

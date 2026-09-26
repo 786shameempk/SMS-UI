@@ -53,21 +53,21 @@ export default function WatchlistTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {watchlist.map((entry) => (
-          <Card key={entry.id} className="border-red-200">
+          <Card key={entry.id} className="border-destructive/30">
             <CardContent className="p-4 flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-destructive-soft text-destructive-strong flex items-center justify-center shrink-0">
                   <ShieldAlert className="w-[18px] h-[18px]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-800">{entry.name}</p>
-                  {entry.phone && <p className="text-xs text-slate-500">{entry.phone}</p>}
-                  <p className="text-sm text-slate-600 mt-1">{entry.reason}</p>
-                  <p className="text-xs text-slate-400 mt-1">Added {formatRelativeDay(entry.addedAt)}</p>
+                  <p className="text-sm font-semibold text-foreground">{entry.name}</p>
+                  {entry.phone && <p className="text-xs text-muted-foreground">{entry.phone}</p>}
+                  <p className="text-sm text-secondary-foreground mt-1">{entry.reason}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Added {formatRelativeDay(entry.addedAt)}</p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setDeleteTarget(entry)}>
-                <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                <Trash2 className="w-3.5 h-3.5 text-destructive-strong" />
               </Button>
             </CardContent>
           </Card>

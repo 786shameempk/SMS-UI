@@ -1,14 +1,15 @@
 import BranchesTab from "../components/BranchesTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function BranchManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Branch management</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage this school's campuses. Every student, staff member, and record belongs to one branch.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Branch management"
+        description="Manage this school's campuses. Every student, staff member, and record belongs to one branch."
+      />
 
       <BranchesTab />
-    </div>
+    </PageContainer>
   );
 }

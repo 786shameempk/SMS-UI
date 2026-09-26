@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Search, SendToBack, UserCog } from "lucide-react";
+import { Pencil, Plus, Search, SendToBack, UserCog } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useClassSectionOptions } from "../hooks";
 import { createStudent, listStudents, transferStudent, updateStudent } from "../api";
 import type { Student, StudentFormValues, TransferFormValues } from "../types";
@@ -26,6 +21,8 @@ import TransferStudentDialog from "../components/TransferStudentDialog";
 import AdmissionsTab from "../components/AdmissionsTab";
 import PromotionPanel from "../components/PromotionPanel";
 import GraduationPanel from "../components/GraduationPanel";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { RowActions } from "@/components/ui/row-actions";
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
@@ -34,7 +31,7 @@ function initialsOf(first: string, last: string) {
 function StudentsTab() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: students = [], isLoading } = useQuery({ queryKey: ["students"], queryFn: listStudents });
+  const { data: students = [], isLoading, isError, refetch } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { classNames } = useClassSectionOptions();
 
   const [search, setSearch] = useState("");
@@ -106,7 +103,7 @@ function StudentsTab() {
               <AvatarFallback className="text-[11px]">{initialsOf(s.firstName, s.lastName)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate group-hover:text-brand-600 transition-colors">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary-text transition-colors">
                 {s.firstName} {s.lastName}
               </p>
               <p className="text-xs text-muted-foreground truncate">{s.admissionNumber}</p>
@@ -153,34 +150,27 @@ function StudentsTab() {
       cell: ({ row }) => {
         const s = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/students/${s.id}`)}>
-                <UserCog className="w-3.5 h-3.5" />
-                View profile
+          <RowActions>
+            <DropdownMenuItem onClick={() => navigate(`/students/${s.id}`)}>
+              <UserCog className="w-3.5 h-3.5" />
+              View profile
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingStudent(s);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit details
+            </DropdownMenuItem>
+            {s.status === "active" && (
+              <DropdownMenuItem onClick={() => setTransferTarget(s)} className="text-warning-strong focus:bg-warning-soft focus:text-warning-strong">
+                <SendToBack className="w-3.5 h-3.5" />
+                Transfer student
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingStudent(s);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit details
-              </DropdownMenuItem>
-              {s.status === "active" && (
-                <DropdownMenuItem onClick={() => setTransferTarget(s)} className="text-amber-600 focus:bg-amber-50 focus:text-amber-700">
-                  <SendToBack className="w-3.5 h-3.5" />
-                  Transfer student
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+          </RowActions>
         );
       },
     },
@@ -236,7 +226,7 @@ function StudentsTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No students match your filters." />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No students match your filters." />
 
       <StudentFormDialog
         open={formOpen}
@@ -267,14 +257,14 @@ function StudentsTab() {
 
 export default function StudentManagementPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Student management</h1>
-        <p className="text-sm text-muted-foreground mt-1">Registration, admissions, and the student directory.</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Student management"
+        description="Registration, admissions, and the student directory."
+      />
 
       <Tabs defaultValue="students">
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="admissions">Admissions</TabsTrigger>
           <TabsTrigger value="promotion">Promotion &amp; Graduation</TabsTrigger>
@@ -290,6 +280,6 @@ export default function StudentManagementPage() {
           <GraduationPanel />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

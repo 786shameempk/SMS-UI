@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Star } from "lucide-react";
+import { Plus, Star } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +26,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
         <button key={star} type="button" onClick={() => onChange(star)} className="cursor-pointer">
-          <Star className={cn("w-5 h-5", star <= value ? "fill-amber-400 text-amber-400" : "text-slate-300")} />
+          <Star className={cn("w-5 h-5", star <= value ? "fill-amber-400 text-amber-400" : "text-muted-foreground/70")} />
         </button>
       ))}
     </div>
@@ -86,11 +86,11 @@ export default function PerformanceTab({ staff }: { staff: StaffMember }) {
         {staff.performanceReviews.map((r) => (
           <div key={r.id} className="rounded-lg border border-border p-3 space-y-1.5">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-800">{r.reviewerName}</p>
+              <p className="text-sm font-medium text-foreground">{r.reviewerName}</p>
               <ReviewStars rating={r.rating} />
             </div>
-            <p className="text-sm text-slate-600">{r.comments}</p>
-            <p className="text-[11px] text-slate-400">{new Date(r.reviewDate).toLocaleDateString()}</p>
+            <p className="text-sm text-secondary-foreground">{r.comments}</p>
+            <p className="text-[11px] text-muted-foreground">{new Date(r.reviewDate).toLocaleDateString()}</p>
           </div>
         ))}
       </CardContent>
@@ -103,25 +103,24 @@ export default function PerformanceTab({ staff }: { staff: StaffMember }) {
           </DialogHeader>
           <form onSubmit={handleSubmit((values) => addMutation.mutate(values))} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="reviewerName">Reviewer</Label>
-              <Input id="reviewerName" {...register("reviewerName")} />
-              {errors.reviewerName && <p className="text-xs text-red-600">{errors.reviewerName.message}</p>}
+              <Label htmlFor="reviewerName" required>Reviewer</Label>
+              <Input id="reviewerName" aria-invalid={errors.reviewerName ? true : undefined} {...register("reviewerName")} />
+              {errors.reviewerName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reviewerName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Rating</Label>
               <Controller control={control} name="rating" render={({ field }) => <StarRating value={field.value} onChange={field.onChange} />} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="comments">Comments</Label>
-              <Textarea id="comments" rows={3} {...register("comments")} />
-              {errors.comments && <p className="text-xs text-red-600">{errors.comments.message}</p>}
+              <Label htmlFor="comments" required>Comments</Label>
+              <Textarea id="comments" rows={3} aria-invalid={errors.comments ? true : undefined} {...register("comments")} />
+              {errors.comments && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.comments.message}</p>}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={addMutation.isPending}>
-                {addMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              <Button type="submit" loading={addMutation.isPending}>
                 Add review
               </Button>
             </DialogFooter>

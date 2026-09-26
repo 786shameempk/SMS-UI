@@ -75,7 +75,7 @@ export default function BackupTab() {
             {history.map((event) => (
               <div key={event.id} className="flex items-center justify-between py-2.5 text-sm">
                 <div>
-                  <p className="font-medium text-slate-800">{TYPE_LABEL[event.type] ?? event.type}</p>
+                  <p className="font-medium text-foreground">{TYPE_LABEL[event.type] ?? event.type}</p>
                   {event.actor && <p className="text-xs text-muted-foreground">by {event.actor}</p>}
                 </div>
                 <div className="text-right text-xs text-muted-foreground">

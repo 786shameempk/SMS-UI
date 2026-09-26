@@ -4,19 +4,18 @@ import JournalTab from "../components/JournalTab";
 import TrialBalanceTab from "../components/TrialBalanceTab";
 import ProfitAndLossTab from "../components/ProfitAndLossTab";
 import GstTab from "../components/GstTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function AccountingPage() {
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Accounting</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Chart of accounts, double-entry journal, trial balance, profit &amp; loss, and GST.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Accounting"
+        description="Chart of accounts, double-entry journal, trial balance, profit &amp; loss, and GST."
+      />
 
       <Tabs defaultValue="journal">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="accounts">Chart of Accounts</TabsTrigger>
           <TabsTrigger value="journal">Journal</TabsTrigger>
           <TabsTrigger value="trial-balance">Trial Balance</TabsTrigger>
@@ -39,6 +38,6 @@ export default function AccountingPage() {
           <GstTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

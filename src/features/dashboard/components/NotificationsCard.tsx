@@ -27,7 +27,7 @@ export default function NotificationsCard({ notifications }: { notifications: No
         {notifications.map((n) => {
           const Icon = CATEGORY_ICON[n.category];
           return (
-            <div key={n.id} className={cn("flex items-start gap-3 rounded-lg p-2.5", !n.read && "bg-brand-50/50")}>
+            <div key={n.id} className={cn("flex items-start gap-3 rounded-lg p-2.5", !n.read && "bg-accent/50")}>
               <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center shrink-0">
                 <Icon className="w-3.5 h-3.5 text-muted-foreground" />
               </div>

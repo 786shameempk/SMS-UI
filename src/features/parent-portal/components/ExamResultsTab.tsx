@@ -41,13 +41,13 @@ export default function ExamResultsTab({ studentId }: { studentId: string }) {
           {results.map((r) => (
             <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800">{r.subject}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm font-medium text-foreground">{r.subject}</p>
+                <p className="text-xs text-muted-foreground">
                   {r.examName} &middot; {new Date(r.date).toLocaleDateString()}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-sm font-semibold text-slate-700 tabular-nums">
+                <span className="text-sm font-semibold text-foreground tabular-nums">
                   {r.marksObtained}/{r.maxMarks}
                 </span>
                 <Badge variant="info">{r.grade}</Badge>

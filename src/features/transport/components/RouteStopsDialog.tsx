@@ -131,11 +131,11 @@ export default function RouteStopsDialog({
               <ul className="space-y-2">
                 {stops.map((stop, index) => (
                   <li key={stop.id} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-slate-600">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
                       {index + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-slate-800">{stop.name}</p>
+                      <p className="text-sm font-medium text-foreground">{stop.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {stop.arrivalTime}
                         {stop.landmark ? ` · ${stop.landmark}` : ""}
@@ -191,17 +191,17 @@ export default function RouteStopsDialog({
               className="space-y-4"
             >
               <div className="space-y-1.5">
-                <Label htmlFor="stop-name">Stop name</Label>
-                <Input id="stop-name" placeholder="e.g. Jayanagar 4th Block" {...register("name")} />
-                {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+                <Label htmlFor="stop-name" required>Stop name</Label>
+                <Input id="stop-name" placeholder="e.g. Jayanagar 4th Block" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+                {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="stop-arrivalTime">Arrival time</Label>
-                <Input id="stop-arrivalTime" type="time" {...register("arrivalTime")} />
-                {errors.arrivalTime && <p className="text-xs text-red-600">{errors.arrivalTime.message}</p>}
+                <Label htmlFor="stop-arrivalTime" required>Arrival time</Label>
+                <Input id="stop-arrivalTime" type="time" aria-invalid={errors.arrivalTime ? true : undefined} {...register("arrivalTime")} />
+                {errors.arrivalTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.arrivalTime.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="stop-landmark">Landmark (optional)</Label>
+                <Label htmlFor="stop-landmark" optional>Landmark</Label>
                 <Input id="stop-landmark" placeholder="e.g. Near BDA Complex" {...register("landmark")} />
               </div>
               <div className="flex justify-end gap-2">

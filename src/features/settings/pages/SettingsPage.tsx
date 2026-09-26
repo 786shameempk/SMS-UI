@@ -6,21 +6,20 @@ import BackupTab from "../components/BackupTab";
 import LocalizationTab from "../components/LocalizationTab";
 import SchoolProfileTab from "../components/SchoolProfileTab";
 import TemplatesTab from "../components/TemplatesTab";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function SettingsPage() {
   const activeTenantId = useAuthStore((s) => s.activeTenantId);
 
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Settings &amp; administration</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          School profile, appearance, localization, system templates, backups, and the audit log.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Settings &amp; administration"
+        description="School profile, appearance, localization, system templates, backups, and the audit log."
+      />
 
       <Tabs defaultValue="profile">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList variant="line">
           <TabsTrigger value="profile">School Profile</TabsTrigger>
           <TabsTrigger value="branding">Appearance</TabsTrigger>
           <TabsTrigger value="localization">Localization</TabsTrigger>
@@ -50,6 +49,6 @@ export default function SettingsPage() {
           <AuditLogTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

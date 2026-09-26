@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,20 +97,20 @@ export default function PreApprovedVisitFormDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="pre-name">Visitor name</Label>
-              <Input id="pre-name" {...register("visitorName")} />
-              {errors.visitorName && <p className="text-xs text-red-600">{errors.visitorName.message}</p>}
+              <Input id="pre-name" aria-invalid={errors.visitorName ? true : undefined} {...register("visitorName")} />
+              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitorName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pre-phone">Phone</Label>
-              <Input id="pre-phone" {...register("phone")} />
-              {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
+              <Input id="pre-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
+              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="pre-purpose">Purpose</Label>
               <Controller
@@ -134,13 +134,13 @@ export default function PreApprovedVisitFormDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pre-scheduledAt">Scheduled for</Label>
-              <Input id="pre-scheduledAt" type="datetime-local" {...register("scheduledAt")} />
-              {errors.scheduledAt && <p className="text-xs text-red-600">{errors.scheduledAt.message}</p>}
+              <Input id="pre-scheduledAt" type="datetime-local" aria-invalid={errors.scheduledAt ? true : undefined} {...register("scheduledAt")} />
+              {errors.scheduledAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.scheduledAt.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="pre-notes">Notes (optional)</Label>
+            <Label htmlFor="pre-notes" optional>Notes</Label>
             <Textarea id="pre-notes" rows={2} {...register("purposeNotes")} />
           </div>
 
@@ -185,7 +185,7 @@ export default function PreApprovedVisitFormDialog({
                   </Select>
                 )}
               />
-              {errors.hostStaffId && <p className="text-xs text-red-600">{errors.hostStaffId.message}</p>}
+              {errors.hostStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStaffId.message}</p>}
             </div>
           )}
 
@@ -210,15 +210,15 @@ export default function PreApprovedVisitFormDialog({
                   </Select>
                 )}
               />
-              {errors.hostStudentId && <p className="text-xs text-red-600">{errors.hostStudentId.message}</p>}
+              {errors.hostStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStudentId.message}</p>}
             </div>
           )}
 
           {hostType === "other" && (
             <div className="space-y-1.5">
               <Label htmlFor="pre-hostOtherLabel">Where / department</Label>
-              <Input id="pre-hostOtherLabel" placeholder="e.g. Front Office, School Auditorium" {...register("hostOtherLabel")} />
-              {errors.hostOtherLabel && <p className="text-xs text-red-600">{errors.hostOtherLabel.message}</p>}
+              <Input id="pre-hostOtherLabel" placeholder="e.g. Front Office, School Auditorium" aria-invalid={errors.hostOtherLabel ? true : undefined} {...register("hostOtherLabel")} />
+              {errors.hostOtherLabel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostOtherLabel.message}</p>}
             </div>
           )}
 
@@ -226,8 +226,7 @@ export default function PreApprovedVisitFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Schedule visit
             </Button>
           </DialogFooter>

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,7 +65,7 @@ export default function StockAdjustmentDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, reason: values.reason.trim() }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="adj-itemId">Item</Label>
+            <Label htmlFor="adj-itemId" required>Item</Label>
             <Controller
               control={control}
               name="itemId"
@@ -91,40 +91,39 @@ export default function StockAdjustmentDialog({
                 </Select>
               )}
             />
-            {errors.itemId && <p className="text-xs text-red-600">{errors.itemId.message}</p>}
+            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.itemId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="adj-newQuantity">Counted quantity</Label>
-              <Input id="adj-newQuantity" type="number" min="0" step="1" {...register("newQuantity")} />
-              {errors.newQuantity && <p className="text-xs text-red-600">{errors.newQuantity.message}</p>}
+              <Label htmlFor="adj-newQuantity" required>Counted quantity</Label>
+              <Input id="adj-newQuantity" type="number" min="0" step="1" aria-invalid={errors.newQuantity ? true : undefined} {...register("newQuantity")} />
+              {errors.newQuantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.newQuantity.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-date">Date</Label>
-              <Input id="adj-date" type="date" {...register("date")} />
-              {errors.date && <p className="text-xs text-red-600">{errors.date.message}</p>}
+              <Label htmlFor="adj-date" required>Date</Label>
+              <Input id="adj-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
             </div>
           </div>
 
           {selectedItem && delta !== 0 && (
-            <p className={`text-xs rounded-md border px-2.5 py-2 ${delta > 0 ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+            <p className={`text-xs rounded-md border px-2.5 py-2 ${delta > 0 ? "border-success/30 bg-success-soft text-success-strong" : "border-warning/30 bg-warning-soft text-warning-strong"}`}>
               {delta > 0 ? `+${delta}` : delta} {selectedItem.unit}(s) relative to the current recorded stock.
             </p>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="adj-reason">Reason</Label>
-            <Textarea id="adj-reason" rows={2} placeholder="e.g. Annual stock take — 2 units found damaged" {...register("reason")} />
-            {errors.reason && <p className="text-xs text-red-600">{errors.reason.message}</p>}
+            <Label htmlFor="adj-reason" required>Reason</Label>
+            <Textarea id="adj-reason" rows={2} placeholder="e.g. Annual stock take — 2 units found damaged" aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save adjustment
             </Button>
           </DialogFooter>

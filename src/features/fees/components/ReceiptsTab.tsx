@@ -15,7 +15,7 @@ import ReceiptView from "./ReceiptView";
 export default function ReceiptsTab() {
   const [viewing, setViewing] = useState<Receipt | null>(null);
 
-  const { data: receipts = [], isLoading } = useQuery({ queryKey: ["fees", "receipts"], queryFn: listReceipts });
+  const { data: receipts = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "receipts"], queryFn: listReceipts });
   const { data: invoices = [] } = useQuery({ queryKey: ["fees", "invoices"], queryFn: listInvoices });
   const { data: students = [] } = useQuery({ queryKey: ["students", "all"], queryFn: listStudents });
 
@@ -23,20 +23,20 @@ export default function ReceiptsTab() {
   const studentById = useMemo(() => new Map(students.map((s) => [s.id, s] as const)), [students]);
 
   const columns: ColumnDef<Receipt, unknown>[] = [
-    { accessorKey: "receiptNumber", header: "Receipt No.", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.receiptNumber}</span> },
+    { accessorKey: "receiptNumber", header: "Receipt No.", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.receiptNumber}</span> },
     {
       id: "student",
       header: "Student",
       cell: ({ row }) => {
         const invoice = invoiceById.get(row.original.invoiceId);
         const student = invoice ? studentById.get(invoice.studentId) : undefined;
-        return <span className="text-sm text-slate-700">{student ? `${student.firstName} ${student.lastName}` : "—"}</span>;
+        return <span className="text-sm text-foreground">{student ? `${student.firstName} ${student.lastName}` : "—"}</span>;
       },
     },
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{formatCurrency(row.original.amount)}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.amount)}</span>,
     },
     {
       accessorKey: "paymentMode",
@@ -46,7 +46,7 @@ export default function ReceiptsTab() {
     {
       accessorKey: "paidOn",
       header: "Paid on",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{new Date(row.original.paidOn).toLocaleDateString()}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.paidOn).toLocaleDateString()}</span>,
     },
     {
       id: "actions",
@@ -70,7 +70,7 @@ export default function ReceiptsTab() {
         <p className="text-sm text-muted-foreground">Receipts are generated automatically whenever a payment is recorded.</p>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={sorted} isLoading={isLoading} emptyMessage="No receipts generated yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No receipts generated yet." />
 
       <ReceiptView open={Boolean(viewing)} onOpenChange={(v) => !v && setViewing(null)} receipt={viewing} invoice={viewingInvoice} student={viewingStudent} />
     </div>

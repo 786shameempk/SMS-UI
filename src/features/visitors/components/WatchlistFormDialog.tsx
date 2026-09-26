@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,25 +51,24 @@ export default function WatchlistFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, phone: values.phone?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="watch-name">Name</Label>
-            <Input id="watch-name" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="watch-name" required>Name</Label>
+            <Input id="watch-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="watch-phone">Phone (optional)</Label>
+            <Label htmlFor="watch-phone" optional>Phone</Label>
             <Input id="watch-phone" {...register("phone")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="watch-reason">Reason</Label>
-            <Textarea id="watch-reason" rows={3} {...register("reason")} />
-            {errors.reason && <p className="text-xs text-red-600">{errors.reason.message}</p>}
+            <Label htmlFor="watch-reason" required>Reason</Label>
+            <Textarea id="watch-reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="destructive" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" variant="destructive" loading={submitting}>
               Add to watchlist
             </Button>
           </DialogFooter>

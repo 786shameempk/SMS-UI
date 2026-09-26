@@ -20,6 +20,7 @@ import { MEETING_TYPES, REMINDER_OPTIONS } from "../constants";
 import { useMeetingRole } from "../hooks";
 import type { MeetingSettings } from "../types";
 import { formatDuration, isoDate } from "../utils";
+import { StatCard } from "@/components/ui/stat-card";
 
 const ALL = "__all__";
 
@@ -30,17 +31,11 @@ function cssVar(name: string, fallback: string) {
 }
 
 function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-card px-4 py-3">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">{value}</p>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-    </div>
-  );
+  return <StatCard label={label} value={value} hint={hint} />;
 }
 
 function PercentBar({ value }: { value: number }) {
-  const tone = value >= 85 ? "bg-green-500" : value >= 70 ? "bg-amber-500" : "bg-red-500";
+  const tone = value >= 85 ? "bg-success" : value >= 70 ? "bg-warning" : "bg-destructive";
   return (
     <div className="flex items-center gap-2">
       <div className="h-1.5 w-20 overflow-hidden rounded-full bg-secondary" aria-hidden>
@@ -313,7 +308,7 @@ function SettingsForm() {
         <Switch id="settings-parent-recordings" checked={form.parentsCanViewRecordings} onCheckedChange={(v) => setForm({ ...form, parentsCanViewRecordings: v })} />
       </label>
       <div className="flex justify-end">
-        <Button type="submit" disabled={save.isPending}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save settings</Button>
+        <Button type="submit" loading={save.isPending}>Save settings</Button>
       </div>
     </form>
   );

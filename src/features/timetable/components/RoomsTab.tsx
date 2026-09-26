@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createRoom, deleteRoom, listRooms, updateRoom } from "../api";
 import type { Room, RoomFormValues } from "../types";
 import RoomFormDialog from "./RoomFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function RoomsTab() {
   const queryClient = useQueryClient();
-  const { data: rooms = [], isLoading } = useQuery({ queryKey: ["timetable", "rooms"], queryFn: listRooms });
+  const { data: rooms = [], isLoading, isError, refetch } = useQuery({ queryKey: ["timetable", "rooms"], queryFn: listRooms });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
@@ -50,36 +51,29 @@ export default function RoomsTab() {
   });
 
   const columns: ColumnDef<Room, unknown>[] = [
-    { accessorKey: "name", header: "Room", cell: ({ row }) => <span className="text-sm font-medium text-slate-800">{row.original.name}</span> },
-    { accessorKey: "capacity", header: "Capacity", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.capacity} seats</span> },
+    { accessorKey: "name", header: "Room", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "capacity", header: "Capacity", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.capacity} seats</span> },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => {
         const room = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(room);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(room)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(room);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(room)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -100,7 +94,7 @@ export default function RoomsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={rooms} isLoading={isLoading} emptyMessage="No rooms yet." />
+      <DataTable searchable columns={columns} data={rooms} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No rooms yet." />
 
       <RoomFormDialog
         open={formOpen}

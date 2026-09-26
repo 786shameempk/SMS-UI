@@ -14,27 +14,27 @@ const columns: ColumnDef<DailySectionSummary, unknown>[] = [
     id: "class",
     header: "Class / Section",
     cell: ({ row }) => (
-      <span className="text-sm font-medium text-slate-800">
+      <span className="text-sm font-medium text-foreground">
         {row.original.className} · {row.original.sectionName}
       </span>
     ),
   },
-  { accessorKey: "totalStudents", header: "Roster", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.totalStudents}</span> },
-  { accessorKey: "present", header: "Present", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.present}</span> },
-  { accessorKey: "absent", header: "Absent", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.absent}</span> },
-  { accessorKey: "late", header: "Late", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.late}</span> },
-  { accessorKey: "halfDay", header: "Half Day", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.halfDay}</span> },
-  { accessorKey: "leave", header: "Leave", cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.leave}</span> },
+  { accessorKey: "totalStudents", header: "Roster", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.totalStudents}</span> },
+  { accessorKey: "present", header: "Present", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.present}</span> },
+  { accessorKey: "absent", header: "Absent", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.absent}</span> },
+  { accessorKey: "late", header: "Late", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.late}</span> },
+  { accessorKey: "halfDay", header: "Half Day", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.halfDay}</span> },
+  { accessorKey: "leave", header: "Leave", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.leave}</span> },
   {
     accessorKey: "percentPresent",
     header: "% Present",
-    cell: ({ row }) => <span className="text-sm font-semibold text-slate-800 tabular-nums">{row.original.percentPresent}%</span>,
+    cell: ({ row }) => <span className="text-sm font-semibold text-foreground tabular-nums">{row.original.percentPresent}%</span>,
   },
 ];
 
 export default function DailyAttendanceReport() {
   const [date, setDate] = useState(todayDateKey());
-  const { data: summaries = [], isLoading } = useQuery({
+  const { data: summaries = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["attendance", "report-daily", date],
     queryFn: () => getDailySectionSummaries(date),
   });
@@ -51,7 +51,7 @@ export default function DailyAttendanceReport() {
         </div>
       </CardHeader>
       <CardContent>
-        <DataTable columns={columns} data={summaries} isLoading={isLoading} emptyMessage="No attendance marked for this date." />
+        <DataTable searchable columns={columns} data={summaries} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No attendance marked for this date." />
       </CardContent>
     </Card>
   );

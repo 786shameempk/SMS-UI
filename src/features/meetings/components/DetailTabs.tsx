@@ -101,7 +101,7 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
               <span className="block truncate text-sm font-medium text-foreground">{p.displayName}</span>
               <span className="block truncate text-xs text-muted-foreground">{p.detail ?? p.personType}</span>
             </span>
-            {p.role !== "Attendee" && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-800 dark:bg-brand-900/40 dark:text-brand-200">Host</span>}
+            {p.role !== "Attendee" && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-accent-foreground dark:bg-brand-900/40 dark:text-brand-200">Host</span>}
             {meeting.can.manageParticipants && p.role === "Attendee" && (
               <Button size="icon" variant="ghost" aria-label={`Remove ${p.displayName}`} onClick={() => setRemoving({ userId: p.userId, name: p.displayName })}>
                 <UserMinus className="h-4 w-4" />
@@ -203,7 +203,7 @@ export function AttendanceTab({ meeting }: { meeting: MeetingDetail }) {
                   <span className="block text-xs text-muted-foreground">{r.detail}</span>
                 </td>
                 <td className="px-4 py-2.5 tabular-nums">{r.firstJoinUtc ? formatTime(r.firstJoinUtc) : "—"}</td>
-                <td className="px-4 py-2.5 tabular-nums">{r.inRoomNow ? <span className="font-medium text-green-600">In class</span> : r.lastLeaveUtc ? formatTime(r.lastLeaveUtc) : "—"}</td>
+                <td className="px-4 py-2.5 tabular-nums">{r.inRoomNow ? <span className="font-medium text-success-strong">In class</span> : r.lastLeaveUtc ? formatTime(r.lastLeaveUtc) : "—"}</td>
                 <td className="px-4 py-2.5 tabular-nums">{formatDuration(r.durationMinutes)}</td>
                 <td className="px-4 py-2.5">
                   {upcoming ? <span className="text-xs text-muted-foreground">Not started</span> : <AttendanceBadge status={r.status} overridden={r.isOverridden} />}
@@ -472,7 +472,7 @@ export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
         </label>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
-          <Button type="submit" disabled={save.isPending}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save notes</Button>
+          <Button type="submit" loading={save.isPending}>Save notes</Button>
         </div>
       </form>
     );

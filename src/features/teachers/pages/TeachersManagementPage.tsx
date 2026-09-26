@@ -2,18 +2,13 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BookOpen, MoreHorizontal, Pencil, Plus, Search, UserCog, Users2 } from "lucide-react";
+import { BookOpen, Pencil, Plus, Search, UserCog, Users2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { listClasses, listSubjects } from "@/features/academics/api";
 import { createStaff, updateStaff } from "@/features/staff/api";
@@ -23,6 +18,8 @@ import type { StaffFormValues, StaffMember } from "@/features/staff/types";
 import AssignClassTeacherDialog from "../components/AssignClassTeacherDialog";
 import AssignSubjectDialog from "../components/AssignSubjectDialog";
 import { assignSubject, listSubjectAssignments, listTeachers } from "../api";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { RowActions } from "@/components/ui/row-actions";
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
@@ -38,7 +35,7 @@ export default function TeachersManagementPage() {
   const [assignSubjectTarget, setAssignSubjectTarget] = useState<StaffMember | null>(null);
   const [classTeacherDialogOpen, setClassTeacherDialogOpen] = useState(false);
 
-  const { data: teachers = [], isLoading } = useQuery({ queryKey: ["teachers"], queryFn: listTeachers });
+  const { data: teachers = [], isLoading, isError, refetch } = useQuery({ queryKey: ["teachers"], queryFn: listTeachers });
   const { data: assignments = [] } = useQuery({ queryKey: ["teachers", "subject-assignments"], queryFn: () => listSubjectAssignments() });
   const { data: subjects = [] } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
@@ -114,7 +111,7 @@ export default function TeachersManagementPage() {
               <AvatarFallback className="text-[11px]">{initialsOf(t.firstName, t.lastName)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate group-hover:text-brand-600 transition-colors">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary-text transition-colors">
                 {t.firstName} {t.lastName}
               </p>
               <p className="text-xs text-muted-foreground truncate">{t.employeeId}</p>
@@ -149,45 +146,36 @@ export default function TeachersManagementPage() {
       cell: ({ row }) => {
         const t = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/teachers/${t.id}`)}>
-                <UserCog className="w-3.5 h-3.5" />
-                View profile
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingTeacher(t);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setAssignSubjectTarget(t)}>
-                <BookOpen className="w-3.5 h-3.5" />
-                Assign subject
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem onClick={() => navigate(`/teachers/${t.id}`)}>
+              <UserCog className="w-3.5 h-3.5" />
+              View profile
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingTeacher(t);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAssignSubjectTarget(t)}>
+              <BookOpen className="w-3.5 h-3.5" />
+              Assign subject
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
   ];
 
   return (
-    <div className="p-6 space-y-5 max-w-[1400px]">
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Teacher management</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Subject &amp; class assignments, lesson plans, and student performance for teaching staff.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Teacher management"
+        description="Subject &amp; class assignments, lesson plans, and student performance for teaching staff."
+      />
 
       <DataTableToolbar>
         <div className="relative w-full max-w-xs">
@@ -211,7 +199,7 @@ export default function TeachersManagementPage() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No teachers match your search." />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No teachers match your search." />
 
       <StaffFormDialog
         open={formOpen}
@@ -239,6 +227,6 @@ export default function TeachersManagementPage() {
       />
 
       <AssignClassTeacherDialog open={classTeacherDialogOpen} onOpenChange={setClassTeacherDialogOpen} teachers={teachers} />
-    </div>
+    </PageContainer>
   );
 }

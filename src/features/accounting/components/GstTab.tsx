@@ -21,7 +21,7 @@ export default function GstTab() {
               <p className="text-xs font-medium text-muted-foreground">Output tax collected</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{formatCurrency(data.outputTax)}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-success-soft text-success-strong flex items-center justify-center shrink-0">
               <ArrowUpCircle className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -32,7 +32,7 @@ export default function GstTab() {
               <p className="text-xs font-medium text-muted-foreground">Input tax credit</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{formatCurrency(data.inputTax)}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-info-soft text-info-strong flex items-center justify-center shrink-0">
               <ArrowDownCircle className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -43,7 +43,7 @@ export default function GstTab() {
               <p className="text-xs font-medium text-muted-foreground">{netLabel}</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{formatCurrency(Math.abs(data.netPayable))}</p>
             </div>
-            <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
               <Receipt className="w-[18px] h-[18px]" />
             </div>
           </CardContent>
@@ -60,14 +60,14 @@ export default function GstTab() {
           {data.entries.map((e) => (
             <div key={e.entryId} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{e.narration}</p>
-                <p className="text-xs text-slate-500 truncate">
+                <p className="text-sm font-medium text-foreground truncate">{e.narration}</p>
+                <p className="text-xs text-muted-foreground truncate">
                   {e.entryNumber} &middot; {formatRelativeDay(e.date)}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Badge variant={e.direction === "output" ? "success" : "info"}>{e.direction === "output" ? "Output" : "Input"}</Badge>
-                <span className="text-sm font-medium text-slate-800 tabular-nums">{formatCurrency(e.taxAmount)}</span>
+                <span className="text-sm font-medium text-foreground tabular-nums">{formatCurrency(e.taxAmount)}</span>
               </div>
             </div>
           ))}

@@ -6,9 +6,9 @@ import type { CalendarEvent } from "../types";
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const EVENT_DOT: Record<CalendarEvent["kind"], string> = {
-  holiday: "bg-amber-500",
-  exam: "bg-red-500",
-  event: "bg-blue-500",
+  holiday: "bg-warning",
+  exam: "bg-destructive",
+  event: "bg-info",
 };
 
 function buildMonthGrid(year: number, month: number): (Date | null)[] {

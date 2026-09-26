@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,21 +106,21 @@ export default function CheckInDialog({
           )}
           className="space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="visit-name">Visitor name</Label>
-              <Input id="visit-name" {...register("visitorName")} />
-              {errors.visitorName && <p className="text-xs text-red-600">{errors.visitorName.message}</p>}
+              <Input id="visit-name" aria-invalid={errors.visitorName ? true : undefined} {...register("visitorName")} />
+              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitorName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="visit-phone">Phone</Label>
-              <Input id="visit-phone" {...register("phone")} />
-              {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
+              <Input id="visit-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
+              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
             </div>
           </div>
 
           {watchlistMatch && (
-            <p className="text-xs rounded-md border border-red-200 bg-red-50 text-red-700 px-2.5 py-2 flex items-start gap-1.5">
+            <p className="text-xs rounded-md border border-destructive/30 bg-destructive-soft text-destructive-strong px-2.5 py-2 flex items-start gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>
                 <strong>{watchlistMatch.name}</strong> matches a watchlist entry: {watchlistMatch.reason}
@@ -128,9 +128,9 @@ export default function CheckInDialog({
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-idType">ID proof type (optional)</Label>
+              <Label htmlFor="visit-idType" optional>ID proof type</Label>
               <Controller
                 control={control}
                 name="idProofType"
@@ -151,7 +151,7 @@ export default function CheckInDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-idNumber">ID proof number (optional)</Label>
+              <Label htmlFor="visit-idNumber" optional>ID proof number</Label>
               <Input id="visit-idNumber" {...register("idProofNumber")} />
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function CheckInDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="visit-purposeNotes">Notes (optional)</Label>
+            <Label htmlFor="visit-purposeNotes" optional>Notes</Label>
             <Textarea id="visit-purposeNotes" rows={2} {...register("purposeNotes")} />
           </div>
 
@@ -224,7 +224,7 @@ export default function CheckInDialog({
                   </Select>
                 )}
               />
-              {errors.hostStaffId && <p className="text-xs text-red-600">{errors.hostStaffId.message}</p>}
+              {errors.hostStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStaffId.message}</p>}
             </div>
           )}
 
@@ -249,15 +249,15 @@ export default function CheckInDialog({
                   </Select>
                 )}
               />
-              {errors.hostStudentId && <p className="text-xs text-red-600">{errors.hostStudentId.message}</p>}
+              {errors.hostStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStudentId.message}</p>}
             </div>
           )}
 
           {hostType === "other" && (
             <div className="space-y-1.5">
               <Label htmlFor="visit-hostOtherLabel">Where / department</Label>
-              <Input id="visit-hostOtherLabel" placeholder="e.g. Front Office, School Auditorium" {...register("hostOtherLabel")} />
-              {errors.hostOtherLabel && <p className="text-xs text-red-600">{errors.hostOtherLabel.message}</p>}
+              <Input id="visit-hostOtherLabel" placeholder="e.g. Front Office, School Auditorium" aria-invalid={errors.hostOtherLabel ? true : undefined} {...register("hostOtherLabel")} />
+              {errors.hostOtherLabel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostOtherLabel.message}</p>}
             </div>
           )}
 
@@ -265,8 +265,7 @@ export default function CheckInDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Check in
             </Button>
           </DialogFooter>

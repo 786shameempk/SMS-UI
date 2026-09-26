@@ -4,6 +4,8 @@ import { useAuthStore } from "@/store/authStore";
 import { useUiStore } from "@/store/useUiStore";
 import { QuickActionGrid, timeOfDayGreeting, WelcomeHero } from "@/components/common/WelcomeHero";
 import { cn } from "@/utils/cn";
+import { PageContainer, PageSection } from "@/components/ui/page";
+import { EmptyState, ErrorState } from "@/components/ui/states";
 import { fetchDashboardData } from "../api";
 import { canSwitchScopeView, fetchScopeSummary } from "../scopeApi";
 import { describeDateRange, resolveDateRange } from "../dateRange";
@@ -90,7 +92,7 @@ export default function DashboardPage() {
   const show = (id: DashboardWidgetId) => availableWidgets.some((w) => w.id === id) && !hiddenWidgets.includes(id);
   const rangeLabel = describeDateRange(dateRange);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard", role, user?.email, dateRange],
     queryFn: () => fetchDashboardData(role, user?.email, dateRange),
   });
@@ -103,6 +105,17 @@ export default function DashboardPage() {
     enabled: scopeEnabled && show("scopeOverview"),
   });
 
+  if (isError && !data)
+    return (
+      <PageContainer width="wide">
+        <ErrorState
+          title="Your dashboard couldn't load"
+          description="We couldn't reach the server to fetch today's figures. Check your connection and try again."
+          onRetry={() => refetch()}
+          retrying={isRefetching}
+        />
+      </PageContainer>
+    );
   if (isLoading || !data) return <DashboardSkeleton />;
 
   const leftColumn = show("performance") || show("revenue") || show("attendance");
@@ -110,13 +123,13 @@ export default function DashboardPage() {
   const nothingShown = availableWidgets.every((w) => !show(w.id));
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-[1600px]">
+    <PageContainer width="wide">
       <WelcomeHero
         eyebrow={`${ROLE_LABEL[role] ?? role} dashboard`}
-        title={`${timeOfDayGreeting()}, ${user?.name.split(" ")[0] ?? "there"} 👋`}
+        title={`${timeOfDayGreeting()}, ${user?.name.split(" ")[0] ?? "there"}`}
         subtitle={ROLE_TAGLINE[role]}
         aside={
-          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:justify-end text-foreground">
+          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:justify-end">
             {scopeEnabled && show("scopeOverview") && <ScopeViewToggle value={scopeView} onChange={setScopeView} />}
             <DateRangePicker value={dateRange} onChange={setDateRange} />
             <ManageWidgetsDialog available={availableWidgets} hidden={hiddenWidgets} onChange={setHiddenWidgets} />
@@ -127,17 +140,18 @@ export default function DashboardPage() {
       <QuickActionGrid actions={quickActionsFor(role, modulePermissions)} />
 
       {nothingShown && (
-        <div className="rounded-xl border border-dashed border-border py-16 text-center">
-          <p className="text-sm font-medium text-foreground">Your dashboard is empty</p>
-          <p className="text-sm text-muted-foreground mt-1">Use Manage widgets to add cards back.</p>
-        </div>
+        <EmptyState title="Your dashboard is empty" description="All widgets are hidden. Use Manage widgets above to add cards back." />
       )}
 
       {scopeEnabled && show("scopeOverview") && (
         <ScopeOverview summary={scope.data} view={scopeView} isLoading={scope.isLoading} isError={scope.isError} rangeLabel={rangeLabel} />
       )}
 
-      {show("stats") && <StatCards stats={data.stats} />}
+      {show("stats") && (
+        <PageSection aria-label="Key figures">
+          <StatCards stats={data.stats} />
+        </PageSection>
+      )}
 
       {(leftColumn || rightColumn) && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -185,6 +199,6 @@ export default function DashboardPage() {
           {show("notifications") && <NotificationsCard notifications={data.notifications} />}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

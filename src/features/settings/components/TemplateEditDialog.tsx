@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,17 +73,16 @@ export default function TemplateEditDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-body">Body</Label>
-            <Textarea id="tpl-body" rows={6} {...register("body")} />
-            {errors.body && <p className="text-xs text-red-600">{errors.body.message}</p>}
+            <Label htmlFor="tpl-body" required>Body</Label>
+            <Textarea id="tpl-body" rows={6} aria-invalid={errors.body ? true : undefined} {...register("body")} />
+            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Save changes
             </Button>
           </DialogFooter>

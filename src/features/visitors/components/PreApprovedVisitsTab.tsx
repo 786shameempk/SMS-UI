@@ -1,22 +1,23 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CalendarPlus, LogIn, MoreHorizontal, Trash2, XCircle } from "lucide-react";
+import { CalendarPlus, LogIn, Trash2, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatDateTime } from "@/utils/format";
 import { PURPOSE_CONFIG, PRE_APPROVAL_STATUS_CONFIG } from "../constants";
 import { cancelPreApprovedVisit, checkInFromPreApproval, createPreApprovedVisit, deletePreApprovedVisit, listPreApprovedVisits } from "../api";
 import type { PreApprovedVisitRow } from "../types";
 import PreApprovedVisitFormDialog from "./PreApprovedVisitFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function PreApprovedVisitsTab() {
   const queryClient = useQueryClient();
-  const { data: visits = [], isLoading } = useQuery({ queryKey: ["visitors", "preapprovals"], queryFn: () => listPreApprovedVisits() });
+  const { data: visits = [], isLoading, isError, refetch } = useQuery({ queryKey: ["visitors", "preapprovals"], queryFn: () => listPreApprovedVisits() });
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PreApprovedVisitRow | null>(null);
 
@@ -69,25 +70,25 @@ export default function PreApprovedVisitsTab() {
       header: "Visitor",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.visitorName}</p>
-          <p className="text-xs text-slate-500">{row.original.phone}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.visitorName}</p>
+          <p className="text-xs text-muted-foreground">{row.original.phone}</p>
         </div>
       ),
     },
     {
       id: "purpose",
       header: "Purpose",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{PURPOSE_CONFIG[row.original.purpose].label}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{PURPOSE_CONFIG[row.original.purpose].label}</span>,
     },
     {
       id: "host",
       header: "Here to see",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.hostLabel}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.hostLabel}</span>,
     },
     {
       accessorKey: "scheduledAt",
       header: "Scheduled for",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatDateTime(row.original.scheduledAt)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatDateTime(row.original.scheduledAt)}</span>,
     },
     {
       id: "status",
@@ -100,31 +101,24 @@ export default function PreApprovedVisitsTab() {
       cell: ({ row }) => {
         const v = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {v.status === "scheduled" && (
-                <>
-                  <DropdownMenuItem onClick={() => checkInMutation.mutate(v.id)}>
-                    <LogIn className="w-3.5 h-3.5" />
-                    Check in now
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => cancelMutation.mutate(v.id)}>
-                    <XCircle className="w-3.5 h-3.5" />
-                    Cancel
-                  </DropdownMenuItem>
-                </>
-              )}
-              <DropdownMenuItem onClick={() => setDeleteTarget(v)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            {v.status === "scheduled" && (
+              <>
+                <DropdownMenuItem onClick={() => checkInMutation.mutate(v.id)}>
+                  <LogIn className="w-3.5 h-3.5" />
+                  Check in now
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => cancelMutation.mutate(v.id)}>
+                  <XCircle className="w-3.5 h-3.5" />
+                  Cancel
+                </DropdownMenuItem>
+              </>
+            )}
+            <DropdownMenuItem onClick={() => setDeleteTarget(v)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -140,7 +134,7 @@ export default function PreApprovedVisitsTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={visits} isLoading={isLoading} emptyMessage="No pre-approved visits scheduled." pageSize={10} />
+      <DataTable searchable columns={columns} data={visits} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No pre-approved visits scheduled." pageSize={10} />
 
       <PreApprovedVisitFormDialog
         open={formOpen}

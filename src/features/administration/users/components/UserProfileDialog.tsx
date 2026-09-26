@@ -117,30 +117,30 @@ export default function UserProfileDialog({
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-                <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 <div className="mt-1.5">
                   <UserStatusBadge status={user.status} />
                 </div>
               </div>
             </div>
 
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
               <div>
-                <dt className="text-xs text-slate-400">Role</dt>
-                <dd className="text-slate-800 font-medium">{roleName}</dd>
+                <dt className="text-xs text-muted-foreground">Role</dt>
+                <dd className="text-foreground font-medium">{roleName}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Department</dt>
-                <dd className="text-slate-800 font-medium">{user.department || "—"}</dd>
+                <dt className="text-xs text-muted-foreground">Department</dt>
+                <dd className="text-foreground font-medium">{user.department || "—"}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Phone</dt>
-                <dd className="text-slate-800 font-medium">{user.phone || "—"}</dd>
+                <dt className="text-xs text-muted-foreground">Phone</dt>
+                <dd className="text-foreground font-medium">{user.phone || "—"}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Last login</dt>
-                <dd className="text-slate-800 font-medium">
+                <dt className="text-xs text-muted-foreground">Last login</dt>
+                <dd className="text-foreground font-medium">
                   {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Never"}
                 </dd>
               </div>
@@ -181,8 +181,8 @@ export default function UserProfileDialog({
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-800">Email notifications</p>
-                <p className="text-xs text-slate-500">Receive account and academic updates by email.</p>
+                <p className="text-sm font-medium text-foreground">Email notifications</p>
+                <p className="text-xs text-muted-foreground">Receive account and academic updates by email.</p>
               </div>
               <Switch
                 checked={user.preferences.emailNotifications}
@@ -192,8 +192,8 @@ export default function UserProfileDialog({
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-800">SMS notifications</p>
-                <p className="text-xs text-slate-500">Receive urgent alerts by SMS.</p>
+                <p className="text-sm font-medium text-foreground">SMS notifications</p>
+                <p className="text-xs text-muted-foreground">Receive urgent alerts by SMS.</p>
               </div>
               <Switch
                 checked={user.preferences.smsNotifications}

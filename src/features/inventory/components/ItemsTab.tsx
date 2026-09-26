@@ -1,24 +1,25 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatCurrency } from "@/utils/format";
 import { ITEM_UNIT_OPTIONS } from "../constants";
 import { createItem, deleteItem, listCategories, listItems, updateItem } from "../api";
 import type { InventoryItem, InventoryItemFormValues } from "../types";
 import ItemFormDialog from "./ItemFormDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function ItemsTab() {
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading } = useQuery({ queryKey: ["inventory", "items"], queryFn: listItems });
+  const { data: items = [], isLoading, isError, refetch } = useQuery({ queryKey: ["inventory", "items"], queryFn: listItems });
   const { data: categories = [] } = useQuery({ queryKey: ["inventory", "categories"], queryFn: listCategories });
 
   const [search, setSearch] = useState("");
@@ -76,15 +77,15 @@ export default function ItemsTab() {
     {
       accessorKey: "code",
       header: "Code",
-      cell: ({ row }) => <span className="text-sm font-medium text-slate-800 tabular-nums">{row.original.code}</span>,
+      cell: ({ row }) => <span className="text-sm font-medium text-foreground tabular-nums">{row.original.code}</span>,
     },
     {
       accessorKey: "name",
       header: "Name",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm text-slate-800">{row.original.name}</p>
-          <p className="text-xs text-slate-500">{row.original.location ?? "—"}</p>
+          <p className="text-sm text-foreground">{row.original.name}</p>
+          <p className="text-xs text-muted-foreground">{row.original.location ?? "—"}</p>
         </div>
       ),
     },
@@ -110,18 +111,18 @@ export default function ItemsTab() {
     {
       id: "reorderLevel",
       header: "Reorder level",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.reorderLevel}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.reorderLevel}</span>,
     },
     {
       id: "unitCost",
       header: "Unit cost",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{formatCurrency(row.original.unitCost)}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.unitCost)}</span>,
     },
     {
       id: "value",
       header: "Stock value",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-700 tabular-nums">{formatCurrency(row.original.quantityInStock * row.original.unitCost)}</span>
+        <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.quantityInStock * row.original.unitCost)}</span>
       ),
     },
     {
@@ -130,28 +131,21 @@ export default function ItemsTab() {
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(item);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(item)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(item);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(item)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -161,7 +155,7 @@ export default function ItemsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input placeholder="Search by code or name" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex items-center gap-2">
@@ -190,7 +184,7 @@ export default function ItemsTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No items match your filters." pageSize={10} />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No items match your filters." pageSize={10} />
 
       <ItemFormDialog
         open={formOpen}

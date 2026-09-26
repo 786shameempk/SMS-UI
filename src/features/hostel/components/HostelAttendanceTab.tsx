@@ -177,10 +177,10 @@ export default function HostelAttendanceTab() {
                 hostelResidents.map((resident) => (
                   <div key={resident.studentId} className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3">
                     <div className="min-w-[180px]">
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {resident.student.firstName} {resident.student.lastName}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {resident.room.roomNumber} · Bed {resident.bedNumber}
                       </p>
                     </div>

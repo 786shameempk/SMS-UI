@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarCheck, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -213,8 +213,7 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Button type="submit" loading={isSubmitting}>
                   Request demo
                 </Button>
               </DialogFooter>

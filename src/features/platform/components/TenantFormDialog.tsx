@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,22 +62,22 @@ export default function TenantFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, subdomain: values.subdomain.toLowerCase() }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="tenant-schoolName">School name</Label>
-            <Input id="tenant-schoolName" {...register("schoolName")} />
-            {errors.schoolName && <p className="text-xs text-red-600">{errors.schoolName.message}</p>}
+            <Label htmlFor="tenant-schoolName" required>School name</Label>
+            <Input id="tenant-schoolName" aria-invalid={errors.schoolName ? true : undefined} {...register("schoolName")} />
+            {errors.schoolName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.schoolName.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="tenant-subdomain">Subdomain</Label>
             <div className="flex items-center gap-1.5">
-              <Input id="tenant-subdomain" placeholder="riverside-intl" {...register("subdomain")} />
+              <Input id="tenant-subdomain" placeholder="riverside-intl" aria-invalid={errors.subdomain ? true : undefined} {...register("subdomain")} />
               <span className="text-sm text-muted-foreground shrink-0">.educore.app</span>
             </div>
-            {errors.subdomain && <p className="text-xs text-red-600">{errors.subdomain.message}</p>}
+            {errors.subdomain && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subdomain.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="tenant-planId">Plan</Label>
+            <Label htmlFor="tenant-planId" required>Plan</Label>
             <Controller
               control={control}
               name="planId"
@@ -96,19 +96,19 @@ export default function TenantFormDialog({
                 </Select>
               )}
             />
-            {errors.planId && <p className="text-xs text-red-600">{errors.planId.message}</p>}
+            {errors.planId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.planId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="tenant-billingName">Billing contact</Label>
-              <Input id="tenant-billingName" {...register("billingContactName")} />
-              {errors.billingContactName && <p className="text-xs text-red-600">{errors.billingContactName.message}</p>}
+              <Input id="tenant-billingName" aria-invalid={errors.billingContactName ? true : undefined} {...register("billingContactName")} />
+              {errors.billingContactName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.billingContactName.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tenant-billingEmail">Billing email</Label>
-              <Input id="tenant-billingEmail" type="email" {...register("billingContactEmail")} />
-              {errors.billingContactEmail && <p className="text-xs text-red-600">{errors.billingContactEmail.message}</p>}
+              <Input id="tenant-billingEmail" type="email" aria-invalid={errors.billingContactEmail ? true : undefined} {...register("billingContactEmail")} />
+              {errors.billingContactEmail && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.billingContactEmail.message}</p>}
             </div>
           </div>
 
@@ -116,8 +116,7 @@ export default function TenantFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               Create tenant
             </Button>
           </DialogFooter>

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BarChart3, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { BarChart3, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatRelativeDay } from "@/utils/format";
 import { AUDIENCE_CONFIG, SURVEY_STATUS_CONFIG } from "../constants";
@@ -15,10 +15,11 @@ import { closeSurvey, createSurvey, deleteSurvey, listSurveys, publishSurvey } f
 import type { SurveyRow } from "../types";
 import SurveyFormDialog from "./SurveyFormDialog";
 import SurveyResultsDialog from "./SurveyResultsDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function SurveysTab() {
   const queryClient = useQueryClient();
-  const { data: surveys = [], isLoading } = useQuery({ queryKey: ["surveys", "list"], queryFn: () => listSurveys() });
+  const { data: surveys = [], isLoading, isError, refetch } = useQuery({ queryKey: ["surveys", "list"], queryFn: () => listSurveys() });
   const [statusFilter, setStatusFilter] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [resultsId, setResultsId] = useState<string | null>(null);
@@ -71,30 +72,30 @@ export default function SurveysTab() {
       header: "Survey",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.title}</p>
-          <p className="text-xs text-slate-500">{row.original.questions.length} question{row.original.questions.length === 1 ? "" : "s"}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.title}</p>
+          <p className="text-xs text-muted-foreground">{row.original.questions.length} question{row.original.questions.length === 1 ? "" : "s"}</p>
         </div>
       ),
     },
     {
       id: "audience",
       header: "Audience",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{AUDIENCE_CONFIG[row.original.audience].label}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{AUDIENCE_CONFIG[row.original.audience].label}</span>,
     },
     {
       id: "responseCount",
       header: "Responses",
-      cell: ({ row }) => <span className="text-sm text-slate-700 tabular-nums">{row.original.responseCount}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.responseCount}</span>,
     },
     {
       accessorKey: "opensAt",
       header: "Opens",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{formatRelativeDay(row.original.opensAt)}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.opensAt)}</span>,
     },
     {
       id: "closesAt",
       header: "Closes",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.closesAt ? formatRelativeDay(row.original.closesAt) : "—"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.closesAt ? formatRelativeDay(row.original.closesAt) : "—"}</span>,
     },
     {
       id: "status",
@@ -107,27 +108,20 @@ export default function SurveysTab() {
       cell: ({ row }) => {
         const s = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setResultsId(s.id)}>
-                <BarChart3 className="w-3.5 h-3.5" />
-                View results
-              </DropdownMenuItem>
-              {s.status === "draft" && (
-                <DropdownMenuItem onClick={() => publishMutation.mutate(s.id)}>Publish</DropdownMenuItem>
-              )}
-              {s.status === "published" && <DropdownMenuItem onClick={() => closeMutation.mutate(s.id)}>Close</DropdownMenuItem>}
-              <DropdownMenuItem onClick={() => setDeleteTarget(s)} className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem onClick={() => setResultsId(s.id)}>
+              <BarChart3 className="w-3.5 h-3.5" />
+              View results
+            </DropdownMenuItem>
+            {s.status === "draft" && (
+              <DropdownMenuItem onClick={() => publishMutation.mutate(s.id)}>Publish</DropdownMenuItem>
+            )}
+            {s.status === "published" && <DropdownMenuItem onClick={() => closeMutation.mutate(s.id)}>Close</DropdownMenuItem>}
+            <DropdownMenuItem onClick={() => setDeleteTarget(s)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -155,7 +149,7 @@ export default function SurveysTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No surveys match your filter." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No surveys match your filter." pageSize={10} />
 
       <SurveyFormDialog
         open={formOpen}

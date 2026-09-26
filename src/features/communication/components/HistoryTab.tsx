@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, MoreHorizontal, Send, XCircle } from "lucide-react";
+import { Eye, Send, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { CHANNELS, MESSAGE_STATUS_CONFIG } from "../constants";
 import { cancelScheduledMessage, listMessages, sendScheduledNow } from "../api";
 import type { BroadcastMessage } from "../types";
 import MessageDetailDialog from "./MessageDetailDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function HistoryTab() {
   const queryClient = useQueryClient();
@@ -19,7 +19,7 @@ export default function HistoryTab() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<BroadcastMessage | null>(null);
 
-  const { data: messages = [], isLoading } = useQuery({ queryKey: ["communication", "messages"], queryFn: listMessages });
+  const { data: messages = [], isLoading, isError, refetch } = useQuery({ queryKey: ["communication", "messages"], queryFn: listMessages });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["communication"] });
 
@@ -49,7 +49,7 @@ export default function HistoryTab() {
       header: "Message",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.subject || "(no subject)"}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.subject || "(no subject)"}</p>
           <p className="text-xs text-muted-foreground line-clamp-1">{row.original.body}</p>
         </div>
       ),
@@ -70,13 +70,13 @@ export default function HistoryTab() {
     {
       id: "recipients",
       header: "Recipients",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.recipientCount}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.recipientCount}</span>,
     },
     {
       id: "when",
       header: "When",
       cell: ({ row }) => (
-        <span className="text-sm text-slate-600">
+        <span className="text-sm text-secondary-foreground">
           {row.original.sentAt
             ? new Date(row.original.sentAt).toLocaleString()
             : row.original.scheduledAt
@@ -99,36 +99,29 @@ export default function HistoryTab() {
       cell: ({ row }) => {
         const message = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setDetailTarget(message);
-                  setDetailOpen(true);
-                }}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                View details
-              </DropdownMenuItem>
-              {message.status === "scheduled" && (
-                <>
-                  <DropdownMenuItem onClick={() => sendNowMutation.mutate(message.id)}>
-                    <Send className="w-3.5 h-3.5" />
-                    Send now
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setCancelTarget(message)}>
-                    <XCircle className="w-3.5 h-3.5" />
-                    Cancel
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setDetailTarget(message);
+                setDetailOpen(true);
+              }}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              View details
+            </DropdownMenuItem>
+            {message.status === "scheduled" && (
+              <>
+                <DropdownMenuItem onClick={() => sendNowMutation.mutate(message.id)}>
+                  <Send className="w-3.5 h-3.5" />
+                  Send now
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCancelTarget(message)}>
+                  <XCircle className="w-3.5 h-3.5" />
+                  Cancel
+                </DropdownMenuItem>
+              </>
+            )}
+          </RowActions>
         );
       },
     },
@@ -140,7 +133,7 @@ export default function HistoryTab() {
         <p className="text-sm text-muted-foreground">Sent and scheduled broadcasts.</p>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={messages} isLoading={isLoading} emptyMessage="No messages yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={messages} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No messages yet." pageSize={10} />
 
       <MessageDetailDialog
         open={detailOpen}

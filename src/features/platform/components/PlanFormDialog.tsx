@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -84,14 +84,14 @@ export default function PlanFormDialog({
           <DialogDescription>Defines the limits and modules tenants on this plan get.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values))} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="plan-name">Plan name</Label>
-              <Input id="plan-name" {...register("name")} />
-              {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+              <Label htmlFor="plan-name" required>Plan name</Label>
+              <Input id="plan-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+              {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="plan-tier">Tier</Label>
+              <Label htmlFor="plan-tier" required>Tier</Label>
               <Controller
                 control={control}
                 name="tier"
@@ -115,25 +115,25 @@ export default function PlanFormDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="plan-price">Monthly price (₹)</Label>
-            <Input id="plan-price" type="number" min="0" step="500" {...register("monthlyPriceInr")} />
-            {errors.monthlyPriceInr && <p className="text-xs text-red-600">{errors.monthlyPriceInr.message}</p>}
+            <Input id="plan-price" type="number" min="0" step="500" aria-invalid={errors.monthlyPriceInr ? true : undefined} {...register("monthlyPriceInr")} />
+            {errors.monthlyPriceInr && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.monthlyPriceInr.message}</p>}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="plan-maxStudents">Max students</Label>
-              <Input id="plan-maxStudents" type="number" min="1" step="1" {...register("maxStudents")} />
-              {errors.maxStudents && <p className="text-xs text-red-600">{errors.maxStudents.message}</p>}
+              <Label htmlFor="plan-maxStudents" required>Max students</Label>
+              <Input id="plan-maxStudents" type="number" min="1" step="1" aria-invalid={errors.maxStudents ? true : undefined} {...register("maxStudents")} />
+              {errors.maxStudents && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.maxStudents.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="plan-maxStaff">Max staff</Label>
-              <Input id="plan-maxStaff" type="number" min="1" step="1" {...register("maxStaff")} />
-              {errors.maxStaff && <p className="text-xs text-red-600">{errors.maxStaff.message}</p>}
+              <Label htmlFor="plan-maxStaff" required>Max staff</Label>
+              <Input id="plan-maxStaff" type="number" min="1" step="1" aria-invalid={errors.maxStaff ? true : undefined} {...register("maxStaff")} />
+              {errors.maxStaff && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.maxStaff.message}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="plan-storage">Storage (GB)</Label>
-              <Input id="plan-storage" type="number" min="1" step="1" {...register("storageGb")} />
-              {errors.storageGb && <p className="text-xs text-red-600">{errors.storageGb.message}</p>}
+              <Input id="plan-storage" type="number" min="1" step="1" aria-invalid={errors.storageGb ? true : undefined} {...register("storageGb")} />
+              {errors.storageGb && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.storageGb.message}</p>}
             </div>
           </div>
 
@@ -144,7 +144,7 @@ export default function PlanFormDialog({
                 <span className="text-muted-foreground">
                   {includedModules.length} of {AVAILABLE_MODULE_LABELS.length} selected
                 </span>
-                <button type="button" className="font-medium text-brand-600 hover:underline cursor-pointer" onClick={() => setValue("includedModules", [...AVAILABLE_MODULE_LABELS])}>
+                <button type="button" className="font-medium text-primary-text hover:underline cursor-pointer" onClick={() => setValue("includedModules", [...AVAILABLE_MODULE_LABELS])}>
                   Select all
                 </button>
                 <button type="button" className="font-medium text-muted-foreground hover:underline cursor-pointer" onClick={() => setValue("includedModules", normalizeModules([]))}>
@@ -177,15 +177,14 @@ export default function PlanFormDialog({
               })}
             </div>
             <p className="text-xs text-muted-foreground">School admins can only grant these modules to roles in Roles &amp; Permissions.</p>
-            {errors.includedModules && <p className="text-xs text-red-600">{errors.includedModules.message}</p>}
+            {errors.includedModules && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.includedModules.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Create plan"}
             </Button>
           </DialogFooter>

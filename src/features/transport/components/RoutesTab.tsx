@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MapPin, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { ROUTE_STATUS_CONFIG } from "../constants";
@@ -13,6 +13,7 @@ import { createRoute, deleteRoute, listBuses, listDrivers, listRoutes, listStops
 import type { TransportRoute, TransportRouteFormValues } from "../types";
 import RouteFormDialog from "./RouteFormDialog";
 import RouteStopsDialog from "./RouteStopsDialog";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function RoutesTab() {
   const queryClient = useQueryClient();
@@ -22,7 +23,7 @@ export default function RoutesTab() {
   const [stopsRoute, setStopsRoute] = useState<TransportRoute | null>(null);
   const [stopsOpen, setStopsOpen] = useState(false);
 
-  const { data: routes = [], isLoading } = useQuery({ queryKey: ["transport", "routes"], queryFn: listRoutes });
+  const { data: routes = [], isLoading, isError, refetch } = useQuery({ queryKey: ["transport", "routes"], queryFn: listRoutes });
   const { data: buses = [] } = useQuery({ queryKey: ["transport", "buses"], queryFn: listBuses });
   const { data: drivers = [] } = useQuery({ queryKey: ["transport", "drivers"], queryFn: listDrivers });
   const { data: allStops = [] } = useQuery({ queryKey: ["transport", "stops", "all"], queryFn: () => listStops() });
@@ -74,7 +75,7 @@ export default function RoutesTab() {
       header: "Route",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">{row.original.name}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.name}</p>
           <p className="text-xs text-muted-foreground">
             {row.original.startTime} – {row.original.endTime} · {stopCountByRoute.get(row.original.id) ?? 0} stops
           </p>
@@ -84,14 +85,14 @@ export default function RoutesTab() {
     {
       id: "bus",
       header: "Bus",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.busId ? busById.get(row.original.busId)?.regNumber ?? "—" : "Unassigned"}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.busId ? busById.get(row.original.busId)?.regNumber ?? "—" : "Unassigned"}</span>,
     },
     {
       id: "driver",
       header: "Driver",
       cell: ({ row }) => {
         const driver = row.original.driverId ? driverById.get(row.original.driverId) : undefined;
-        return <span className="text-sm text-slate-600">{driver ? `${driver.staff.firstName} ${driver.staff.lastName}` : "Unassigned"}</span>;
+        return <span className="text-sm text-secondary-foreground">{driver ? `${driver.staff.firstName} ${driver.staff.lastName}` : "Unassigned"}</span>;
       },
     },
     {
@@ -108,37 +109,30 @@ export default function RoutesTab() {
       cell: ({ row }) => {
         const route = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setStopsRoute(route);
-                  setStopsOpen(true);
-                }}
-              >
-                <MapPin className="w-3.5 h-3.5" />
-                Manage stops
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditing(route);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleteTarget(route)}>
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RowActions>
+            <DropdownMenuItem
+              onClick={() => {
+                setStopsRoute(route);
+                setStopsOpen(true);
+              }}
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              Manage stops
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditing(route);
+                setFormOpen(true);
+              }}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTarget(route)} variant="destructive">
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </RowActions>
         );
       },
     },
@@ -159,7 +153,7 @@ export default function RoutesTab() {
         </Button>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={routes} isLoading={isLoading} emptyMessage="No routes yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={routes} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No routes yet." pageSize={8} />
 
       <RouteFormDialog
         open={formOpen}

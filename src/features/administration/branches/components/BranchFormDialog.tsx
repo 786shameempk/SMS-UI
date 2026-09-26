@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,21 +55,21 @@ export default function BranchFormDialog({ open, onOpenChange, branch, onSubmit,
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Branch name</Label>
-            <Input id="name" placeholder="North Campus" {...register("name")} />
-            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+            <Label htmlFor="name" required>Branch name</Label>
+            <Input id="name" placeholder="North Campus" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="code">Short code</Label>
-            <Input id="code" placeholder="NORTH" {...register("code")} />
-            {errors.code && <p className="text-xs text-red-600">{errors.code.message}</p>}
+            <Label htmlFor="code" required>Short code</Label>
+            <Input id="code" placeholder="NORTH" aria-invalid={errors.code ? true : undefined} {...register("code")} />
+            {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="address">Address (optional)</Label>
+            <Label htmlFor="address" optional>Address</Label>
             <Input id="address" {...register("address")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone (optional)</Label>
+            <Label htmlFor="phone" optional>Phone</Label>
             <Input id="phone" {...register("phone")} />
           </div>
           <div className="space-y-1.5">
@@ -94,8 +94,7 @@ export default function BranchFormDialog({ open, onOpenChange, branch, onSubmit,
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" loading={submitting}>
               {isEdit ? "Save changes" : "Add branch"}
             </Button>
           </DialogFooter>

@@ -10,7 +10,7 @@ import { listHealthRecords } from "../api";
 import type { HealthRecordRow } from "../types";
 
 export default function HealthRecordsTab() {
-  const { data: records = [], isLoading } = useQuery({ queryKey: ["health", "records"], queryFn: listHealthRecords });
+  const { data: records = [], isLoading, isError, refetch } = useQuery({ queryKey: ["health", "records"], queryFn: listHealthRecords });
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -32,10 +32,10 @@ export default function HealthRecordsTab() {
       header: "Student",
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-foreground">
             {row.original.student.firstName} {row.original.student.lastName}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {row.original.student.className} - {row.original.student.section} &middot; {row.original.student.admissionNumber}
           </p>
         </div>
@@ -44,7 +44,7 @@ export default function HealthRecordsTab() {
     {
       id: "bloodGroup",
       header: "Blood group",
-      cell: ({ row }) => <span className="text-sm text-slate-700">{row.original.student.medical.bloodGroup === "unknown" ? "—" : row.original.student.medical.bloodGroup}</span>,
+      cell: ({ row }) => <span className="text-sm text-foreground">{row.original.student.medical.bloodGroup === "unknown" ? "—" : row.original.student.medical.bloodGroup}</span>,
     },
     {
       id: "allergies",
@@ -53,7 +53,7 @@ export default function HealthRecordsTab() {
         row.original.student.medical.allergies?.trim() ? (
           <Badge variant="warning">{row.original.student.medical.allergies}</Badge>
         ) : (
-          <span className="text-sm text-slate-400">None on file</span>
+          <span className="text-sm text-muted-foreground">None on file</span>
         ),
     },
     {
@@ -61,9 +61,9 @@ export default function HealthRecordsTab() {
       header: "Ongoing conditions",
       cell: ({ row }) =>
         row.original.student.medical.conditions?.trim() ? (
-          <span className="text-sm text-slate-700">{row.original.student.medical.conditions}</span>
+          <span className="text-sm text-foreground">{row.original.student.medical.conditions}</span>
         ) : (
-          <span className="text-sm text-slate-400">None on file</span>
+          <span className="text-sm text-muted-foreground">None on file</span>
         ),
     },
     {
@@ -71,9 +71,9 @@ export default function HealthRecordsTab() {
       header: "Last checkup",
       cell: ({ row }) =>
         row.original.lastCheckupDate ? (
-          <span className="text-sm text-slate-600">{formatRelativeDay(row.original.lastCheckupDate)}</span>
+          <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.lastCheckupDate)}</span>
         ) : (
-          <span className="text-sm text-slate-400">Never</span>
+          <span className="text-sm text-muted-foreground">Never</span>
         ),
     },
     {
@@ -83,13 +83,13 @@ export default function HealthRecordsTab() {
         row.original.overdueVaccinations > 0 ? (
           <Badge variant="danger">{row.original.overdueVaccinations}</Badge>
         ) : (
-          <span className="text-sm text-slate-400">0</span>
+          <span className="text-sm text-muted-foreground">0</span>
         ),
     },
     {
       id: "visitsThisYear",
       header: "Infirmary visits (this year)",
-      cell: ({ row }) => <span className="text-sm text-slate-600">{row.original.visitCountThisYear}</span>,
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.visitCountThisYear}</span>,
     },
   ];
 
@@ -97,7 +97,7 @@ export default function HealthRecordsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input placeholder="Search by name, class, or admission no." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <p className="text-xs text-muted-foreground max-w-sm text-right">
@@ -105,7 +105,7 @@ export default function HealthRecordsTab() {
         </p>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} emptyMessage="No students match your search." pageSize={10} />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No students match your search." pageSize={10} />
     </div>
   );
 }

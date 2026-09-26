@@ -2,10 +2,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { AttendanceSummary } from "../types";
 
 const SEGMENTS: { key: keyof Omit<AttendanceSummary, "totalMarked">; label: string; color: string }[] = [
-  { key: "present", label: "Present", color: "bg-green-500" },
-  { key: "late", label: "Late", color: "bg-amber-500" },
-  { key: "absent", label: "Absent", color: "bg-red-500" },
-  { key: "onLeave", label: "On leave", color: "bg-slate-300" },
+  { key: "present", label: "Present", color: "bg-success" },
+  { key: "late", label: "Late", color: "bg-warning" },
+  { key: "absent", label: "Absent", color: "bg-destructive" },
+  { key: "onLeave", label: "On leave", color: "bg-muted-foreground/40" },
 ];
 
 export default function AttendanceSummaryCard({ attendance }: { attendance: AttendanceSummary }) {
