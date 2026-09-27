@@ -5,7 +5,8 @@ import { getExamResults, listExamSchedules, listExams } from "@/features/examina
 import { listAssignedHomework } from "@/features/homework/api";
 import { getStudent, listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
-import { listInvoicesForStudent, payInvoiceOnline } from "@/features/fees/api";
+import { listInvoicesForStudent } from "@/features/fees/api";
+import { payInvoiceWithRazorpay } from "./razorpayCheckout";
 import type { FeeInvoice as FeesInvoice } from "@/features/fees/types";
 import { listMyNotifications, markRead } from "@/features/notifications/api";
 import type { Notification } from "@/features/notifications/types";
@@ -180,9 +181,10 @@ export async function listFeeInvoices(studentId: string): Promise<FeeInvoice[]> 
   return invoices.map(toParentFeeInvoice);
 }
 
-export async function payFeeInvoice(studentId: string, invoiceId: string): Promise<FeeInvoice> {
+/** Opens Razorpay's checkout; resolves once FinanceService has verified the payment and marked the invoice paid. */
+export async function payFeeInvoice(studentId: string, invoiceId: string, prefill: { name?: string; email?: string } = {}): Promise<FeeInvoice> {
   void studentId;
-  const { invoice } = await payInvoiceOnline(invoiceId);
+  const { invoice } = await payInvoiceWithRazorpay(invoiceId, prefill);
   return toParentFeeInvoice(invoice);
 }
 

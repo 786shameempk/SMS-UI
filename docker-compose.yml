@@ -73,6 +73,8 @@ services:
     environment:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      # Plan limits (max students / staff) are checked with AuthService before adding either.
+      Services__AuthServiceUrl: http://authservice:8080/
     volumes:
       # Study Materials uploads (see AcademicService LocalStudyMaterialStorage); survives image rebuilds.
       - study-materials:/app/App_Data/study-materials
@@ -86,6 +88,12 @@ services:
     environment:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinanceServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      # Parent/student fee access asks AcademicService whose children they are.
+      Services__AcademicServiceUrl: http://academicservice:8080/
+      # Razorpay online fee payment (EduCore Student app). Empty = off; use rzp_test_ keys for testing.
+      Razorpay__KeyId: ${RAZORPAY_KEY_ID:-}
+      Razorpay__KeySecret: ${RAZORPAY_KEY_SECRET:-}
+      Razorpay__WebhookSecret: ${RAZORPAY_WEBHOOK_SECRET:-}
 
   campusservice:
     <<: *dotnet-service
@@ -96,6 +104,8 @@ services:
     environment:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CampusServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      # Parent/student "my child's bus" asks AcademicService whose children they are.
+      Services__AcademicServiceUrl: http://academicservice:8080/
 
   engagementservice:
     <<: *dotnet-service
@@ -211,6 +221,9 @@ services:
     environment:
       <<: *dotnet-env
       Services__FinanceServiceUrl: http://financeservice:8080/
+      # Expo web preview of the mobile apps (npm run student:web) calls the gateway from the Metro dev server origin.
+      Cors__AllowedOrigins__2: http://localhost:8081
+      Cors__AllowedOrigins__3: http://127.0.0.1:8081
       ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address: http://authservice:8080/
       ReverseProxy__Clusters__academic-cluster__Destinations__destination1__Address: http://academicservice:8080/
       ReverseProxy__Clusters__finance-cluster__Destinations__destination1__Address: http://financeservice:8080/

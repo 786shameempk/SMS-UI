@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/format";
+import { getPaymentConfig } from "@/features/fees/api";
+import { useAuthStore } from "@/store/authStore";
 import { listFeeInvoices, payFeeInvoice } from "../api";
+import { CheckoutDismissed } from "../razorpayCheckout";
 import type { FeeInvoice, FeeInvoiceStatus } from "../types";
 import OnlinePaymentDialog from "./OnlinePaymentDialog";
 
@@ -24,15 +27,20 @@ export default function FeesTab({ studentId }: { studentId: string }) {
     queryFn: () => listFeeInvoices(studentId),
   });
   const [payTarget, setPayTarget] = useState<FeeInvoice | null>(null);
+  const user = useAuthStore((s) => s.user);
+  const config = useQuery({ queryKey: ["payments", "config"], queryFn: getPaymentConfig, staleTime: 10 * 60_000 });
 
   const payMutation = useMutation({
-    mutationFn: (invoiceId: string) => payFeeInvoice(studentId, invoiceId),
+    mutationFn: (invoiceId: string) => payFeeInvoice(studentId, invoiceId, { name: user?.name, email: user?.email }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parent-portal", "fees", studentId] });
-      toast.success(`Payment successful for ${payTarget?.term}`);
+      toast.success(`Payment received for ${payTarget?.term}`);
       setPayTarget(null);
     },
-    onError: () => toast.error("Payment failed, please try again"),
+    onError: (err: Error) => {
+      if (err instanceof CheckoutDismissed) return;
+      toast.error(err.message || "Payment failed, please try again");
+    },
   });
 
   return (
@@ -75,6 +83,7 @@ export default function FeesTab({ studentId }: { studentId: string }) {
         onOpenChange={(v) => !v && setPayTarget(null)}
         invoice={payTarget}
         submitting={payMutation.isPending}
+        enabled={config.data?.enabled ?? false}
         onPay={async () => {
           if (payTarget) await payMutation.mutateAsync(payTarget.id);
         }}

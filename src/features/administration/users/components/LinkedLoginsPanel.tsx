@@ -22,6 +22,12 @@ interface LoginUser {
   roleKey: string | null;
 }
 
+interface LinkedUser {
+  userId: string;
+  personType: LinkKind;
+  personId: string;
+}
+
 interface RawPerson {
   id: string;
   userId: string | null;
@@ -55,8 +61,25 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
 
 const NONE = "__none__";
 
-function LinkRow({ row, users, onLinked }: { row: Row; users: LoginUser[]; onLinked: () => void }) {
-  const candidates = useMemo(() => users.filter((u) => u.roleKey && row.roles.includes(u.roleKey)), [users, row.roles]);
+function LinkRow({ row, users, taken, onLinked }: { row: Row; users: LoginUser[]; taken: Map<string, Set<LinkKind>>; onLinked: () => void }) {
+  // Only logins not already linked elsewhere - except a parent login already linked to a sibling's
+  // guardian record whose email matches this guardian, so one parent can cover several children.
+  const candidates = useMemo(
+    () =>
+      users.filter((u) => {
+        if (!u.roleKey || !row.roles.includes(u.roleKey)) return false;
+        const kinds = taken.get(u.id);
+        if (!kinds) return true;
+        return (
+          row.kind === "Guardian" &&
+          kinds.size === 1 &&
+          kinds.has("Guardian") &&
+          !!row.email &&
+          u.email.toLowerCase() === row.email.toLowerCase()
+        );
+      }),
+    [users, row.roles, row.kind, row.email, taken],
+  );
   const linked = users.find((u) => u.id === row.userId);
   // Preselect the login whose email matches the record - the usual case, one click to confirm.
   const suggested = candidates.find((u) => row.email && u.email.toLowerCase() === row.email.toLowerCase());
@@ -95,6 +118,7 @@ function LinkRow({ row, users, onLinked }: { row: Row; users: LoginUser[]; onLin
             <SelectContent>
               <SelectItem value={NONE}>Choose a login…</SelectItem>
               {candidates.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} · {u.email}</SelectItem>)}
+              {candidates.length === 0 && <SelectItem value="__empty__" disabled>No unlinked logins available</SelectItem>}
             </SelectContent>
           </Select>
           <Button size="sm" onClick={() => save.mutate(choice)} disabled={choice === NONE || save.isPending}>
@@ -118,6 +142,20 @@ export default function LinkedLoginsPanel({ kind, personId }: { kind: "student" 
     queryFn: () => unwrap(authHttpClient.get<LoginUser[]>("/api/school-users")),
     staleTime: 60_000,
   });
+  const linkedUsers = useQuery({
+    queryKey: ["linked-logins", "linked-users"],
+    queryFn: () => unwrap(academicHttpClient.get<LinkedUser[]>("api/people/linked-users")),
+  });
+  const taken = useMemo(() => {
+    const map = new Map<string, Set<LinkKind>>();
+    for (const l of linkedUsers.data ?? []) {
+      const kinds = map.get(l.userId) ?? new Set<LinkKind>();
+      kinds.add(l.personType);
+      map.set(l.userId, kinds);
+    }
+    return map;
+  }, [linkedUsers.data]);
+  const loading = person.isLoading || users.isLoading || linkedUsers.isLoading;
 
   const rows: Row[] = useMemo(() => {
     const p = person.data;
@@ -146,10 +184,20 @@ export default function LinkedLoginsPanel({ kind, personId }: { kind: "student" 
         <CardDescription>Links this record to the login that signs in as them. Online classes use it to decide who can join.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
-        {(person.isLoading || users.isLoading) && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
         {users.isError && <p className="text-sm text-destructive-strong">Couldn't load logins: {(users.error as Error).message}</p>}
-        {!person.isLoading && !users.isLoading && rows.map((row) => (
-          <LinkRow key={`${row.kind}-${row.personId}-${row.userId}`} row={row} users={users.data ?? []} onLinked={() => void queryClient.invalidateQueries({ queryKey: key })} />
+        {linkedUsers.isError && <p className="text-sm text-destructive-strong">Couldn't load linked logins: {(linkedUsers.error as Error).message}</p>}
+        {!loading && rows.map((row) => (
+          <LinkRow
+            key={`${row.kind}-${row.personId}-${row.userId}`}
+            row={row}
+            users={users.data ?? []}
+            taken={taken}
+            onLinked={() => {
+              void queryClient.invalidateQueries({ queryKey: key });
+              void queryClient.invalidateQueries({ queryKey: ["linked-logins", "linked-users"] });
+            }}
+          />
         ))}
       </CardContent>
     </Card>

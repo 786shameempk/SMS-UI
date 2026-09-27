@@ -114,6 +114,8 @@ export interface Receipt {
   amount: number;
   paidOn: string;
   paymentMode: PaymentMode;
+  /** Gateway payment id for online payments (e.g. Razorpay "pay_..."). */
+  providerPaymentId?: string;
 }
 
 export type RefundStatus = "pending" | "processed";

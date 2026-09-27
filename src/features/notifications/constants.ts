@@ -11,6 +11,7 @@ export const CATEGORY_CONFIG: Record<NotificationCategory, { label: string; vari
   alert: { label: "Alert", variant: "danger" },
   talent: { label: "Talent Showcase", variant: "default" },
   meeting: { label: "Online Classes", variant: "info" },
+  message: { label: "Messages", variant: "info" },
 };
 
 export const AUDIENCE_OPTIONS: Array<{ value: AnnouncementAudience; label: string }> = [

@@ -42,6 +42,23 @@
         "CI": "1",
         "EXPO_PUBLIC_API_URL": "http://localhost:5138"
       }
+    },
+    {
+      "name": "educore-teacher-web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "../SMS Mobile/node_modules/expo/bin/cli",
+        "start",
+        "../SMS Mobile/apps/teacher",
+        "--web",
+        "--port",
+        "8081"
+      ],
+      "port": 8081,
+      "env": {
+        "CI": "1",
+        "EXPO_PUBLIC_API_URL": "http://localhost:5138"
+      }
     }
   ]
 }
