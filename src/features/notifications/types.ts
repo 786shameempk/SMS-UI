@@ -1,6 +1,6 @@
 import type { UserRole } from "@/types/auth";
 
-export type NotificationCategory = "announcement" | "academic" | "finance" | "event" | "system" | "alert" | "talent" | "meeting";
+export type NotificationCategory = "announcement" | "academic" | "finance" | "event" | "system" | "alert" | "talent" | "meeting" | "message";
 
 export interface Notification {
   id: string;

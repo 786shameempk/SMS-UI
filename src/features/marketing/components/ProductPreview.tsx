@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 import { CalendarCheck, LayoutDashboard, Wallet } from "lucide-react";
 import { cn } from "@/utils/cn";
+import SectionHeading from "./SectionHeading";
 
 const TRENDS: Record<string, Array<{ x: string; y: number }>> = {
   dashboard: [
@@ -65,30 +66,32 @@ export default function ProductPreview() {
   return (
     <section className="bg-slate-50 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand-600">See it in action</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-            A different module every click, the same familiar system
-          </h2>
-        </div>
+        <SectionHeading eyebrow="See it in action" title="A different module every click, the same familiar system" />
 
-        <div className="mx-auto mt-10 flex max-w-xl flex-wrap items-center justify-center gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActive(t.id)}
-              className={cn(
-                "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-                active === t.id
-                  ? "border-brand-600 bg-brand-600 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900",
-              )}
-            >
-              <t.icon className="h-4 w-4" />
-              {t.label}
-            </button>
-          ))}
+        <div className="mt-10 flex justify-center">
+          <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActive(t.id)}
+                className={cn(
+                  "relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                  active === t.id ? "text-primary-foreground" : "text-slate-600 hover:text-slate-900",
+                )}
+              >
+                {active === t.id && (
+                  <motion.span
+                    layoutId="preview-tab-pill"
+                    className="bg-brand-gradient absolute inset-0 rounded-full shadow-md shadow-brand-600/25"
+                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <t.icon className="relative h-4 w-4" />
+                <span className="relative">{t.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="relative mt-10 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-900/5 sm:p-4">

@@ -142,6 +142,7 @@ interface ApiReceipt {
   amount: number;
   paidOn: string;
   paymentMode: string;
+  providerPaymentId?: string | null;
 }
 
 interface ApiRefund {
@@ -223,6 +224,7 @@ function mapReceipt(dto: ApiReceipt): Receipt {
     amount: dto.amount,
     paidOn: dto.paidOn,
     paymentMode: PAYMENT_MODE_FROM_API[dto.paymentMode] ?? "cash",
+    providerPaymentId: dto.providerPaymentId ?? undefined,
   };
 }
 
@@ -451,4 +453,35 @@ export async function requestRefund(values: RefundFormValues): Promise<Refund> {
 export async function processRefund(id: string): Promise<Refund> {
   const dto = await unwrap(financeHttpClient.post<ApiRefund>(`/api/refunds/${id}/process`));
   return mapRefund(dto);
+}
+
+// ── Online payment (Razorpay) ──────────────────────────────────────────────
+// The invoice is only marked paid after FinanceService confirms the payment with Razorpay
+// (signed checkout result, or Razorpay's webhook). Parents can't record payments directly.
+
+export interface PaymentConfig {
+  enabled: boolean;
+  keyId: string | null;
+  currency: string;
+}
+
+export interface RazorpayOrder {
+  orderId: string;
+  keyId: string;
+  amountPaise: number;
+  currency: string;
+  invoiceId: string;
+  description: string;
+}
+
+export const getPaymentConfig = () => unwrap(financeHttpClient.get<PaymentConfig>("/api/payments/config"));
+
+export const createRazorpayOrder = (invoiceId: string) =>
+  unwrap(financeHttpClient.post<RazorpayOrder>("/api/payments/razorpay/orders", { invoiceId }));
+
+export async function verifyRazorpayPayment(values: { orderId: string; paymentId: string; signature: string }): Promise<{ invoice: FeeInvoice; receipt: Receipt | null }> {
+  const result = await unwrap(
+    financeHttpClient.post<{ status: string; invoice: ApiFeeInvoice; receipt: ApiReceipt | null }>("/api/payments/razorpay/verify", values),
+  );
+  return { invoice: mapFeeInvoice(result.invoice), receipt: result.receipt ? mapReceipt(result.receipt) : null };
 }

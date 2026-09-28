@@ -88,6 +88,8 @@ function StaffDirectoryTab() {
       invalidate();
       toast.success(`${member.firstName} reactivated`);
     },
+    // e.g. the school's plan has no staff seats left.
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not reactivate staff member"),
   });
 
   const filtered = useMemo(() => {

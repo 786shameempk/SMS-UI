@@ -68,7 +68,7 @@ export default function AppLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header />
-        <main id="main-content" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto focus:outline-none">
+        <main id="main-content" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto bg-app-glow focus:outline-none">
           {/* Pages are lazy chunks: the shell stays put while the next page loads. */}
           <Suspense fallback={<PageSkeleton />}>
             <Outlet />

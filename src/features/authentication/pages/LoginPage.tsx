@@ -67,7 +67,7 @@ function CredentialsForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-7">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-2xl border border-border/80 bg-card p-6 shadow-lg sm:p-8">
       <div className="space-y-1.5">
         <Label htmlFor="email" required>Email</Label>
         <Input id="email" type="email" placeholder="you@school.edu" autoComplete="username" aria-invalid={errors.email ? true : undefined} {...register("email")} />
@@ -135,11 +135,11 @@ function CredentialsForm() {
 export default function LoginPage() {
   const [expired] = useState(() => readSignOutReason() === "expired");
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-app-glow px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <GraduationCap className="h-5 w-5" aria-hidden="true" />
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">
+            <GraduationCap className="h-6 w-6" aria-hidden="true" />
           </div>
           <h1 className="text-page-title">EduCore</h1>
           <p className="text-sm text-muted-foreground mt-1">Sign in to your school management account</p>

@@ -14,6 +14,7 @@ const CATEGORY_TO_API: Record<NotificationCategory, string> = {
   alert: "Alert",
   talent: "Talent",
   meeting: "Meeting",
+  message: "Message",
 };
 const CATEGORY_FROM_API: Record<string, NotificationCategory> = {
   Announcement: "announcement",
@@ -24,6 +25,7 @@ const CATEGORY_FROM_API: Record<string, NotificationCategory> = {
   Alert: "alert",
   Talent: "talent",
   Meeting: "meeting",
+  Message: "message",
 };
 
 interface ApiNotification {

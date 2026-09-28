@@ -1,14 +1,18 @@
 import {
+  BookOpen,
   Bus,
   Building2,
   CalendarCheck,
   ChartColumn,
   Globe,
   GraduationCap,
+  Landmark,
   Library,
   Megaphone,
+  School,
   ShieldCheck,
   Sparkles,
+  Trees,
   Wallet,
   WalletCards,
   type LucideIcon,
@@ -137,6 +141,25 @@ export const TESTIMONIALS: Testimonial[] = [
     name: "Meera Iyer",
     role: "Principal, Riverside International School",
   },
+];
+
+export interface Partner {
+  name: string;
+  location: string;
+  /** Path to a real logo under /public (e.g. "/partners/greenfield.svg"). Without one, a crest is drawn from `icon` + `color`. */
+  logoUrl?: string;
+  icon: LucideIcon;
+  color: string;
+}
+
+// Placeholder partners - replace with real schools/companies (and their logos) once they've agreed to be listed.
+export const PARTNERS: Partner[] = [
+  { name: "Greenfield Public School", location: "Kochi", icon: GraduationCap, color: "#16a34a" },
+  { name: "St. Aurora Convent", location: "Bengaluru", icon: BookOpen, color: "#2563eb" },
+  { name: "Horizon International", location: "Dubai", icon: Globe, color: "#0891b2" },
+  { name: "Lakeside Academy", location: "Kozhikode", icon: School, color: "#7c3aed" },
+  { name: "Brightpath EduTrust", location: "Chennai", icon: Landmark, color: "#dc2626" },
+  { name: "Cedar Valley School", location: "Mysuru", icon: Trees, color: "#ea580c" },
 ];
 
 export interface PricingTier {
