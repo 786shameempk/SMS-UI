@@ -40,14 +40,14 @@ export function PageHeader({ title, description, actions, eyebrow, icon: Icon, c
     <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between", className)} {...props}>
       <div className="flex min-w-0 items-start gap-3">
         {Icon && (
-          <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-primary-text shadow-xs">
+          <div className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-xs ring-1 ring-inset ring-primary/20">
             <Icon className="h-5 w-5" />
           </div>
         )}
         <div className="min-w-0 space-y-1">
           {eyebrow}
           <h1 className="text-page-title">{title}</h1>
-          {description && <p className="max-w-3xl text-sm text-muted-foreground">{description}</p>}
+          {description && <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>}
           {children}
         </div>
       </div>

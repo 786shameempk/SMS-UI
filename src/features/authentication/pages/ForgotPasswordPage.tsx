@@ -34,10 +34,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-app-glow px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">
             <GraduationCap className="h-5 w-5" aria-hidden="true" />
           </div>
           <h1 className="text-page-title">Forgot password</h1>
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm sm:p-7">
+        <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-lg sm:p-8">
           {sent ? (
             <div className="flex flex-col items-center text-center gap-3 py-2">
               <div className="w-10 h-10 rounded-xl bg-success-soft flex items-center justify-center">

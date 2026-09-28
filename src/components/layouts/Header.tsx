@@ -158,7 +158,7 @@ export default function Header() {
             aria-label="Account menu"
             className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:pr-2.5"
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary bg-brand-gradient text-[11px] font-semibold text-primary-foreground ring-2 ring-card shadow-xs">
               {initialsOf(user?.name)}
             </div>
             <div className="hidden text-left lg:block">
@@ -169,7 +169,7 @@ export default function Header() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <div className="flex items-center gap-3 px-2.5 py-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary bg-brand-gradient text-sm font-semibold text-primary-foreground shadow-xs">
               {initialsOf(user?.name)}
             </div>
             <div className="min-w-0">

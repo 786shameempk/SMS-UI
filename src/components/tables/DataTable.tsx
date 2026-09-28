@@ -135,9 +135,9 @@ export function DataTable<TData>({
   const actionCell = (row: Row<TData>) => row.getVisibleCells().find((c) => c.column.id === "actions");
 
   return (
-    <div className={cn("overflow-hidden rounded-xl border border-border bg-card shadow-xs", className)}>
+    <div className={cn("overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm", className)}>
       {showToolbar && (
-        <div className="flex flex-col gap-2 border-b border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div className="flex flex-col gap-2 border-b border-border bg-card px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
           {searchable ? (
             <SearchInput value={globalFilter} onValueChange={setGlobalFilter} placeholder={searchPlaceholder} containerClassName="sm:w-72" />
           ) : (
@@ -157,7 +157,7 @@ export function DataTable<TData>({
             style={maxHeight !== undefined ? { maxHeight } : undefined}
           >
             <table className="w-full caption-bottom text-sm">
-              <thead className={cn("bg-muted/70 backdrop-blur-sm", maxHeight !== undefined && "sticky top-0 z-10")}>
+              <thead className={cn("bg-muted/80 backdrop-blur-sm", maxHeight !== undefined && "sticky top-0 z-10")}>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id} className="border-b border-border">
                     {headerGroup.headers.map((header) => {
@@ -170,7 +170,7 @@ export function DataTable<TData>({
                           scope="col"
                           aria-sort={sortDir === "asc" ? "ascending" : sortDir === "desc" ? "descending" : undefined}
                           className={cn(
-                            "h-10 px-[var(--space-row-padding-x)] text-left align-middle text-xs font-medium text-muted-foreground whitespace-nowrap",
+                            "h-10 px-[var(--space-row-padding-x)] text-left align-middle text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground whitespace-nowrap",
                             header.column.id === "actions" && "w-12",
                           )}
                         >
@@ -178,7 +178,7 @@ export function DataTable<TData>({
                             <button
                               type="button"
                               onClick={header.column.getToggleSortingHandler()}
-                              className="-mx-1.5 inline-flex items-center gap-1 rounded px-1.5 py-1 hover:bg-secondary hover:text-foreground cursor-pointer"
+                              className="-mx-1.5 inline-flex items-center gap-1 rounded px-1.5 py-1 uppercase tracking-[inherit] transition-colors hover:bg-secondary hover:text-foreground cursor-pointer"
                             >
                               {content}
                               {sortDir === "asc" ? (
@@ -220,7 +220,7 @@ export function DataTable<TData>({
                       key={row.id}
                       onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                       className={cn(
-                        "border-b border-border/70 last:border-0 transition-colors hover:bg-muted/60",
+                        "border-b border-border/70 last:border-0 transition-colors duration-150 hover:bg-accent/50",
                         onRowClick && "cursor-pointer",
                       )}
                     >
@@ -263,7 +263,7 @@ export function DataTable<TData>({
                     <li
                       key={row.id}
                       onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                      className={cn("p-4", onRowClick && "cursor-pointer active:bg-muted/60")}
+                      className={cn("p-4 transition-colors", onRowClick && "cursor-pointer active:bg-accent/60")}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1 text-sm font-medium">{first && flexRender(first.column.columnDef.cell, first.getContext())}</div>
@@ -295,7 +295,7 @@ export function DataTable<TData>({
       )}
 
       {!isLoading && !isError && filteredCount > 0 && (
-        <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2.5 sm:px-4">
+        <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/30 px-3 py-2.5 sm:px-4">
           <p className="text-xs text-muted-foreground tabular-nums" aria-live="polite">
             <span className="hidden sm:inline">Showing </span>
             <span className="font-medium text-foreground">

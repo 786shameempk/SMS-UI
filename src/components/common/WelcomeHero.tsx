@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import type { LucideIcon } from "lucide-react";
+import { ArrowRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export function timeOfDayGreeting(): string {
@@ -10,8 +10,8 @@ export function timeOfDayGreeting(): string {
   return "Good evening";
 }
 
-/** The greeting header every role's home page opens with (dashboard, parent portal). Deliberately a calm page
- *  header rather than a banner: the controls and data below are what the user came for. */
+/** The greeting header every role's home page opens with (dashboard, parent portal). A softly branded panel,
+ *  not a loud banner: the controls and data below are still what the user came for. */
 export function WelcomeHero({
   eyebrow,
   title,
@@ -26,17 +26,18 @@ export function WelcomeHero({
 }) {
   const today = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
   return (
-    <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="min-w-0 space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">
-          <span className="text-primary-text">{eyebrow}</span>
-          <span aria-hidden="true"> · </span>
+    <section className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-border/80 bg-hero p-5 shadow-sm sm:p-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative min-w-0 space-y-1.5">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground ring-1 ring-inset ring-primary/20">
+            {eyebrow}
+          </span>
           {today}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
-        {subtitle && <p className="max-w-2xl text-sm text-muted-foreground">{subtitle}</p>}
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem] sm:leading-9">{title}</h1>
+        {subtitle && <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{subtitle}</p>}
       </div>
-      {aside}
+      {aside && <div className="relative">{aside}</div>}
     </section>
   );
 }
@@ -55,17 +56,21 @@ export interface QuickAction {
 export function QuickActionTile({ action }: { action: QuickAction }) {
   const body = (
     <>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground ring-1 ring-inset ring-primary/20 transition-colors duration-200 group-hover:bg-primary group-hover:text-primary-foreground group-hover:ring-transparent">
         <action.icon className="h-[18px] w-[18px]" aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1 text-left">
-        <span className="block truncate text-sm font-medium text-foreground">{action.label}</span>
+        <span className="block truncate text-sm font-semibold text-foreground">{action.label}</span>
         <span className="block truncate text-xs text-muted-foreground">{action.hint}</span>
       </span>
+      <ArrowRight
+        className="h-4 w-4 shrink-0 -translate-x-1 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:text-primary-text group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+        aria-hidden="true"
+      />
     </>
   );
   const className =
-    "group flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-xs transition-[border-color,box-shadow] duration-150 hover:border-input hover:shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    "group flex items-center gap-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return action.to ? (
     <Link to={action.to} className={className}>

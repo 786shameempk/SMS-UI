@@ -33,7 +33,7 @@ function NavItemLink({ item, isCollapsed }: { item: NavItem; isCollapsed: boolea
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         isCollapsed ? "mx-auto h-10 w-10 justify-center" : "h-9 gap-3 px-2.5",
         isActive
-          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground shadow-xs ring-1 ring-inset ring-primary/15"
           : "text-sidebar-foreground hover:bg-secondary hover:text-foreground",
       )}
     >
@@ -132,7 +132,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
         className="flex h-dvh shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar"
       >
         <div className={cn("flex h-14 shrink-0 items-center border-b border-sidebar-border", isSidebarCollapsed ? "justify-center" : "gap-2.5 px-4")}>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">
             <GraduationCap className="h-[18px] w-[18px]" aria-hidden="true" />
           </div>
           {!isSidebarCollapsed && (

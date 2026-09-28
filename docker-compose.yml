@@ -54,10 +54,14 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AuthServiceDb;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True;"
       ConnectionStrings__Redis: "redis:6379"
       ClientApp__BaseUrl: http://localhost:8080
-      # Landing-page leads (POST /api/leads) are emailed via SendGrid - empty key = logged only.
-      SendGrid__ApiKey: ${SENDGRID_API_KEY:-}
-      SendGrid__FromEmail: ${SENDGRID_FROM_EMAIL:-no-reply@example.com}
-      SendGrid__FromName: EduCore
+      # Emails (landing-page leads, password resets...) go out via SMTP (Brevo) - empty password = logged only.
+      Smtp__Host: ${SMTP_HOST:-smtp-relay.brevo.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      Smtp__Username: ${SMTP_USERNAME:-bb76ed001@smtp-brevo.com}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__FromEmail: ${SMTP_FROM_EMAIL:-info@schoolsphrere.com}
+      Smtp__FromName: ${SMTP_FROM_NAME:-SchoolSphere}
     depends_on:
       sqlserver:
         condition: service_healthy

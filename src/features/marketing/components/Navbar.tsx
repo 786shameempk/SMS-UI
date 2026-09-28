@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { GraduationCap, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/utils/cn";
 import { useLeadCapture } from "./LeadCapture";
 
 const NAV_LINKS = [
@@ -13,10 +14,23 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { openDemo, openContact } = useLeadCapture();
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/80 backdrop-blur-md">
+    <header
+      className={cn(
+        "sticky top-0 z-50 w-full border-b backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-300",
+        scrolled ? "border-slate-200/70 bg-white/85 shadow-sm shadow-slate-900/5" : "border-transparent bg-white/40",
+      )}
+    >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2.5">
           <div
@@ -33,7 +47,7 @@ export default function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+              className="relative text-sm font-medium text-slate-600 transition-colors after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-brand-500 after:transition-transform hover:text-slate-900 hover:after:scale-x-100"
             >
               {link.label}
             </a>

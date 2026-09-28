@@ -5,6 +5,7 @@ import Hero from "../components/Hero";
 import FeaturesGrid from "../components/FeaturesGrid";
 import ProductPreview from "../components/ProductPreview";
 import WhySection from "../components/WhySection";
+import Partners from "../components/Partners";
 import Testimonials from "../components/Testimonials";
 import PricingSection from "../components/PricingSection";
 import FinalCta from "../components/FinalCta";
@@ -25,6 +26,7 @@ export default function LandingPage() {
         <Navbar />
         <main>
           <Hero />
+          <Partners />
           <FeaturesGrid />
           <ProductPreview />
           <WhySection />

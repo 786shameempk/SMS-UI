@@ -20,18 +20,19 @@ export function EmptyState({ icon: Icon = Inbox, title, description, action, bar
       className={cn(
         "flex flex-col items-center justify-center text-center",
         size === "sm" ? "gap-2 px-4 py-8" : "gap-3 px-6 py-12",
-        !bare && "rounded-xl border border-dashed border-border bg-card/50",
+        !bare && "rounded-xl border border-dashed border-border bg-card/60",
         className,
       )}
       {...props}
     >
+      {/* Brand-tinted, layered icon: friendlier than a grey circle, still quiet enough to sit inside a table. */}
       <div
         className={cn(
-          "flex items-center justify-center rounded-full bg-secondary text-muted-foreground ring-8 ring-secondary/40",
-          size === "sm" ? "h-9 w-9" : "h-11 w-11",
+          "flex items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-xs ring-1 ring-inset ring-primary/20 outline-8 outline-accent/40",
+          size === "sm" ? "h-10 w-10" : "h-12 w-12",
         )}
       >
-        <Icon className={size === "sm" ? "h-4 w-4" : "h-5 w-5"} aria-hidden="true" />
+        <Icon className={size === "sm" ? "h-[18px] w-[18px]" : "h-[22px] w-[22px]"} aria-hidden="true" />
       </div>
       <div className="max-w-sm space-y-1">
         <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -75,8 +76,8 @@ export function ErrorState({
     >
       <div
         className={cn(
-          "flex items-center justify-center rounded-full bg-destructive-soft text-destructive-strong",
-          size === "sm" ? "h-9 w-9" : "h-11 w-11",
+          "flex items-center justify-center rounded-2xl bg-destructive-soft text-destructive-strong ring-1 ring-inset ring-destructive/20",
+          size === "sm" ? "h-10 w-10" : "h-12 w-12",
         )}
       >
         <AlertTriangle className={size === "sm" ? "h-4 w-4" : "h-5 w-5"} aria-hidden="true" />

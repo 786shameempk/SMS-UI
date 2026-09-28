@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
 import { TESTIMONIALS } from "../data";
+import SectionHeading from "./SectionHeading";
 
 function initialsOf(name: string) {
   return name
@@ -15,12 +16,7 @@ export default function Testimonials() {
   return (
     <section className="bg-white py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand-600">From the demo desk</p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-            Trusted by the people who run the front office
-          </h2>
-        </div>
+        <SectionHeading eyebrow="From the demo desk" title="Trusted by the people who run the front office" />
 
         <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
           {TESTIMONIALS.map((t, index) => (
@@ -30,15 +26,12 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
-              className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50/60 p-6"
+              className="relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/80 p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/5"
             >
-              <Quote className="h-6 w-6 text-brand-300" />
-              <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-slate-700">&ldquo;{t.quote}&rdquo;</blockquote>
-              <figcaption className="mt-6 flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
-                  style={{ background: "linear-gradient(135deg, var(--color-brand-400) 0%, var(--color-brand-600) 100%)" }}
-                >
+              <Quote className="absolute -right-3 -top-3 h-24 w-24 rotate-12 text-brand-100" strokeWidth={1.5} />
+              <blockquote className="relative flex-1 text-[15px] leading-relaxed text-slate-700">&ldquo;{t.quote}&rdquo;</blockquote>
+              <figcaption className="relative mt-6 flex items-center gap-3 border-t border-slate-200/70 pt-5">
+                <div className="bg-brand-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm ring-2 ring-white">
                   {initialsOf(t.name)}
                 </div>
                 <div>

@@ -37,7 +37,7 @@ export default function Hero() {
             </div>
 
             <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
-              Run your entire school on one connected platform
+              Run your entire school on <span className="text-brand-gradient">one connected platform</span>
             </h1>
 
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-600">
@@ -60,10 +60,10 @@ export default function Hero() {
               Free 30-minute walkthrough &middot; Tailored to your school &middot; No commitment
             </p>
 
-            <dl className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <dl className="mt-12 grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 shadow-sm backdrop-blur sm:grid-cols-4">
               {HERO_STATS.map((stat) => (
-                <div key={stat.label}>
-                  <dt className="text-2xl font-extrabold tabular-nums text-slate-900 sm:text-3xl">{stat.value}</dt>
+                <div key={stat.label} className="border-slate-200/80 px-4 py-4 [&:not(:last-child)]:border-r max-sm:[&:nth-child(2)]:border-r-0 max-sm:[&:nth-child(-n+2)]:border-b">
+                  <dt className="text-2xl font-extrabold tabular-nums text-slate-900">{stat.value}</dt>
                   <dd className="mt-1 text-xs font-medium text-slate-500">{stat.label}</dd>
                 </div>
               ))}
@@ -77,12 +77,18 @@ export default function Hero() {
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
             className="relative"
           >
-            <div className="relative rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-900/10">
+            {/* Brand glow behind the mockup */}
+            <div
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] opacity-60 blur-2xl"
+              style={{ background: "linear-gradient(135deg, var(--color-brand-300) 0%, transparent 45%, var(--color-brand-200) 100%)" }}
+            />
+            <div className="relative rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-900/10 ring-1 ring-white/60">
               {/* Browser chrome */}
               <div className="flex items-center gap-1.5 px-3 py-2.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
+                <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+                <span className="h-2.5 w-2.5 rounded-full bg-green-300" />
+                <div className="ml-3 h-5 flex-1 rounded-md bg-slate-100" />
               </div>
 
               <div className="flex overflow-hidden rounded-xl border border-slate-100">
@@ -130,7 +136,11 @@ export default function Hero() {
                         <div
                           key={i}
                           className="flex-1 rounded-t-sm"
-                          style={{ height: `${h * 0.55}%`, background: "var(--color-brand-300)" }}
+                          style={{
+                            height: `${h * 0.55}%`,
+                            background: "linear-gradient(to top, var(--color-brand-300), var(--color-brand-500))",
+                            opacity: 0.55 + (i / 11) * 0.45,
+                          }}
                         />
                       ))}
                     </div>
