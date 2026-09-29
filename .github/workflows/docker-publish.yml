@@ -1,0 +1,76 @@
+name: Docker image (GHCR)
+
+# Builds the SMS UI image and publishes it to GitHub Container Registry as ghcr.io/<owner>/sms-ui, the image
+# deploy/azure/docker-compose.yml runs. Pull requests only build it, as a check; pushes to main and version
+# tags (v1.2.3) also publish. Uses the built-in GITHUB_TOKEN, so no extra secret is needed.
+#
+# Vite bakes the API URLs into the bundle, so the image is built for one public address: set the repository
+# variable PUBLIC_URL (Settings > Secrets and variables > Actions > Variables), e.g. https://app.example.com.
+# The browser then calls the API gateway on the same origin at /services/<name>/.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: sms-ui
+
+jobs:
+  build_and_push_image:
+    runs-on: ubuntu-latest
+    name: Build and Push Docker Image (GHCR)
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUBLIC_URL: ${{ vars.PUBLIC_URL || 'http://localhost:8080' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tags: "latest" on main (the default branch), the short commit SHA on every build (for rollbacks), "1.2.3" + "1.2" for
+      # version tags, "pr-<n>" on pull requests.
+      - name: Docker metadata (tags and labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=pr
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_AUTH_API_URL=${{ env.PUBLIC_URL }}/services/identity/
+            VITE_ACADEMIC_API_URL=${{ env.PUBLIC_URL }}/services/academic/
+            VITE_FINANCE_API_URL=${{ env.PUBLIC_URL }}/services/finance/
+            VITE_CAMPUS_API_URL=${{ env.PUBLIC_URL }}/services/campus/
+            VITE_ENGAGEMENT_API_URL=${{ env.PUBLIC_URL }}/services/engagement/
+            VITE_MEETING_API_URL=${{ env.PUBLIC_URL }}/services/meetings/
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
