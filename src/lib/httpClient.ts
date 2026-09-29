@@ -1,23 +1,39 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/store/authStore";
 
-/** Base URL of AuthService (see AuthService/src/AuthService.API). Configure via .env (see .env.example). */
-export const AUTH_API_BASE_URL = import.meta.env.VITE_AUTH_API_URL ?? "https://localhost:44348/";
+/**
+ * Service base URLs, resolved in order:
+ * 1. runtime config (public/config.js → window.__EDUCORE_CONFIG__) - set per deployment without rebuilding,
+ *    e.g. by the Docker image's startup script;
+ * 2. build-time VITE_* variables (.env locally, CI variables in a pipeline);
+ * 3. the local development ports.
+ * Empty strings count as "not set", so a blank config.js or an empty CI variable falls through.
+ */
+const runtimeConfig: Partial<Record<string, string>> =
+  (typeof window !== "undefined" && (window as Window & { __EDUCORE_CONFIG__?: Record<string, string> }).__EDUCORE_CONFIG__) || {};
 
-/** Base URL of AcademicService (see AcademicService/src/AcademicService.API). Configure via .env. */
-export const ACADEMIC_API_BASE_URL = import.meta.env.VITE_ACADEMIC_API_URL ?? "http://localhost:5136/";
+function resolveUrl(runtimeKey: string, buildTime: string | undefined, fallback: string): string {
+  const value = runtimeConfig[runtimeKey]?.trim() || buildTime?.trim() || fallback;
+  return value.endsWith("/") ? value : `${value}/`;
+}
 
-/** Base URL of FinanceService (see FinanceService/src/FinanceService.API). Configure via .env. */
-export const FINANCE_API_BASE_URL = import.meta.env.VITE_FINANCE_API_URL ?? "http://localhost:5137/";
+/** Base URL of AuthService (see AuthService/src/AuthService.API). */
+export const AUTH_API_BASE_URL = resolveUrl("authApiUrl", import.meta.env.VITE_AUTH_API_URL, "https://localhost:44348/");
 
-/** Base URL of CampusService (see CampusService/src/CampusService.API). Configure via .env. */
-export const CAMPUS_API_BASE_URL = import.meta.env.VITE_CAMPUS_API_URL ?? "http://localhost:5139/";
+/** Base URL of AcademicService (see AcademicService/src/AcademicService.API). */
+export const ACADEMIC_API_BASE_URL = resolveUrl("academicApiUrl", import.meta.env.VITE_ACADEMIC_API_URL, "http://localhost:5136/");
 
-/** Base URL of EngagementService (see EngagementService/src/EngagementService.API). Configure via .env. */
-export const ENGAGEMENT_API_BASE_URL = import.meta.env.VITE_ENGAGEMENT_API_URL ?? "http://localhost:5140/";
+/** Base URL of FinanceService (see FinanceService/src/FinanceService.API). */
+export const FINANCE_API_BASE_URL = resolveUrl("financeApiUrl", import.meta.env.VITE_FINANCE_API_URL, "http://localhost:5137/");
 
-/** Base URL of MeetingService (see MeetingService/src/MeetingService.API). Configure via .env. */
-export const MEETING_API_BASE_URL = import.meta.env.VITE_MEETING_API_URL ?? "http://localhost:5141/";
+/** Base URL of CampusService (see CampusService/src/CampusService.API). */
+export const CAMPUS_API_BASE_URL = resolveUrl("campusApiUrl", import.meta.env.VITE_CAMPUS_API_URL, "http://localhost:5139/");
+
+/** Base URL of EngagementService (see EngagementService/src/EngagementService.API). */
+export const ENGAGEMENT_API_BASE_URL = resolveUrl("engagementApiUrl", import.meta.env.VITE_ENGAGEMENT_API_URL, "http://localhost:5140/");
+
+/** Base URL of MeetingService (see MeetingService/src/MeetingService.API). */
+export const MEETING_API_BASE_URL = resolveUrl("meetingApiUrl", import.meta.env.VITE_MEETING_API_URL, "http://localhost:5141/");
 
 /**
  * Every backend service beyond AuthService validates the same JWT but has no way to know an

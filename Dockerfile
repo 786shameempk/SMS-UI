@@ -36,6 +36,12 @@ COPY --from=build /src/dist /usr/share/nginx/html
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Runtime API addresses: nginx runs /docker-entrypoint.d/*.sh at start, and this one rewrites config.js from
+# AUTH_API_URL, ACADEMIC_API_URL, ... (see docker/40-educore-config.sh). CRLFs are stripped in case the
+# checkout was made on Windows.
+COPY docker/40-educore-config.sh /docker-entrypoint.d/40-educore-config.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.d/40-educore-config.sh && chmod +x /docker-entrypoint.d/40-educore-config.sh
+
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
