@@ -1,0 +1,30 @@
+# Caddy gets and renews Let's Encrypt certificates automatically. DOMAIN must point at the VM's
+# public IP, and ports 80 + 443 must be open, before the first `docker compose up`.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# APIs: the gateway routes /services/<name>/... to each service; /api/... are its own endpoints.
+	handle /services/* {
+		reverse_proxy apigateway:8080
+	}
+	handle /api/* {
+		reverse_proxy apigateway:8080
+	}
+
+	# Everything else is the SPA (nginx inside the ui image already falls back to index.html).
+	handle {
+		reverse_proxy ui:80
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
