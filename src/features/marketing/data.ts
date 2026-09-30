@@ -23,11 +23,15 @@ import {
   Video,
   Wallet,
   Workflow,
+  Building2,
+  Handshake,
+  Headset,
+  Rocket,
+  SlidersHorizontal,
+  Sprout,
   type LucideIcon,
 } from "lucide-react";
-import { listPlans } from "@/features/platform/api";
 import { AVAILABLE_MODULE_LABELS } from "@/features/platform/constants";
-import { formatCurrency } from "@/utils/format";
 
 /** School-facing modules in the plan catalog, so the headline count never drifts from `/platform`. */
 export const MODULE_COUNT = AVAILABLE_MODULE_LABELS.length;
@@ -219,39 +223,82 @@ export const TESTIMONIALS: Testimonial[] = [
   },
 ];
 
-// ── Pricing ─────────────────────────────────────────────────────────
+// ── Plans & Solutions ───────────────────────────────────────────────
+// Commercial pricing is private by design: plans describe what's included, and prices are only ever
+// shared through a quote. Never add amounts, currencies or per-month figures here.
 
-export interface PricingTier {
-  id: string;
-  name: string;
-  priceLabel: string;
-  description: string;
-  highlighted: boolean;
+export type PlanKey = "Starter" | "Professional" | "Enterprise";
+
+export interface PlanSolution {
+  key: PlanKey;
+  subtitle: string;
+  /** Replaces a price: the plan's commercial terms are discussed, not published. */
+  pricingNote: string;
+  icon: LucideIcon;
   features: string[];
+  highlighted?: boolean;
+  cta: "Explore Plan" | "Contact Us";
 }
 
-/** Read from the Platform Console's real plan catalog (public endpoint) so pricing never drifts from `/platform`. */
-export async function getPricingTiers(): Promise<PricingTier[]> {
-  const plans = await listPlans();
-  const descriptions: Record<string, string> = {
-    starter: "For a single campus just getting off spreadsheets.",
-    growth: "For growing schools that need every module working together.",
-    enterprise: "For multi-branch networks that need scale and control.",
-  };
-  return plans.map((plan) => ({
-    id: plan.id,
-    name: plan.name,
-    priceLabel: `${formatCurrency(plan.monthlyPriceInr)}/mo`,
-    description: descriptions[plan.tier] ?? "",
-    highlighted: plan.tier === "growth",
+export const PLAN_SOLUTIONS: PlanSolution[] = [
+  {
+    key: "Starter",
+    subtitle: "Essential tools for getting started",
+    pricingNote: "Flexible pricing",
+    icon: Sprout,
+    features: ["Student Management", "Staff Management", "Attendance", "Basic Fees Management", "Basic Reports", "Core School Administration"],
+    cta: "Explore Plan",
+  },
+  {
+    key: "Professional",
+    subtitle: "Advanced tools for growing schools",
+    pricingNote: "Contact us for pricing",
+    icon: Rocket,
+    highlighted: true,
     features: [
-      `Up to ${plan.maxStudents.toLocaleString("en-IN")} students`,
-      `Up to ${plan.maxStaff.toLocaleString("en-IN")} staff accounts`,
-      `${plan.storageGb} GB document storage`,
-      `${plan.includedModules.length} of ${AVAILABLE_MODULE_LABELS.length} modules included`,
+      "Everything in Starter",
+      "Online Exams",
+      "Advanced Reports",
+      "Parent Portal",
+      "Notifications",
+      "AI-powered features",
+      "Advanced School Management",
     ],
-  }));
-}
+    cta: "Explore Plan",
+  },
+  {
+    key: "Enterprise",
+    subtitle: "Flexible solutions for larger institutions",
+    pricingNote: "Custom plan",
+    icon: Building2,
+    features: [
+      "Everything in Professional",
+      "Custom Modules",
+      "Advanced Integrations",
+      "Custom Workflows",
+      "Dedicated Support",
+      "Flexible Deployment Options",
+      "Custom Requirements",
+    ],
+    cta: "Contact Us",
+  },
+];
+
+export const PLAN_KEYS: PlanKey[] = PLAN_SOLUTIONS.map((p) => p.key);
+
+/** Reassurances shown under the plan cards, in place of a price table. */
+export const PLAN_ASSURANCES = [
+  { icon: SlidersHorizontal, title: "Tailored to your requirements", description: "Pick the modules you need today and add more as your school grows." },
+  { icon: Handshake, title: "Transparent, personal quotes", description: "Pricing is shared directly with your school, based on size and scope." },
+  { icon: Headset, title: "Guided onboarding", description: "Our team helps with setup, data migration and staff training." },
+] as const;
+
+/** Modules a school can ask about in the quote form (the same names as the plan catalog). */
+export const QUOTE_MODULE_OPTIONS: string[] = AVAILABLE_MODULE_LABELS.filter(
+  (m) => !["Dashboard", "User Management", "Roles & Permissions", "Settings"].includes(m),
+);
+
+export const STAFF_COUNT_OPTIONS = ["Under 25", "25 – 50", "50 – 100", "100 – 250", "250+"] as const;
 
 // ── Lead capture (Contact Us widget / Request a Demo) ─────────────────────
 

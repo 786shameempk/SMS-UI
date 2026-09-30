@@ -15,7 +15,7 @@ const COLUMNS: Array<{ title: string; links: FooterLink[] }> = [
     links: [
       { label: "Features", href: "#features" },
       { label: "Solutions", href: "#solutions" },
-      { label: "Pricing", href: "#pricing" },
+      { label: "Plans", href: "#plans" },
       { label: "Security", href: "#security" },
     ],
   },

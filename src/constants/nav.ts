@@ -12,6 +12,13 @@ import {
   CalendarDays,
   CalendarRange,
   ChartColumn,
+  ChartNoAxesColumn,
+  CircleCheckBig,
+  ClipboardPenLine,
+  Award,
+  FileQuestionMark,
+  ListChecks,
+  MonitorCheck,
   ClipboardList,
   FileCheck2,
   Globe,
@@ -44,7 +51,12 @@ export interface NavItem {
   icon: LucideIcon;
   end?: boolean;
   permissionKey?: keyof ModulePermissions;
+  /** Show only to staff (who author/evaluate) or only to students, within a module both can open. */
+  audience?: NavAudience;
 }
+
+/** "staff": admins, principals, teachers. "student": student logins. */
+export type NavAudience = "staff" | "student";
 
 export interface NavSection {
   title: string;
@@ -78,6 +90,24 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Timetable", to: "/timetable", icon: CalendarClock, permissionKey: "timetable" },
       { label: "Examinations", to: "/examinations", icon: FileCheck2, permissionKey: "examinations" },
       { label: "Homework", to: "/homework", icon: ClipboardList, permissionKey: "homework" },
+    ],
+  },
+  {
+    // Online Exams: staff author, evaluate and report; students sit exams. Both share module.onlineExams, so
+    // each item says who it's for (see useVisibleNav).
+    title: "Online Exams",
+    permissionKey: "onlineExams",
+    items: [
+      { label: "Exam Dashboard", to: "/online-exams", icon: MonitorCheck, end: true, permissionKey: "onlineExams", audience: "staff" },
+      { label: "Exams", to: "/online-exams/exams", icon: ListChecks, permissionKey: "onlineExams", audience: "staff" },
+      { label: "Question Bank", to: "/online-exams/question-bank", icon: FileQuestionMark, permissionKey: "onlineExams", audience: "staff" },
+      { label: "Evaluations", to: "/online-exams/evaluations", icon: ClipboardPenLine, permissionKey: "onlineExams", audience: "staff" },
+      { label: "Results", to: "/online-exams/results", icon: Award, permissionKey: "onlineExams", audience: "staff" },
+      { label: "Exam Reports", to: "/online-exams/reports", icon: ChartNoAxesColumn, permissionKey: "onlineExams", audience: "staff" },
+      { label: "My Exams", to: "/online-exams/my", icon: MonitorCheck, end: true, permissionKey: "onlineExams", audience: "student" },
+      { label: "Upcoming Exams", to: "/online-exams/my/upcoming", icon: CalendarClock, permissionKey: "onlineExams", audience: "student" },
+      { label: "Completed Exams", to: "/online-exams/my/completed", icon: CircleCheckBig, permissionKey: "onlineExams", audience: "student" },
+      { label: "My Results", to: "/online-exams/my/results", icon: Award, permissionKey: "onlineExams", audience: "student" },
     ],
   },
   {

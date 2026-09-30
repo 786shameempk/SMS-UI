@@ -1,11 +1,13 @@
-import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { academicHttpClient, authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { applyBrandPreset, applyDensityPreset, applyRadiusPreset } from "./theme";
 import type { BrandPresetKey, DensityPresetKey, RadiusPresetKey } from "./theme";
 import type {
   AuditLogEntry,
   BackupEvent,
   LocalizationSettings,
+  PlanUsage,
   SchoolProfile,
+  Subscription,
   SystemTemplate,
   SystemTemplateFormValues,
 } from "./types";
@@ -192,4 +194,15 @@ export async function restoreBackup(file: File): Promise<void> {
 
   await unwrap(authHttpClient.post<void>("/api/settings/backups/import", parsed));
   window.location.reload();
+}
+
+// ── Subscription (plan, modules, usage - never pricing) ────────────────────
+
+export async function getSubscription(): Promise<Subscription> {
+  return unwrap(authHttpClient.get<Subscription>("/api/settings/subscription"));
+}
+
+/** Students and staff counted against the plan, from AcademicService (the same counts its plan-limit checks use). */
+export async function getPlanUsage(): Promise<PlanUsage> {
+  return unwrap(academicHttpClient.get<PlanUsage>("/api/stats/plan-usage"));
 }

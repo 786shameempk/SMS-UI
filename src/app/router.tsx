@@ -61,6 +61,20 @@ const MeetingCalendarPage = lazy(() => import("@/features/meetings/pages/Meeting
 const MeetingDetailsPage = lazy(() => import("@/features/meetings/pages/MeetingDetailsPage"));
 const MeetingReportsPage = lazy(() => import("@/features/meetings/pages/MeetingReportsPage"));
 const MeetingRoomPage = lazy(() => import("@/features/meetings/pages/MeetingRoomPage"));
+const ExamDashboardPage = lazy(() => import("@/features/online-exams/pages/ExamDashboardPage"));
+const ExamListPage = lazy(() => import("@/features/online-exams/pages/ExamListPage"));
+const ExamWizardPage = lazy(() => import("@/features/online-exams/pages/ExamWizardPage"));
+const ExamDetailPage = lazy(() => import("@/features/online-exams/pages/ExamDetailPage"));
+const ExamResultsPage = lazy(() => import("@/features/online-exams/pages/ExamResultsPage"));
+const AttemptReviewPage = lazy(() => import("@/features/online-exams/pages/AttemptReviewPage"));
+const QuestionBankPage = lazy(() => import("@/features/online-exams/pages/QuestionBankPage"));
+const EvaluationsPage = lazy(() => import("@/features/online-exams/pages/EvaluationsPage"));
+const ResultsHubPage = lazy(() => import("@/features/online-exams/pages/ResultsHubPage"));
+const ExamReportsPage = lazy(() => import("@/features/online-exams/pages/ExamReportsPage"));
+const MyExamsPage = lazy(() => import("@/features/online-exams/pages/MyExamsPage"));
+const MyResultsPage = lazy(() => import("@/features/online-exams/pages/MyResultsPage"));
+const MyResultPage = lazy(() => import("@/features/online-exams/pages/MyResultPage"));
+const TakeExamPage = lazy(() => import("@/features/online-exams/pages/TakeExamPage"));
 
 export const router = createBrowserRouter([
   { path: "/", element: <LandingPage />, errorElement: <RouteError /> },
@@ -73,6 +87,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <MeetingRoomPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    // The exam a student is sitting is full screen and distraction-free, outside the app shell - signed-in only.
+    path: "/online-exams/take/:id",
+    element: (
+      <ProtectedRoute>
+        <TakeExamPage />
       </ProtectedRoute>
     ),
   },
@@ -129,6 +152,22 @@ export const router = createBrowserRouter([
       { path: "online-classes/:id", element: <MeetingDetailsPage /> },
       { path: "reports", element: <ReportsPage /> },
       { path: "study-materials", element: <StudyMaterialsPage /> },
+      { path: "online-exams", element: <ExamDashboardPage /> },
+      { path: "online-exams/exams", element: <ExamListPage /> },
+      { path: "online-exams/exams/new", element: <ExamWizardPage /> },
+      { path: "online-exams/exams/:id", element: <ExamDetailPage /> },
+      { path: "online-exams/exams/:id/edit", element: <ExamWizardPage key="edit" /> },
+      { path: "online-exams/exams/:id/results", element: <ExamResultsPage /> },
+      { path: "online-exams/exams/:id/attempts/:attemptId", element: <AttemptReviewPage /> },
+      { path: "online-exams/question-bank", element: <QuestionBankPage /> },
+      { path: "online-exams/evaluations", element: <EvaluationsPage /> },
+      { path: "online-exams/results", element: <ResultsHubPage /> },
+      { path: "online-exams/reports", element: <ExamReportsPage /> },
+      { path: "online-exams/my", element: <MyExamsPage view="all" /> },
+      { path: "online-exams/my/upcoming", element: <MyExamsPage view="upcoming" key="upcoming" /> },
+      { path: "online-exams/my/completed", element: <MyExamsPage view="completed" key="completed" /> },
+      { path: "online-exams/my/results", element: <MyResultsPage /> },
+      { path: "online-exams/my/:id/result", element: <MyResultPage /> },
       {
         // Talent Showcase ("Creative Campus") - its own layout supplies the module nav and identity.
         path: "talents",

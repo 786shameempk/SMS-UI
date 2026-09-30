@@ -1,6 +1,7 @@
 import { PalmtreeIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/states";
 import { formatRelativeDay } from "@/utils/format";
 import type { HolidayItem } from "../types";
 
@@ -14,6 +15,7 @@ export default function HolidaysCard({ holidays }: { holidays: HolidayItem[] }) 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2.5">
+        {holidays.length === 0 && <EmptyState bare size="sm" icon={PalmtreeIcon} title="No upcoming holidays" className="py-6" />}
         {holidays.map((h) => (
           <div key={h.id} className="flex items-center justify-between">
             <div className="min-w-0">

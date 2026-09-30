@@ -79,6 +79,9 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
       # Plan limits (max students / staff) are checked with AuthService before adding either.
       Services__AuthServiceUrl: http://authservice:8080/
+      # Online Exams notifications (scheduled, reminders, results...) go to EngagementService's internal events.
+      Services__EngagementServiceUrl: http://engagementservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
     volumes:
       # Study Materials uploads (see AcademicService LocalStudyMaterialStorage); survives image rebuilds.
       - study-materials:/app/App_Data/study-materials

@@ -22,6 +22,7 @@ export const PERMISSION_MODULES = [
   "Examinations",
   "Homework",
   "Study Materials",
+  "Online Exams",
   "Staff Management",
   "Payroll",
   "Fee Management",

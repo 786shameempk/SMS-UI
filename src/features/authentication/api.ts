@@ -91,6 +91,7 @@ function mapModulePermissions(permissions: string[]): ModulePermissions {
     talents: false,
     meetings: false,
     studyMaterials: false,
+    onlineExams: false,
   };
   for (const permission of permissions) {
     if (permission.startsWith(MODULE_PERMISSION_PREFIX)) {

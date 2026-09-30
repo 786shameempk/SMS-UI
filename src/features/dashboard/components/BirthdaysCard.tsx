@@ -1,5 +1,6 @@
 import { Cake } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/states";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatRelativeDay } from "@/utils/format";
 import type { BirthdayItem } from "../types";
@@ -14,7 +15,7 @@ export default function BirthdaysCard({ birthdays }: { birthdays: BirthdayItem[]
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        {birthdays.length === 0 && <p className="text-sm text-muted-foreground">No birthdays this week.</p>}
+        {birthdays.length === 0 && <EmptyState bare size="sm" icon={Cake} title="No birthdays this week" className="py-6" />}
         {birthdays.map((b) => (
           <div key={b.id} className="flex items-center gap-3">
             <Avatar className="w-8 h-8">

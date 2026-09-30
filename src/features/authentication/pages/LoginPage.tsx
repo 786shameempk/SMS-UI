@@ -29,6 +29,7 @@ const DEMO_ACCOUNTS = [
   { role: "Administrator", email: "admin@educore.dev", password: "Admin@12345" },
   { role: "Teacher", email: "teacher@educore.dev", password: "Teacher@123" },
   { role: "Parent", email: "parent@educore.dev", password: "Parent@123" },
+  { role: "Student", email: "student@educore.dev", password: "Student@123" },
 ];
 
 /** How long the "Signed in" confirmation shows before moving on to the dashboard. */
