@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,12 +20,6 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-/** Where to go after signing in: back to the page the session ended on, never off-site or to /login itself. */
-function useReturnPath(): string {
-  const from = (useLocation().state as { from?: unknown } | null)?.from;
-  return typeof from === "string" && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/login") ? from : "/dashboard";
-}
-
 function readSignOutReason(): string | null {
   try {
     return sessionStorage.getItem(SIGN_OUT_REASON_KEY);
@@ -36,7 +30,6 @@ function readSignOutReason(): string | null {
 
 function CredentialsForm() {
   const navigate = useNavigate();
-  const returnPath = useReturnPath();
   const setSession = useAuthStore((s) => s.setSession);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +51,8 @@ function CredentialsForm() {
       const result = await login(values);
       setSession(result.user, result.token, result.permissions, values.rememberMe, result.refreshToken);
       toast.success(`Welcome back, ${result.user.name.split(" ")[0]}`);
-      navigate(returnPath, { replace: true });
+      // Every sign-in starts on the dashboard (the first nav item), never the page the last session ended on.
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
