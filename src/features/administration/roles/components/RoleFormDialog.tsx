@@ -7,13 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Role, RoleFormValues } from "../types";
 
 const roleFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
+  grantsAllBranchAccess: z.boolean(),
 });
+
+const EMPTY: RoleFormValues = { name: "", description: "", grantsAllBranchAccess: false };
 
 interface RoleFormDialogProps {
   open: boolean;
@@ -29,11 +33,13 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSubmit, sub
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
-  } = useForm<RoleFormValues>({ resolver: zodResolver(roleFormSchema), defaultValues: { name: "", description: "" } });
+  } = useForm<RoleFormValues>({ resolver: zodResolver(roleFormSchema), defaultValues: EMPTY });
 
   useEffect(() => {
-    if (open) reset(role ? { name: role.name, description: role.description } : { name: "", description: "" });
+    if (open) reset(role ? { name: role.name, description: role.description, grantsAllBranchAccess: role.grantsAllBranchAccess } : EMPTY);
   }, [open, role, reset]);
 
   return (
@@ -56,6 +62,20 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSubmit, sub
             <Textarea id="description" rows={3} aria-invalid={errors.description ? true : undefined} {...register("description")} />
             {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
           </div>
+          <label className="flex items-start gap-3 rounded-lg border border-border p-3 cursor-pointer select-none">
+            <Checkbox
+              className="mt-0.5"
+              checked={watch("grantsAllBranchAccess")}
+              onCheckedChange={(v) => setValue("grantsAllBranchAccess", v === true, { shouldDirty: true })}
+            />
+            <span className="space-y-0.5">
+              <span className="block text-sm font-medium text-foreground">All branches</span>
+              <span className="block text-xs text-muted-foreground">
+                Users with this role work across every branch and switch branch in the header. Leave off to lock each user to the
+                branch they're assigned.
+              </span>
+            </span>
+          </label>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

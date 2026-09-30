@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
-import { CalendarCheck, LayoutDashboard, Wallet } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, Video, Wallet } from "lucide-react";
 import { cn } from "@/utils/cn";
 import SectionHeading from "./SectionHeading";
 
@@ -17,6 +17,10 @@ const TRENDS: Record<string, Array<{ x: string; y: number }>> = {
   attendance: [
     { x: "Mon", y: 88 }, { x: "Tue", y: 91 }, { x: "Wed", y: 85 }, { x: "Thu", y: 94 },
     { x: "Fri", y: 89 }, { x: "Sat", y: 96 }, { x: "Sun", y: 92 },
+  ],
+  classes: [
+    { x: "Mon", y: 18 }, { x: "Tue", y: 24 }, { x: "Wed", y: 21 }, { x: "Thu", y: 27 },
+    { x: "Fri", y: 25 }, { x: "Sat", y: 12 }, { x: "Sun", y: 4 },
   ],
 };
 
@@ -57,6 +61,18 @@ const TABS = [
       { label: "Flagged low-attendance", value: "14" },
     ],
   },
+  {
+    id: "classes",
+    label: "Online Classes",
+    icon: Video,
+    title: "Live classes, without the extra tools",
+    description: "Schedule a class, and students get a reminder, join from the browser, and find the recording and materials afterwards — attendance is taken for you.",
+    rows: [
+      { label: "Classes this week", value: "131" },
+      { label: "Average join rate", value: "94%" },
+      { label: "Recordings saved", value: "118" },
+    ],
+  },
 ];
 
 export default function ProductPreview() {
@@ -69,7 +85,7 @@ export default function ProductPreview() {
         <SectionHeading eyebrow="See it in action" title="A different module every click, the same familiar system" />
 
         <div className="mt-10 flex justify-center">
-          <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+          <div className="inline-flex flex-wrap justify-center gap-1 rounded-3xl border border-slate-200 bg-white p-1 shadow-sm">
             {TABS.map((t) => (
               <button
                 key={t.id}

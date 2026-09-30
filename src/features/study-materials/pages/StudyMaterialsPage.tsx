@@ -189,10 +189,10 @@ export default function StudyMaterialsPage() {
   };
 
   const description = isSuperAdmin
-    ? "Share notes, papers and videos with every school on EduCore. School uploads stay inside their own school."
+    ? "Share notes, papers and videos with every school on School Sphere. School uploads stay inside their own school."
     : canUpload
       ? "Share notes, worksheets, papers and videos with your students. Your uploads are visible only inside your school."
-      : "Notes, worksheets, question papers and videos from your teachers and EduCore.";
+      : "Notes, worksheets, question papers and videos from your teachers and School Sphere.";
 
   return (
     <PageContainer>
@@ -269,7 +269,7 @@ export default function StudyMaterialsPage() {
             allLabel="All sources"
             options={[
               { value: "school", label: "My school" },
-              { value: "platform", label: "EduCore library" },
+              { value: "platform", label: "School Sphere library" },
             ]}
           />
         )}
@@ -304,7 +304,7 @@ export default function StudyMaterialsPage() {
           <EmptyState
             icon={isSuperAdmin ? Globe2 : BookOpenText}
             title="No study materials yet"
-            description={isLearner ? "When your teachers share notes, papers or videos, they'll appear here." : "Published materials from your school and EduCore appear here."}
+            description={isLearner ? "When your teachers share notes, papers or videos, they'll appear here." : "Published materials from your school and School Sphere appear here."}
           />
         )
       ) : (

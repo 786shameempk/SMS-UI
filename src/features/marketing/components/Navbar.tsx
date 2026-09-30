@@ -8,7 +8,7 @@ import { useLeadCapture } from "./LeadCapture";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
-  { label: "Why EduCore", href: "#why" },
+  { label: "Why School Sphere", href: "#why" },
   { label: "Pricing", href: "#pricing" },
 ];
 
@@ -39,7 +39,7 @@ export default function Navbar() {
           >
             <GraduationCap className="h-4 w-4 text-white" />
           </div>
-          <span className="text-base font-extrabold tracking-tight text-slate-900">EduCore</span>
+          <span className="text-base font-extrabold tracking-tight text-slate-900">School Sphere</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

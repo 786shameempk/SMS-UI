@@ -163,7 +163,7 @@ export async function listBackupHistory(): Promise<BackupEvent[]> {
 export async function exportBackup(): Promise<{ filename: string; sizeBytes: number }> {
   const snapshot = await unwrap(authHttpClient.get<unknown>("/api/settings/backups/export"));
   const payload = JSON.stringify(snapshot, null, 2);
-  const filename = `educore-config-${new Date().toISOString().slice(0, 10)}.json`;
+  const filename = `school-sphere-config-${new Date().toISOString().slice(0, 10)}.json`;
   const blob = new Blob([payload], { type: "application/json" });
 
   const url = URL.createObjectURL(blob);
@@ -187,7 +187,7 @@ export async function restoreBackup(file: File): Promise<void> {
     throw new Error("This file isn't a valid backup — it could not be parsed as JSON.");
   }
   if (!parsed || typeof parsed !== "object" || !("profile" in parsed) || !("appearance" in parsed)) {
-    throw new Error("This file doesn't look like an EduCore configuration backup.");
+    throw new Error("This file doesn't look like an School Sphere configuration backup.");
   }
 
   await unwrap(authHttpClient.post<void>("/api/settings/backups/import", parsed));

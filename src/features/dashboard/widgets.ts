@@ -25,6 +25,8 @@ export interface DashboardWidgetDef {
   description: string;
   /** Omitted = every role can add it. */
   roles?: UserRole[];
+  /** Only for users whose role covers every branch. */
+  allBranchesOnly?: boolean;
 }
 
 const FINANCE_ROLES: UserRole[] = ["admin", "superAdmin", "principal", "accountant"];
@@ -35,7 +37,7 @@ export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
     id: "scopeOverview",
     label: "Branch overview",
     description: "Students, staff and fees — all branches combined, or the selected branch.",
-    roles: ["admin", "superAdmin"],
+    allBranchesOnly: true,
   },
   { id: "performance", label: "Academic performance", description: "Average score and pass rate trend." },
   { id: "revenue", label: "Fee revenue", description: "Collected vs. expected fees per month.", roles: FINANCE_ROLES },
@@ -54,6 +56,7 @@ export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
   { id: "notifications", label: "Notifications", description: "Recent announcements and reminders." },
 ];
 
-export function widgetsForRole(role: UserRole): DashboardWidgetDef[] {
-  return DASHBOARD_WIDGETS.filter((w) => !w.roles || w.roles.includes(role));
+/** `allBranches`: the user's role covers every branch (see canSwitchScopeView), whatever it is called. */
+export function widgetsForRole(role: UserRole, allBranches: boolean): DashboardWidgetDef[] {
+  return DASHBOARD_WIDGETS.filter((w) => (!w.roles || w.roles.includes(role)) && (!w.allBranchesOnly || allBranches));
 }

@@ -125,7 +125,7 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                 <p className="text-[15px] font-bold leading-tight">Have a question?</p>
                 <p className="flex items-center gap-1.5 text-xs text-white/85">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
-                  EduCore team &middot; usually replies within a day
+                  School Sphere team &middot; usually replies within a day
                 </p>
               </div>
               <button
@@ -259,7 +259,7 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
             </div>
 
             <div className="border-t border-border py-2 text-center text-[11px] text-muted-foreground">
-              Powered by <span className="font-semibold text-brand-600">EduCore</span>
+              Powered by <span className="font-semibold text-brand-600">School Sphere</span>
             </div>
           </motion.div>
         )}

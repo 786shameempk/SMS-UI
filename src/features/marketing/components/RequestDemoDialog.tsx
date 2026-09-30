@@ -104,7 +104,7 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
                 Free personalised demo
               </div>
               <DialogTitle className="text-xl">Request a demo</DialogTitle>
-              <DialogDescription>See how EduCore fits your school — we'll tailor the walkthrough to what you share.</DialogDescription>
+              <DialogDescription>See how School Sphere fits your school — we'll tailor the walkthrough to what you share.</DialogDescription>
             </DialogHeader>
 
             <ul className="space-y-2 rounded-xl border border-brand-100 bg-brand-50/60 p-4 dark:border-border dark:bg-secondary">

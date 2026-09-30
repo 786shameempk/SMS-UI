@@ -43,6 +43,7 @@ const ROLE_LABEL: Record<string, string> = {
   parent: "Parent",
   student: "Student",
   superAdmin: "Super Admin",
+  staff: "Staff",
 };
 
 const SCOPE_VIEW_OPTIONS: Array<{ value: DashboardScopeView; label: string; icon: typeof Layers }> = [
@@ -87,8 +88,8 @@ export default function DashboardPage() {
   const hiddenWidgets = useUiStore((s) => s.hiddenDashboardWidgets);
   const setHiddenWidgets = useUiStore((s) => s.setHiddenDashboardWidgets);
 
-  const scopeEnabled = canSwitchScopeView(role);
-  const availableWidgets = widgetsForRole(role);
+  const scopeEnabled = canSwitchScopeView(user);
+  const availableWidgets = widgetsForRole(role, scopeEnabled);
   const show = (id: DashboardWidgetId) => availableWidgets.some((w) => w.id === id) && !hiddenWidgets.includes(id);
   const rangeLabel = describeDateRange(dateRange);
 

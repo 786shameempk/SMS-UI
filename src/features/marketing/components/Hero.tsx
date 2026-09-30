@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUp, Bell, CalendarCheck, MessageCircle, Sparkles, Users, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HERO_STATS } from "../data";
+import { HERO_STATS, MODULE_COUNT } from "../data";
 import { useLeadCapture } from "./LeadCapture";
 
 export default function Hero() {
@@ -33,7 +33,7 @@ export default function Hero() {
           >
             <div className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
               <Sparkles className="h-3.5 w-3.5" />
-              New: real multi-branch &amp; multi-tenant isolation
+              New: live online classes, study materials &amp; talent showcase
             </div>
 
             <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
@@ -41,8 +41,8 @@ export default function Hero() {
             </h1>
 
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate-600">
-              From admissions to alumni, timetables to transport — EduCore brings 29 modules, live analytics, and
-              bank-grade access control into a single, beautifully simple system.
+              From admissions to online classes, timetables to transport — School Sphere brings {MODULE_COUNT} modules, live
+              analytics, and bank-grade access control into a single, beautifully simple system.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">

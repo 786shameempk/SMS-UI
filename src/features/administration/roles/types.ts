@@ -6,10 +6,9 @@ export interface Role {
   name: string;
   description: string;
   isSystem: boolean;
-  /** Whether a user with this role isn't locked to one branch (mirrors admin/superAdmin's
-   *  AuthUser.branchId === null) — used by the Users form to decide whether a branch field is
-   *  required, instead of a fragile match on a specific role id. Only ever true for the
-   *  built-in Administrator role. */
+  /** Whether a user with this role works across every branch of the school (switching in the header)
+   *  instead of being locked to one — the Users form skips the branch field for these roles. True for
+   *  the built-in Administrator, and for any custom role created or edited with "All branches". */
   grantsAllBranchAccess: boolean;
   createdAt: string;
 }
@@ -17,6 +16,7 @@ export interface Role {
 export interface RoleFormValues {
   name: string;
   description: string;
+  grantsAllBranchAccess: boolean;
 }
 
 export type PermissionCategory = "menu" | "api" | "screen" | "action";

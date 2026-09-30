@@ -6,14 +6,16 @@ const COLUMNS = [
     title: "Product",
     links: [
       { label: "Features", href: "#features" },
-      { label: "Why EduCore", href: "#why" },
+      { label: "Online classes", href: "#features" },
+      { label: "Why School Sphere", href: "#why" },
       { label: "Pricing", href: "#pricing" },
     ],
   },
   {
     title: "Platform",
     links: [
-      { label: "Multi-branch campuses", href: "#features" },
+      { label: "Multi-branch campuses", href: "#why" },
+      { label: "Custom roles & permissions", href: "#why" },
       { label: "Multi-tenant isolation", href: "#why" },
       { label: "Security & audit trails", href: "#why" },
     ],
@@ -40,7 +42,7 @@ export default function Footer() {
               >
                 <GraduationCap className="h-4 w-4 text-white" />
               </div>
-              <span className="text-base font-extrabold tracking-tight text-slate-900">EduCore</span>
+              <span className="text-base font-extrabold tracking-tight text-slate-900">School Sphere</span>
             </div>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
               A connected school management platform — academics to accounting, one campus or many.
@@ -77,7 +79,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 sm:flex-row">
-          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} EduCore. All rights reserved.</p>
+          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} School Sphere. All rights reserved.</p>
           <p className="text-xs text-slate-400">A demo school-management platform.</p>
         </div>
       </div>

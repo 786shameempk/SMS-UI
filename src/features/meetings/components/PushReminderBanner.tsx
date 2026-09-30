@@ -24,7 +24,7 @@ export default function PushReminderBanner() {
       <BellRing className="h-5 w-5 shrink-0 text-primary-text" aria-hidden />
       <p className="min-w-0 flex-1 text-foreground">
         <span className="font-medium">Get a reminder before each class</span>
-        <span className="hidden text-muted-foreground sm:inline"> on this device, even when EduCore isn't open.</span>
+        <span className="hidden text-muted-foreground sm:inline"> on this device, even when School Sphere isn't open.</span>
       </p>
       <Button
         size="sm"

@@ -25,7 +25,7 @@ export default function WhySection() {
           <SectionHeading
             align="left"
             inverted
-            eyebrow="Why EduCore"
+            eyebrow="Why School Sphere"
             title={
               <>
                 Built like real enterprise software,{" "}
@@ -34,7 +34,7 @@ export default function WhySection() {
                 </span>
               </>
             }
-            description="Most school software either looks dated or costs like it was built for a hospital chain. EduCore is architected the way modern SaaS products are — real tenant isolation, real audit trails, real analytics — without the enterprise sales cycle."
+            description="Most school software either looks dated or costs like it was built for a hospital chain. School Sphere is architected the way modern SaaS products are — real tenant isolation, real audit trails, real analytics — without the enterprise sales cycle."
           />
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

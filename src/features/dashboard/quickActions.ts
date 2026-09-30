@@ -62,12 +62,17 @@ const BY_ROLE: Record<UserRole, RoleAction[]> = {
   receptionist: [A.visitors, A.helpdesk, A.students, A.calendar, A.meetings],
   student: [A.myHomework, A.studyMaterials, A.timetable, A.meetings, A.talents],
   parent: [A.studyMaterials, A.meetings, A.talents, A.calendar],
+  // A custom role: every shortcut, narrowed below to the modules its permissions actually grant.
+  staff: Object.values(A),
 };
+
+const MAX_QUICK_ACTIONS = 6;
 
 /** Shortcuts for the dashboard, limited to what the signed-in role can actually open. */
 export function quickActionsFor(role: UserRole, permissions: ModulePermissions | null): QuickAction[] {
   return (BY_ROLE[role] ?? [])
     .filter((a) => !a.permissionKey || !permissions || permissions[a.permissionKey])
+    .slice(0, MAX_QUICK_ACTIONS)
     .map(({ permissionKey: _permissionKey, ...action }) => action);
 }
 
@@ -81,4 +86,5 @@ export const ROLE_TAGLINE: Record<UserRole, string> = {
   receptionist: "Visitors, requests and today's front-desk happenings.",
   student: "Your classes, homework and the talents you're proud of.",
   parent: "Stay close to your child's school day.",
+  staff: "Everything your role covers today, in one place.",
 };

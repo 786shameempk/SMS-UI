@@ -5,6 +5,7 @@ import { ChevronDown, GraduationCap, PanelLeftClose, PanelLeftOpen, X } from "lu
 import { cn } from "@/utils/cn";
 import { useUiStore } from "@/store/useUiStore";
 import { useAuthStore } from "@/store/authStore";
+import { hasAllBranchAccess } from "@/types/auth";
 import type { NavItem } from "@/constants/nav";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVisibleNav } from "./useVisibleNav";
@@ -119,7 +120,9 @@ function ExpandedNavSection({ title, items }: { title: string; items: NavItem[] 
 export default function Sidebar({ forceExpanded = false, onClose }: { forceExpanded?: boolean; onClose?: () => void }) {
   const { isSidebarCollapsed: collapsedPreference, toggleSidebar } = useUiStore();
   const isSidebarCollapsed = collapsedPreference && !forceExpanded;
-  const role = useAuthStore((s) => s.user?.role);
+  const user = useAuthStore((s) => s.user);
+  const isSuperAdmin = user?.role === "superAdmin";
+  const canSwitchBranch = isSuperAdmin || hasAllBranchAccess(user);
   const { coreItems, sections } = useVisibleNav();
 
   return (
@@ -137,7 +140,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
           </div>
           {!isSidebarCollapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-bold leading-none tracking-tight text-foreground">EduCore</p>
+              <p className="truncate text-[15px] font-bold leading-none tracking-tight text-foreground">School Sphere</p>
               <p className="mt-1 truncate text-[11px] leading-none text-muted-foreground">School management</p>
             </div>
           )}
@@ -154,9 +157,9 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
         </div>
 
         {/* The header hides the scope switchers on phones, so the drawer carries them. */}
-        {forceExpanded && (role === "admin" || role === "superAdmin") && (
+        {forceExpanded && canSwitchBranch && (
           <div className="space-y-2 border-b border-sidebar-border p-3 md:hidden">
-            {role === "superAdmin" && <TenantSwitcher className="w-full" />}
+            {isSuperAdmin && <TenantSwitcher className="w-full" />}
             <BranchSwitcher className="w-full" />
           </div>
         )}

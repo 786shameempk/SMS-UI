@@ -5,7 +5,7 @@ import { formatCurrency } from "@/utils/format";
 import type { FeeInvoice } from "../types";
 
 /**
- * Confirm step before Razorpay's checkout opens. EduCore never asks for card or UPI details itself - they're
+ * Confirm step before Razorpay's checkout opens. School Sphere never asks for card or UPI details itself - they're
  * entered on Razorpay's secure form, and the school confirms the payment with Razorpay before marking it paid.
  */
 export default function OnlinePaymentDialog({

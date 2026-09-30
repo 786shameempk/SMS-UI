@@ -68,7 +68,7 @@ export default function IdCardTab({ student }: { student: Student }) {
           >
             <GraduationCap className="w-5 h-5 text-white" />
             <div className="text-white">
-              <p className="text-sm font-bold leading-none">EduCore</p>
+              <p className="text-sm font-bold leading-none">School Sphere</p>
               <p className="text-[10px] opacity-80 leading-none mt-0.5">Student Identity Card</p>
             </div>
           </div>

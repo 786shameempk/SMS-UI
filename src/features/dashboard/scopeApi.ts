@@ -1,4 +1,4 @@
-import type { UserRole } from "@/types/auth";
+import { hasAllBranchAccess, type AuthUser } from "@/types/auth";
 import { academicHttpClient, authHttpClient, financeHttpClient } from "@/lib/httpClient";
 import { isWithinRange } from "./dateRange";
 import type { DashboardScopeView, ScopeMetrics, ScopeSummary } from "./types";
@@ -32,9 +32,10 @@ interface BranchRow {
 
 const EMPTY: ScopeMetrics = { students: 0, staff: 0, feesCollected: 0, feesPending: 0, overdueInvoices: 0, failed: false };
 
-/** Only Admin and Super Admin can switch branches, so only they get the aggregated/segregated choice. */
-export function canSwitchScopeView(role: UserRole): boolean {
-  return role === "admin" || role === "superAdmin";
+/** Only users whose role covers every branch (Admin, Super Admin, or a custom "All branches" role) can
+ *  switch branches, so only they get the aggregated/segregated choice. */
+export function canSwitchScopeView(user: AuthUser | null): boolean {
+  return user?.role === "superAdmin" || hasAllBranchAccess(user);
 }
 
 async function fetchBranchMetrics(headers: ScopeHeaders, range: { start: Date; end: Date }): Promise<ScopeMetrics> {

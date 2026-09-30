@@ -239,7 +239,7 @@ export default function MaterialFormDialog({
           <DialogTitle>{isEdit ? "Edit study material" : "Add study material"}</DialogTitle>
           <DialogDescription>
             {isPlatform
-              ? "Platform materials are shared with every school on EduCore."
+              ? "Platform materials are shared with every school on School Sphere."
               : "Visible only inside your school, to the students you choose below."}
           </DialogDescription>
         </DialogHeader>

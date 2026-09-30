@@ -38,7 +38,7 @@ export default function MaterialDetailDialog({
                 <Badge variant="neutral">{CATEGORY_CONFIG[m.category].label}</Badge>
                 {m.isGlobal && (
                   <Badge variant="info">
-                    <Globe2 className="h-3 w-3" aria-hidden="true" /> Shared by EduCore
+                    <Globe2 className="h-3 w-3" aria-hidden="true" /> Shared by School Sphere
                   </Badge>
                 )}
                 {m.status !== "published" && <StatusBadge status={m.status} />}

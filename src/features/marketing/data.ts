@@ -1,18 +1,21 @@
 import {
   BookOpen,
   Bus,
-  Building2,
   CalendarCheck,
   ChartColumn,
   Globe,
   GraduationCap,
+  HeartPulse,
   Landmark,
-  Library,
+  LibraryBig,
   Megaphone,
   School,
   ShieldCheck,
   Sparkles,
+  Star,
   Trees,
+  UsersRound,
+  Video,
   Wallet,
   WalletCards,
   type LucideIcon,
@@ -25,9 +28,38 @@ export interface FeatureItem {
   icon: LucideIcon;
   title: string;
   description: string;
+  /** Recently shipped — gets a "New" pill on the landing page. */
+  isNew?: boolean;
 }
 
+/** School-facing modules in the plan catalog, so the headline count never drifts from `/platform`. */
+export const MODULE_COUNT = AVAILABLE_MODULE_LABELS.length;
+
 export const FEATURES: FeatureItem[] = [
+  {
+    icon: Video,
+    title: "Online Classes",
+    description: "Scheduled live classes with chat, class materials, automatic attendance, cloud recordings, and push reminders before every session.",
+    isNew: true,
+  },
+  {
+    icon: LibraryBig,
+    title: "Study Materials & Homework",
+    description: "Teachers share notes, files, and links by class and subject; students see their homework and resources in one place.",
+    isNew: true,
+  },
+  {
+    icon: Star,
+    title: "Talent Showcase",
+    description: "A moderated space where students share art, music, and video — with teacher review, reactions, and a school-wide showcase.",
+    isNew: true,
+  },
+  {
+    icon: UsersRound,
+    title: "Parent & Student Portal",
+    description: "Parents follow their child's attendance, homework, fees, and school bus — and pay fees online in a few taps.",
+    isNew: true,
+  },
   {
     icon: GraduationCap,
     title: "Academics & Timetable",
@@ -41,7 +73,7 @@ export const FEATURES: FeatureItem[] = [
   {
     icon: Wallet,
     title: "Fees & Accounting",
-    description: "Structures, discounts, invoicing, receipts, and a real double-entry ledger with trial balance and GST summaries.",
+    description: "Structures, discounts, invoicing, online payments, receipts, and a real double-entry ledger with trial balance and GST summaries.",
   },
   {
     icon: WalletCards,
@@ -49,14 +81,14 @@ export const FEATURES: FeatureItem[] = [
     description: "Staff records, leave, performance reviews, and bulk monthly payroll runs with itemized, print-ready payslips.",
   },
   {
-    icon: Library,
-    title: "Library & Inventory",
-    description: "Barcode-ready catalogs with fine tracking, and perpetual stock control for every department's supplies.",
+    icon: Bus,
+    title: "Campus Operations",
+    description: "Library catalogs with fines, stock control, bus routes and seats, hostel rooms and mess plans — all in one dashboard.",
   },
   {
-    icon: Bus,
-    title: "Transport & Hostel",
-    description: "Live route tracking, seat allocation, room occupancy, and weekly mess planning, all in one dashboard.",
+    icon: HeartPulse,
+    title: "Front Office & Wellbeing",
+    description: "Visitor passes, health records, a help desk for complaints, surveys, and one-click certificates — the whole front desk, digital.",
   },
   {
     icon: Megaphone,
@@ -68,11 +100,6 @@ export const FEATURES: FeatureItem[] = [
     title: "Reports & AI Insights",
     description: "Nine live analytics dashboards plus AI-assisted risk flags and drafting, grounded in your school's real data.",
   },
-  {
-    icon: Building2,
-    title: "Multi-Branch & Multi-Tenant",
-    description: "True data isolation across schools and campuses, with role-scoped switching for admins and super admins.",
-  },
 ];
 
 export interface StatItem {
@@ -83,7 +110,7 @@ export interface StatItem {
 export const HERO_STATS: StatItem[] = [
   { value: "2,384+", label: "Students managed" },
   { value: "162+", label: "Staff & faculty" },
-  { value: "29", label: "Modules, one login" },
+  { value: String(MODULE_COUNT), label: "Modules, one login" },
   { value: "99.9%", label: "Uptime SLA" },
 ];
 
@@ -97,7 +124,7 @@ export const WHY_ITEMS: WhyItem[] = [
   {
     icon: ShieldCheck,
     title: "Enterprise-grade security",
-    description: "Role-based access control, MFA, full audit trails, and per-tenant data isolation by default — not bolted on later.",
+    description: "Custom roles with module-level permissions, MFA, full audit trails, and per-tenant data isolation by default — not bolted on later.",
   },
   {
     icon: Sparkles,
@@ -107,7 +134,7 @@ export const WHY_ITEMS: WhyItem[] = [
   {
     icon: Globe,
     title: "Built to scale",
-    description: "From a single campus to a multi-branch network of schools — same platform, same login, no re-platforming later.",
+    description: "From a single campus to a multi-branch network — give any role access to every branch, and pick only the modules your plan needs.",
   },
   {
     icon: ChartColumn,
@@ -125,9 +152,9 @@ export interface Testimonial {
 export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "We replaced six spreadsheets and two disconnected tools with EduCore in a single term. Our front office finally runs on one source of truth.",
+      "We replaced six spreadsheets and two disconnected tools with School Sphere in a single term. Our front office finally runs on one source of truth.",
     name: "Ava Whitfield",
-    role: "School Administrator, EduCore School",
+    role: "School Administrator, Greenfield Public School",
   },
   {
     quote:
@@ -213,6 +240,6 @@ export const STUDENT_COUNT_OPTIONS = ["Under 250", "250 – 500", "500 – 1,000
 
 export const DEMO_HIGHLIGHTS = [
   "A 30-minute live walkthrough tailored to your school",
-  "See admissions, fees, attendance and exams working together",
+  "See admissions, fees, attendance, exams and online classes working together",
   "Get migration and pricing answers from a product specialist",
 ] as const;

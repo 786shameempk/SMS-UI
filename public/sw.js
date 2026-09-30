@@ -1,5 +1,5 @@
 /*
- * EduCore service worker: Web Push only (class reminders, "class is live", cancellations).
+ * School Sphere service worker: Web Push only (class reminders, "class is live", cancellations).
  * It deliberately does not cache pages or API responses - a school app showing yesterday's timetable
  * offline would do more harm than good, and it keeps deploys instant.
  */
@@ -12,9 +12,9 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: "EduCore", body: event.data ? event.data.text() : "" };
+    data = { title: "School Sphere", body: event.data ? event.data.text() : "" };
   }
-  const title = data.title || "EduCore";
+  const title = data.title || "School Sphere";
   event.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || "",
@@ -33,7 +33,7 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      // Reuse an open EduCore tab if there is one, otherwise open a new window.
+      // Reuse an open School Sphere tab if there is one, otherwise open a new window.
       for (const client of windows) {
         if (new URL(client.url).origin === self.location.origin && "focus" in client) {
           await client.focus();
