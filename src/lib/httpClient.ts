@@ -143,7 +143,9 @@ export function extractApiErrorMessage(error: unknown, fallback = "Something wen
     const firstFieldError = problem?.errors && Object.values(problem.errors)[0]?.[0];
     if (firstFieldError) return firstFieldError;
     if (problem?.title) return problem.title;
-    if (error.message) return error.message;
+    // No response at all: server down, offline, or blocked by CORS. Axios's own text ("Network Error",
+    // "Request failed with status code 500") means nothing to a user, so say what happened instead.
+    if (!error.response) return "We can't reach the server right now. Check your connection and try again.";
   }
   return fallback;
 }
