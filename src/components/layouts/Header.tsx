@@ -3,6 +3,7 @@ import { cn } from "@/utils/cn";
 import { ChevronRight, LogOut, Menu, Monitor, Moon, ShieldCheck, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
+import { hasAllBranchAccess } from "@/types/auth";
 import { useUiStore } from "@/store/useUiStore";
 import {
   DropdownMenu,
@@ -115,7 +116,7 @@ export default function Header() {
   const navigate = useNavigate();
   const openMobileNav = useMobileNav((s) => s.setOpen);
   const isSuperAdmin = user?.role === "superAdmin";
-  const isAdmin = user?.role === "admin" || isSuperAdmin;
+  const canSwitchBranch = isSuperAdmin || hasAllBranchAccess(user);
 
   const handleLogout = () => {
     clearAuth();
@@ -142,7 +143,7 @@ export default function Header() {
 
       {/* School/branch scope: header on tablet+, phone nav drawer below md. */}
       {isSuperAdmin && <TenantSwitcher className="hidden md:flex md:w-44 xl:w-56" />}
-      {isAdmin && <BranchSwitcher className="hidden md:flex md:w-40 xl:w-48" />}
+      {canSwitchBranch && <BranchSwitcher className="hidden md:flex md:w-40 xl:w-48" />}
 
       <div className="flex items-center gap-0.5">
         <ThemeModeToggle />

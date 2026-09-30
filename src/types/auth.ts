@@ -7,7 +7,9 @@ export type UserRole =
   | "librarian"
   | "receptionist"
   | "parent"
-  | "student";
+  | "student"
+  /** A school's custom role (Roles & Permissions): what it may open comes from its module permissions. */
+  | "staff";
 
 export interface AuthUser {
   id: string;
@@ -17,9 +19,17 @@ export interface AuthUser {
   avatarUrl?: string | null;
   /** Every user belongs to exactly one tenant, except superAdmin (null), who can view any of them. */
   tenantId: string | null;
-  /** Every user belongs to exactly one branch (campus) within their tenant, except admin/superAdmin
-   *  (null), who aren't locked to one branch and can switch between their tenant's branches. */
+  /** The branch (campus) the user is locked to; null for users whose role covers every branch. */
   branchId: string | null;
+  /** The user's role has "All branches" (Admin, or any custom role set that way): they switch branch in
+   *  the header instead of being locked to one. Based on the role's setting, never its name. */
+  allBranchAccess: boolean;
+}
+
+/** Sessions saved before allBranchAccess existed: an all-branch user was one without a branch. */
+export function hasAllBranchAccess(user: AuthUser | null | undefined): boolean {
+  if (!user) return false;
+  return user.allBranchAccess ?? (user.branchId === null && user.tenantId !== null);
 }
 
 /** Coarse-grained module visibility flags, refined into per-action permissions by the Role & Permission module. */

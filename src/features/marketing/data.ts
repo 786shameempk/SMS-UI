@@ -1,166 +1,225 @@
 import {
-  BookOpen,
-  Bus,
-  Building2,
+  BellRing,
   CalendarCheck,
   ChartColumn,
-  Globe,
+  Cloud,
+  FileBarChart,
+  FileLock2,
+  Fingerprint,
   GraduationCap,
-  Landmark,
-  Library,
+  KeyRound,
+  LayoutDashboard,
+  LibraryBig,
   Megaphone,
-  School,
+  ScrollText,
   ShieldCheck,
+  Smartphone,
   Sparkles,
-  Trees,
+  Star,
+  TrendingDown,
+  UserCheck,
+  UserRoundSearch,
+  UsersRound,
+  Video,
   Wallet,
-  WalletCards,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 import { listPlans } from "@/features/platform/api";
 import { AVAILABLE_MODULE_LABELS } from "@/features/platform/constants";
 import { formatCurrency } from "@/utils/format";
 
-export interface FeatureItem {
+/** School-facing modules in the plan catalog, so the headline count never drifts from `/platform`. */
+export const MODULE_COUNT = AVAILABLE_MODULE_LABELS.length;
+
+interface IconItem {
   icon: LucideIcon;
   title: string;
   description: string;
 }
 
-export const FEATURES: FeatureItem[] = [
+// ── Value strip ──────────────────────────────────────────────────────
+
+export const VALUE_PILLARS = ["One Platform", "Less Administration", "Better Communication", "Smarter Decisions"] as const;
+
+export const TRUST_BADGES: Array<{ icon: LucideIcon; label: string }> = [
+  { icon: ShieldCheck, label: "Secure" },
+  { icon: Cloud, label: "Cloud-based" },
+  { icon: Smartphone, label: "Mobile-friendly" },
+  { icon: KeyRound, label: "Role-based access" },
+];
+
+// ── Everything in one place ─────────────────────────────────────────
+
+export const FEATURES: IconItem[] = [
   {
     icon: GraduationCap,
-    title: "Academics & Timetable",
-    description: "Classes, sections, subjects, exams, and a conflict-aware timetable builder — all kept in sync automatically.",
+    title: "Student Management",
+    description: "Profiles, admissions, enrollment, documents, and academic records — every student's story in one place.",
   },
   {
     icon: CalendarCheck,
-    title: "Attendance & Analytics",
-    description: "Manual, QR, biometric, or face capture with instant daily, monthly, and yearly reporting per student and staff.",
+    title: "Attendance",
+    description: "Mark a class in seconds and spot patterns early, with daily, monthly, and yearly views for students and staff.",
   },
   {
-    icon: Wallet,
-    title: "Fees & Accounting",
-    description: "Structures, discounts, invoicing, receipts, and a real double-entry ledger with trial balance and GST summaries.",
+    icon: LibraryBig,
+    title: "Academic Management",
+    description: "Classes, subjects, timetables, assignments, examinations, and report cards that stay in sync automatically.",
   },
   {
-    icon: WalletCards,
-    title: "HR & Payroll",
-    description: "Staff records, leave, performance reviews, and bulk monthly payroll runs with itemized, print-ready payslips.",
-  },
-  {
-    icon: Library,
-    title: "Library & Inventory",
-    description: "Barcode-ready catalogs with fine tracking, and perpetual stock control for every department's supplies.",
-  },
-  {
-    icon: Bus,
-    title: "Transport & Hostel",
-    description: "Live route tracking, seat allocation, room occupancy, and weekly mess planning, all in one dashboard.",
+    icon: UserCheck,
+    title: "Teacher Management",
+    description: "Timetables, homework, marks entry, and study materials — the daily tools teachers need, on any device.",
   },
   {
     icon: Megaphone,
-    title: "Communication Hub",
-    description: "Email, SMS, push, and WhatsApp broadcasts with templates, scheduling, and a real in-app notification center.",
+    title: "Parent Communication",
+    description: "Announcements, notifications, and updates that reach parents by app, email, or SMS — and actually get read.",
   },
   {
-    icon: Sparkles,
-    title: "Reports & AI Insights",
-    description: "Nine live analytics dashboards plus AI-assisted risk flags and drafting, grounded in your school's real data.",
-  },
-  {
-    icon: Building2,
-    title: "Multi-Branch & Multi-Tenant",
-    description: "True data isolation across schools and campuses, with role-scoped switching for admins and super admins.",
-  },
-];
-
-export interface StatItem {
-  value: string;
-  label: string;
-}
-
-export const HERO_STATS: StatItem[] = [
-  { value: "2,384+", label: "Students managed" },
-  { value: "162+", label: "Staff & faculty" },
-  { value: "29", label: "Modules, one login" },
-  { value: "99.9%", label: "Uptime SLA" },
-];
-
-export interface WhyItem {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-}
-
-export const WHY_ITEMS: WhyItem[] = [
-  {
-    icon: ShieldCheck,
-    title: "Enterprise-grade security",
-    description: "Role-based access control, MFA, full audit trails, and per-tenant data isolation by default — not bolted on later.",
-  },
-  {
-    icon: Sparkles,
-    title: "AI-assisted, not AI-replaced",
-    description: "Smart insights and drafting that stay grounded in your real records — never a fabricated number or invented result.",
-  },
-  {
-    icon: Globe,
-    title: "Built to scale",
-    description: "From a single campus to a multi-branch network of schools — same platform, same login, no re-platforming later.",
+    icon: Wallet,
+    title: "Fees & Finance",
+    description: "Fee structures, invoices, online payments, receipts, and accounts that reconcile themselves.",
   },
   {
     icon: ChartColumn,
-    title: "Decisions backed by data",
-    description: "Nine live analytics dashboards mean every decision starts from the same source of truth as the front office.",
+    title: "Reports & Analytics",
+    description: "Live dashboards and ready-made reports that turn everyday school data into clear, useful answers.",
+  },
+  {
+    icon: Workflow,
+    title: "Smart Automation",
+    description: "Reminders, follow-ups, and routine paperwork run on their own, so staff spend time on students instead.",
   },
 ];
+
+/** Recently shipped modules, called out under the feature grid. */
+export const NEW_MODULES: Array<{ icon: LucideIcon; label: string }> = [
+  { icon: Video, label: "Online Classes" },
+  { icon: LibraryBig, label: "Study Materials" },
+  { icon: Star, label: "Talent Showcase" },
+  { icon: UsersRound, label: "Parent Portal" },
+];
+
+// ── Designed for every role ─────────────────────────────────────────
+
+export type RoleId = "admin" | "teacher" | "student" | "parent";
+
+export interface RoleCard {
+  id: RoleId;
+  role: string;
+  headline: string;
+  points: string[];
+}
+
+export const ROLE_CARDS: RoleCard[] = [
+  {
+    id: "admin",
+    role: "Administrators",
+    headline: "Run every branch and department from one live view.",
+    points: ["Enrollment, fees, and staffing at a glance", "Custom roles and permissions", "Branch-by-branch or combined reports"],
+  },
+  {
+    id: "teacher",
+    role: "Teachers",
+    headline: "Less paperwork, more time in the classroom.",
+    points: ["Attendance in a couple of taps", "Homework, marks, and materials", "Live online classes built in"],
+  },
+  {
+    id: "student",
+    role: "Students",
+    headline: "Everything for the school day, always up to date.",
+    points: ["Timetable and homework due dates", "Notes, papers, and recordings", "A showcase for their talents"],
+  },
+  {
+    id: "parent",
+    role: "Parents",
+    headline: "Stay close to your child's school day.",
+    points: ["Attendance, homework, and results", "Pay fees online in a few taps", "Bus tracking and school updates"],
+  },
+];
+
+// ── Smarter insights ────────────────────────────────────────────────
+
+export const INSIGHT_CAPABILITIES: Array<{ icon: LucideIcon; label: string }> = [
+  { icon: TrendingDown, label: "Identify attendance trends" },
+  { icon: UserRoundSearch, label: "Highlight students who may need attention" },
+  { icon: FileBarChart, label: "Generate useful reports" },
+  { icon: Workflow, label: "Automate repetitive workflows" },
+  { icon: BellRing, label: "Surface important information" },
+  { icon: Sparkles, label: "Simplify administrative tasks" },
+];
+
+// ── How it works ────────────────────────────────────────────────────
+
+export const STEPS: Array<IconItem & { number: string }> = [
+  {
+    number: "01",
+    icon: LayoutDashboard,
+    title: "Set Up Your School",
+    description: "Configure your school, branches, academic structure, users, and roles — we help you import what you already have.",
+  },
+  {
+    number: "02",
+    icon: UsersRound,
+    title: "Connect Your Community",
+    description: "Invite administrators, teachers, students, and parents. Each sees exactly what their role needs.",
+  },
+  {
+    number: "03",
+    icon: Sparkles,
+    title: "Manage Everything",
+    description: "Run admissions, classes, fees, and communication day to day from one centralized system.",
+  },
+];
+
+// ── Security ────────────────────────────────────────────────────────
+
+export const SECURITY_ITEMS: IconItem[] = [
+  { icon: KeyRound, title: "Role-based access control", description: "Every role sees only the modules and actions it's been granted." },
+  { icon: Fingerprint, title: "Secure authentication", description: "Strong passwords, multi-factor sign-in, and session controls." },
+  { icon: FileLock2, title: "Data protection", description: "Each school's data is isolated from every other school's." },
+  { icon: ScrollText, title: "Audit-friendly workflows", description: "Sensitive changes are logged with who, what, and when." },
+  { icon: Cloud, title: "Secure cloud infrastructure", description: "Hosted on managed cloud infrastructure with regular backups." },
+  { icon: ShieldCheck, title: "Permission-based access", description: "Fine-grained permissions down to individual screens and actions." },
+];
+
+// ── Testimonials ────────────────────────────────────────────────────
 
 export interface Testimonial {
   quote: string;
   name: string;
   role: string;
+  school: string;
 }
 
+// Placeholder testimonials - replace with real quotes (and permission to use them) before launch.
 export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "We replaced six spreadsheets and two disconnected tools with EduCore in a single term. Our front office finally runs on one source of truth.",
+      "We reduced the amount of manual administrative work significantly and gave teachers more time to focus on students.",
     name: "Ava Whitfield",
-    role: "School Administrator, EduCore School",
+    role: "School Administrator",
+    school: "Greenfield Public School",
   },
   {
     quote:
-      "Rolling out a second campus used to mean standing up a second system. Now it's a dropdown in the header, with real data isolation underneath.",
-    name: "Nikhil Shetty",
-    role: "Super Admin, Platform Console",
-  },
-  {
-    quote:
-      "Attendance, report cards, and fee reminders used to eat an entire afternoon every week. Now it's a glance at the dashboard between classes.",
+      "Parents finally see attendance, homework, and fee updates in one place. The number of calls to our front office has dropped noticeably.",
     name: "Meera Iyer",
-    role: "Principal, Riverside International School",
+    role: "Principal",
+    school: "Riverside International School",
+  },
+  {
+    quote:
+      "Taking attendance and sharing class notes now takes minutes instead of a free period. It just fits into how I already teach.",
+    name: "Rahul Menon",
+    role: "Mathematics Teacher",
+    school: "Lakeside Academy",
   },
 ];
 
-export interface Partner {
-  name: string;
-  location: string;
-  /** Path to a real logo under /public (e.g. "/partners/greenfield.svg"). Without one, a crest is drawn from `icon` + `color`. */
-  logoUrl?: string;
-  icon: LucideIcon;
-  color: string;
-}
-
-// Placeholder partners - replace with real schools/companies (and their logos) once they've agreed to be listed.
-export const PARTNERS: Partner[] = [
-  { name: "Greenfield Public School", location: "Kochi", icon: GraduationCap, color: "#16a34a" },
-  { name: "St. Aurora Convent", location: "Bengaluru", icon: BookOpen, color: "#2563eb" },
-  { name: "Horizon International", location: "Dubai", icon: Globe, color: "#0891b2" },
-  { name: "Lakeside Academy", location: "Kozhikode", icon: School, color: "#7c3aed" },
-  { name: "Brightpath EduTrust", location: "Chennai", icon: Landmark, color: "#dc2626" },
-  { name: "Cedar Valley School", location: "Mysuru", icon: Trees, color: "#ea580c" },
-];
+// ── Pricing ─────────────────────────────────────────────────────────
 
 export interface PricingTier {
   id: string;
@@ -213,6 +272,6 @@ export const STUDENT_COUNT_OPTIONS = ["Under 250", "250 – 500", "500 – 1,000
 
 export const DEMO_HIGHLIGHTS = [
   "A 30-minute live walkthrough tailored to your school",
-  "See admissions, fees, attendance and exams working together",
+  "See admissions, fees, attendance, exams and online classes working together",
   "Get migration and pricing answers from a product specialist",
 ] as const;

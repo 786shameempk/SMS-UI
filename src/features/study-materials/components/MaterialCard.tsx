@@ -85,7 +85,7 @@ export default function MaterialCard({
             {kind && <Badge variant="default">{kind}</Badge>}
             {m.isGlobal && (
               <Badge variant="info">
-                <Globe2 className="h-3 w-3" aria-hidden="true" /> EduCore
+                <Globe2 className="h-3 w-3" aria-hidden="true" /> School Sphere
               </Badge>
             )}
             {m.isPinned && (

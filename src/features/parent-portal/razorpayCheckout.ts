@@ -2,7 +2,7 @@ import { createRazorpayOrder, verifyRazorpayPayment } from "@/features/fees/api"
 
 /**
  * Razorpay Standard Checkout (checkout.js) for the web parent portal. Card/UPI details are entered on
- * Razorpay's own form, never in EduCore; FinanceService verifies the signed result before marking paid.
+ * Razorpay's own form, never in School Sphere; FinanceService verifies the signed result before marking paid.
  */
 
 const SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
@@ -55,7 +55,7 @@ export async function payInvoiceWithRazorpay(invoiceId: string, prefill: { name?
       order_id: order.orderId,
       amount: order.amountPaise,
       currency: order.currency,
-      name: "EduCore",
+      name: "School Sphere",
       description: order.description,
       prefill,
       theme: { color: "#ECA427" },

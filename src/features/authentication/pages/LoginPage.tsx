@@ -135,7 +135,7 @@ export default function LoginPage() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">
             <GraduationCap className="h-6 w-6" aria-hidden="true" />
           </div>
-          <h1 className="text-page-title">EduCore</h1>
+          <h1 className="text-page-title">School Sphere</h1>
           <p className="text-sm text-muted-foreground mt-1">Sign in to your school management account</p>
         </div>
 

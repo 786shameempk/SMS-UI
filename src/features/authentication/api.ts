@@ -19,6 +19,7 @@ interface ApiUserDto {
   lastName: string;
   tenantId: string | null;
   branchId: string | null;
+  allBranchAccess: boolean;
   roles: string[];
   permissions: string[];
 }
@@ -43,15 +44,16 @@ const VALID_ROLES: UserRole[] = [
   "student",
 ];
 
-/** AuthService's Identity role names are meant to match UserRole exactly (see AuthService's
+/** AuthService's built-in Identity role names match UserRole exactly (see AuthService's
  *  Domain/Constants/Roles.cs), matched case-insensitively to tolerate any legacy/manually-cased
- *  role rows in the database. Falls back to the least-privileged role if nothing recognizable. */
+ *  role rows in the database. Anything else is a school's custom role ("custom-…"): "staff", whose
+ *  menus and data come from its module permissions and branch scope, never student behaviour. */
 function mapRole(roles: string[]): UserRole {
   for (const role of roles) {
     const match = VALID_ROLES.find((v) => v.toLowerCase() === role.toLowerCase());
     if (match) return match;
   }
-  return "student";
+  return "staff";
 }
 
 const MODULE_PERMISSION_PREFIX = "module.";
@@ -107,6 +109,7 @@ function mapAuthUser(dto: ApiUserDto): AuthUser {
     avatarUrl: null,
     tenantId: dto.tenantId,
     branchId: dto.branchId,
+    allBranchAccess: dto.allBranchAccess,
   };
 }
 
