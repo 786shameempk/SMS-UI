@@ -6,8 +6,8 @@ import { useAuthStore } from "@/store/authStore";
 const MAX_TIMER_MS = 2_147_483_647;
 
 /**
- * Signed-in pages only. With no session, or once it runs out, the user goes to /login, which brings
- * them back to the page they were on after signing in again. Sessions end in three ways:
+ * Signed-in pages only. With no session, or once it runs out, the user goes to /login; signing in
+ * again always starts on the dashboard. Sessions end in three ways:
  *  - the remembered session lifetime passes (timer below, re-checked when the tab regains focus),
  *  - an API call returns 401 and the token can't be renewed (lib/httpClient.ts),
  *  - the user signs out.

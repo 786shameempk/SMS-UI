@@ -334,10 +334,23 @@ async function buildHostelOccupancySchoolwide(): Promise<HostelOccupancySummary>
 
 // ── Assembler ───────────────────────────────────────────────────────────
 
+/** Roles that only ever see their own (or their children's) records, never the school-wide lists. */
+const PERSONAL_ROLES: UserRole[] = ["parent", "student"];
+
 export async function fetchDashboardData(role: UserRole, email: string | undefined, range: DashboardDateRange): Promise<DashboardData> {
   const months = monthsInRange(resolveDateRange(range));
-  const children = await getParentChildren(role, email);
-  const isParentScoped = role === "parent" && children.length > 0;
+  const personal = PERSONAL_ROLES.includes(role);
+  const children = await getParentChildren(role, email).catch((): Student[] => []);
+
+  /**
+   * One widget's data. Parents and students get their children's records, or nothing when none are
+   * linked - never the school-wide lists, which they aren't allowed to read. A module the role can't
+   * open (e.g. 403 from library or transport) blanks just that card instead of failing the dashboard.
+   */
+  function widget<T>(forChildren: (c: Student[]) => Promise<T>, schoolwide: () => Promise<T>, empty: T): Promise<T> {
+    const load = personal ? (children.length > 0 ? () => forChildren(children) : () => Promise.resolve(empty)) : schoolwide;
+    return load().catch(() => empty);
+  }
 
   const [
     pendingAssignments,
@@ -347,12 +360,12 @@ export async function fetchDashboardData(role: UserRole, email: string | undefin
     busStatus,
     hostelOccupancy,
   ] = await Promise.all([
-    isParentScoped ? buildPendingAssignmentsForChildren(children) : buildPendingAssignmentsSchoolwide(),
-    isParentScoped ? buildUpcomingExamsForChildren(children) : buildUpcomingExamsSchoolwide(),
-    isParentScoped ? buildFeesDueForChildren(children) : buildFeesDueSchoolwide(),
-    isParentScoped ? buildLibraryDueForChildren(children) : buildLibraryDueSchoolwide(),
-    isParentScoped ? buildBusStatusForChildren(children) : buildBusStatusSchoolwide(),
-    isParentScoped ? buildHostelOccupancyForChildren(children) : buildHostelOccupancySchoolwide(),
+    widget(buildPendingAssignmentsForChildren, buildPendingAssignmentsSchoolwide, []),
+    widget(buildUpcomingExamsForChildren, buildUpcomingExamsSchoolwide, []),
+    widget(buildFeesDueForChildren, buildFeesDueSchoolwide, { totalPending: 0, totalOverdue: 0, currency: "INR", items: [] }),
+    widget(buildLibraryDueForChildren, buildLibraryDueSchoolwide, []),
+    widget<BusStatusSummary>(buildBusStatusForChildren, buildBusStatusSchoolwide, { fleet: [], mine: null }),
+    widget<HostelOccupancySummary>(buildHostelOccupancyForChildren, buildHostelOccupancySchoolwide, { hostels: [], mine: null }),
   ]);
 
   const data: DashboardData = {

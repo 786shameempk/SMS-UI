@@ -32,6 +32,9 @@ x-dotnet-env: &dotnet-env
   ASPNETCORE_ENVIRONMENT: Production
   Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
   Cors__AllowedOrigins__0: https://${DOMAIN:?DOMAIN is required - set it in .env next to docker-compose.yml (see .env.example)}
+  # A second site allowed to call the APIs from another origin (e.g. the Azure Static Web Apps frontend).
+  # Unset = just the main domain again (harmless duplicate).
+  Cors__AllowedOrigins__1: ${CORS_EXTRA_ORIGIN:-https://${DOMAIN}}
 
 services:
   caddy:
@@ -57,6 +60,15 @@ services:
     <<: *logging
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/sms-ui:${UI_IMAGE_TAG:-latest}
     restart: unless-stopped
+    # Runtime API addresses (written into config.js when the container starts), so the SPA calls this
+    # domain whatever URLs were baked into the image at build time.
+    environment:
+      AUTH_API_URL: https://${DOMAIN}/services/identity/
+      ACADEMIC_API_URL: https://${DOMAIN}/services/academic/
+      FINANCE_API_URL: https://${DOMAIN}/services/finance/
+      CAMPUS_API_URL: https://${DOMAIN}/services/campus/
+      ENGAGEMENT_API_URL: https://${DOMAIN}/services/engagement/
+      MEETING_API_URL: https://${DOMAIN}/services/meetings/
 
   apigateway:
     <<: *logging
