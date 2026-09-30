@@ -2,10 +2,12 @@ import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
+import ValueStrip from "../components/ValueStrip";
 import FeaturesGrid from "../components/FeaturesGrid";
-import ProductPreview from "../components/ProductPreview";
-import WhySection from "../components/WhySection";
-import Partners from "../components/Partners";
+import ShowcaseSection from "../components/ShowcaseSection";
+import InsightsSection from "../components/InsightsSection";
+import HowItWorks from "../components/HowItWorks";
+import SecuritySection from "../components/SecuritySection";
 import Testimonials from "../components/Testimonials";
 import PricingSection from "../components/PricingSection";
 import FinalCta from "../components/FinalCta";
@@ -22,14 +24,16 @@ export default function LandingPage() {
 
   return (
     <LeadCaptureProvider>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen overflow-x-clip bg-white antialiased">
         <Navbar />
         <main>
           <Hero />
-          <Partners />
+          <ValueStrip />
           <FeaturesGrid />
-          <ProductPreview />
-          <WhySection />
+          <ShowcaseSection />
+          <InsightsSection />
+          <HowItWorks />
+          <SecuritySection />
           <Testimonials />
           <PricingSection />
           <FinalCta />

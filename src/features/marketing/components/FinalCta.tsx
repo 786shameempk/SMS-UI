@@ -1,60 +1,57 @@
-import { motion } from "framer-motion";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, CalendarCheck2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeadCapture } from "./LeadCapture";
+import Reveal from "./Reveal";
 
 export default function FinalCta() {
   const { openDemo, openContact } = useLeadCapture();
 
   return (
-    <section className="bg-white px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative isolate mx-auto max-w-6xl overflow-hidden rounded-3xl px-6 py-16 text-center shadow-2xl shadow-brand-900/20 sm:px-12 sm:py-20"
-      >
+    <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+      <Reveal className="relative isolate mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-slate-950 px-6 py-16 text-center shadow-2xl shadow-slate-900/25 sm:px-12 sm:py-24">
+        {/* Gradient light + grid */}
+        <div className="absolute left-1/2 top-0 -z-10 h-[28rem] w-[48rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,var(--color-brand-500),transparent)] opacity-40" />
+        <div className="absolute -bottom-40 -right-20 -z-10 h-80 w-80 rounded-full bg-brand-700/30 blur-3xl" />
         <div
-          className="absolute inset-0 -z-10"
-          style={{ background: "linear-gradient(135deg, var(--color-brand-700) 0%, var(--color-brand-900) 100%)" }}
-        />
-        <div className="absolute -left-20 -top-24 -z-10 h-72 w-72 rounded-full bg-brand-400/40 blur-3xl" />
-        <div className="absolute -bottom-32 -right-16 -z-10 h-80 w-80 rounded-full bg-brand-500/30 blur-3xl" />
-        <div
-          className="pointer-events-none absolute inset-0 -z-10 opacity-15"
+          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.12]"
           style={{
-            backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-            maskImage: "radial-gradient(ellipse at center, black 20%, transparent 75%)",
+            backgroundImage:
+              "linear-gradient(to right, rgb(255 255 255 / 0.5) 1px, transparent 1px), linear-gradient(to bottom, rgb(255 255 255 / 0.5) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+            maskImage: "radial-gradient(ellipse at top, black 20%, transparent 70%)",
           }}
         />
 
-        <h2 className="mx-auto max-w-2xl text-3xl font-extrabold tracking-tight text-balance text-white sm:text-4xl">
-          Ready to bring your school into one system?
+        <h2 className="mx-auto max-w-3xl text-3xl font-bold tracking-[-0.03em] text-balance text-white sm:text-5xl">
+          Ready to Build a <span className="text-brand-gradient">Smarter School?</span>
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-brand-100">
-          Book a free, personalised walkthrough with our team — or drop us a message and we'll get right back to you.
+        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+          Bring your school's people, processes, and information together in one simple platform.
         </p>
 
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button size="lg" onClick={openDemo} className="group bg-white text-brand-800 shadow-lg hover:bg-brand-50 hover:opacity-100">
-            Request a Demo
+        <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+          <Button size="lg" onClick={openDemo} className="group h-12 px-6 text-[15px] shadow-lg shadow-brand-500/30">
+            Get Started
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
           <Button
             size="lg"
             variant="ghost"
-            onClick={openContact}
-            className="border border-white/25 text-white hover:bg-white/10 hover:text-white"
+            onClick={openDemo}
+            className="h-12 border border-white/20 px-6 text-[15px] text-white hover:bg-white/10 hover:text-white"
           >
-            <MessageCircle className="h-4 w-4" />
-            Contact Us
+            <CalendarCheck2 className="h-4 w-4" />
+            Book a Demo
           </Button>
         </div>
 
-        <p className="mt-5 text-xs font-medium text-brand-200">We usually reply within one business day</p>
-      </motion.div>
+        <p className="mt-6 text-xs font-medium text-slate-400">
+          Free 30-minute walkthrough &middot; No commitment &middot;{" "}
+          <button type="button" onClick={openContact} className="underline decoration-slate-600 underline-offset-2 hover:text-white">
+            Questions? Talk to us
+          </button>
+        </p>
+      </Reveal>
     </section>
   );
 }
