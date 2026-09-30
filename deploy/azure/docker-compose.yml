@@ -122,6 +122,9 @@ services:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
       Services__AuthServiceUrl: http://authservice:8080/
+      # Online Exams notifications (scheduled, reminders, results...) go to EngagementService's internal events.
+      Services__EngagementServiceUrl: http://engagementservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
     volumes:
       - study-materials:/app/App_Data/study-materials
 

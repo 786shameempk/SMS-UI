@@ -63,6 +63,7 @@ export interface ModulePermissions {
   talents: boolean;
   meetings: boolean;
   studyMaterials: boolean;
+  onlineExams: boolean;
   [module: string]: boolean;
 }
 

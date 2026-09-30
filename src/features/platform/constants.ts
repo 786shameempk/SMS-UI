@@ -12,7 +12,7 @@ export const TENANT_STATUS_CONFIG: Record<TenantStatus, { label: string; variant
 
 export const PLAN_TIER_CONFIG: Record<PlanTier, { label: string }> = {
   starter: { label: "Starter" },
-  growth: { label: "Growth" },
+  growth: { label: "Professional" },
   enterprise: { label: "Enterprise" },
 };
 

@@ -1,6 +1,6 @@
 import { authHttpClient, extractApiErrorMessage, getApiErrorStatus } from "@/lib/httpClient";
 
-export type LeadKind = "contact" | "demo";
+export type LeadKind = "contact" | "demo" | "quote";
 
 export interface ContactLead {
   kind: "contact";
@@ -22,12 +22,27 @@ export interface DemoLead {
   message?: string;
 }
 
-export type Lead = ContactLead | DemoLead;
+/** "Request a Quote" (Plans & Solutions, or an upgrade enquiry from Settings → Subscription). Never carries a price. */
+export interface QuoteLead {
+  kind: "quote";
+  name: string;
+  email: string;
+  phone: string;
+  schoolName: string;
+  studentCount: string;
+  staffCount?: string;
+  requiredModules?: string[];
+  preferredPlan?: string;
+  requirements?: string;
+  message?: string;
+}
 
-const LEAD_KIND_TO_API: Record<LeadKind, string> = { contact: "Contact", demo: "Demo" };
+export type Lead = ContactLead | DemoLead | QuoteLead;
+
+const LEAD_KIND_TO_API: Record<LeadKind, string> = { contact: "Contact", demo: "Demo", quote: "Quote" };
 
 /**
- * Landing-page leads (Contact Us chat + Request a Demo), sent to AuthService's public `POST /api/leads`.
+ * Landing-page leads (Contact Us chat, Request a Demo, Request a Quote), sent to AuthService's public `POST /api/leads`.
  * The backend emails the company inbox and, when a phone number is given, WhatsApps the company number
  * (see AuthService's LeadNotifications settings). It's rate-limited per IP.
  */

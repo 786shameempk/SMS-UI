@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Solutions", href: "#solutions" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Plans", href: "#plans" },
 ];
 
 interface ResourceLink {

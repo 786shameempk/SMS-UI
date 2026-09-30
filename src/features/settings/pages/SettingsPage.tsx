@@ -5,6 +5,7 @@ import AuditLogTab from "../components/AuditLogTab";
 import BackupTab from "../components/BackupTab";
 import LocalizationTab from "../components/LocalizationTab";
 import SchoolProfileTab from "../components/SchoolProfileTab";
+import SubscriptionTab from "../components/SubscriptionTab";
 import TemplatesTab from "../components/TemplatesTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
@@ -15,12 +16,13 @@ export default function SettingsPage() {
     <PageContainer>
       <PageHeader
         title="Settings &amp; administration"
-        description="School profile, appearance, localization, system templates, backups, and the audit log."
+        description="School profile, subscription plan, appearance, localization, system templates, backups, and the audit log."
       />
 
       <Tabs defaultValue="profile">
         <TabsList variant="line">
           <TabsTrigger value="profile">School Profile</TabsTrigger>
+          <TabsTrigger value="subscription">Plan &amp; Subscription</TabsTrigger>
           <TabsTrigger value="branding">Appearance</TabsTrigger>
           <TabsTrigger value="localization">Localization</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
@@ -29,6 +31,9 @@ export default function SettingsPage() {
         </TabsList>
         <TabsContent value="profile">
           <SchoolProfileTab />
+        </TabsContent>
+        <TabsContent value="subscription">
+          <SubscriptionTab />
         </TabsContent>
         <TabsContent value="branding">
           {/* Remounts on tenant switch: its 3 preset queries sit outside the CSS-variable

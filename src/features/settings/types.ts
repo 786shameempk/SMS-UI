@@ -65,3 +65,27 @@ export interface BackupEvent {
 export interface BrandingSettings {
   preset: BrandPresetKey;
 }
+
+export type SubscriptionStatus = "Trial" | "Active" | "Suspended" | "Cancelled";
+
+/** The school's own plan (Settings → Subscription). Pricing is private and never part of this. */
+export interface Subscription {
+  schoolName: string;
+  status: SubscriptionStatus;
+  /** Null for a school that predates plans: nothing is capped and every module is included. */
+  planName: string | null;
+  tier: "Starter" | "Growth" | "Enterprise" | null;
+  maxStudents: number | null;
+  maxStaff: number | null;
+  storageGb: number | null;
+  includedModules: string[];
+  availableModules: string[];
+  subscribedSince: string;
+  billingContactName: string;
+  billingContactEmail: string;
+}
+
+export interface PlanUsage {
+  studentCount: number;
+  staffCount: number;
+}
