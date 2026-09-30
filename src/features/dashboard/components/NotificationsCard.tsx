@@ -1,5 +1,6 @@
 import { Banknote, Bell, CalendarDays, GraduationCap, Settings } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/states";
 import { cn } from "@/utils/cn";
 import { formatRelativeDay } from "@/utils/format";
 import type { NotificationItem } from "../types";
@@ -24,6 +25,7 @@ export default function NotificationsCard({ notifications }: { notifications: No
         <CardDescription>{unreadCount} unread</CardDescription>
       </CardHeader>
       <CardContent className="space-y-1">
+        {notifications.length === 0 && <EmptyState bare size="sm" icon={Bell} title="You're all caught up" description="New notifications will appear here." className="py-6" />}
         {notifications.map((n) => {
           const Icon = CATEGORY_ICON[n.category];
           return (
@@ -32,7 +34,7 @@ export default function NotificationsCard({ notifications }: { notifications: No
                 <Icon className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                <p className="line-clamp-2 text-sm font-medium leading-5 text-foreground">{n.title}</p>
                 <p className="text-xs text-muted-foreground line-clamp-1">{n.body}</p>
               </div>
               <span className="text-[11px] text-muted-foreground shrink-0">{formatRelativeDay(n.createdAt)}</span>

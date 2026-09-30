@@ -1,16 +1,18 @@
+import { ClipboardCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/states";
 import { formatRelativeDay } from "@/utils/format";
 import type { PendingAssignment } from "../types";
 
 export default function PendingAssignmentsCard({ assignments }: { assignments: PendingAssignment[] }) {
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardHeader>
         <CardTitle>Pending assignments</CardTitle>
         <CardDescription>Work due soon.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {assignments.length === 0 && <p className="text-sm text-muted-foreground">Nothing pending.</p>}
+      <CardContent className="flex-1 space-y-3">
+        {assignments.length === 0 && <EmptyState bare size="sm" icon={ClipboardCheck} title="All caught up" description="No assignments are due soon." className="h-full py-6" />}
         {assignments.map((assignment) => {
           const pct =
             assignment.totalCount && assignment.submittedCount !== undefined

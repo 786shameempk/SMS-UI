@@ -1,17 +1,18 @@
 import { Bus, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/states";
 import { TRACKING_STATUS_CONFIG } from "@/features/transport/constants";
 import type { BusStatusSummary } from "../types";
 
 export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSummary }) {
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardHeader>
         <CardTitle>Bus status</CardTitle>
         <CardDescription>{busStatus.mine ? "Your child's transport." : "Live fleet status."}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="flex-1 space-y-2">
         {busStatus.mine ? (
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="min-w-0 flex items-center gap-2.5">
@@ -34,7 +35,7 @@ export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSumma
             </Badge>
           </div>
         ) : busStatus.fleet.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No live routes running right now.</p>
+          <EmptyState bare size="sm" icon={Bus} title="No routes running" description="Live buses appear here during trips." className="h-full py-6" />
         ) : (
           <div className="grid grid-cols-2 gap-2">
             {busStatus.fleet.map((f) => (

@@ -10,8 +10,8 @@ export function timeOfDayGreeting(): string {
   return "Good evening";
 }
 
-/** The greeting header every role's home page opens with (dashboard, parent portal). A softly branded panel,
- *  not a loud banner: the controls and data below are still what the user came for. */
+/** The greeting header every role's home page opens with (dashboard, parent portal). A plain page header,
+ *  not a banner: the figures below are what the user came for, so this stays quiet and compact. */
 export function WelcomeHero({
   eyebrow,
   title,
@@ -24,20 +24,19 @@ export function WelcomeHero({
   /** Right-hand content: child chips, page controls, ... */
   aside?: ReactNode;
 }) {
-  const today = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const today = new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   return (
-    <section className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-border/80 bg-hero p-5 shadow-sm sm:p-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="relative min-w-0 space-y-1.5">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
-          <span className="inline-flex items-center rounded-full bg-accent px-2 py-0.5 font-semibold text-accent-foreground ring-1 ring-inset ring-primary/20">
-            {eyebrow}
-          </span>
-          {today}
+    <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="min-w-0 space-y-1">
+        <p className="flex flex-wrap items-center gap-x-2 text-[13px] font-medium text-muted-foreground">
+          <span>{today}</span>
+          <span aria-hidden="true" className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+          <span>{eyebrow}</span>
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem] sm:leading-9">{title}</h1>
+        <h1 className="text-2xl font-semibold leading-8 tracking-[-0.015em] text-foreground">{title}</h1>
         {subtitle && <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{subtitle}</p>}
       </div>
-      {aside && <div className="relative">{aside}</div>}
+      {aside && <div className="shrink-0">{aside}</div>}
     </section>
   );
 }

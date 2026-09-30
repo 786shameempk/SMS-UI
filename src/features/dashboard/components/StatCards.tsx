@@ -35,8 +35,6 @@ export default function StatCards({ stats }: { stats: StatCardData[] }) {
           icon={ICONS[stat.icon] ?? Users}
           tone={TONES[index % TONES.length]}
           trend={stat.delta ? { value: stat.delta.value, direction: stat.delta.direction } : undefined}
-          className="animate-in fade-in-0 slide-in-from-bottom-1 duration-300 fill-mode-both"
-          style={{ animationDelay: `${index * 40}ms` }}
         />
       ))}
     </StatGrid>

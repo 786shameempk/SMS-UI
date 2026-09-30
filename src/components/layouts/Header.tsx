@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/utils/cn";
-import { ChevronRight, LogOut, Menu, Monitor, Moon, ShieldCheck, Sun } from "lucide-react";
+import { ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, Search, ShieldCheck, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { hasAllBranchAccess } from "@/types/auth";
@@ -18,7 +18,7 @@ import NotificationBell from "@/features/notifications/components/NotificationBe
 import { useMobileNav } from "@/components/layouts/mobileNav";
 import { findNavEntry } from "@/constants/nav";
 import { BranchSwitcher, TenantSwitcher } from "./ScopeSwitchers";
-import CommandMenu from "./CommandMenu";
+import CommandMenu, { openCommandMenu } from "./CommandMenu";
 
 const THEME_MODE_SEQUENCE: ThemeMode[] = ["light", "dark", "system"];
 const THEME_MODE_ICON: Record<ThemeMode, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
@@ -53,6 +53,50 @@ function ThemeModeToggle() {
   );
 }
 
+function HelpMenu() {
+  const navigate = useNavigate();
+  const canUseHelpdesk = useAuthStore((s) => s.modulePermissions?.helpdesk ?? false);
+  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+  return (
+    <DropdownMenu>
+      <TooltipProvider>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Help and support"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <CircleHelp className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Help</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuItem onClick={openCommandMenu}>
+          <Search />
+          Search pages
+          <kbd className="ml-auto rounded border border-border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground">
+            {isMac ? "⌘" : "Ctrl"} K
+          </kbd>
+        </DropdownMenuItem>
+        {canUseHelpdesk && (
+          <DropdownMenuItem onClick={() => navigate("/helpdesk")}>
+            <LifeBuoy />
+            Help desk
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <p className="px-2.5 py-2 text-xs leading-5 text-muted-foreground">Something not working? Your school administrator can help with access and accounts.</p>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function initialsOf(name: string | undefined | null) {
   if (!name) return "U";
   return name
@@ -80,7 +124,8 @@ function Breadcrumbs() {
         {crumbs.map((c, i) => {
           const last = i === crumbs.length - 1;
           return (
-            <li key={i} className={cn("flex min-w-0 items-center gap-1.5", !last && "hidden md:flex")}>
+            // Only the current page below xl: the header is too busy on laptops for the section too.
+            <li key={i} className={cn("flex min-w-0 items-center gap-1.5", !last && "hidden xl:flex")}>
               {c.to ? (
                 <Link to={c.to} className="truncate text-muted-foreground transition-colors hover:text-foreground">
                   {c.label}
@@ -135,7 +180,8 @@ export default function Header() {
         <Menu className="h-5 w-5" />
       </button>
 
-      <div className="min-w-0 flex-1">
+      {/* The page title keeps room for itself; the search and scope controls give way first. */}
+      <div className="min-w-[6rem] flex-1">
         <Breadcrumbs />
       </div>
 
@@ -147,6 +193,7 @@ export default function Header() {
 
       <div className="flex items-center gap-0.5">
         <ThemeModeToggle />
+        <HelpMenu />
         <NotificationBell />
       </div>
 
@@ -157,12 +204,12 @@ export default function Header() {
           <button
             type="button"
             aria-label="Account menu"
-            className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:pr-2.5"
+            className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 2xl:pr-2.5"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary bg-brand-gradient text-[11px] font-semibold text-primary-foreground ring-2 ring-card shadow-xs">
               {initialsOf(user?.name)}
             </div>
-            <div className="hidden text-left lg:block">
+            <div className="hidden text-left 2xl:block">
               <p className="max-w-[140px] truncate text-[13px] font-medium leading-tight text-foreground">{user?.name ?? "User"}</p>
               <p className="text-[11px] leading-tight text-muted-foreground">{ROLE_LABEL[user?.role ?? ""] ?? user?.role}</p>
             </div>

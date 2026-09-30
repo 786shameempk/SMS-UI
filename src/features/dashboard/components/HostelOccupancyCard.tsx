@@ -1,15 +1,16 @@
 import { BedDouble } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/states";
 import type { HostelOccupancySummary } from "../types";
 
 export default function HostelOccupancyCard({ hostel }: { hostel: HostelOccupancySummary }) {
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardHeader>
         <CardTitle>Hostel occupancy</CardTitle>
         <CardDescription>{hostel.mine ? "Your child's boarding details." : "Beds occupied vs. capacity."}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="flex-1 space-y-2">
         {hostel.mine ? (
           <div className="flex items-center gap-2.5 rounded-lg border border-border p-3">
             <BedDouble className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -21,7 +22,7 @@ export default function HostelOccupancyCard({ hostel }: { hostel: HostelOccupanc
             </div>
           </div>
         ) : hostel.hostels.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No active hostels.</p>
+          <EmptyState bare size="sm" icon={BedDouble} title="No active hostels" description="Hostel occupancy appears once rooms are set up." className="h-full py-6" />
         ) : (
           hostel.hostels.map((h) => {
             const pct = h.bedCount ? Math.round((h.occupiedCount / h.bedCount) * 100) : 0;

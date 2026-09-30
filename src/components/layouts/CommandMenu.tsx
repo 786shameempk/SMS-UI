@@ -5,6 +5,13 @@ import { CornerDownLeft, Search } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useVisibleNav } from "./useVisibleNav";
 
+const OPEN_EVENT = "command-menu:open";
+
+/** Opens the palette from elsewhere in the shell (e.g. the help menu) without lifting its state. */
+export function openCommandMenu() {
+  window.dispatchEvent(new Event(OPEN_EVENT));
+}
+
 /** Ctrl/⌘+K "jump to page" palette over the permitted nav items. Pure navigation, no data access. */
 export default function CommandMenu() {
   const [open, setOpen] = useState(false);
@@ -35,8 +42,13 @@ export default function CommandMenu() {
         setOpen((v) => !v);
       }
     };
+    const onOpen = () => setOpen(true);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(OPEN_EVENT, onOpen);
+    };
   }, []);
 
   useEffect(() => setActive(0), [query, open]);
@@ -70,7 +82,7 @@ export default function CommandMenu() {
       <DialogPrimitive.Trigger asChild>
         <button
           type="button"
-          className="group flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/60 px-2.5 text-sm text-muted-foreground transition-colors hover:border-input hover:bg-card hover:text-foreground cursor-pointer w-9 justify-center lg:w-60 lg:justify-start xl:w-72"
+          className="group flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/60 px-2.5 text-sm text-muted-foreground transition-colors hover:border-input hover:bg-card hover:text-foreground cursor-pointer w-9 shrink justify-center lg:w-52 lg:justify-start xl:w-64"
           aria-label="Search pages"
         >
           <Search className="h-4 w-4 shrink-0" />

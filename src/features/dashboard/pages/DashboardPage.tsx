@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Layers, SplitSquareHorizontal } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useUiStore } from "@/store/useUiStore";
-import { QuickActionGrid, timeOfDayGreeting, WelcomeHero } from "@/components/common/WelcomeHero";
+import { timeOfDayGreeting, WelcomeHero } from "@/components/common/WelcomeHero";
 import { cn } from "@/utils/cn";
 import { PageContainer, PageSection } from "@/components/ui/page";
 import { EmptyState, ErrorState } from "@/components/ui/states";
@@ -28,6 +28,7 @@ import BirthdaysCard from "../components/BirthdaysCard";
 import HolidaysCard from "../components/HolidaysCard";
 import MiniCalendar from "../components/MiniCalendar";
 import RecentActivityCard from "../components/RecentActivityCard";
+import QuickActionsCard from "../components/QuickActionsCard";
 import DashboardSkeleton from "../components/DashboardSkeleton";
 import DateRangePicker from "../components/DateRangePicker";
 import ManageWidgetsDialog from "../components/ManageWidgetsDialog";
@@ -119,8 +120,9 @@ export default function DashboardPage() {
     );
   if (isLoading || !data) return <DashboardSkeleton />;
 
+  const quickActions = quickActionsFor(role, modulePermissions);
   const leftColumn = show("performance") || show("revenue") || show("attendance");
-  const rightColumn = show("calendar") || show("birthdays") || show("holidays");
+  const rightColumn = quickActions.length > 0 || show("calendar") || show("birthdays") || show("holidays");
   const nothingShown = availableWidgets.every((w) => !show(w.id));
 
   return (
@@ -138,33 +140,34 @@ export default function DashboardPage() {
         }
       />
 
-      <QuickActionGrid actions={quickActionsFor(role, modulePermissions)} />
-
       {nothingShown && (
         <EmptyState title="Your dashboard is empty" description="All widgets are hidden. Use Manage widgets above to add cards back." />
       )}
 
-      {scopeEnabled && show("scopeOverview") && (
-        <ScopeOverview summary={scope.data} view={scopeView} isLoading={scope.isLoading} isError={scope.isError} rangeLabel={rangeLabel} />
-      )}
-
+      {/* Headline figures first, then the per-branch breakdown for users who can see every branch. */}
       {show("stats") && (
         <PageSection aria-label="Key figures">
           <StatCards stats={data.stats} />
         </PageSection>
       )}
 
+      {scopeEnabled && show("scopeOverview") && (
+        <ScopeOverview summary={scope.data} view={scopeView} isLoading={scope.isLoading} isError={scope.isError} rangeLabel={rangeLabel} />
+      )}
+
+      {/* Main content: trends on the left, shortcuts and the week ahead in the side column. */}
       {(leftColumn || rightColumn) && (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           {leftColumn && (
             <div className={cn("space-y-4", rightColumn ? "xl:col-span-2" : "xl:col-span-3")}>
+              {show("attendance") && <AttendanceSummaryCard attendance={data.attendance} />}
               {show("performance") && <PerformanceChart data={data.performanceTrend} rangeLabel={rangeLabel} />}
               {show("revenue") && <RevenueChart data={data.revenueTrend} rangeLabel={rangeLabel} />}
-              {show("attendance") && <AttendanceSummaryCard attendance={data.attendance} />}
             </div>
           )}
           {rightColumn && (
-            <div className={leftColumn ? "space-y-4" : "xl:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4"}>
+            <div className={leftColumn ? "space-y-4" : "grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-3 xl:grid-cols-4"}>
+              <QuickActionsCard actions={quickActions} />
               {show("calendar") && <MiniCalendar events={data.calendarEvents} />}
               {show("birthdays") && <BirthdaysCard birthdays={data.birthdays} />}
               {show("holidays") && <HolidaysCard holidays={data.holidays} />}
@@ -174,30 +177,30 @@ export default function DashboardPage() {
       )}
 
       {(show("todayClasses") || show("upcomingExams") || show("pendingAssignments")) && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {show("todayClasses") && <TodayClassesCard classes={data.todayClasses} />}
           {show("upcomingExams") && <UpcomingExamsCard exams={data.upcomingExams} />}
           {show("pendingAssignments") && <PendingAssignmentsCard assignments={data.pendingAssignments} />}
         </div>
       )}
 
-      {(show("feesDue") || show("libraryDue") || show("busStatus") || show("hostel")) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {show("feesDue") && <FeeDueCard fees={data.feesDue} />}
-          {show("libraryDue") && <LibraryDueBooksCard books={data.libraryDue} />}
-          {show("busStatus") && <BusStatusCard busStatus={data.busStatus} />}
-          {show("hostel") && <HostelOccupancyCard hostel={data.hostelOccupancy} />}
-        </div>
-      )}
-
       {(show("recentActivity") || show("notifications")) && (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           {show("recentActivity") && (
             <div className={show("notifications") ? "xl:col-span-2" : "xl:col-span-3"}>
               <RecentActivityCard activity={data.recentActivity} />
             </div>
           )}
           {show("notifications") && <NotificationsCard notifications={data.notifications} />}
+        </div>
+      )}
+
+      {(show("feesDue") || show("libraryDue") || show("busStatus") || show("hostel")) && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {show("feesDue") && <FeeDueCard fees={data.feesDue} />}
+          {show("libraryDue") && <LibraryDueBooksCard books={data.libraryDue} />}
+          {show("busStatus") && <BusStatusCard busStatus={data.busStatus} />}
+          {show("hostel") && <HostelOccupancyCard hostel={data.hostelOccupancy} />}
         </div>
       )}
     </PageContainer>
