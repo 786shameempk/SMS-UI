@@ -91,7 +91,7 @@ export default function DocumentsTab({ student }: { student: Student }) {
                 </div>
                 <div className="min-w-0">
                   {doc.fileDataUrl ? (
-                    <a href={doc.fileDataUrl} download={doc.name} className="text-sm font-medium text-primary-text hover:underline truncate block">
+                    <a href={doc.fileDataUrl} download={doc.name} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary-text hover:underline truncate block">
                       {doc.name}
                     </a>
                   ) : (

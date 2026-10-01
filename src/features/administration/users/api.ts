@@ -1,4 +1,4 @@
-import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { AUTH_API_BASE_URL, authHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
 import type { DeviceRecord, SessionRecord } from "@/features/authentication/types";
 import type { LoginHistoryEntry, SystemUser, UserFormValues, UserPreferences, UserStatus } from "./types";
 
@@ -61,7 +61,7 @@ const mapUser = (dto: ApiSchoolUser): SystemUser => ({
   roleId: dto.roleId ?? "",
   department: dto.department ?? undefined,
   status: dto.status,
-  avatarUrl: dto.avatarUrl,
+  avatarUrl: resolveFileUrl(dto.avatarUrl, AUTH_API_BASE_URL) ?? null,
   createdAt: dto.createdAt,
   lastLoginAt: dto.lastLoginAt,
   mfaEnabled: dto.mfaEnabled,

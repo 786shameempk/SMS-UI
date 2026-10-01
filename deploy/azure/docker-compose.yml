@@ -35,6 +35,9 @@ x-dotnet-env: &dotnet-env
   # A second site allowed to call the APIs from another origin (e.g. the Azure Static Web Apps frontend).
   # Unset = just the main domain again (harmless duplicate).
   Cors__AllowedOrigins__1: ${CORS_EXTRA_ORIGIN:-https://${DOMAIN}}
+  # Files (study materials, talent media, meeting files, student/staff photos and documents, avatars) live in Azure
+  # Blob Storage, in private containers the services create themselves. Empty = the old local volumes (not for prod).
+  BlobStorage__ConnectionString: ${AZURE_STORAGE_CONNECTION_STRING:-}
 
 services:
   caddy:
@@ -126,7 +129,7 @@ services:
       Services__EngagementServiceUrl: http://engagementservice:8080/
       ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
     volumes:
-      - study-materials:/app/App_Data/study-materials
+      - study-materials:/app/App_Data/study-materials # old files: copied to blob storage once, then unused
 
   financeservice:
     <<: *dotnet-service
@@ -159,7 +162,7 @@ services:
       Push__PrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
       Push__Subject: mailto:${ACME_EMAIL}
     volumes:
-      - talent-media:/app/App_Data/talent-media
+      - talent-media:/app/App_Data/talent-media # old files: copied to blob storage once, then unused
 
   meetingservice:
     <<: *dotnet-service
@@ -178,7 +181,7 @@ services:
       LiveKit__ApiSecret: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
       LiveKit__EgressEnabled: "false"
     volumes:
-      - meeting-files:/app/App_Data/meeting-files
+      - meeting-files:/app/App_Data/meeting-files # recordings land here before upload; meeting-link key ring
     depends_on:
       sqlserver:
         condition: service_healthy

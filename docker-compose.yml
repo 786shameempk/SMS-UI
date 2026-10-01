@@ -18,6 +18,9 @@ x-dotnet-env: &dotnet-env
   ASPNETCORE_ENVIRONMENT: Development
   Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
   Cors__AllowedOrigins__0: http://localhost:8080
+  # Files (study materials, talent media, meeting files, photos/documents, avatars) go to Azure Blob Storage.
+  # Locally that's Azurite (the official emulator, well-known dev key); set BLOB_CONNECTION_STRING to use a real account.
+  BlobStorage__ConnectionString: ${BLOB_CONNECTION_STRING:-DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;}
 
 services:
   ui:
@@ -83,7 +86,7 @@ services:
       Services__EngagementServiceUrl: http://engagementservice:8080/
       ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
     volumes:
-      # Study Materials uploads (see AcademicService LocalStudyMaterialStorage); survives image rebuilds.
+      # Old Study Materials folder: copied into blob storage once on start, then no longer written.
       - study-materials:/app/App_Data/study-materials
 
   financeservice:
@@ -130,7 +133,7 @@ services:
       Push__PrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
       Push__Subject: mailto:admin@educore.dev
     volumes:
-      # Talent Showcase uploads survive rebuilds.
+      # Old Talent Showcase folder: copied into blob storage once on start, then no longer written.
       - talent-media:/app/App_Data/talent-media
 
   # Online classes & meetings. See E:\Personal\MeetingService and the design doc linked in its README.
@@ -155,7 +158,8 @@ services:
       LiveKit__EgressEnabled: "true"
       LiveKit__EgressOutputRoot: /out
     volumes:
-      # Class materials, recordings and the encryption key ring survive rebuilds.
+      # Shared with LiveKit Egress, which drops recordings here before they're uploaded to blob storage; also holds
+      # the encryption key ring for stored meeting links. Older files are copied into blob storage once on start.
       - meeting-files:/app/App_Data/meeting-files
     depends_on:
       sqlserver:
@@ -262,6 +266,16 @@ services:
       retries: 10
       start_period: 20s
 
+  # Azure Storage emulator for local runs (blob endpoint on :10000 - browse it with Azure Storage Explorer).
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --location /data --loose --skipApiVersionCheck
+    restart: unless-stopped
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite-data:/data
+
   redis:
     image: redis:7-alpine
     volumes:
@@ -269,6 +283,7 @@ services:
 
 volumes:
   sqlserver-data:
+  azurite-data:
   redis-data:
   talent-media:
   study-materials:
