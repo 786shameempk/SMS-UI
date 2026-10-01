@@ -1,6 +1,7 @@
 import { financeHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listClasses } from "@/features/academics/api";
 import { listStudents } from "@/features/students/api";
+import type { ApiPage, Page } from "@/types/paging";
 import type {
   DiscountAppliesTo,
   DiscountType,
@@ -70,6 +71,9 @@ const INVOICE_STATUS_FROM_API: Record<string, FeeInvoiceStatus> = {
   Overdue: "overdue",
   Partial: "partial",
 };
+const INVOICE_STATUS_TO_API = Object.fromEntries(
+  Object.entries(INVOICE_STATUS_FROM_API).map(([api, ui]) => [ui, api]),
+) as Record<FeeInvoiceStatus, string>;
 
 const INSTALLMENT_STATUS_FROM_API: Record<string, InstallmentStatus> = { Due: "due", Paid: "paid", Overdue: "overdue" };
 
@@ -351,6 +355,29 @@ export async function applyDiscountToInvoice(_invoiceId: string, _discountId: st
 export async function listInvoices(): Promise<FeeInvoice[]> {
   const invoices = await unwrap(financeHttpClient.get<ApiFeeInvoice[]>("/api/feeinvoices"));
   return invoices.map(mapFeeInvoice);
+}
+
+export interface InvoicePageParams {
+  /** Zero-based, like TanStack Table. */
+  pageIndex: number;
+  pageSize: number;
+  classId?: string;
+  status?: FeeInvoiceStatus;
+}
+
+/** One page of invoices, newest due date first, filtered server-side (GET /api/feeinvoices?pageNumber=…). */
+export async function listInvoicesPage(params: InvoicePageParams): Promise<Page<FeeInvoice>> {
+  const page = await unwrap(
+    financeHttpClient.get<ApiPage<ApiFeeInvoice>>("/api/feeinvoices", {
+      params: {
+        pageNumber: params.pageIndex + 1,
+        pageSize: params.pageSize,
+        classId: params.classId,
+        status: params.status ? INVOICE_STATUS_TO_API[params.status] : undefined,
+      },
+    }),
+  );
+  return { items: page.items.map(mapFeeInvoice), totalCount: page.totalCount };
 }
 
 export async function listInvoicesForStudent(studentId: string): Promise<FeeInvoice[]> {
