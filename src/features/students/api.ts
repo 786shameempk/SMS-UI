@@ -1,4 +1,4 @@
-import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { ACADEMIC_API_BASE_URL, academicHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listClasses, listSections } from "@/features/academics/api";
 import type {
@@ -205,7 +205,7 @@ function mapStudent(dto: ApiStudent, index: Awaited<ReturnType<typeof buildSecti
     admissionNumber: dto.admissionNumber,
     firstName: dto.firstName,
     lastName: dto.lastName,
-    photoUrl: dto.photoUrl,
+    photoUrl: resolveFileUrl(dto.photoUrl, ACADEMIC_API_BASE_URL) ?? null,
     dateOfBirth: dto.dateOfBirth,
     gender: GENDER_FROM_API[dto.gender] ?? "other",
     className: schoolClass?.name ?? "",
@@ -250,7 +250,7 @@ function mapStudent(dto: ApiStudent, index: Awaited<ReturnType<typeof buildSecti
       name: d.name,
       category: DOCUMENT_CATEGORY_FROM_API[d.category] ?? "other",
       uploadedAt: d.uploadedAt,
-      fileDataUrl: d.fileDataUrl ?? undefined,
+      fileDataUrl: resolveFileUrl(d.fileDataUrl, ACADEMIC_API_BASE_URL),
     })),
     transferRecord: dto.transferRecord
       ? {

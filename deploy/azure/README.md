@@ -41,7 +41,31 @@ curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER   # log out and back in
 ```
 
-## 5. Configure and start
+## 5. File storage (Azure Blob Storage)
+
+Every uploaded file lives in one storage account: study materials, Talent Showcase media, meeting materials and
+recordings, student/staff photos and documents, and user avatars. The services create their private containers
+(`study-materials`, `talent-media`, `meeting-files`, `people-files`, `user-files`) on first use and serve files only
+through their own short-lived signed links, so the containers never need public access or CORS.
+
+Create the account once (same region as the VM), e.g. with the Azure CLI:
+
+```bash
+az storage account create -g <resource-group> -n <uniquename> -l <region> \
+  --sku Standard_LRS --kind StorageV2 --min-tls-version TLS1_2 --allow-blob-public-access false
+az storage account show-connection-string -g <resource-group> -n <uniquename> -o tsv
+```
+
+Put that connection string in `.env` as `AZURE_STORAGE_CONNECTION_STRING`. Recommended in the portal: Data protection →
+enable soft delete for blobs (e.g. 30 days) and versioning, so a deleted file can be restored.
+
+**Moving an existing install:** set the connection string and restart. On start each service copies its old files
+into blob storage under the same keys (photos/documents/avatars that were stored inside the database are moved too)
+and logs e.g. `Study materials: copied N local files to blob storage`. Old files are left in the volumes; once you've
+checked everything opens, the `study-materials` and `talent-media` volumes can be removed. Keep `meeting-files`: LiveKit
+Egress drops recordings there before they're uploaded, and it holds the key ring that decrypts stored meeting links.
+
+## 6. Configure and start
 
 Copy this folder (`docker-compose.yml`, `Caddyfile`, `.env.example`) to the VM, e.g. `~/sms`:
 
@@ -75,8 +99,9 @@ Pin `IMAGE_TAG` / `UI_IMAGE_TAG` in `.env` to a `sha-xxxxxxx` tag to deploy or r
 
 ## Backups
 
-Everything stateful is in named volumes: `sqlserver-data`, `redis-data`, `study-materials`, `talent-media`,
-`meeting-files` (recordings + the meeting encryption key ring) and `caddy-data` (certificates).
+Uploaded files are in Azure Blob Storage (see section 5; turn on soft delete and versioning there). On the VM, the
+stateful volumes are `sqlserver-data`, `redis-data`, `meeting-files` (the meeting encryption key ring, and
+recordings until they're uploaded) and `caddy-data` (certificates).
 At minimum, back up the databases regularly, for example:
 
 ```bash

@@ -1,4 +1,4 @@
-import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { ACADEMIC_API_BASE_URL, academicHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
 import { listStaffAttendanceRecords } from "@/features/attendance/api";
 import type {
   Experience,
@@ -202,7 +202,7 @@ function mapStaff(dto: ApiStaffMember): StaffMember {
     employeeId: dto.employeeId,
     firstName: dto.firstName,
     lastName: dto.lastName,
-    photoUrl: dto.photoUrl,
+    photoUrl: resolveFileUrl(dto.photoUrl, ACADEMIC_API_BASE_URL) ?? null,
     designation: DESIGNATION_FROM_API[dto.designation] ?? "Teacher",
     department: dto.department,
     status: STAFF_STATUS_FROM_API[dto.status] ?? "active",
@@ -240,7 +240,7 @@ function mapStaff(dto: ApiStaffMember): StaffMember {
       name: d.name,
       category: DOCUMENT_CATEGORY_FROM_API[d.category] ?? "other",
       uploadedAt: d.uploadedAt,
-      fileDataUrl: d.fileDataUrl ?? undefined,
+      fileDataUrl: resolveFileUrl(d.fileDataUrl, ACADEMIC_API_BASE_URL),
     })),
     performanceReviews: dto.performanceReviews.map((r): PerformanceReview => ({
       id: r.id,

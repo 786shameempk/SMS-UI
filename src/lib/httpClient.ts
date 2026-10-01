@@ -20,6 +20,17 @@ function resolveUrl(runtimeKey: string, buildTime: string | undefined, fallback:
 /** Base URL of AuthService (see AuthService/src/AuthService.API). */
 export const AUTH_API_BASE_URL = resolveUrl("authApiUrl", import.meta.env.VITE_AUTH_API_URL, "https://localhost:44348/");
 
+/**
+ * Files (photos, documents, avatars) live in blob storage and are served by each service from short-lived signed
+ * links the API returns relative to that service ("api/people-files/..."). Makes them absolute; data URLs (files not
+ * moved yet, or a service without blob storage) and absolute URLs pass through unchanged.
+ */
+export function resolveFileUrl(url: string | null | undefined, serviceBaseUrl: string): string | undefined {
+  if (!url) return undefined;
+  if (/^(data:|blob:|https?:)/i.test(url)) return url;
+  return new URL(url, serviceBaseUrl).toString();
+}
+
 /** Base URL of AcademicService (see AcademicService/src/AcademicService.API). */
 export const ACADEMIC_API_BASE_URL = resolveUrl("academicApiUrl", import.meta.env.VITE_ACADEMIC_API_URL, "http://localhost:5136/");
 
