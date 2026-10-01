@@ -6,7 +6,8 @@ import { URLS, TENANT_ID, BRANCH_ID, USERS } from "./config.js";
 const TOKEN_TTL_MS = 12 * 60 * 1000;
 
 // k6 gives each virtual user its own copy of module state, so this is a per-VU session.
-const session = { role: null, token: null, issuedAt: 0 };
+// A user may carry its own tenantId/branchId (seeded multi-school accounts); otherwise the configured defaults apply.
+const session = { role: null, token: null, issuedAt: 0, tenant: TENANT_ID, branch: BRANCH_ID };
 
 export function pickUser(role) {
   const list = USERS[role];
@@ -26,9 +27,10 @@ export function login(user) {
 /** Signs this VU in as `role`, reusing the token until it is close to expiry. */
 export function ensureSession(role) {
   if (session.role === role && session.token && Date.now() - session.issuedAt < TOKEN_TTL_MS) return;
-  const token = login(pickUser(role));
+  const user = pickUser(role);
+  const token = login(user);
   if (!token) fail(`login failed for role ${role}`);
-  Object.assign(session, { role, token, issuedAt: Date.now() });
+  Object.assign(session, { role, token, issuedAt: Date.now(), tenant: user.tenantId ?? TENANT_ID, branch: user.branchId ?? BRANCH_ID });
 }
 
 /**
@@ -39,8 +41,8 @@ export function get(service, path, name = path) {
   const res = http.get(`${URLS[service]}${path}`, {
     headers: {
       Authorization: `Bearer ${session.token}`,
-      "X-Tenant-Id": TENANT_ID,
-      "X-Branch-Id": BRANCH_ID,
+      "X-Tenant-Id": session.tenant,
+      "X-Branch-Id": session.branch,
     },
     tags: { service, name: `GET ${name}` },
   });

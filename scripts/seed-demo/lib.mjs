@@ -101,6 +101,31 @@ export class Session {
     }
   }
 
+  /** multipart/form-data POST (file uploads), with the same headers and one re-sign-in on 401. */
+  async form(service, path, formData, { tenant = this.tenant, branch = this.branch } = {}) {
+    const url = `${this.urls[service]}${path}`;
+    for (let attempt = 0; ; attempt++) {
+      const headers = { Authorization: `Bearer ${this.token}` };
+      if (tenant) headers["X-Tenant-Id"] = tenant;
+      if (branch) headers["X-Branch-Id"] = branch;
+      this.calls++;
+      const res = await fetch(url, { method: "POST", headers, body: formData });
+      if (res.status === 401 && attempt === 0) {
+        await this.login();
+        continue;
+      }
+      const text = await res.text();
+      let data = text;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        /* not JSON */
+      }
+      if (!res.ok) throw new ApiError(res.status, "POST", url, data);
+      return data;
+    }
+  }
+
   get = (s, p, o) => this.call(s, "GET", p, undefined, o);
   post = (s, p, b = {}, o) => this.call(s, "POST", p, b, o);
   put = (s, p, b = {}, o) => this.call(s, "PUT", p, b, o);

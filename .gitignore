@@ -41,3 +41,5 @@ amplifyconfiguration*
 # k6 load tests: local test accounts and result files
 loadtest/users.json
 loadtest/results/
+scripts/seed-demo/seed-users.json
+loadtest/users.seeded.json
