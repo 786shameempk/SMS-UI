@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Building2, Globe } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +7,15 @@ import { listBranches } from "@/features/administration/branches/api";
 import { getBrandPreset, getDensityPreset, getRadiusPreset } from "@/features/settings/api";
 import { applyBrandPreset, applyDensityPreset, applyRadiusPreset } from "@/features/settings/theme";
 import { cn } from "@/utils/cn";
+
+/**
+ * Wipes every cached result and refetches whatever is on screen, after the active tenant/branch changed.
+ * Requests read the scope from the auth store at send time, so the refetches already use the new scope.
+ */
+function resetForScopeChange(queryClient: QueryClient) {
+  queryClient.getMutationCache().clear();
+  return queryClient.resetQueries();
+}
 
 /** Super-admin school switcher and admin branch switcher. Shown in the header on tablet/desktop and
  *  at the top of the phone nav drawer, where the header has no room for them. */
@@ -22,10 +31,11 @@ export function TenantSwitcher({ className }: { className?: string }) {
       onValueChange={async (id) => {
         if (id === activeTenantId) return;
         setActiveTenantId(id);
-        // A hard cache clear (not invalidate) is deliberate: this is a tenant isolation boundary,
-        // and invalidate would leave the previous tenant's data rendered during the background
-        // refetch — exactly the cross-tenant flash this switch must never produce.
-        queryClient.clear();
+        // Reset (not invalidate) is deliberate: this is a tenant isolation boundary. Reset drops every
+        // cached result - so the previous tenant's data is never rendered during the refetch - and, unlike
+        // clear(), also refetches the queries currently on screen (header, sidebar) with the new tenant.
+        // The page itself remounts on the scope change (AppLayout keys it by tenant + branch).
+        void resetForScopeChange(queryClient);
         // Appearance (brand/corner/density) is tenant-scoped too, but lives outside react-query's
         // cache entirely (live CSS variables) — queryClient.clear() alone won't re-paint it, so
         // the newly active tenant's own saved combination has to be fetched and applied here.
@@ -67,10 +77,8 @@ export function BranchSwitcher({ className }: { className?: string }) {
       onValueChange={(id) => {
         if (id === activeBranchId) return;
         setActiveBranchId(id);
-        // Same hard cache clear as TenantSwitcher, for the same reason: this is a branch
-        // isolation boundary, and invalidate would flash the previous branch's data on screen
-        // during the background refetch.
-        queryClient.clear();
+        // Same reset as TenantSwitcher, for the same reason: a branch isolation boundary.
+        void resetForScopeChange(queryClient);
       }}
     >
       <SelectTrigger className={cn("w-48", className)} aria-label="Branch">

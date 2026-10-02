@@ -43,3 +43,6 @@ loadtest/users.json
 loadtest/results/
 scripts/seed-demo/seed-users.json
 loadtest/users.seeded.json
+
+# Test coverage output (npm run test:coverage)
+coverage

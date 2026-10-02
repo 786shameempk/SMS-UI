@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { label: "Solutions", href: "#solutions" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Plans", href: "#plans" },
+  { label: "FAQ", href: "#faq" },
 ];
 
 interface ResourceLink {
@@ -23,7 +24,7 @@ interface ResourceLink {
 
 const RESOURCES: ResourceLink[] = [
   { icon: ShieldCheck, label: "Security", description: "How we protect your school's data", href: "#security" },
-  { icon: Workflow, label: "Smarter insights", description: "Trends, alerts and automation", href: "#insights" },
+  { icon: Workflow, label: "AI insights", description: "AI-powered trends, alerts and automation", href: "#insights" },
   { icon: LifeBuoy, label: "Help & support", description: "Talk to our team", action: "contact" },
 ];
 

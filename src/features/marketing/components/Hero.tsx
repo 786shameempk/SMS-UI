@@ -48,8 +48,8 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.05, ease }}
             className="mt-7 text-[2.6rem] font-bold leading-[1.05] tracking-[-0.035em] text-balance text-slate-950 sm:text-6xl lg:text-7xl"
           >
-            Everything Your School Needs.{" "}
-            <span className="text-brand-gradient">One Smarter Platform.</span>
+            AI School Management System{" "}
+            <span className="text-brand-gradient">for Modern Schools</span>
           </motion.h1>
 
           <motion.p
@@ -58,8 +58,9 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.12, ease }}
             className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-pretty text-slate-600 sm:text-lg"
           >
-            Bring administration, academics, communication, and everyday school operations together in one simple and
-            intelligent platform — for administrators, teachers, students, and parents.
+            School Sphere is an AI school management system that brings administration, academics, attendance, fees,
+            communication, and everyday school operations together in one platform — for administrators, teachers,
+            students, and parents.
           </motion.p>
 
           <motion.div
@@ -73,7 +74,7 @@ export default function Hero() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
             <Button size="lg" variant="outline" asChild className="h-12 bg-white/80 px-6 text-[15px] backdrop-blur">
-              <a href="#features">Explore Features</a>
+              <a href="#features">Explore School Management Features</a>
             </Button>
           </motion.div>
 
@@ -98,7 +99,9 @@ export default function Hero() {
             style={{ transformOrigin: "50% 0%" }}
             className="rounded-[1.25rem] border border-white/60 bg-white/40 p-1.5 shadow-2xl shadow-slate-900/10 backdrop-blur sm:p-2"
           >
-            <DashboardMockup />
+            <figure aria-label="AI school management system dashboard">
+              <DashboardMockup />
+            </figure>
           </motion.div>
 
           <FloatingCard className="-left-10 top-24" delay={1.3}>

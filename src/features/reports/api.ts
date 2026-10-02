@@ -25,6 +25,15 @@ function monthLabel(monthKey: string): string {
   return new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
 }
 
+const API_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** AcademicService labels yearly-trend months in English ("Sep 26") whatever the viewer's locale, so matching
+ *  on monthLabel() missed months like "Sept 26" (en-IN/en-GB) - or every month in a non-English locale. */
+function apiMonthLabel(monthKey: string): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  return `${API_MONTHS[month - 1]} ${String(year % 100).padStart(2, "0")}`;
+}
+
 function lastNMonthKeys(n: number): string[] {
   const now = new Date();
   const keys: string[] = [];
@@ -86,7 +95,7 @@ export async function getAttendanceTrendReport(): Promise<AttendanceTrendReport>
     const staffBucket = staffByMonth.get(key);
     return {
       month: label,
-      studentPercent: studentByLabel.get(label) ?? null,
+      studentPercent: studentByLabel.get(apiMonthLabel(key)) ?? null,
       staffPercent: staffBucket ? Math.round((staffBucket.present / staffBucket.total) * 100) : null,
     };
   });

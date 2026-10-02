@@ -8,7 +8,7 @@ export default function HowItWorks() {
     <section id="how-it-works" className="scroll-mt-16 bg-white py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <SectionHeading eyebrow="How it works" title="Up and Running in Three Steps" description="No lengthy implementation project. Our team helps you move over from spreadsheets or your current system." />
+          <SectionHeading eyebrow="How it works" title="Set Up Your School ERP in Three Steps" description="No lengthy implementation project. Our team helps you move over from spreadsheets or your current system." />
         </Reveal>
 
         <ol className="relative mt-16 grid gap-10 md:grid-cols-3 md:gap-8">

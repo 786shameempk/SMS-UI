@@ -20,7 +20,7 @@ export default function PlansSection() {
         <Reveal>
           <SectionHeading
             eyebrow="Plans & Solutions"
-            title="Plans for Every School"
+            title="School Management Software Plans for Every School"
             description="Flexible plans for schools of every size, with more capabilities as you grow. Tailored to your requirements, with custom solutions available."
           />
         </Reveal>

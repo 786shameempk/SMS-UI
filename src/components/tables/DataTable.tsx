@@ -119,12 +119,14 @@ export function DataTable<TData>({
     enableSorting: !server,
     manualPagination: Boolean(server),
     pageCount: server ? Math.max(1, Math.ceil(server.totalCount / server.pageSize)) : undefined,
-    onPaginationChange: server
-      ? (updater) => {
-          const current = { pageIndex: server.pageIndex, pageSize: server.pageSize };
-          server.onPageChange((typeof updater === "function" ? updater(current) : updater).pageIndex);
-        }
-      : undefined,
+    // Only in server mode: passing `undefined` would replace TanStack's own pagination state updater and leave
+    // client-paged tables stuck on the first page.
+    ...(server && {
+      onPaginationChange: (updater) => {
+        const current = { pageIndex: server.pageIndex, pageSize: server.pageSize };
+        server.onPageChange((typeof updater === "function" ? updater(current) : updater).pageIndex);
+      },
+    }),
     autoResetPageIndex: !server,
     initialState: { pagination: { pageSize } },
   });

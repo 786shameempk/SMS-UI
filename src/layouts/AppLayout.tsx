@@ -5,11 +5,20 @@ import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
 import { useMobileNav } from "@/components/layouts/mobileNav";
 import { PageSkeleton } from "@/components/ui/states";
+import { useAuthStore } from "@/store/authStore";
 
 export default function AppLayout() {
   const { pathname } = useLocation();
   const { open, setOpen } = useMobileNav();
   const mainRef = useRef<HTMLElement>(null);
+  // Switching school (tenant) or branch remounts the page, so every screen - not only those whose
+  // queries happen to include the scope in their keys - reloads its data, filters and forms for the new scope.
+  const scopeKey = useAuthStore((s) => `${s.activeTenantId}:${s.activeBranchId}`);
+
+  // A new scope also starts at the top of the page.
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [scopeKey]);
 
   // Following a link in the phone drawer closes it; a new page starts at the top.
   useEffect(() => {
@@ -70,7 +79,7 @@ export default function AppLayout() {
         <Header />
         <main id="main-content" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto bg-app-glow focus:outline-none">
           {/* Pages are lazy chunks: the shell stays put while the next page loads. */}
-          <Suspense fallback={<PageSkeleton />}>
+          <Suspense key={scopeKey} fallback={<PageSkeleton />}>
             <Outlet />
           </Suspense>
         </main>

@@ -163,13 +163,14 @@ export async function deletePayrollRun(id: string): Promise<void> {
 export async function markPayslipPaid(id: string): Promise<Payslip> {
   let updated: Payslip;
   try {
-    const dto = await unwrap(financeHttpClient.post<ApiPayslip>(`/api/payslips/${id}/mark-paid`));
+    // Not unwrap()ed: that would replace the axios error and hide the 409 status checked below.
+    const { data: dto } = await financeHttpClient.post<ApiPayslip>(`/api/payslips/${id}/mark-paid`);
     updated = mapPayslip(dto);
   } catch (err) {
-    if (getApiErrorStatus(err) !== 409) throw err;
+    if (getApiErrorStatus(err) !== 409) throw new Error(extractApiErrorMessage(err));
     const payslips = await unwrap(financeHttpClient.get<ApiPayslip[]>("/api/payslips"));
     const dto = payslips.find((p) => p.id === id);
-    if (!dto) throw err;
+    if (!dto) throw new Error(extractApiErrorMessage(err));
     updated = mapPayslip(dto);
   }
 

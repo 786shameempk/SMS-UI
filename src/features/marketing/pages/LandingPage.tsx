@@ -10,6 +10,7 @@ import HowItWorks from "../components/HowItWorks";
 import SecuritySection from "../components/SecuritySection";
 import Testimonials from "../components/Testimonials";
 import PlansSection from "../components/PlansSection";
+import FaqSection from "../components/FaqSection";
 import FinalCta from "../components/FinalCta";
 import Footer from "../components/Footer";
 import { LeadCaptureProvider } from "../components/LeadCapture";
@@ -36,6 +37,7 @@ export default function LandingPage() {
           <SecuritySection />
           <Testimonials />
           <PlansSection />
+          <FaqSection />
           <FinalCta />
         </main>
         <Footer />
