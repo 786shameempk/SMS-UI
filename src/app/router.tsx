@@ -4,6 +4,7 @@ import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import RouteError from "./RouteError";
 import ProtectedRoute from "@/routes/ProtectedRoute";
+import RequireModule from "@/routes/RequireModule";
 import AppLayout from "@/layouts/AppLayout";
 const LandingPage = lazy(() => import("@/features/marketing/pages/LandingPage"));
 const LoginPage = lazy(() => import("@/features/authentication/pages/LoginPage"));
@@ -139,7 +140,7 @@ export const router = createBrowserRouter([
       { path: "helpdesk", element: <HelpDeskPage /> },
       { path: "surveys", element: <SurveysFeedbackPage /> },
       { path: "platform", element: <PlatformConsolePage /> },
-      { path: "ai", element: <AIFeaturesPage /> },
+      { path: "ai", element: <RequireModule module="aiFeatures"><AIFeaturesPage /></RequireModule> },
       { path: "library", element: <LibraryManagementPage /> },
       { path: "transport", element: <TransportManagementPage /> },
       { path: "hostel", element: <HostelManagementPage /> },

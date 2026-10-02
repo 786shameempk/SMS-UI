@@ -4,8 +4,15 @@ import { renderWithProviders, signIn, signOut } from "@/test/utils";
 import AssistantTab from "./AssistantTab";
 import * as assistantApi from "../assistant/api";
 
-vi.mock("../assistant/api", () => ({ sendAssistantMessage: vi.fn(), AI_MOCK_ENABLED: false }));
+vi.mock("../assistant/api", () => ({
+  sendAssistantMessage: vi.fn(),
+  listConversations: vi.fn(async () => []),
+  getConversation: vi.fn(),
+  deleteConversation: vi.fn(),
+  AI_MOCK_ENABLED: false,
+}));
 vi.mock("@/features/parent-portal/api", () => ({ getMyChildren: vi.fn(async () => []) }));
+vi.mock("react-hot-toast", () => ({ default: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
 
 describe("AssistantTab", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -75,5 +82,64 @@ describe("AssistantTab", () => {
     release({ conversationId: "c", reply: "done", sources: [] });
     await screen.findByText("done");
     expect(screen.queryByText(/thinking/i)).not.toBeInTheDocument();
+  });
+
+  describe("history", () => {
+    const past = { id: "c9", title: "Fees for October", feature: "chat", studentId: "kid-2", updatedAt: "2026-09-30T08:00:00Z" };
+
+    it("reopens a past conversation and continues it", async () => {
+      signIn("student");
+      vi.mocked(assistantApi.listConversations).mockResolvedValue([past]);
+      vi.mocked(assistantApi.getConversation).mockResolvedValue({
+        id: "c9", title: past.title,
+        messages: [
+          { role: "user", content: "What fees are due?", sources: [], createdAt: "2026-09-30T08:00:00Z" },
+          { role: "assistant", content: "Tuition of 600 is due.", sources: ["fees", "unknown-tool"], createdAt: "2026-09-30T08:00:05Z" },
+        ],
+      });
+      vi.mocked(assistantApi.sendAssistantMessage).mockResolvedValue({ conversationId: "c9", reply: "Due on 10 October.", sources: [] });
+      const user = userEvent.setup();
+      renderWithProviders(<AssistantTab />);
+
+      await user.click(screen.getByRole("button", { name: "History" }));
+      await user.click(await screen.findByRole("button", { name: /^fees for october/i }));
+
+      expect(await screen.findByText("Tuition of 600 is due.")).toBeInTheDocument();
+      expect(screen.getByText("Fees")).toBeInTheDocument(); // unknown sources are dropped, known ones keep their chip
+      await user.type(screen.getByLabelText("Message"), "When?{enter}");
+      await waitFor(() => expect(assistantApi.sendAssistantMessage).toHaveBeenCalled());
+      expect(vi.mocked(assistantApi.sendAssistantMessage).mock.calls[0][0]).toMatchObject({ conversationId: "c9", message: "When?" });
+    });
+
+    it("starts a fresh conversation with New chat", async () => {
+      signIn("student");
+      vi.mocked(assistantApi.sendAssistantMessage).mockResolvedValue({ conversationId: "c1", reply: "first answer", sources: [] });
+      const user = userEvent.setup();
+      renderWithProviders(<AssistantTab />);
+
+      expect(screen.getByRole("button", { name: /new chat/i })).toBeDisabled();
+      await user.type(screen.getByLabelText("Message"), "first{enter}");
+      await screen.findByText("first answer");
+      await user.click(screen.getByRole("button", { name: /new chat/i }));
+
+      expect(screen.queryByText("first answer")).not.toBeInTheDocument();
+      await user.type(screen.getByLabelText("Message"), "second{enter}");
+      await waitFor(() => expect(assistantApi.sendAssistantMessage).toHaveBeenCalledTimes(2));
+      expect(vi.mocked(assistantApi.sendAssistantMessage).mock.calls[1][0]).toMatchObject({ conversationId: undefined });
+    });
+
+    it("deletes a conversation after confirmation", async () => {
+      signIn("student");
+      vi.mocked(assistantApi.listConversations).mockResolvedValue([past]);
+      vi.mocked(assistantApi.deleteConversation).mockResolvedValue();
+      const user = userEvent.setup();
+      renderWithProviders(<AssistantTab />);
+
+      await user.click(screen.getByRole("button", { name: "History" }));
+      await user.click(await screen.findByRole("button", { name: /delete conversation: fees for october/i }));
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+
+      await waitFor(() => expect(vi.mocked(assistantApi.deleteConversation).mock.calls[0][0]).toBe("c9"));
+    });
   });
 });

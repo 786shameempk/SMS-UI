@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Send, Sparkles } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { History, Loader2, Plus, Send, Sparkles } from "lucide-react";
+import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import ChildSwitcher from "@/features/parent-portal/components/ChildSwitcher";
 import { getMyChildren } from "@/features/parent-portal/api";
 import { useAuthStore } from "@/store/authStore";
-import { sendAssistantMessage } from "../assistant/api";
-import { SOURCE_LABELS, suggestedPrompts } from "../assistant/constants";
-import type { AssistantMessage } from "../assistant/types";
+import { AI_MOCK_ENABLED, getConversation, sendAssistantMessage } from "../assistant/api";
+import { CONVERSATIONS_KEY, SOURCE_LABELS, suggestedPrompts } from "../assistant/constants";
+import type { AssistantMessage, AssistantSource, ConversationSummary } from "../assistant/types";
+import ConversationHistory from "./ConversationHistory";
 
 let nextId = 0;
 const newId = () => `m${++nextId}`;
@@ -29,7 +31,38 @@ export default function AssistantTab() {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [conversationId, setConversationId] = useState<string | undefined>();
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [opening, setOpening] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  const startNew = () => {
+    setConversationId(undefined);
+    setMessages([]);
+  };
+
+  /** Reopens a past conversation so it can be continued; parents switch to the child it was about. */
+  const openConversation = async (c: ConversationSummary) => {
+    setOpening(true);
+    try {
+      const detail = await getConversation(c.id);
+      if (isParent && c.studentId) setChildId(c.studentId);
+      setConversationId(c.id);
+      setMessages(
+        detail.messages.map((m) => ({
+          id: newId(),
+          role: m.role,
+          content: m.content,
+          sources: m.sources.filter((s): s is AssistantSource => s in SOURCE_LABELS),
+        })),
+      );
+      setHistoryOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not open that conversation.");
+    } finally {
+      setOpening(false);
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
@@ -39,6 +72,7 @@ export default function AssistantTab() {
     mutationFn: sendAssistantMessage,
     onSuccess: (res) => {
       setConversationId(res.conversationId);
+      queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY });
       setMessages((m) => [...m, { id: newId(), role: "assistant", content: res.reply, sources: res.sources, demo: res.demo }]);
     },
     onError: (err: Error) => {
@@ -57,6 +91,26 @@ export default function AssistantTab() {
   return (
     <Card className="max-w-3xl">
       <CardContent className="space-y-4 pt-6">
+        {!AI_MOCK_ENABLED && (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setHistoryOpen((o) => !o)} aria-expanded={historyOpen}>
+              {opening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <History className="h-3.5 w-3.5" />}
+              History
+            </Button>
+            <Button variant="outline" size="sm" onClick={startNew} disabled={messages.length === 0 || mutation.isPending}>
+              <Plus className="h-3.5 w-3.5" />
+              New chat
+            </Button>
+          </div>
+        )}
+        {historyOpen && (
+          <ConversationHistory
+            activeId={conversationId}
+            onOpen={openConversation}
+            onDeleted={(id) => id === conversationId && startNew()}
+            childName={isParent ? (id) => children.find((c) => c.id === id)?.firstName : undefined}
+          />
+        )}
         {isParent && (
           <ChildSwitcher
             students={children}

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Copy, FileQuestionMark, FileUp, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Copy, FileQuestionMark, FileUp, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { DataTable } from "@/components/tables/DataTable";
@@ -14,6 +14,7 @@ import { PageContainer, PageHeader } from "@/components/ui/page";
 import { RowActions } from "@/components/ui/row-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listClasses, listSubjects } from "@/features/academics/api";
+import GenerateQuestionsDialog from "@/features/ai/components/generation/GenerateQuestionsDialog";
 import { useAuthStore } from "@/store/authStore";
 import { createQuestion, deleteQuestions, duplicateQuestion, importQuestions, listQuestions, listQuestionTopics, updateQuestion } from "../api";
 import { DIFFICULTIES, DIFFICULTY_TONE, formatMarks, isExamStaff, QUESTION_TYPE_LABEL, QUESTION_TYPES } from "../constants";
@@ -25,12 +26,15 @@ const ALL = "__all";
 
 export default function QuestionBankPage() {
   const role = useAuthStore((s) => s.user?.role);
+  // Same rule as the nav: the AI entry point only shows when the school and role include AI Features.
+  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<QuestionBankItem | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [toDelete, setToDelete] = useState<string[] | null>(null);
 
   const filters: QuestionFilters = {
@@ -195,6 +199,12 @@ export default function QuestionBankPage() {
         description="Reusable questions for your subjects. Exams copy a question when it's added, so editing here never changes an exam already set."
         actions={
           <div className="flex flex-wrap gap-2">
+            {canUseAi && (
+              <Button variant="outline" onClick={() => setAiOpen(true)}>
+                <Sparkles className="h-4 w-4" />
+                Generate with AI
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setImportOpen(true)}>
               <FileUp className="h-4 w-4" />
               Import CSV
@@ -337,6 +347,15 @@ export default function QuestionBankPage() {
         submitting={save.isPending}
         onSubmit={(input) => save.mutate(input)}
       />
+
+      {canUseAi && (
+        <GenerateQuestionsDialog
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          defaults={{ classId: filters.classId, subjectId: filters.subjectId, chapter: filters.topic }}
+          onPublished={refresh}
+        />
+      )}
 
       <ImportQuestionsDialog
         open={importOpen}

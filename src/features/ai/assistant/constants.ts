@@ -30,3 +30,6 @@ const STAFF_PROMPTS = [
 export function suggestedPrompts(role: UserRole | undefined): string[] {
   return role === "student" || role === "parent" ? LEARNER_PROMPTS : STAFF_PROMPTS;
 }
+
+/** React Query key for the signed-in user's conversation list. */
+export const CONVERSATIONS_KEY = ["ai", "conversations"] as const;

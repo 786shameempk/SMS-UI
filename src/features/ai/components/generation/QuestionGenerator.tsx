@@ -12,9 +12,16 @@ import { AI_DIFFICULTIES, AI_QUESTION_KINDS, KIND_LABEL, toQuestionBankInputs } 
 import type { AiDifficulty, AiQuestionKind, GeneratedQuestion } from "../../generation/types";
 import { ClassSubjectFields, DraftBar, FormError, GenerateButton, QuestionReviewList } from "./shared";
 
-export default function QuestionGenerator() {
-  const [target, setTarget] = useState({ classId: "", subjectId: "" });
-  const [chapter, setChapter] = useState("");
+/** Starting class, subject and topic, e.g. the Question Bank page's current filters. */
+export interface QuestionGeneratorDefaults {
+  classId?: string;
+  subjectId?: string;
+  chapter?: string;
+}
+
+export default function QuestionGenerator({ defaults, onPublished }: { defaults?: QuestionGeneratorDefaults; onPublished?: () => void } = {}) {
+  const [target, setTarget] = useState({ classId: defaults?.classId ?? "", subjectId: defaults?.subjectId ?? "" });
+  const [chapter, setChapter] = useState(defaults?.chapter ?? "");
   const [count, setCount] = useState(10);
   const [difficulty, setDifficulty] = useState<AiDifficulty>("Medium");
   const [types, setTypes] = useState<AiQuestionKind[]>(["MCQ", "ShortAnswer"]);
@@ -35,9 +42,14 @@ export default function QuestionGenerator() {
   });
 
   const publish = useMutation({
-    mutationFn: () => importQuestions(toQuestionBankInputs(questions ?? [], target.subjectId, target.classId, chapter.trim() || null)),
+    // File the questions under what they were generated for, even if the form was changed afterwards.
+    mutationFn: () => {
+      const source = generate.variables!;
+      return importQuestions(toQuestionBankInputs(questions ?? [], source.subjectId ?? "", source.classId ?? "", source.chapter || null));
+    },
     onSuccess: (r) => {
       setPublished(true);
+      onPublished?.();
       toast.success(`${r.imported} question${r.imported === 1 ? "" : "s"} added to the question bank`);
       if (r.errors.length) toast.error(`${r.errors.length} could not be imported: ${r.errors[0]}`);
     },

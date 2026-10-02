@@ -154,3 +154,107 @@ export interface Homework {
   extensionTask: string;
   supportTask: string;
 }
+
+export type RemarkTone = "Encouraging" | "Balanced" | "Formal";
+export type RemarkLength = "Short" | "Medium";
+
+/** AiService reads the marks itself (with the teacher's token); the request only says which student and exam. */
+export interface ReportCardRemarkRequest {
+  examId: string;
+  studentId: string;
+  observations?: string;
+  tone: RemarkTone;
+  length: RemarkLength;
+  language?: string;
+}
+
+export interface ReportCardRemark {
+  remark: string;
+  /** Which records the draft used, e.g. "Exam marks", "Earlier exams", "Your observations". */
+  basedOn: string[];
+}
+
+export interface RemarkStyle {
+  tone: RemarkTone;
+  length: RemarkLength;
+  language?: string;
+}
+
+export interface ReportCardRemarkBatchRequest extends RemarkStyle {
+  examId: string;
+  students: { studentId: string; observations?: string }[];
+}
+
+/** One student's draft, or why there is none (errorCode/error). */
+export interface BatchRemarkItem {
+  studentId: string;
+  remark: string | null;
+  basedOn: string[];
+  errorCode: string | null;
+  error: string | null;
+}
+
+export interface ReportCardRemarkBatchResult {
+  items: BatchRemarkItem[];
+  aiGenerated: boolean;
+  status: "Draft";
+  model: string | null;
+}
+
+export interface DifficultConcept {
+  concept: string;
+  questionNumbers: number[];
+  evidence: string;
+}
+
+export interface RevisionTopic {
+  topic: string;
+  reason: string;
+  suggestion: string;
+}
+
+/** Computed by AiService from the exam statistics, not by the model. */
+export interface TopicStat {
+  topic: string;
+  questionNumbers: number[];
+  averageCorrect: number;
+}
+
+export interface ExamInsights {
+  summary: string;
+  difficultConcepts: DifficultConcept[];
+  revisionTopics: RevisionTopic[];
+  teachingSuggestions: string[];
+  studentsSubmitted: number;
+  classAverage: number | null;
+  topics: TopicStat[];
+  weakestQuestions: { number: number; text: string; topic: string | null; correctPercentage: number; unansweredPercentage: number }[];
+}
+
+export interface PerformancePoint {
+  area: string;
+  evidence: string;
+}
+
+export interface ImprovementArea extends PerformancePoint {
+  suggestion: string;
+}
+
+/** A subject across the recent exams (oldest first); null where the student was absent or the exam could not be read. */
+export interface SubjectTrend {
+  subject: string;
+  percentages: (number | null)[];
+  change: number | null;
+}
+
+export interface StudentPerformance {
+  summary: string;
+  strengths: PerformancePoint[];
+  areasToImprove: ImprovementArea[];
+  talkingPoints: string[];
+  exams: { exam: string; percentage: number; grade: string | null }[];
+  recentExamNames: string[];
+  subjects: SubjectTrend[];
+  attendancePercent: number | null;
+  attendanceDays: number;
+}

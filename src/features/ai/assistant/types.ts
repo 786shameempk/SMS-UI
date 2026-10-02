@@ -24,3 +24,18 @@ export interface AssistantChatResponse {
   sources: AssistantSource[];
   demo?: boolean;
 }
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  feature: string;
+  /** The child a parent's conversation was about. */
+  studentId: string | null;
+  updatedAt: string;
+}
+
+export interface ConversationDetail {
+  id: string;
+  title: string;
+  messages: { role: "user" | "assistant"; content: string; sources: string[]; createdAt: string }[];
+}

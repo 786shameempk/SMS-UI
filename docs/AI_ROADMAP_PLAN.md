@@ -1,7 +1,9 @@
 # AI Roadmap — Phase 1 plan for EduCore (SMS UI)
 
-## Where we are
-- `src/features/ai/` exists (route `/ai`, permission `aiFeatures`) but is **rule-based and client-side**: insights, at-risk scoring, template drafts. No LLM, no AI service, no AI base URL.
+## Where we are (updated 2026-10-02)
+- AiService (`E:\Personal\AiService`, port 5142) is built: chat + tools, 5 generators, RAG documents + study assistant, quotas, usage log. Its README phase table is stale (Phase 3 RAG is done).
+- UI (route `/ai`, permission `aiFeatures`): Ask School AI, Teacher Tools generators, **Study Assistant** (all roles) and **Study Materials** (staff: upload, live indexing status, delete) call AiService. Insights / At-Risk / Content Assistant are still rule-based.
+- Real endpoints differ from the table below: RAG is `/api/ai/documents` + `/api/ai/study-assistant` (a separate upload, not indexing of study-materials ids); there is no `/capabilities` and no server-side paper drafts.
 - Services: Auth, Academic(5136), Finance(5137), Campus(5139), Engagement(5140), Meeting(5141). All clients come from `createServiceHttpClient` in `src/lib/httpClient.ts` (bearer + `X-Tenant-Id`/`X-Branch-Id`, 401 refresh).
 - Conventions: `src/features/<module>/{api.ts,types.ts,constants.ts,components,pages}`, React Query, RHF+zod, shadcn-style `components/ui`, `@/` alias, colocated tests.
 
@@ -63,9 +65,22 @@ AiService will run on exactly one of: `OpenAIProvider`, `AzureOpenAIProvider`, `
 ## Suggested order
 1. AI client plumbing + mock adapter + School Assistant UI (done, parent child selector included)
 2. Paper generator wizard + review panel + publish to question bank (done; publishes via the existing `/api/question-bank/import`, tagged `ai-generated`)
-3. Worksheet generator (reuses 2)
-4. Study material RAG panel
+3. Worksheet generator (done: generate, print, assign as homework)
+4. Study material RAG panel (done: Study Assistant + Study Materials tabs; not yet linked from the study-materials dialogs)
 5. Phase 2 (performance analysis, exam analysis) extends the existing rule-based insights with LLM narration over the same data.
+
+## Next up
+- Access (done 2026-10-02): AuthService gives AI Features to principal/teacher/parent/student (`TenantDefaults.DefaultMatrix`, seeded role claims; migration `20261002190000_GrantAiFeaturesToTeachersParentsStudents` for existing schools), and `/ai` is wrapped in `RequireModule`. Plans still gate it (not in Starter). `AI.*` permissions are optional overrides; AiService's role audiences already cover the defaults.
+- Done 2026-10-02: homework/worksheet drafts → "Assign as homework" (prefilled `HomeworkFormDialog`, saved as Draft, answers never included); "Generate with AI" on the Question Bank page (`GenerateQuestionsDialog`, prefilled from filters).
+- Lesson plans still print-only (no lesson-plan module to save into).
+- Done 2026-10-02: report card remarks. `POST /api/ai/report-card-remark {examId, studentId, observations?, tone, length}`; AiService reads `class-results` (+ transcript for trend) with the teacher's token, sends no name/admission number to the model (`[STUDENT]` placeholder), returns a Draft. UI: "Draft with AI" under Remarks in Examinations → Report Cards; the teacher must "Use this remark" then Save.
+- Done 2026-10-02: whole-class remarks. `POST /api/ai/report-card-remarks/batch` (≤10 students, one model call each, per-student errors, stops on quota). UI: "Draft remarks with AI" in Examinations → Results & Ranking; sends chunks of 5 with progress, skips students who already have a remark unless included, saves only ticked drafts.
+- Done 2026-10-02: exam insights for online exams. AcademicService `GET /api/online-exams/{id}/analysis` now also returns each question's bank `topic`/`difficulty`; AiService `POST /api/ai/exam-insights {examId}` computes topic averages + weakest questions itself, the model explains them (cited question numbers validated). UI: "AI insights" card on Online Exams → Reports.
+- Done 2026-10-02: conversation history in Ask School AI (History / New chat; `GET /api/ai/conversations?feature=chat`, new `DELETE /api/ai/conversations/{id}`).
+- Done 2026-10-02: AI Usage tab (admin/principal) — totals, monthly token allowance (`limits` added to `GET /api/ai/usage`), requests per day, by feature, top users (names from AuthService `school-users`).
+- Done 2026-10-02: student progress summary. `POST /api/ai/student-performance {studentId}`: transcript + subject trends over the last 3 exams + 90-day attendance, computed by AiService; UI card on Examinations → Transcript.
+- Backend still to expose: notification generator, translation (prompts + engine exist; controllers do not).
+- Conversation history (`GET /api/ai/conversations`) and an admin usage view (`GET /api/ai/usage`).
 
 ## Risks
 - Student data going to a third-party LLM: needs tenant consent, a data-minimization policy, and a no-training provider agreement.

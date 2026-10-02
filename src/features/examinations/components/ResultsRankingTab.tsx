@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/tables/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ClassRemarksDialog from "@/features/ai/components/generation/ClassRemarksDialog";
+import { useAuthStore } from "@/store/authStore";
 import { gradeBadgeVariant } from "../constants";
 import { getExamClassResults, listExams } from "../api";
 import type { StudentExamSummary } from "../types";
@@ -13,6 +17,10 @@ export default function ResultsRankingTab() {
   const { data: exams = [] } = useQuery({ queryKey: ["examinations", "exams"], queryFn: listExams });
   const [examId, setExamId] = useState<string | undefined>();
   const activeExamId = examId ?? exams[0]?.id;
+  const activeExam = exams.find((e) => e.id === activeExamId);
+  // Same rule as the nav: the AI helper only shows when the school and role include AI Features.
+  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const [remarksOpen, setRemarksOpen] = useState(false);
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["examinations", "class-results", activeExamId],
@@ -65,18 +73,26 @@ export default function ResultsRankingTab() {
               Ranked by total marks (ties broken alphabetically). See the Report Cards tab for a per-student, per-subject breakdown.
             </p>
           </div>
-          <Select value={activeExamId} onValueChange={setExamId}>
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="Select an exam" />
-            </SelectTrigger>
-            <SelectContent>
-              {exams.map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {e.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap items-center gap-2">
+            {canUseAi && results.length > 0 && (
+              <Button variant="outline" onClick={() => setRemarksOpen(true)}>
+                <Sparkles className="h-4 w-4" />
+                Draft remarks with AI
+              </Button>
+            )}
+            <Select value={activeExamId} onValueChange={setExamId}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select an exam" />
+              </SelectTrigger>
+              <SelectContent>
+                {exams.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <DataTable searchable
@@ -89,6 +105,17 @@ export default function ResultsRankingTab() {
           />
         </CardContent>
       </Card>
+
+      {/* Mounted only while open, so every run starts from a fresh setup step. */}
+      {canUseAi && activeExamId && remarksOpen && (
+        <ClassRemarksDialog
+          open
+          onOpenChange={setRemarksOpen}
+          examId={activeExamId}
+          examName={activeExam?.name ?? "this exam"}
+          results={results}
+        />
+      )}
     </div>
   );
 }

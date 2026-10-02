@@ -2,6 +2,7 @@ import { aiHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { AI_MOCK_ENABLED } from "../assistant/api";
 import type {
   ExamPaper,
+  ExamInsights,
   ExamRequest,
   GeneratedQuestionSet,
   GenerationResult,
@@ -10,6 +11,9 @@ import type {
   LessonPlan,
   LessonPlanRequest,
   QuestionsRequest,
+  ReportCardRemark,
+  ReportCardRemarkRequest,
+  StudentPerformance,
   Worksheet,
   WorksheetRequest,
 } from "./types";
@@ -29,3 +33,8 @@ export const generateExam = (body: ExamRequest) => generate<ExamRequest, ExamPap
 export const generateWorksheet = (body: WorksheetRequest) => generate<WorksheetRequest, Worksheet>("api/ai/generate-worksheet", body);
 export const generateLessonPlan = (body: LessonPlanRequest) => generate<LessonPlanRequest, LessonPlan>("api/ai/generate-lesson-plan", body);
 export const generateHomework = (body: HomeworkRequest) => generate<HomeworkRequest, Homework>("api/ai/generate-homework", body);
+export const generateReportCardRemark = (body: ReportCardRemarkRequest) =>
+  generate<ReportCardRemarkRequest, ReportCardRemark>("api/ai/report-card-remark", body);
+export const analyzeOnlineExam = (examId: string) => generate<{ examId: string }, ExamInsights>("api/ai/exam-insights", { examId });
+export const analyzeStudentPerformance = (studentId: string) =>
+  generate<{ studentId: string }, StudentPerformance>("api/ai/student-performance", { studentId });

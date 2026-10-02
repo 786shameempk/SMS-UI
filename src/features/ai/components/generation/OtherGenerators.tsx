@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { generateHomework, generateLessonPlan, generateWorksheet } from "../../generation/api";
+import { homeworkToAssignmentText, worksheetToAssignmentText } from "../../generation/assignment";
 import { AI_DIFFICULTIES } from "../../generation/mapping";
 import { homeworkToHtml, lessonPlanToHtml, printDocument, worksheetToHtml } from "../../generation/printable";
 import type { AiDifficulty, Homework, LessonPlan, Worksheet } from "../../generation/types";
+import AssignHomeworkButton from "./AssignHomeworkButton";
 import { ClassSubjectFields, DraftBar, FormError, GenerateButton } from "./shared";
 
 const popupHint = "Allow pop-ups to print or save as PDF.";
@@ -93,6 +95,16 @@ export function WorksheetGenerator() {
                 <Printer className="h-4 w-4" />
                 With answers
               </Button>
+              {generate.variables && (
+                <AssignHomeworkButton
+                  key={generate.submittedAt}
+                  title={sheet.title}
+                  description={worksheetToAssignmentText(sheet)}
+                  classId={generate.variables.classId ?? ""}
+                  subjectId={generate.variables.subjectId ?? ""}
+                  disabled={generate.isPending}
+                />
+              )}
             </DraftBar>
             {sheet.sections.map((s, i) => (
               <section key={i} className="space-y-1">
@@ -267,6 +279,16 @@ export function HomeworkGenerator() {
                 <Printer className="h-4 w-4" />
                 Print / PDF
               </Button>
+              {generate.variables && (
+                <AssignHomeworkButton
+                  key={generate.submittedAt}
+                  title={homework.title}
+                  description={homeworkToAssignmentText(homework)}
+                  classId={generate.variables.classId ?? ""}
+                  subjectId={generate.variables.subjectId ?? ""}
+                  disabled={generate.isPending}
+                />
+              )}
             </DraftBar>
             <FormField label="Title" htmlFor="hg-title">
               <Input id="hg-title" value={homework.title} onChange={(e) => update({ title: e.target.value })} />

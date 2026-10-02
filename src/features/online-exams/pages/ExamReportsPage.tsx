@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StatCard, StatGrid } from "@/components/ui/stat-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { useAuthStore } from "@/store/authStore";
+import ExamInsightsCard from "@/features/ai/components/analysis/ExamInsightsCard";
 import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE } from "@/features/dashboard/chartTheme";
 import { getExamAnalysis, listOnlineExams } from "../api";
 import { formatExamTime, formatMarks, formatPercent, isExamStaff, QUESTION_TYPE_LABEL } from "../constants";
@@ -42,6 +43,8 @@ function CorrectBar({ q }: { q: QuestionAnalysis }) {
 
 export default function ExamReportsPage() {
   const role = useAuthStore((s) => s.user?.role);
+  // Same rule as the nav: the AI card only shows when the school and role include AI Features.
+  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
   const [params, setParams] = useSearchParams();
   const examId = params.get("exam") ?? "";
 
@@ -68,6 +71,7 @@ export default function ExamReportsPage() {
             <p className="line-clamp-2 text-foreground">{row.original.text}</p>
             <p className="text-xs text-muted-foreground">
               {QUESTION_TYPE_LABEL[row.original.type]} · {formatMarks(row.original.marks)} marks
+              {row.original.topic ? ` · ${row.original.topic}` : ""}
             </p>
           </div>
         ),
@@ -141,6 +145,9 @@ export default function ExamReportsPage() {
             <StatCard label="Students appeared" value={a.exam.submittedCount} icon={Users} tone="success" hint={`of ${a.exam.assignedCount} assigned`} />
             <StatCard label="Exam closed" value={formatExamTime(a.exam.endUtc, a.exam.timeZoneId).split(",")[0]} icon={BarChart3} tone="neutral" />
           </StatGrid>
+
+          {/* Keyed by exam so switching exams never shows the previous exam's insights. */}
+          {canUseAi && <ExamInsightsCard key={examId} examId={examId} />}
 
           {hardest.length > 0 && hardest[0].correctPercentage < 50 && (
             <Card>

@@ -261,6 +261,9 @@ export interface QuestionAnalysis {
   incorrectPercentage: number;
   unansweredPercentage: number;
   averageMarks: number;
+  /** From the question-bank item it was copied from; null for questions written in the exam. */
+  topic?: string | null;
+  difficulty?: QuestionDifficulty | null;
 }
 
 export interface ExamAnalysis {

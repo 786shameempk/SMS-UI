@@ -14,11 +14,11 @@ describe("generation api", () => {
   });
 
   it("posts the request to the matching AiService endpoint and returns the draft", async () => {
-    const { generateQuestions, generateExam, generateWorksheet, generateLessonPlan, generateHomework, aiHttpClient } = await load();
+    const { generateQuestions, generateExam, generateWorksheet, generateLessonPlan, generateHomework, generateReportCardRemark, aiHttpClient } = await load();
     const draft = { content: { questions: [] }, aiGenerated: true, status: "Draft", model: "m" };
     const calls = stubClient(aiHttpClient, {
       "POST api/ai/generate-questions": draft, "POST api/ai/generate-exam": draft, "POST api/ai/generate-worksheet": draft,
-      "POST api/ai/generate-lesson-plan": draft, "POST api/ai/generate-homework": draft,
+      "POST api/ai/generate-lesson-plan": draft, "POST api/ai/generate-homework": draft, "POST api/ai/report-card-remark": draft,
     });
 
     const body = { classId: "c", subjectId: "s" };
@@ -27,8 +27,9 @@ describe("generation api", () => {
     await generateWorksheet({ ...body, topic: "t", difficulty: "Easy", questionCount: 1 });
     await generateLessonPlan({ ...body, topic: "t", durationMinutes: 30 });
     await generateHomework({ ...body, topic: "t", difficulty: "Easy", taskCount: 1 });
+    await generateReportCardRemark({ examId: "e", studentId: "st", tone: "Balanced", length: "Short" });
 
-    expect(calls.map((c) => c.url)).toEqual(["api/ai/generate-questions", "api/ai/generate-exam", "api/ai/generate-worksheet", "api/ai/generate-lesson-plan", "api/ai/generate-homework"]);
+    expect(calls.map((c) => c.url)).toEqual(["api/ai/generate-questions", "api/ai/generate-exam", "api/ai/generate-worksheet", "api/ai/generate-lesson-plan", "api/ai/generate-homework", "api/ai/report-card-remark"]);
   });
 
   it("surfaces the server message when generation is rejected", async () => {

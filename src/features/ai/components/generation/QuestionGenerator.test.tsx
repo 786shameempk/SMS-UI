@@ -73,6 +73,27 @@ describe("QuestionGenerator", () => {
     expect(await screen.findByText("Added to question bank")).toBeInTheDocument();
   });
 
+  it("starts from the given defaults and files approved questions under what was generated", async () => {
+    const user = userEvent.setup();
+    const onPublished = vi.fn();
+    vi.mocked(generationApi.generateQuestions).mockResolvedValue(draft);
+    vi.mocked(examApi.importQuestions).mockResolvedValue({ imported: 2, errors: [] });
+    renderWithProviders(<QuestionGenerator defaults={{ classId: "c9", subjectId: "s9", chapter: "Light" }} onPublished={onPublished} />);
+
+    expect(screen.getByLabelText(/chapter/i)).toHaveValue("Light");
+    await user.click(screen.getByRole("button", { name: /generate draft/i }));
+    await screen.findByText("AI generated");
+    // Changing the form after generating must not move the draft to another class or topic.
+    await user.click(screen.getByRole("button", { name: /pick class/i }));
+    await user.clear(screen.getByLabelText(/chapter/i));
+    await user.type(screen.getByLabelText(/chapter/i), "Sound");
+    await user.click(screen.getByRole("button", { name: /approve & add to question bank/i }));
+
+    await waitFor(() => expect(examApi.importQuestions).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(examApi.importQuestions).mock.calls[0][0][0]).toMatchObject({ classId: "c9", subjectId: "s9", topic: "Light" });
+    await waitFor(() => expect(onPublished).toHaveBeenCalled());
+  });
+
   it("rejecting a draft discards it without saving", async () => {
     const user = userEvent.setup();
     vi.mocked(generationApi.generateQuestions).mockResolvedValue(draft);

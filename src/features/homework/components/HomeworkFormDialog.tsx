@@ -17,8 +17,8 @@ import type { Homework, HomeworkFormValues, HomeworkStatus } from "../types";
 const NONE_SECTION = "__none__";
 
 const homeworkSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
+  title: z.string().min(1, "Title is required").max(200, "Title can be at most 200 characters"),
+  description: z.string().min(1, "Description is required").max(2000, "Description can be at most 2000 characters"),
   subjectId: z.string().min(1, "Select a subject"),
   classId: z.string().min(1, "Select a class"),
   sectionId: z.string().optional(),
@@ -48,6 +48,7 @@ export default function HomeworkFormDialog({
   open,
   onOpenChange,
   homework,
+  initialValues,
   classes,
   subjects,
   sections,
@@ -58,6 +59,8 @@ export default function HomeworkFormDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   homework?: Homework | null;
+  /** Prefills a new homework (e.g. from an AI draft); ignored when editing. */
+  initialValues?: Partial<HomeworkFormValues>;
   classes: SchoolClass[];
   subjects: Subject[];
   sections: Section[];
@@ -91,9 +94,9 @@ export default function HomeworkFormDialog({
             attachmentNote: homework.attachmentNote ?? "",
             status: homework.status,
           }
-        : emptyValues,
+        : { ...emptyValues, ...initialValues, sectionId: initialValues?.sectionId ?? NONE_SECTION },
     );
-  }, [open, homework, reset]);
+  }, [open, homework, initialValues, reset]);
 
   const classId = watch("classId");
   const availableSubjects = useMemo(() => (classId ? subjects.filter((s) => s.classIds.includes(classId)) : subjects), [subjects, classId]);
