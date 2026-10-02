@@ -4,12 +4,7 @@
 	email {$ACME_EMAIL}
 }
 
-# EXTRA_DOMAINS (optional, space-separated) also point at this VM: Caddy gets certificates for them and
-# permanently redirects them to DOMAIN, so the SPA, CORS and auth all keep working on the one main origin.
-{$DOMAIN} {$EXTRA_DOMAINS} {
-	@extra not host {$DOMAIN}
-	redir @extra https://{$DOMAIN}{uri} permanent
-
+{$DOMAIN} {
 	encode zstd gzip
 
 	# APIs: the gateway routes /services/<name>/... to each service; /api/... are its own endpoints.

@@ -50,7 +50,6 @@ services:
       - "443:443/udp"
     environment:
       DOMAIN: ${DOMAIN}
-      EXTRA_DOMAINS: ${EXTRA_DOMAINS:-}
       ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required - set it in .env next to docker-compose.yml (see .env.example)}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

@@ -2,7 +2,7 @@
 # Runs at container start (nginx's /docker-entrypoint.d hook): writes the SPA's runtime API addresses into
 # config.js from environment variables, so one image works in every environment without rebuilding.
 #
-#   AUTH_API_URL, ACADEMIC_API_URL, FINANCE_API_URL, CAMPUS_API_URL, ENGAGEMENT_API_URL, MEETING_API_URL
+#   AUTH_API_URL, ACADEMIC_API_URL, FINANCE_API_URL, CAMPUS_API_URL, ENGAGEMENT_API_URL, MEETING_API_URL, AI_API_URL
 #
 # Each must be reachable from the user's browser (a public URL, not a Docker service name). Unset or empty
 # variables stay "", and the app then uses the addresses baked in at build time (VITE_* build args).
@@ -20,6 +20,7 @@ window.__EDUCORE_CONFIG__ = {
   campusApiUrl: "$(esc "${CAMPUS_API_URL:-}")",
   engagementApiUrl: "$(esc "${ENGAGEMENT_API_URL:-}")",
   meetingApiUrl: "$(esc "${MEETING_API_URL:-}")",
+  aiApiUrl: "$(esc "${AI_API_URL:-}")",
 };
 EOF
 echo "educore: wrote runtime API config to $target"

@@ -26,10 +26,6 @@ Browser ──443──> Caddy ─┬─ /            -> ui
 An A record for your domain (e.g. `app.example.com`) pointing at the VM's public IP. It must resolve
 before the first start, or Caddy can't get a certificate.
 
-More domains on the same VM: add an A record for each to the same IP, list them in `.env` as
-`EXTRA_DOMAINS` (space-separated), then `docker compose up -d caddy`. Caddy gets a certificate for each and
-redirects them to `DOMAIN`.
-
 ## 3. Build the images
 
 The 7 service repos already publish to `ghcr.io/786shameempk/<service>` on every push to `master`.

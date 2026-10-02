@@ -46,6 +46,9 @@ export const ENGAGEMENT_API_BASE_URL = resolveUrl("engagementApiUrl", import.met
 /** Base URL of MeetingService (see MeetingService/src/MeetingService.API). */
 export const MEETING_API_BASE_URL = resolveUrl("meetingApiUrl", import.meta.env.VITE_MEETING_API_URL, "http://localhost:5141/");
 
+/** Base URL of AiService (see AiService/src/AiService.API). Not deployed yet — the UI falls back to a mock when VITE_AI_MOCK=true. */
+export const AI_API_BASE_URL = resolveUrl("aiApiUrl", import.meta.env.VITE_AI_API_URL, "http://localhost:5142/");
+
 /**
  * Every backend service beyond AuthService validates the same JWT but has no way to know an
  * Admin/SuperAdmin's *currently active* tenant/branch (that's a client-side switcher, not a JWT
@@ -137,6 +140,8 @@ export const campusHttpClient = createServiceHttpClient(CAMPUS_API_BASE_URL);
 export const engagementHttpClient = createServiceHttpClient(ENGAGEMENT_API_BASE_URL);
 
 export const meetingHttpClient = createServiceHttpClient(MEETING_API_BASE_URL);
+
+export const aiHttpClient = createServiceHttpClient(AI_API_BASE_URL);
 
 /** AuthService's ExceptionHandlingMiddleware always responds with this shape on failure. */
 export interface ApiProblemDetails {
