@@ -1,6 +1,6 @@
 # Deploying SMS to an Azure Linux VM
 
-One VM runs everything with Docker Compose: the UI and 7 .NET services from GHCR, SQL Server, Redis and
+One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, SQL Server, Redis and
 Caddy, which is the only public entry point and handles HTTPS.
 
 LiveKit (in-app video classes + recording) is **not deployed yet**. MeetingService still runs and
@@ -8,7 +8,7 @@ external-link meetings (Zoom/Meet/Teams URLs) work; in-app video classes won't c
 
 ```
 Browser ──443──> Caddy ─┬─ /            -> ui
-                        ├─ /services/*  -> apigateway -> auth / academic / finance / campus / engagement / meeting
+                        ├─ /services/*  -> apigateway -> auth / academic / finance / campus / engagement / meeting / ai
                         └─ /api/*       -> apigateway (reports)
 ```
 
@@ -26,9 +26,13 @@ Browser ──443──> Caddy ─┬─ /            -> ui
 An A record for your domain (e.g. `app.example.com`) pointing at the VM's public IP. It must resolve
 before the first start, or Caddy can't get a certificate.
 
+More domains on the same VM: add an A record for each to the same IP, list them in `.env` as
+`EXTRA_DOMAINS` (space-separated), then `docker compose up -d caddy`. Caddy gets a certificate for each and
+redirects them to `DOMAIN`.
+
 ## 3. Build the images
 
-The 7 service repos already publish to `ghcr.io/786shameempk/<service>` on every push to `master`.
+The 8 service repos already publish to `ghcr.io/786shameempk/<service>` on every push to `master`.
 
 The UI bakes its API URLs in at build time, so in the **SMS-UI** GitHub repo set the Actions variable
 `PUBLIC_URL` (Settings > Secrets and variables > Actions > Variables), e.g. `https://app.example.com`, then
@@ -45,7 +49,7 @@ sudo usermod -aG docker $USER   # log out and back in
 
 Every uploaded file lives in one storage account: study materials, Talent Showcase media, meeting materials and
 recordings, student/staff photos and documents, and user avatars. The services create their private containers
-(`study-materials`, `talent-media`, `meeting-files`, `people-files`, `user-files`) on first use and serve files only
+(`study-materials`, `talent-media`, `meeting-files`, `people-files`, `user-files`, `ai-documents`) on first use and serve files only
 through their own short-lived signed links, so the containers never need public access or CORS.
 
 Create the account once (same region as the VM), e.g. with the Azure CLI:
@@ -64,6 +68,25 @@ into blob storage under the same keys (photos/documents/avatars that were stored
 and logs e.g. `Study materials: copied N local files to blob storage`. Old files are left in the volumes; once you've
 checked everything opens, the `study-materials` and `talent-media` volumes can be removed. Keep `meeting-files`: LiveKit
 Egress drops recordings there before they're uploaded, and it holds the key ring that decrypts stored meeting links.
+
+## 5b. AI (AiService)
+
+AiService runs the AI assistant, teacher generators, study-material Q&A, report-card remarks and exam/progress
+insights. It publishes to `ghcr.io/786shameempk/aiservice` like the other services and is reached through the
+gateway at `/services/ai/*`; the UI is pointed there at start-up (`AI_API_URL`).
+
+Set these in `.env` (see `.env.example`):
+
+- `AI_PROVIDER`: `OpenAI`, `Anthropic` or `AzureOpenAI`, plus that provider's key (`OPENAI_API_KEY`, ...). The key
+  stays on the VM: it never reaches the browser and is never stored in `appsettings.json`. With the default `Mock`
+  the service starts without a key, but the generators, remarks and insights refuse to run.
+- `AI_EMBEDDINGS_PROVIDER`: `OpenAI` or `AzureOpenAI` for real study-material search (`Mock` is keyword-only).
+- `AI_DAILY_REQUESTS_PER_USER` / `AI_MONTHLY_TOKENS_PER_SCHOOL`: usage limits. Admins see usage in AI Features > AI Usage.
+
+Its database (`AiServiceDb`) and background-job tables are created on first start. Uploaded study materials go to the
+`ai-documents` blob container.
+
+Who sees AI Features is decided by AuthService (role defaults, the school's plan and Roles & Permissions), not here.
 
 ## 6. Configure and start
 

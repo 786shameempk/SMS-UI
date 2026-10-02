@@ -34,6 +34,7 @@ services:
         VITE_CAMPUS_API_URL: http://localhost:5139/
         VITE_ENGAGEMENT_API_URL: http://localhost:5140/
         VITE_MEETING_API_URL: http://localhost:5141/
+        VITE_AI_API_URL: http://localhost:5142/
     container_name: school-ui
     ports:
       - "8080:80"
@@ -241,6 +242,7 @@ services:
       ReverseProxy__Clusters__meeting-cluster__Destinations__destination1__Address: http://meetingservice:8080/
       ReverseProxy__Clusters__campus-cluster__Destinations__destination1__Address: http://campusservice:8080/
       ReverseProxy__Clusters__engagement-cluster__Destinations__destination1__Address: http://engagementservice:8080/
+      ReverseProxy__Clusters__ai-cluster__Destinations__destination1__Address: http://aiservice:8080/
     depends_on:
       - authservice
       - academicservice
@@ -248,6 +250,44 @@ services:
       - meetingservice
       - campusservice
       - engagementservice
+      - aiservice
+
+  # AI assistant (LLM). Same JWT as every service; reads school data only through the other services using the
+  # caller's own token. Provider: Mock (no credentials, canned tool answers) until AI_PROVIDER and its key are set.
+  # The provider key lives only in this container's environment; it never reaches the browser.
+  aiservice:
+    <<: *dotnet-service
+    build:
+      context: ../AiService
+    ports:
+      - "5142:8080"
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AiServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__Redis: "redis:6379"
+      Services__Academic: http://academicservice:8080/
+      Services__Finance: http://financeservice:8080/
+      Services__Engagement: http://engagementservice:8080/
+      Services__Campus: http://campusservice:8080/
+      Ai__DefaultProvider: ${AI_PROVIDER:-Mock}
+      Ai__Anthropic__ApiKey: ${ANTHROPIC_API_KEY:-}
+      Ai__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      Ai__AzureOpenAI__Endpoint: ${AZURE_OPENAI_ENDPOINT:-}
+      Ai__AzureOpenAI__ApiKey: ${AZURE_OPENAI_API_KEY:-}
+      Ai__AzureOpenAI__Deployment: ${AZURE_OPENAI_DEPLOYMENT:-}
+      Ai__Local__BaseUrl: ${LOCAL_LLM_URL:-http://localhost:11434/v1/}
+      # Embeddings for study-material search. Mock = keyword-style demo vectors; use OpenAI / AzureOpenAI / Local for real semantic search
+      # (Anthropic has no embeddings API). Vectors live in SQL Server; files in blob storage (BlobStorage__ConnectionString above).
+      Ai__Embeddings__Provider: ${AI_EMBEDDINGS_PROVIDER:-Mock}
+      Ai__Embeddings__Model: ${AI_EMBEDDINGS_MODEL:-text-embedding-3-small}
+      Ai__Embeddings__AzureDeployment: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-}
+      Ai__Limits__DailyRequestsPerUser: ${AI_DAILY_REQUESTS_PER_USER:-100}
+      Ai__Limits__MonthlyTokenLimitPerSchool: ${AI_MONTHLY_TOKENS_PER_SCHOOL:-1000000}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest

@@ -19,4 +19,5 @@ window.__EDUCORE_CONFIG__ = {
   campusApiUrl: "",
   engagementApiUrl: "",
   meetingApiUrl: "",
+  aiApiUrl: "",
 };

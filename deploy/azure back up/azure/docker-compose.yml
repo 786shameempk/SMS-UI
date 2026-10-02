@@ -1,0 +1,223 @@
+# Production stack for a single Azure Linux VM: every SMS service pulled from GHCR, plus SQL Server, Redis
+# and Caddy as the only public entry point (automatic HTTPS).
+#
+# LiveKit (built-in video classes + recording) is not deployed yet: MeetingService still starts and
+# external-link meetings (Zoom/Meet/Teams URLs) work, but "in-app video" classes won't connect.
+#
+#   cp .env.example .env            # then fill in real values
+#   docker login ghcr.io            # GitHub username + PAT with read:packages (GHCR packages are private by default)
+#   docker compose pull && docker compose up -d
+#
+# Public layout (see Caddyfile):
+#   https://${DOMAIN}/               -> ui (SPA)
+#   https://${DOMAIN}/services/*     -> apigateway -> each service (YARP routes)
+#   https://${DOMAIN}/api/*          -> apigateway's own endpoints (reports)
+# Nothing else is published on the host: SQL Server, Redis and the services are only on the Docker network.
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
+
+x-dotnet-service: &dotnet-service
+  <<: *logging
+  restart: unless-stopped
+  depends_on:
+    sqlserver:
+      condition: service_healthy
+
+x-dotnet-env: &dotnet-env
+  ASPNETCORE_ENVIRONMENT: Production
+  Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
+  Cors__AllowedOrigins__0: https://${DOMAIN:?DOMAIN is required - set it in .env next to docker-compose.yml (see .env.example)}
+  # A second site allowed to call the APIs from another origin (e.g. the Azure Static Web Apps frontend).
+  # Unset = just the main domain again (harmless duplicate).
+  Cors__AllowedOrigins__1: ${CORS_EXTRA_ORIGIN:-https://${DOMAIN}}
+  # Files (study materials, talent media, meeting files, student/staff photos and documents, avatars) live in Azure
+  # Blob Storage, in private containers the services create themselves. Empty = the old local volumes (not for prod).
+  BlobStorage__ConnectionString: ${AZURE_STORAGE_CONNECTION_STRING:-}
+
+services:
+  caddy:
+    <<: *logging
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required - set it in .env next to docker-compose.yml (see .env.example)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - ui
+      - apigateway
+
+  ui:
+    <<: *logging
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/sms-ui:${UI_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    # Runtime API addresses (written into config.js when the container starts), so the SPA calls this
+    # domain whatever URLs were baked into the image at build time.
+    environment:
+      AUTH_API_URL: https://${DOMAIN}/services/identity/
+      ACADEMIC_API_URL: https://${DOMAIN}/services/academic/
+      FINANCE_API_URL: https://${DOMAIN}/services/finance/
+      CAMPUS_API_URL: https://${DOMAIN}/services/campus/
+      ENGAGEMENT_API_URL: https://${DOMAIN}/services/engagement/
+      MEETING_API_URL: https://${DOMAIN}/services/meetings/
+
+  apigateway:
+    <<: *logging
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/apigateway:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      <<: *dotnet-env
+      Services__FinanceServiceUrl: http://financeservice:8080/
+      ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address: http://authservice:8080/
+      ReverseProxy__Clusters__academic-cluster__Destinations__destination1__Address: http://academicservice:8080/
+      ReverseProxy__Clusters__finance-cluster__Destinations__destination1__Address: http://financeservice:8080/
+      ReverseProxy__Clusters__meeting-cluster__Destinations__destination1__Address: http://meetingservice:8080/
+      ReverseProxy__Clusters__campus-cluster__Destinations__destination1__Address: http://campusservice:8080/
+      ReverseProxy__Clusters__engagement-cluster__Destinations__destination1__Address: http://engagementservice:8080/
+    depends_on:
+      - authservice
+      - academicservice
+      - financeservice
+      - meetingservice
+      - campusservice
+      - engagementservice
+
+  authservice:
+    <<: *dotnet-service
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/authservice:${IMAGE_TAG:-latest}
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AuthServiceDb;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};TrustServerCertificate=True;"
+      ConnectionStrings__Redis: "redis:6379"
+      ClientApp__BaseUrl: https://${DOMAIN}
+      LeadNotifications__NotifyEmail: ${LEAD_NOTIFY_EMAIL:-info@schoolsphrere.com}
+      LeadNotifications__NotifyWhatsAppNumber: ${LEAD_NOTIFY_WHATSAPP:-}
+      # Email via SMTP (Brevo). SMTP_PASSWORD (the Brevo SMTP key) goes in .env only - never in this file. Empty = emails are only logged.
+      Smtp__Host: ${SMTP_HOST:-smtp-relay.brevo.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      Smtp__Username: ${SMTP_USERNAME:-bb76ed001@smtp-brevo.com}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__FromEmail: ${SMTP_FROM_EMAIL:-info@schoolsphrere.com}
+      Smtp__FromName: ${SMTP_FROM_NAME:-School Sphere}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  academicservice:
+    <<: *dotnet-service
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/academicservice:${IMAGE_TAG:-latest}
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Services__AuthServiceUrl: http://authservice:8080/
+      # Online Exams notifications (scheduled, reminders, results...) go to EngagementService's internal events.
+      Services__EngagementServiceUrl: http://engagementservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
+    volumes:
+      - study-materials:/app/App_Data/study-materials # old files: copied to blob storage once, then unused
+
+  financeservice:
+    <<: *dotnet-service
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/financeservice:${IMAGE_TAG:-latest}
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinanceServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Services__AcademicServiceUrl: http://academicservice:8080/
+      # Webhook URL to set on the Razorpay dashboard: https://${DOMAIN}/services/finance/api/payments/razorpay/webhook
+      Razorpay__KeyId: ${RAZORPAY_KEY_ID:-}
+      Razorpay__KeySecret: ${RAZORPAY_KEY_SECRET:-}
+      Razorpay__WebhookSecret: ${RAZORPAY_WEBHOOK_SECRET:-}
+
+  campusservice:
+    <<: *dotnet-service
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/campusservice:${IMAGE_TAG:-latest}
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CampusServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Services__AcademicServiceUrl: http://academicservice:8080/
+
+  engagementservice:
+    <<: *dotnet-service
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/engagementservice:${IMAGE_TAG:-latest}
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=EngagementServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
+      Push__PublicKey: ${PUSH_VAPID_PUBLIC_KEY:-}
+      Push__PrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
+      Push__Subject: mailto:${ACME_EMAIL}
+    volumes:
+      - talent-media:/app/App_Data/talent-media # old files: copied to blob storage once, then unused
+
+  meetingservice:
+    <<: *dotnet-service
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/meetingservice:${IMAGE_TAG:-latest}
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=MeetingServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Services__AcademicServiceUrl: http://academicservice:8080/
+      Services__EngagementServiceUrl: http://engagementservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET}
+      # LiveKit is not deployed yet, but MeetingService refuses to start without a key + secret (32+ chars),
+      # so these must still be set. In-app video classes stay unavailable until LiveKit is added back.
+      LiveKit__Url: wss://${DOMAIN}/livekit-not-deployed
+      LiveKit__ApiUrl: http://livekit-not-deployed:7880
+      LiveKit__ApiKey: ${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required - set it in .env next to docker-compose.yml (see .env.example)}
+      LiveKit__ApiSecret: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
+      LiveKit__EgressEnabled: "false"
+    volumes:
+      - meeting-files:/app/App_Data/meeting-files # recordings land here before upload; meeting-link key ring
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  sqlserver:
+    <<: *logging
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      # Express is free for production (10 GB per database). "Developer" is NOT licensed for production;
+      # use Standard/Enterprise only with a licence.
+      MSSQL_PID: ${MSSQL_PID:-Express}
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    <<: *logging
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+
+volumes:
+  caddy-data:
+  caddy-config:
+  sqlserver-data:
+  redis-data:
+  talent-media:
+  study-materials:
+  meeting-files:

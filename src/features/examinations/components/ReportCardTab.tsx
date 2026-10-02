@@ -8,12 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import RemarkAssistant from "@/features/ai/components/generation/RemarkAssistant";
 import { listStudents } from "@/features/students/api";
+import { useAuthStore } from "@/store/authStore";
 import { getRemark, getReportCard, listExams, saveRemark } from "../api";
 import { EXAM_TYPE_LABELS, gradeBadgeVariant } from "../constants";
 
 export default function ReportCardTab() {
   const queryClient = useQueryClient();
+  // Same rule as the nav: the AI helper only shows when the school and role include AI Features.
+  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
   const { data: students = [] } = useQuery({ queryKey: ["examinations", "all-students"], queryFn: listStudents });
   const { data: exams = [] } = useQuery({ queryKey: ["examinations", "exams"], queryFn: listExams });
 
@@ -187,6 +191,9 @@ export default function ReportCardTab() {
                 value={remarkDraft}
                 onChange={(e) => setRemarkDraft(e.target.value)}
               />
+              {canUseAi && examId && studentId && (
+                <RemarkAssistant key={`${examId}-${studentId}`} examId={examId} studentId={studentId} onUse={setRemarkDraft} />
+              )}
               <div className="flex justify-end">
                 <Button size="sm" onClick={() => saveRemarkMutation.mutate()} disabled={saveRemarkMutation.isPending}>
                   {saveRemarkMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

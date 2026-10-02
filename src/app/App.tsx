@@ -12,6 +12,7 @@ import {
   getStoredThemeMode,
 } from "@/features/settings/theme";
 import { router } from "./router";
+import { GoogleAnalytics } from "./GoogleAnalytics";
 
 // Runs once at module load, before first paint, so no saved appearance setting ever flashes its
 // default. Theme mode must apply first: applyBrandPreset reads document.documentElement's
@@ -25,6 +26,7 @@ export default function App() {
   // reducedMotion="user": every framer-motion animation honours the OS "reduce motion" setting.
   return (
     <MotionConfig reducedMotion="user">
+      <GoogleAnalytics router={router} />
       <Suspense fallback={<div className="min-h-dvh bg-background" />}>
         <RouterProvider router={router} />
       </Suspense>

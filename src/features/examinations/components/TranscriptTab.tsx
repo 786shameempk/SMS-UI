@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/tables/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import StudentPerformanceCard from "@/features/ai/components/analysis/StudentPerformanceCard";
 import { listStudents } from "@/features/students/api";
+import { useAuthStore } from "@/store/authStore";
 import { EXAM_TYPE_LABELS, gradeBadgeVariant } from "../constants";
 import { getTranscript } from "../api";
 import type { TranscriptRow } from "../types";
@@ -13,6 +15,8 @@ import type { TranscriptRow } from "../types";
 export default function TranscriptTab() {
   const { data: students = [] } = useQuery({ queryKey: ["examinations", "all-students"], queryFn: listStudents });
   const [studentId, setStudentId] = useState<string | undefined>();
+  // Same rule as the nav: the AI card only shows when the school and role include AI Features.
+  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
 
   const { data: transcript, isLoading, isError, refetch } = useQuery({
     queryKey: ["examinations", "transcript", studentId],
@@ -87,6 +91,9 @@ export default function TranscriptTab() {
           />
         </CardContent>
       </Card>
+
+      {/* Keyed by student so switching students never shows the previous student's summary. */}
+      {canUseAi && studentId && (transcript?.rows.length ?? 0) > 0 && <StudentPerformanceCard key={studentId} studentId={studentId} />}
     </div>
   );
 }

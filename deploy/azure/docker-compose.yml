@@ -10,7 +10,7 @@
 #
 # Public layout (see Caddyfile):
 #   https://${DOMAIN}/               -> ui (SPA)
-#   https://${DOMAIN}/services/*     -> apigateway -> each service (YARP routes)
+#   https://${DOMAIN}/services/*     -> apigateway -> each service (YARP routes; /services/ai/* -> aiservice)
 #   https://${DOMAIN}/api/*          -> apigateway's own endpoints (reports)
 # Nothing else is published on the host: SQL Server, Redis and the services are only on the Docker network.
 
@@ -50,6 +50,7 @@ services:
       - "443:443/udp"
     environment:
       DOMAIN: ${DOMAIN}
+      EXTRA_DOMAINS: ${EXTRA_DOMAINS:-}
       ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required - set it in .env next to docker-compose.yml (see .env.example)}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -72,6 +73,7 @@ services:
       CAMPUS_API_URL: https://${DOMAIN}/services/campus/
       ENGAGEMENT_API_URL: https://${DOMAIN}/services/engagement/
       MEETING_API_URL: https://${DOMAIN}/services/meetings/
+      AI_API_URL: https://${DOMAIN}/services/ai/
 
   apigateway:
     <<: *logging
@@ -86,6 +88,7 @@ services:
       ReverseProxy__Clusters__meeting-cluster__Destinations__destination1__Address: http://meetingservice:8080/
       ReverseProxy__Clusters__campus-cluster__Destinations__destination1__Address: http://campusservice:8080/
       ReverseProxy__Clusters__engagement-cluster__Destinations__destination1__Address: http://engagementservice:8080/
+      ReverseProxy__Clusters__ai-cluster__Destinations__destination1__Address: http://aiservice:8080/
     depends_on:
       - authservice
       - academicservice
@@ -93,6 +96,7 @@ services:
       - meetingservice
       - campusservice
       - engagementservice
+      - aiservice
 
   authservice:
     <<: *dotnet-service
@@ -186,6 +190,41 @@ services:
       sqlserver:
         condition: service_healthy
 
+  # AI assistant, generators, study-material Q&A and report-card remarks. Reads school data only through the
+  # other services with the caller's own token. The provider key stays in this container's environment and never
+  # reaches the browser. AI_PROVIDER=Mock (the default) runs without any key, but then the generators refuse.
+  aiservice:
+    <<: *dotnet-service
+    image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/aiservice:${IMAGE_TAG:-latest}
+    environment:
+      <<: *dotnet-env
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AiServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__Redis: "redis:6379"
+      Services__Academic: http://academicservice:8080/
+      Services__Finance: http://financeservice:8080/
+      Services__Engagement: http://engagementservice:8080/
+      Services__Campus: http://campusservice:8080/
+      Ai__DefaultProvider: ${AI_PROVIDER:-Mock}
+      Ai__Anthropic__ApiKey: ${ANTHROPIC_API_KEY:-}
+      Ai__OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      Ai__AzureOpenAI__Endpoint: ${AZURE_OPENAI_ENDPOINT:-}
+      Ai__AzureOpenAI__ApiKey: ${AZURE_OPENAI_API_KEY:-}
+      Ai__AzureOpenAI__Deployment: ${AZURE_OPENAI_DEPLOYMENT:-}
+      # Study-material search. Mock = keyword-style demo vectors; OpenAI / AzureOpenAI for real semantic search
+      # (Anthropic has no embeddings API). Vectors live in SQL Server; the files in blob storage (dotnet-env above).
+      Ai__Embeddings__Provider: ${AI_EMBEDDINGS_PROVIDER:-Mock}
+      Ai__Embeddings__Model: ${AI_EMBEDDINGS_MODEL:-text-embedding-3-small}
+      Ai__Embeddings__AzureDeployment: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-}
+      Ai__Limits__DailyRequestsPerUser: ${AI_DAILY_REQUESTS_PER_USER:-100}
+      Ai__Limits__MonthlyTokenLimitPerSchool: ${AI_MONTHLY_TOKENS_PER_SCHOOL:-1000000}
+    volumes:
+      - ai-documents:/app/App_Data/ai-documents # only used when AZURE_STORAGE_CONNECTION_STRING is empty
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   sqlserver:
     <<: *logging
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -221,3 +260,4 @@ volumes:
   talent-media:
   study-materials:
   meeting-files:
+  ai-documents:
