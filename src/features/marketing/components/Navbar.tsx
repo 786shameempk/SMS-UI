@@ -8,6 +8,7 @@ import { useLeadCapture } from "./LeadCapture";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
+  { label: "AI", href: "#ai" },
   { label: "Solutions", href: "#solutions" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Plans", href: "#plans" },
@@ -24,7 +25,7 @@ interface ResourceLink {
 
 const RESOURCES: ResourceLink[] = [
   { icon: ShieldCheck, label: "Security", description: "How we protect your school's data", href: "#security" },
-  { icon: Workflow, label: "AI insights", description: "AI-powered trends, alerts and automation", href: "#insights" },
+  { icon: Workflow, label: "AI insights", description: "Trends and students who may need attention", href: "#insights" },
   { icon: LifeBuoy, label: "Help & support", description: "Talk to our team", action: "contact" },
 ];
 

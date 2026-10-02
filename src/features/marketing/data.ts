@@ -1,5 +1,12 @@
 import {
   BellRing,
+  BookOpenCheck,
+  FileText,
+  Laptop,
+  LineChart,
+  MessageCircle,
+  PenLine,
+  Target,
   CalendarCheck,
   ChartColumn,
   Cloud,
@@ -22,7 +29,6 @@ import {
   UsersRound,
   Video,
   Wallet,
-  Workflow,
   Building2,
   Handshake,
   Headset,
@@ -40,6 +46,8 @@ interface IconItem {
   icon: LucideIcon;
   title: string;
   description: string;
+  /** Shown as the highlighted tile (the AI feature). */
+  featured?: boolean;
 }
 
 // ── Value strip ──────────────────────────────────────────────────────
@@ -92,18 +100,20 @@ export const FEATURES: IconItem[] = [
     description: "Live dashboards and ready-made reports that turn everyday school data into clear, useful answers.",
   },
   {
-    icon: Workflow,
-    title: "AI & Automation",
-    description: "AI-drafted reminders and notes, automatic follow-ups, and routine paperwork that runs on its own, so staff spend time on students instead.",
+    icon: Sparkles,
+    title: "AI Assistant & Teacher Tools",
+    description: "Ask School AI about fees, attendance or exams, and draft question papers, worksheets, lesson plans and report card remarks — always reviewed by staff before anyone sees them.",
+    featured: true,
   },
 ];
 
 /** Recently shipped modules, called out under the feature grid. */
-export const NEW_MODULES: Array<{ icon: LucideIcon; label: string }> = [
-  { icon: Video, label: "Online Classes" },
-  { icon: LibraryBig, label: "Study Materials" },
-  { icon: Star, label: "Talent Showcase" },
-  { icon: UsersRound, label: "Parent Portal" },
+export const NEW_MODULES: Array<{ icon: LucideIcon; label: string; href: string }> = [
+  { icon: Sparkles, label: "Ask School AI", href: "#ai" },
+  { icon: FileText, label: "AI Question Papers", href: "#ai" },
+  { icon: Laptop, label: "Online Exams", href: "#solutions" },
+  { icon: Video, label: "Online Classes", href: "#solutions" },
+  { icon: Star, label: "Talent Showcase", href: "#solutions" },
 ];
 
 // ── Designed for every role ─────────────────────────────────────────
@@ -122,25 +132,25 @@ export const ROLE_CARDS: RoleCard[] = [
     id: "admin",
     role: "Administrators",
     headline: "Run every branch and department from one live view.",
-    points: ["Enrollment, fees, and staffing at a glance", "Custom roles and permissions", "Branch-by-branch or combined reports"],
+    points: ["Enrollment, fees, and staffing at a glance", "Custom roles and permissions", "Branch-by-branch reports and AI usage"],
   },
   {
     id: "teacher",
     role: "Teachers",
     headline: "Less paperwork, more time in the classroom.",
-    points: ["Attendance in a couple of taps", "Homework, marks, and materials", "Live online classes built in"],
+    points: ["Attendance in a couple of taps", "AI question papers, worksheets and remarks", "Live online classes and online exams"],
   },
   {
     id: "student",
     role: "Students",
     headline: "Everything for the school day, always up to date.",
-    points: ["Timetable and homework due dates", "Notes, papers, and recordings", "A showcase for their talents"],
+    points: ["Timetable and homework due dates", "AI study help from class materials", "A showcase for their talents"],
   },
   {
     id: "parent",
     role: "Parents",
     headline: "Stay close to your child's school day.",
-    points: ["Attendance, homework, and results", "Pay fees online in a few taps", "Bus tracking and school updates"],
+    points: ["Attendance, homework, and results", "Pay fees online in a few taps", "Ask School AI about your child's day"],
   },
 ];
 
@@ -149,10 +159,75 @@ export const ROLE_CARDS: RoleCard[] = [
 export const INSIGHT_CAPABILITIES: Array<{ icon: LucideIcon; label: string }> = [
   { icon: TrendingDown, label: "Identify attendance trends" },
   { icon: UserRoundSearch, label: "Highlight students who may need attention" },
+  { icon: Target, label: "Explain which exam topics were hard" },
+  { icon: LineChart, label: "Summarise a student's progress" },
   { icon: FileBarChart, label: "Generate useful reports" },
-  { icon: Workflow, label: "Automate repetitive workflows" },
   { icon: BellRing, label: "Surface important information" },
-  { icon: Sparkles, label: "Simplify administrative tasks" },
+];
+
+// ── AI for every role ───────────────────────────────────────────────
+
+export type AiShowcaseId = "assistant" | "papers" | "study" | "remarks" | "insights";
+
+export interface AiShowcaseItem {
+  id: AiShowcaseId;
+  icon: LucideIcon;
+  label: string;
+  audience: string;
+  title: string;
+  description: string;
+}
+
+/** Each entry is a real AI feature in the product; the matching visual lives in AiSection. */
+export const AI_SHOWCASE: AiShowcaseItem[] = [
+  {
+    id: "assistant",
+    icon: MessageCircle,
+    label: "Ask School AI",
+    audience: "Parents, students and staff",
+    title: "Answers from your school's own records",
+    description: "Ask about fees, attendance, timetables, exams or homework in plain language. Every answer shows what it was based on, and each person only sees what their role allows.",
+  },
+  {
+    id: "papers",
+    icon: FileText,
+    label: "Question papers",
+    audience: "Teachers",
+    title: "Question papers and worksheets in minutes",
+    description: "Pick a class, chapter and difficulty mix. Review and edit every question, then add it to the question bank, print it, or assign it as homework.",
+  },
+  {
+    id: "study",
+    icon: BookOpenCheck,
+    label: "Study help",
+    audience: "Students and parents",
+    title: "A study tutor that reads your class notes",
+    description: "Teachers upload notes and chapters; students get explanations, summaries, flashcards and quizzes with the page each answer came from.",
+  },
+  {
+    id: "remarks",
+    icon: PenLine,
+    label: "Report remarks",
+    audience: "Teachers",
+    title: "Report card remarks for the whole class",
+    description: "Thoughtful, editable remarks drafted from each student's marks and your own observations. Nothing is saved until you approve it.",
+  },
+  {
+    id: "insights",
+    icon: Target,
+    label: "Exam insights",
+    audience: "Teachers and principals",
+    title: "Know what to reteach after every exam",
+    description: "See which topics the class found hard, what to revise and how, plus a progress summary for any student before a parent meeting.",
+  },
+];
+
+/** How the AI is kept safe; shown under the AI showcase. */
+export const AI_PRINCIPLES: Array<{ icon: LucideIcon; label: string }> = [
+  { icon: UserCheck, label: "Staff review every draft" },
+  { icon: ShieldCheck, label: "No student names in AI remarks or analysis" },
+  { icon: KeyRound, label: "Answers respect each role's access" },
+  { icon: ChartColumn, label: "Usage limits and reports for admins" },
 ];
 
 // ── How it works ────────────────────────────────────────────────────
@@ -342,7 +417,12 @@ export const FAQS: FaqItem[] = [
   {
     question: "How does School Sphere use AI in school management?",
     answer:
-      "School Sphere's AI highlights students who may need attention based on attendance, academic performance, and overdue fees, surfaces trends across attendance, academics, fees, and admissions, and drafts report card comments, fee reminders, and parent notes from each student's real records for staff to review.",
+      "Parents, students and staff can ask School AI about fees, attendance, timetables and exams, with answers drawn only from records their role can see. Teachers draft question papers, worksheets, lesson plans, homework and report card remarks with AI, and see which exam topics a class found hard. Students get study help from their own class materials. School Sphere also highlights students who may need attention and surfaces trends across attendance, academics and fees.",
+  },
+  {
+    question: "Is student data safe with School Sphere's AI?",
+    answer:
+      "Yes. The AI only reads data through the same permissions as the person asking, so a parent sees only their own child. Student names and admission numbers are not sent to the AI model when it drafts remarks or analyses results, every AI draft is reviewed by staff before it is saved or shared, and administrators can see AI usage and set limits for their school.",
   },
 ];
 
