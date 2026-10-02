@@ -1,0 +1,46 @@
+# School Sphere - https://sms-schoolsphere.com
+# The public site is the landing page. Everything below is the signed-in app (it only shows a login screen to
+# crawlers) or a one-time password link, so it is kept out of search results.
+# Keep this list in step with the top-level routes in src/app/router.tsx (src/seo.test.ts checks it).
+
+User-agent: *
+Allow: /
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /academics
+Disallow: /account
+Disallow: /accounting
+Disallow: /admin
+Disallow: /ai
+Disallow: /attendance
+Disallow: /calendar
+Disallow: /certificates
+Disallow: /communication
+Disallow: /dashboard
+Disallow: /examinations
+Disallow: /fees
+Disallow: /health
+Disallow: /helpdesk
+Disallow: /homework
+Disallow: /hostel
+Disallow: /inventory
+Disallow: /library
+Disallow: /my-homework
+Disallow: /notifications
+Disallow: /online-classes
+Disallow: /online-exams
+Disallow: /parent-portal
+Disallow: /payroll
+Disallow: /platform
+Disallow: /reports
+Disallow: /staff
+Disallow: /students
+Disallow: /study-materials
+Disallow: /surveys
+Disallow: /talents
+Disallow: /teachers
+Disallow: /timetable
+Disallow: /transport
+Disallow: /visitors
+
+Sitemap: https://sms-schoolsphere.com/sitemap.xml

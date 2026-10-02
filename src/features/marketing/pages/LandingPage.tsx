@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import ValueStrip from "../components/ValueStrip";
 import FeaturesGrid from "../components/FeaturesGrid";
+import AiSection from "../components/AiSection";
 import ShowcaseSection from "../components/ShowcaseSection";
 import InsightsSection from "../components/InsightsSection";
 import HowItWorks from "../components/HowItWorks";
@@ -31,6 +32,7 @@ export default function LandingPage() {
           <Hero />
           <ValueStrip />
           <FeaturesGrid />
+          <AiSection />
           <ShowcaseSection />
           <InsightsSection />
           <HowItWorks />

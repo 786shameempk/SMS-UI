@@ -156,8 +156,8 @@ export default function InsightsSection() {
                   <CircleCheck className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white">Fee reminders sent automatically</p>
-                  <p className="text-xs text-slate-400">124 parents · 3 days before the due date</p>
+                  <p className="text-sm font-medium text-white">Report card remarks drafted</p>
+                  <p className="text-xs text-slate-400">32 students · ready for your review</p>
                 </div>
               </div>
             </InsightCard>

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, CircleCheck, IndianRupee, Sparkles, UserRoundSearch } from "lucide-react";
+import { ArrowRight, IndianRupee, Sparkles, UserRoundSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MODULE_COUNT } from "../data";
 import DashboardMockup, { FloatingCard } from "./DashboardMockup";
@@ -31,14 +31,14 @@ export default function Hero() {
       <div className="mx-auto max-w-7xl px-4 pb-16 pt-14 sm:px-6 sm:pt-20 lg:px-8 lg:pb-24 lg:pt-24">
         <div className="mx-auto max-w-4xl text-center">
           <motion.a
-            href="#features"
+            href="#ai"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease }}
             className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 py-1 pl-1 pr-3 text-xs font-medium text-slate-600 shadow-sm backdrop-blur transition-colors hover:border-brand-300"
           >
             <span className="bg-brand-gradient rounded-full px-2 py-0.5 text-[11px] font-semibold text-white">New</span>
-            Online classes, study materials<span className="hidden sm:inline"> &amp; talent showcase</span>
+            Ask School AI<span className="hidden sm:inline">, AI question papers &amp; exam insights</span>
             <ArrowRight className="h-3 w-3 text-slate-400 transition-transform group-hover:translate-x-0.5" />
           </motion.a>
 
@@ -105,13 +105,13 @@ export default function Hero() {
           </motion.div>
 
           <FloatingCard className="-left-10 top-24" delay={1.3}>
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
-                <CircleCheck className="h-4 w-4 text-emerald-600" />
+            <div className="flex items-start gap-2.5">
+              <span className="bg-brand-gradient flex h-8 w-8 items-center justify-center rounded-lg">
+                <Sparkles className="h-4 w-4 text-white" />
               </span>
               <div>
-                <p className="text-[11px] font-medium text-slate-500">Attendance marked · Grade 9 B</p>
-                <p className="text-[13px] font-semibold text-slate-900">38 of 40 students present</p>
+                <p className="text-[11px] font-medium text-slate-500">Ask School AI · “Which topics did 8 B find hard?”</p>
+                <p className="text-[13px] font-semibold text-slate-900">Simplifying fractions · 35% correct</p>
               </div>
             </div>
           </FloatingCard>
