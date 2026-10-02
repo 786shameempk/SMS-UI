@@ -26,7 +26,7 @@ export default function FinalCta() {
           Ready to Build a <span className="text-brand-gradient">Smarter School?</span>
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-          Bring your school's people, processes, and information together in one simple platform.
+          Bring your school's people, processes, and information together in one AI school management system.
         </p>
 
         <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">

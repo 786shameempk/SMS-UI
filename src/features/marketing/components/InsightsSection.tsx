@@ -79,9 +79,9 @@ export default function InsightsSection() {
           <SectionHeading
             align="left"
             inverted
-            eyebrow="Smarter insights"
-            title="Make Better Decisions with Smarter Insights"
-            description="School Sphere quietly watches the patterns across attendance, academics, and fees — and brings the things that matter to your attention, based on your school's real records."
+            eyebrow="AI insights"
+            title="AI-Powered School Management That Surfaces What Matters"
+            description="The AI in School Sphere watches the patterns across attendance, academics, and fees — and brings the things that matter to your attention, based on your school's real records."
           />
           <ul className="mt-10 grid gap-3 sm:grid-cols-2">
             {INSIGHT_CAPABILITIES.map((c) => (

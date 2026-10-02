@@ -126,7 +126,7 @@ export default function SecuritySection() {
             align="left"
             eyebrow="Security"
             title="Built for Schools. Designed for Trust."
-            description="Student and family records deserve serious protection. Security is part of how School Sphere is built — not an add-on."
+            description="Student and family records deserve serious protection. Security is built into the School Sphere school management software — not an add-on."
           />
           <ul className="mt-10 grid gap-x-6 gap-y-6 sm:grid-cols-2">
             {SECURITY_ITEMS.map((item) => (

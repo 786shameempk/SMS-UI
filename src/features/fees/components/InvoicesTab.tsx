@@ -1,20 +1,22 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CreditCard, ListPlus, Percent, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
+import { usePageIndex } from "@/components/tables/usePageIndex";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listStudents } from "@/features/students/api";
+import { listClasses } from "@/features/academics/api";
+import { listStudentsByIds } from "@/features/students/api";
 import { formatCurrency } from "@/utils/format";
 import {
   applyDiscountToInvoice,
   generateInstallments,
   listDiscounts,
   listFeeStructures,
-  listInvoices,
+  listInvoicesPage,
   recordPayment,
   requestRefund,
 } from "../api";
@@ -27,6 +29,7 @@ import { RowActions } from "@/components/ui/row-actions";
 
 const ALL_FILTER = "__all__";
 const INSTALLMENT_COUNT = 3;
+const PAGE_SIZE = 25;
 
 export default function InvoicesTab() {
   const queryClient = useQueryClient();
@@ -37,14 +40,39 @@ export default function InvoicesTab() {
   const [refundTarget, setRefundTarget] = useState<FeeInvoice | null>(null);
   const [discountTarget, setDiscountTarget] = useState<FeeInvoice | null>(null);
 
-  const { data: invoices = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "invoices"], queryFn: listInvoices });
-  const { data: students = [] } = useQuery({ queryKey: ["students", "all"], queryFn: listStudents });
+  const [pageIndex, setPageIndex] = usePageIndex(JSON.stringify([classFilter, statusFilter]));
+
+  // Filtering and paging happen in FinanceService; only the visible page is downloaded, plus the names of
+  // just the students on it.
+  const filters = {
+    pageIndex,
+    pageSize: PAGE_SIZE,
+    classId: classFilter === ALL_FILTER ? undefined : classFilter,
+    status: statusFilter === ALL_FILTER ? undefined : statusFilter,
+  };
+  const { data: page, isLoading, isError, refetch } = useQuery({
+    queryKey: ["fees", "invoices", "page", filters],
+    queryFn: () => listInvoicesPage(filters),
+    placeholderData: keepPreviousData,
+  });
+  const invoices = useMemo(() => page?.items ?? [], [page]);
+  const studentIds = useMemo(() => [...new Set(invoices.map((inv) => inv.studentId))].sort(), [invoices]);
+  const { data: students = [] } = useQuery({
+    queryKey: ["students", "byIds", studentIds],
+    queryFn: () => listStudentsByIds(studentIds),
+    enabled: studentIds.length > 0,
+    placeholderData: keepPreviousData,
+  });
+  const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
   const { data: structures = [] } = useQuery({ queryKey: ["fees", "structures"], queryFn: listFeeStructures });
   const { data: discounts = [] } = useQuery({ queryKey: ["fees", "discounts"], queryFn: listDiscounts });
 
   const studentById = useMemo(() => new Map(students.map((s) => [s.id, s] as const)), [students]);
   const structureById = useMemo(() => new Map(structures.map((s) => [s.id, s] as const)), [structures]);
-  const classNames = useMemo(() => Array.from(new Set(students.map((s) => s.className))).sort(), [students]);
+  const classOptions = useMemo(
+    () => [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
+    [classes],
+  );
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["fees"] });
 
@@ -85,13 +113,6 @@ export default function InvoicesTab() {
       toast.success(`Split into ${INSTALLMENT_COUNT} installments`);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not generate installments"),
-  });
-
-  const filtered = invoices.filter((inv) => {
-    const student = studentById.get(inv.studentId);
-    if (classFilter !== ALL_FILTER && student?.className !== classFilter) return false;
-    if (statusFilter !== ALL_FILTER && inv.status !== statusFilter) return false;
-    return true;
   });
 
   const columns: ColumnDef<FeeInvoice, unknown>[] = [
@@ -194,9 +215,9 @@ export default function InvoicesTab() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL_FILTER}>All classes</SelectItem>
-              {classNames.map((name) => (
-                <SelectItem key={name} value={name}>
-                  {name}
+              {classOptions.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -215,10 +236,18 @@ export default function InvoicesTab() {
             </SelectContent>
           </Select>
         </div>
-        <p className="text-sm text-muted-foreground">{filtered.length} invoice(s)</p>
+        <p className="text-sm text-muted-foreground">{page?.totalCount ?? 0} invoice(s)</p>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No invoices match the selected filters." />
+      <DataTable
+        columns={columns}
+        data={invoices}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        emptyMessage="No invoices match the selected filters."
+        serverPagination={{ pageIndex, pageSize: PAGE_SIZE, totalCount: page?.totalCount ?? 0, onPageChange: setPageIndex }}
+      />
 
       <RecordPaymentDialog
         open={Boolean(payTarget)}

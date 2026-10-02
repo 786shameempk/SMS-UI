@@ -13,10 +13,11 @@ const COLUMNS: Array<{ title: string; links: FooterLink[] }> = [
   {
     title: "Product",
     links: [
-      { label: "Features", href: "#features" },
-      { label: "Solutions", href: "#solutions" },
-      { label: "Plans", href: "#plans" },
-      { label: "Security", href: "#security" },
+      { label: "School Management Features", href: "#features" },
+      { label: "AI School Insights", href: "#insights" },
+      { label: "Solutions by Role", href: "#solutions" },
+      { label: "School ERP Plans", href: "#plans" },
+      { label: "Data Security", href: "#security" },
     ],
   },
   {
@@ -31,6 +32,7 @@ const COLUMNS: Array<{ title: string; links: FooterLink[] }> = [
     title: "Resources",
     links: [
       { label: "Documentation", href: "#" },
+      { label: "FAQ", href: "#faq" },
       { label: "Help Center", action: "contact" },
       { label: "Blog", href: "#" },
     ],
@@ -81,7 +83,7 @@ export default function Footer() {
           <div className="col-span-2 sm:col-span-4 lg:col-span-1">
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
-              One connected platform for administrators, teachers, students, and parents — one campus or many.
+              The AI school management system for administrators, teachers, students, and parents — one campus or many.
             </p>
             <ul className="mt-6 flex items-center gap-2">
               {SOCIALS.map((s) => (

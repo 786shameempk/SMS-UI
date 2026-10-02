@@ -1,0 +1,55 @@
+{
+  "$comment": "Schools created by seed.mjs. plan = Starter | Professional | Enterprise (the seeder only fills modules the plan includes). The first branch of each school is the 'Main Campus' created with the tenant.",
+  "academicYear": { "name": "2026-27", "start": "2026-06-01", "end": "2027-03-31" },
+  "tenants": [
+    {
+      "subdomain": "greenvalley",
+      "school": "Green Valley International School",
+      "plan": "Enterprise",
+      "city": "Bengaluru",
+      "vehiclePrefix": "KA",
+      "localities": ["Jayanagar", "Indiranagar", "Koramangala", "Whitefield", "HSR Layout", "Malleshwaram", "BTM Layout", "Hebbal", "Banashankari", "Basavanagudi"],
+      "profile": { "tagline": "Learning today, leading tomorrow", "address": "14th Cross, 4th Block, Jayanagar, Bengaluru 560011", "phone": "080 4123 4500", "principalName": "Dr. Meera Krishnan", "establishedYear": 1998 },
+      "billingContactName": "Anita Raghavan",
+      "grades": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "studentsPerBranch": 300,
+      "teachersPerBranch": 20,
+      "branches": [
+        { "name": "Main Campus", "code": "MAIN", "area": "Jayanagar, Bengaluru", "phone": "080 4123 4500" },
+        { "name": "Whitefield Campus", "code": "WFD", "area": "Whitefield, Bengaluru", "phone": "080 4123 4600" },
+        { "name": "Hebbal Campus", "code": "HBL", "area": "Hebbal, Bengaluru", "phone": "080 4123 4700" }
+      ]
+    },
+    {
+      "subdomain": "riverside",
+      "school": "Riverside Public School",
+      "plan": "Professional",
+      "city": "Kochi",
+      "vehiclePrefix": "KL",
+      "localities": ["Kakkanad", "Edappally", "Vyttila", "Kaloor", "Palarivattom", "Aluva", "Thrikkakara", "Panampilly Nagar", "Kadavanthra", "Fort Kochi"],
+      "profile": { "tagline": "Rooted in values, reaching for excellence", "address": "Infopark Road, Kakkanad, Kochi 682030", "phone": "0484 242 1100", "principalName": "Mr. Thomas Varghese", "establishedYear": 2006 },
+      "billingContactName": "Sheela Mathew",
+      "grades": [6, 7, 8, 9, 10, 11, 12],
+      "studentsPerBranch": 200,
+      "teachersPerBranch": 14,
+      "branches": [
+        { "name": "Main Campus", "code": "MAIN", "area": "Kakkanad, Kochi", "phone": "0484 242 1100" },
+        { "name": "Edappally Campus", "code": "EDP", "area": "Edappally, Kochi", "phone": "0484 242 1200" }
+      ]
+    },
+    {
+      "subdomain": "littlestars",
+      "school": "Little Stars Academy",
+      "plan": "Starter",
+      "city": "Chennai",
+      "vehiclePrefix": "TN",
+      "localities": ["Adyar", "Besant Nagar", "Velachery", "T. Nagar", "Mylapore", "Anna Nagar", "Tambaram", "Porur"],
+      "profile": { "tagline": "Small steps, big dreams", "address": "12 Gandhi Road, Adyar, Chennai 600020", "phone": "044 2441 3300", "principalName": "Mrs. Lakshmi Sundaram", "establishedYear": 2015 },
+      "billingContactName": "Rajesh Sundaram",
+      "grades": [1, 2, 3, 4, 5],
+      "studentsPerBranch": 120,
+      "teachersPerBranch": 8,
+      "branches": [{ "name": "Main Campus", "code": "MAIN", "area": "Adyar, Chennai", "phone": "044 2441 3300" }]
+    }
+  ]
+}

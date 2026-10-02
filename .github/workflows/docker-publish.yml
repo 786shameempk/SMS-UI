@@ -21,7 +21,41 @@ env:
   IMAGE_NAME: sms-ui
 
 jobs:
+  # Type-check, unit tests and coverage thresholds (vitest.config.ts) gate the image: build_and_push_image
+  # needs this job, so a failing test never publishes.
+  test:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check tests
+        run: npm run typecheck:test
+
+      - name: Test (with coverage)
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          if-no-files-found: ignore
+
   build_and_push_image:
+    needs: test
     runs-on: ubuntu-latest
     name: Build and Push Docker Image (GHCR)
     permissions:

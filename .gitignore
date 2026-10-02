@@ -37,3 +37,12 @@ amplifyconfiguration*
 
 # Docker Compose secrets (see .env.docker.example)
 .env.docker
+
+# k6 load tests: local test accounts and result files
+loadtest/users.json
+loadtest/results/
+scripts/seed-demo/seed-users.json
+loadtest/users.seeded.json
+
+# Test coverage output (npm run test:coverage)
+coverage

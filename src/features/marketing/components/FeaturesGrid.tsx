@@ -11,8 +11,8 @@ export default function FeaturesGrid() {
         <Reveal>
           <SectionHeading
             eyebrow="Features"
-            title="Everything in One Place"
-            description="Every department your school runs, built on one connected system — one login, one source of truth, and no spreadsheets to reconcile."
+            title="One School Management System for Every Department"
+            description="Student management, attendance, academics, fees, and communication run on one connected school ERP — one login, one source of truth, and no spreadsheets to reconcile."
           />
         </Reveal>
 

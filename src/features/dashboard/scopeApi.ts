@@ -1,5 +1,6 @@
 import { hasAllBranchAccess, type AuthUser } from "@/types/auth";
 import { academicHttpClient, authHttpClient, financeHttpClient } from "@/lib/httpClient";
+import type { ApiPage } from "@/types/paging";
 import { isWithinRange } from "./dateRange";
 import type { DashboardScopeView, ScopeMetrics, ScopeSummary } from "./types";
 
@@ -40,14 +41,15 @@ export function canSwitchScopeView(user: AuthUser | null): boolean {
 
 async function fetchBranchMetrics(headers: ScopeHeaders, range: { start: Date; end: Date }): Promise<ScopeMetrics> {
   const [students, staff, invoices] = await Promise.allSettled([
-    academicHttpClient.get<StatusRow[]>("/api/students", { headers }),
+    // Only the count is needed: a one-row page carries totalCount without downloading every student.
+    academicHttpClient.get<ApiPage<unknown>>("/api/students", { headers, params: { pageNumber: 1, pageSize: 1, status: "Active" } }),
     academicHttpClient.get<StatusRow[]>("/api/staff", { headers }),
     financeHttpClient.get<InvoiceRow[]>("/api/feeinvoices", { headers }),
   ]);
 
   const metrics: ScopeMetrics = { ...EMPTY };
   if (students.status === "fulfilled") {
-    metrics.students = students.value.data.filter((s) => s.status === "Active").length;
+    metrics.students = students.value.data.totalCount;
   }
   if (staff.status === "fulfilled") {
     metrics.staff = staff.value.data.filter((s) => s.status === "Active" || s.status === "OnLeave").length;

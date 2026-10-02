@@ -1,6 +1,7 @@
 import { ACADEMIC_API_BASE_URL, academicHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listClasses, listSections } from "@/features/academics/api";
+import type { ApiPage, Page } from "@/types/paging";
 import type {
   AdmissionApplication,
   AdmissionDecisionFormValues,
@@ -42,6 +43,9 @@ const STUDENT_STATUS_FROM_API: Record<string, StudentStatus> = {
   Graduated: "graduated",
   Alumni: "alumni",
 };
+const STUDENT_STATUS_TO_API = Object.fromEntries(
+  Object.entries(STUDENT_STATUS_FROM_API).map(([api, ui]) => [ui, api]),
+) as Record<StudentStatus, string>;
 
 const GUARDIAN_RELATION_TO_API: Record<GuardianRelation, string> = {
   father: "Father",
@@ -350,12 +354,50 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
 // ── Students ─────────────────────────────────────────────────────────────
 // Real AcademicService-backed (see docs/MICROSERVICES_PLAN.md).
 
+/** Every student the caller may see. For pickers; screens that list students should use `listStudentsPage`. */
 export async function listStudents(): Promise<Student[]> {
   const [apiStudents, index] = await Promise.all([
     unwrap(academicHttpClient.get<ApiStudent[]>("/api/students")),
     buildSectionIndex(),
   ]);
   return apiStudents.map((s) => mapStudent(s, index));
+}
+
+export interface StudentPageParams {
+  /** Zero-based, like TanStack Table. */
+  pageIndex: number;
+  pageSize: number;
+  /** Name, admission number or exact roll number. */
+  search?: string;
+  classId?: string;
+  status?: StudentStatus;
+}
+
+/** GET /api/students?pageNumber=… - filtered, ordered and paged server-side - mapped for the UI. */
+async function fetchStudentPage(params: Record<string, string | number | undefined>): Promise<Page<Student>> {
+  const [page, index] = await Promise.all([
+    unwrap(academicHttpClient.get<ApiPage<ApiStudent>>("/api/students", { params })),
+    buildSectionIndex(),
+  ]);
+  return { items: page.items.map((s) => mapStudent(s, index)), totalCount: page.totalCount };
+}
+
+/** One page of students for a list screen. */
+export function listStudentsPage(params: StudentPageParams): Promise<Page<Student>> {
+  return fetchStudentPage({
+    pageNumber: params.pageIndex + 1,
+    pageSize: params.pageSize,
+    search: params.search?.trim() || undefined,
+    classId: params.classId,
+    status: params.status ? STUDENT_STATUS_TO_API[params.status] : undefined,
+  });
+}
+
+/** Just the given students (at most 100), e.g. the names behind one page of another list. */
+export async function listStudentsByIds(ids: string[]): Promise<Student[]> {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return [];
+  return (await fetchStudentPage({ pageNumber: 1, pageSize: 100, ids: unique.join(",") })).items;
 }
 
 export async function getStudent(id: string): Promise<Student> {

@@ -47,6 +47,20 @@ interface DataTableProps<TData> {
   /** Caps the body height and makes the header sticky inside it. */
   maxHeight?: number | string;
   className?: string;
+  /**
+   * Paging done by the API: `data` is just the current page, and the footer pages through `totalCount` rows by
+   * calling `onPageChange`. Column sorting and the built-in search are off in this mode (they would only see one
+   * page) - filter through the API instead.
+   */
+  serverPagination?: ServerPagination;
+}
+
+export interface ServerPagination {
+  /** Zero-based. */
+  pageIndex: number;
+  pageSize: number;
+  totalCount: number;
+  onPageChange: (pageIndex: number) => void;
 }
 
 /** Shallow text match over the row's own data (not just accessor columns), so display-only columns stay searchable. */
@@ -83,6 +97,7 @@ export function DataTable<TData>({
   mobileLayout = "cards",
   maxHeight,
   className,
+  serverPagination: server,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -90,7 +105,9 @@ export function DataTable<TData>({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter },
+    state: server
+      ? { sorting, globalFilter, pagination: { pageIndex: server.pageIndex, pageSize: server.pageSize } }
+      : { sorting, globalFilter },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: rowTextFilter as FilterFn<TData>,
@@ -98,18 +115,29 @@ export function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    autoResetPageIndex: true,
+    getPaginationRowModel: server ? undefined : getPaginationRowModel(),
+    enableSorting: !server,
+    manualPagination: Boolean(server),
+    pageCount: server ? Math.max(1, Math.ceil(server.totalCount / server.pageSize)) : undefined,
+    // Only in server mode: passing `undefined` would replace TanStack's own pagination state updater and leave
+    // client-paged tables stuck on the first page.
+    ...(server && {
+      onPaginationChange: (updater) => {
+        const current = { pageIndex: server.pageIndex, pageSize: server.pageSize };
+        server.onPageChange((typeof updater === "function" ? updater(current) : updater).pageIndex);
+      },
+    }),
+    autoResetPageIndex: !server,
     initialState: { pagination: { pageSize } },
   });
 
   const rows = table.getRowModel().rows;
-  const filteredCount = table.getFilteredRowModel().rows.length;
+  const filteredCount = server ? server.totalCount : table.getFilteredRowModel().rows.length;
   const { pageIndex, pageSize: size } = table.getState().pagination;
   const from = filteredCount === 0 ? 0 : pageIndex * size + 1;
-  const to = Math.min(filteredCount, (pageIndex + 1) * size);
+  const to = server ? pageIndex * size + rows.length : Math.min(filteredCount, (pageIndex + 1) * size);
   const isFiltering = globalFilter.trim().length > 0;
-  const showToolbar = searchable || toolbar;
+  const showToolbar = (searchable && !server) || toolbar;
   const visibleColumns = table.getVisibleLeafColumns();
 
   const skeletonWidths = useMemo(() => visibleColumns.map((_, i) => ["w-3/4", "w-1/2", "w-2/3", "w-1/3", "w-3/5"][i % 5]), [visibleColumns]);
@@ -138,7 +166,7 @@ export function DataTable<TData>({
     <div className={cn("overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm", className)}>
       {showToolbar && (
         <div className="flex flex-col gap-2 border-b border-border bg-card px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-          {searchable ? (
+          {searchable && !server ? (
             <SearchInput value={globalFilter} onValueChange={setGlobalFilter} placeholder={searchPlaceholder} containerClassName="sm:w-72" />
           ) : (
             <span />

@@ -1,0 +1,5 @@
+{
+  "admin": [{ "email": "admin@educore.dev", "password": "<from AuthService seed>" }],
+  "teacher": [{ "email": "teacher@educore.dev", "password": "<from AuthService seed>" }],
+  "parent": [{ "email": "parent@educore.dev", "password": "<from AuthService seed>" }]
+}

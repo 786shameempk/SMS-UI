@@ -331,7 +331,7 @@ export default function ShowcaseSection() {
         <ShowcaseRow
           eyebrow="Dashboard"
           title="See Your School at a Glance"
-          description="Get a real-time overview of attendance, students, academic activities, notifications, and important school metrics from a single dashboard."
+          description="Get a real-time overview of attendance, students, academic activities, notifications, and important school metrics from a single school management dashboard."
           points={["One campus or every branch combined", "Widgets each role can arrange for themselves", "Problems flagged before they become emergencies"]}
           visual={<GlanceVisual />}
           cta={

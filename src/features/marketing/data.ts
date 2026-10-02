@@ -59,11 +59,11 @@ export const FEATURES: IconItem[] = [
   {
     icon: GraduationCap,
     title: "Student Management",
-    description: "Profiles, admissions, enrollment, documents, and academic records — every student's story in one place.",
+    description: "A student management system for profiles, admissions, enrollment, documents, and academic records — every student's story in one place.",
   },
   {
     icon: CalendarCheck,
-    title: "Attendance",
+    title: "Attendance Management",
     description: "Mark a class in seconds and spot patterns early, with daily, monthly, and yearly views for students and staff.",
   },
   {
@@ -83,7 +83,7 @@ export const FEATURES: IconItem[] = [
   },
   {
     icon: Wallet,
-    title: "Fees & Finance",
+    title: "Fee Management",
     description: "Fee structures, invoices, online payments, receipts, and accounts that reconcile themselves.",
   },
   {
@@ -93,8 +93,8 @@ export const FEATURES: IconItem[] = [
   },
   {
     icon: Workflow,
-    title: "Smart Automation",
-    description: "Reminders, follow-ups, and routine paperwork run on their own, so staff spend time on students instead.",
+    title: "AI & Automation",
+    description: "AI-drafted reminders and notes, automatic follow-ups, and routine paperwork that runs on its own, so staff spend time on students instead.",
   },
 ];
 
@@ -299,6 +299,52 @@ export const QUOTE_MODULE_OPTIONS: string[] = AVAILABLE_MODULE_LABELS.filter(
 );
 
 export const STAFF_COUNT_OPTIONS = ["Under 25", "25 – 50", "50 – 100", "100 – 250", "250+"] as const;
+
+// ── FAQ ─────────────────────────────────────────────────────────────
+// Plain-text answers: the same strings feed the visible FAQ and its FAQPage JSON-LD, so they never drift apart.
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export const FAQS: FaqItem[] = [
+  {
+    question: "What is an AI School Management System?",
+    answer:
+      "An AI school management system is a single platform that runs a school's administration, academics, attendance, fees, and communication, and uses AI to spot patterns in that data and take routine work off staff. School Sphere combines a complete school ERP with AI insights and drafting tools.",
+  },
+  {
+    question: "How does an AI School Management System help schools?",
+    answer:
+      "It replaces spreadsheets and disconnected tools with one source of truth. Administrators see the whole school in one dashboard, teachers spend less time on paperwork, parents get timely updates, and the AI flags issues such as falling attendance or overdue fees before they become problems.",
+  },
+  {
+    question: "What features are included in School Sphere?",
+    answer:
+      "School Sphere covers student management, attendance, academics, timetables, examinations and online exams, homework, fee management and accounting, parent communication, online classes, study materials, transport, library, reports, and more — all under one login with role-based access.",
+  },
+  {
+    question: "Does School Sphere provide student management?",
+    answer:
+      "Yes. The student management system holds every student's profile, admission and enrollment details, documents, guardians, attendance, marks, and fee history, so staff can find complete records in seconds.",
+  },
+  {
+    question: "Can School Sphere manage school attendance?",
+    answer:
+      "Yes. Teachers mark class attendance in a couple of taps on any device, parents can follow it in the parent portal, and daily, monthly, and yearly attendance reports are available for both students and staff.",
+  },
+  {
+    question: "Does School Sphere support fee management?",
+    answer:
+      "Yes. You can set up fee structures, generate invoices, accept online payments, issue receipts, and track overdue fees. Parents can view and pay fees from the parent portal.",
+  },
+  {
+    question: "How does School Sphere use AI in school management?",
+    answer:
+      "School Sphere's AI highlights students who may need attention based on attendance, academic performance, and overdue fees, surfaces trends across attendance, academics, fees, and admissions, and drafts report card comments, fee reminders, and parent notes from each student's real records for staff to review.",
+  },
+];
 
 // ── Lead capture (Contact Us widget / Request a Demo) ─────────────────────
 
