@@ -15,11 +15,16 @@ import LinkedLoginsPanel from "@/features/administration/users/components/Linked
 import { useAuthStore } from "@/store/authStore";
 import { PageContainer } from "@/components/ui/page";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
+import { useAiCapabilities } from "@/features/ai/capabilities";
+import LearningProfilePanel from "@/features/ai/components/learning/LearningProfilePanel";
 
 export default function StudentProfilePage() {
   const { studentId } = useParams<{ studentId: string }>();
   const role = useAuthStore((s) => s.user?.role);
   const canLinkLogins = role === "admin" || role === "superAdmin";
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const { allowed } = useAiCapabilities();
+  const showLearning = aiModule && allowed("learning-profile");
   const navigate = useNavigate();
 
   const {
@@ -82,6 +87,7 @@ export default function StudentProfilePage() {
           <TabsTrigger value="transport">Transport &amp; Hostel</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="idcard">ID Card</TabsTrigger>
+          {showLearning && <TabsTrigger value="learning">Learning profile</TabsTrigger>}
           {canLinkLogins && <TabsTrigger value="logins">Logins</TabsTrigger>}
         </TabsList>
         <TabsContent value="overview">
@@ -102,6 +108,11 @@ export default function StudentProfilePage() {
         <TabsContent value="idcard">
           <IdCardTab student={student} />
         </TabsContent>
+        {showLearning && (
+          <TabsContent value="learning">
+            <LearningProfilePanel studentId={student.id} />
+          </TabsContent>
+        )}
         {canLinkLogins && (
           <TabsContent value="logins">
             <LinkedLoginsPanel kind="student" personId={student.id} />

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { INSIGHT_AREA_CONFIG } from "../constants";
 import { getInsights } from "../api";
 import type { Insight, InsightArea } from "../types";
+import { useAiCapabilities } from "../capabilities";
+import InsightExplanationPanel from "./explain/InsightExplanationPanel";
 
 const AREA_ICON: Record<InsightArea, typeof Bus> = {
   attendance: Bus,
@@ -15,13 +17,14 @@ const AREA_ICON: Record<InsightArea, typeof Bus> = {
 
 export default function InsightsTab() {
   const queryClient = useQueryClient();
+  const { can } = useAiCapabilities();
   const { data: insights = [], isLoading, isFetching } = useQuery({ queryKey: ["ai", "insights"], queryFn: getInsights });
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground max-w-lg">
-          Auto-generated summaries over this school's real, live data — no external model, just rule-based templates applied to today's numbers.
+          Rule-based summaries of this school's live data. "Explain with AI" asks the school's AI to interpret the same figures; it never changes them.
         </p>
         <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["ai", "insights"] })} disabled={isFetching}>
           <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
@@ -55,6 +58,7 @@ export default function InsightsTab() {
                     </li>
                   ))}
                 </ul>
+                {can("explain-insight") && <InsightExplanationPanel area={insight.area} />}
               </CardContent>
             </Card>
           );

@@ -9,12 +9,16 @@ import { listStudents } from "@/features/students/api";
 import { DRAFT_SCENARIO_CONFIG, DRAFT_SCENARIO_OPTIONS } from "../constants";
 import { generateDraft } from "../api";
 import type { DraftScenario } from "../types";
+import { useAiCapabilities } from "../capabilities";
+import NotAvailableNotice from "./NotAvailableNotice";
+import NoticeDrafter from "./notices/NoticeDrafter";
 
 export default function ContentAssistantTab() {
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const [scenario, setScenario] = useState<DraftScenario>("report_card_comment");
   const [studentId, setStudentId] = useState("");
   const [copied, setCopied] = useState(false);
+  const { can, unsupported } = useAiCapabilities();
 
   const mutation = useMutation({
     mutationFn: generateDraft,
@@ -36,10 +40,12 @@ export default function ContentAssistantTab() {
 
   return (
     <div className="max-w-2xl space-y-4">
+      {can("generate-notification") && <NoticeDrafter />}
+      {unsupported("generate-notification") && <NotAvailableNotice what="AI notice drafting" />}
       <Card>
         <CardHeader>
-          <CardTitle>Content assistant</CardTitle>
-          <CardDescription>Drafts a message from a student's real data — always review before sending.</CardDescription>
+          <CardTitle>Student message templates</CardTitle>
+          <CardDescription>Fills a message from a student's real records (no AI model) — always review before sending.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-3">

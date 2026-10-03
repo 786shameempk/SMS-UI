@@ -9,6 +9,7 @@ import { DataTable } from "@/components/tables/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ClassRemarksDialog from "@/features/ai/components/generation/ClassRemarksDialog";
 import { useAuthStore } from "@/store/authStore";
+import { useAiCapabilities } from "@/features/ai/capabilities";
 import { gradeBadgeVariant } from "../constants";
 import { getExamClassResults, listExams } from "../api";
 import type { StudentExamSummary } from "../types";
@@ -18,8 +19,10 @@ export default function ResultsRankingTab() {
   const [examId, setExamId] = useState<string | undefined>();
   const activeExamId = examId ?? exams[0]?.id;
   const activeExam = exams.find((e) => e.id === activeExamId);
-  // Same rule as the nav: the AI helper only shows when the school and role include AI Features.
-  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const { can: canAi } = useAiCapabilities();
+  const canUseAi = aiModule && canAi("report-card-comment");
   const [remarksOpen, setRemarksOpen] = useState(false);
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({

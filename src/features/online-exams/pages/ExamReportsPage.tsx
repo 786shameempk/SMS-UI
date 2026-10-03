@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StatCard, StatGrid } from "@/components/ui/stat-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { useAuthStore } from "@/store/authStore";
+import { useAiCapabilities } from "@/features/ai/capabilities";
 import ExamInsightsCard from "@/features/ai/components/analysis/ExamInsightsCard";
 import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE } from "@/features/dashboard/chartTheme";
 import { getExamAnalysis, listOnlineExams } from "../api";
@@ -43,8 +44,10 @@ function CorrectBar({ q }: { q: QuestionAnalysis }) {
 
 export default function ExamReportsPage() {
   const role = useAuthStore((s) => s.user?.role);
-  // Same rule as the nav: the AI card only shows when the school and role include AI Features.
-  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const { can: canAi } = useAiCapabilities();
+  const canUseAi = aiModule && canAi("analyze-exam");
   const [params, setParams] = useSearchParams();
   const examId = params.get("exam") ?? "";
 

@@ -38,6 +38,7 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
 
 const mapRole = (dto: ApiSchoolRole): Role => ({
   id: dto.id,
+  key: dto.key,
   tenantId: dto.tenantId ?? "",
   name: dto.name,
   description: dto.description,
@@ -69,6 +70,34 @@ export async function updateRole(id: string, values: RoleFormValues): Promise<Ro
 export async function deleteRole(id: string): Promise<void> {
   await unwrap(authHttpClient.delete<void>(`/api/school-roles/${id}`));
 }
+
+// ── AI permissions (AI.* claims AiService reads; applied at each user's next sign-in) ──────────
+
+export interface AiPermissionInfo {
+  key: string;
+  label: string;
+  description: string;
+  /** Never given to parent or student roles. */
+  staffOnly: boolean;
+}
+
+export interface RoleAiPermissions {
+  roleId: string;
+  permissions: string[];
+  /** False while the role uses its defaults. */
+  configured: boolean;
+}
+
+export const AI_PERMISSIONS_QUERY_KEY = ["admin", "ai-permissions"] as const;
+
+export const getAiPermissions = () =>
+  unwrap(authHttpClient.get<{ catalog: AiPermissionInfo[]; roles: RoleAiPermissions[] }>("/api/school-roles/ai-permissions"));
+
+export const setRoleAiPermissions = (roleId: string, permissions: string[]) =>
+  unwrap(authHttpClient.put<RoleAiPermissions>(`/api/school-roles/${roleId}/ai-permissions`, { permissions }));
+
+export const resetRoleAiPermissions = (roleId: string) =>
+  unwrap(authHttpClient.delete<RoleAiPermissions>(`/api/school-roles/${roleId}/ai-permissions`));
 
 // ── Permissions ──────────────────────────────────────────────────────────────
 

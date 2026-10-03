@@ -1,6 +1,8 @@
 
 export interface Role {
   id: string;
+  /** The role's identity name ("teacher", "parent", or a custom role's key). */
+  key?: string;
   /** Only meaningful for custom (non-system) roles — system roles are shared across every tenant. */
   tenantId: string;
   name: string;

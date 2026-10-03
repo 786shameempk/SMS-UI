@@ -3,6 +3,7 @@ import RolesTab from "../components/RolesTab";
 import PermissionMatrixTab from "../components/PermissionMatrixTab";
 import PoliciesTab from "../components/PoliciesTab";
 import FeatureTogglesTab from "../components/FeatureTogglesTab";
+import AiPermissionsTab from "../components/AiPermissionsTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function RolePermissionManagementPage() {
@@ -18,6 +19,7 @@ export default function RolePermissionManagementPage() {
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="matrix">Permission matrix</TabsTrigger>
           <TabsTrigger value="policies">Policies</TabsTrigger>
+          <TabsTrigger value="ai">AI permissions</TabsTrigger>
           <TabsTrigger value="features">Feature toggles</TabsTrigger>
         </TabsList>
         <TabsContent value="roles">
@@ -28,6 +30,9 @@ export default function RolePermissionManagementPage() {
         </TabsContent>
         <TabsContent value="policies">
           <PoliciesTab />
+        </TabsContent>
+        <TabsContent value="ai">
+          <AiPermissionsTab />
         </TabsContent>
         <TabsContent value="features">
           <FeatureTogglesTab />

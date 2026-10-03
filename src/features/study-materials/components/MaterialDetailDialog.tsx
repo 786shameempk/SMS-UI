@@ -1,4 +1,8 @@
-import { Download, ExternalLink, FileText, Globe2 } from "lucide-react";
+import { useState } from "react";
+import { Download, ExternalLink, FileText, Globe2, Sparkles } from "lucide-react";
+import MaterialAiPanel from "@/features/ai/components/study/MaterialAiPanel";
+import { useAiCapabilities } from "@/features/ai/capabilities";
+import { useAuthStore } from "@/store/authStore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -28,6 +32,16 @@ export default function MaterialDetailDialog({
 }) {
   const embed = youTubeEmbed(m?.linkUrl);
   const isImage = m?.contentType?.startsWith("image/");
+  // Asking needs the study assistant; files only (links can't be read). The server re-checks access every time.
+  const { can } = useAiCapabilities();
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const canAsk = Boolean(m?.fileName) && aiModule && can("study-assistant");
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiFor, setAiFor] = useState(m?.id);
+  if (aiFor !== m?.id) {
+    setAiFor(m?.id);
+    setAiOpen(false);
+  }
   return (
     <Dialog open={Boolean(m)} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -76,6 +90,20 @@ export default function MaterialDetailDialog({
             ) : null}
 
             {m.description && <p className="whitespace-pre-line text-sm leading-6 text-secondary-foreground">{m.description}</p>}
+
+            {canAsk && (
+              <section className="space-y-3 rounded-lg border border-border p-4" aria-label="Ask AI about this material">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" /> Ask AI about this material
+                  </h3>
+                  <Button type="button" size="sm" variant={aiOpen ? "ghost" : "outline"} onClick={() => setAiOpen((o) => !o)} aria-expanded={aiOpen}>
+                    {aiOpen ? "Hide" : "Open"}
+                  </Button>
+                </div>
+                {aiOpen && <MaterialAiPanel key={m.id} materialId={m.id} fileName={m.fileName} canPrepare={can("upload-document")} />}
+              </section>
+            )}
 
             <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-lg border border-border p-4 text-sm sm:grid-cols-2">
               {(

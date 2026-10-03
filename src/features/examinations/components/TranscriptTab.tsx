@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import StudentPerformanceCard from "@/features/ai/components/analysis/StudentPerformanceCard";
 import { listStudents } from "@/features/students/api";
 import { useAuthStore } from "@/store/authStore";
+import { useAiCapabilities } from "@/features/ai/capabilities";
 import { EXAM_TYPE_LABELS, gradeBadgeVariant } from "../constants";
 import { getTranscript } from "../api";
 import type { TranscriptRow } from "../types";
@@ -15,8 +16,10 @@ import type { TranscriptRow } from "../types";
 export default function TranscriptTab() {
   const { data: students = [] } = useQuery({ queryKey: ["examinations", "all-students"], queryFn: listStudents });
   const [studentId, setStudentId] = useState<string | undefined>();
-  // Same rule as the nav: the AI card only shows when the school and role include AI Features.
-  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const { can: canAi } = useAiCapabilities();
+  const canUseAi = aiModule && canAi("analyze-performance");
 
   const { data: transcript, isLoading, isError, refetch } = useQuery({
     queryKey: ["examinations", "transcript", studentId],

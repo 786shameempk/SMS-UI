@@ -1,4 +1,18 @@
-export type AssistantSource = "timetable" | "attendance" | "fees" | "exams" | "notices" | "homework" | "materials";
+export type AssistantSource = "timetable" | "attendance" | "fees" | "exams" | "notices" | "homework" | "materials" | "admissions" | "at-risk students" | "leave" | "messages";
+
+/** Which assistant: Ask School AI, or the admin analytics assistant (school-wide figures, admins only). */
+export type AssistantMode = "chat" | "analytics";
+
+/** Something the assistant prepared (e.g. a leave application). Nothing happens until the user confirms it. */
+export interface ProposedAction {
+  id: string;
+  kind: string;
+  summary: string;
+  status: "Pending" | "Completed" | "Cancelled" | "Failed" | "Expired";
+  studentId: string | null;
+  expiresAt: string;
+  resultRef?: string | null;
+}
 
 export interface AssistantMessage {
   id: string;
@@ -9,6 +23,15 @@ export interface AssistantMessage {
   /** True for replies produced by the offline demo adapter rather than AiService. */
   demo?: boolean;
   error?: boolean;
+  /** Still being written (streaming). */
+  pending?: boolean;
+  /** The user stopped it before the end. */
+  stopped?: boolean;
+  errorText?: string;
+  /** The question to resend from the Retry button. */
+  retry?: string;
+  /** Actions prepared in this answer, each awaiting confirmation. */
+  actions?: ProposedAction[];
 }
 
 export interface AssistantChatRequest {
@@ -16,6 +39,8 @@ export interface AssistantChatRequest {
   message: string;
   /** Parents ask about one child at a time; the backend still re-checks the guardian link. */
   studentId?: string;
+  /** The screen the question was asked from (e.g. "Fees"), as context only. */
+  page?: string;
 }
 
 export interface AssistantChatResponse {
@@ -23,6 +48,7 @@ export interface AssistantChatResponse {
   reply: string;
   sources: AssistantSource[];
   demo?: boolean;
+  actions?: ProposedAction[];
 }
 
 export interface ConversationSummary {

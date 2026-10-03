@@ -258,3 +258,31 @@ export interface StudentPerformance {
   attendancePercent: number | null;
   attendanceDays: number;
 }
+
+// ── Explanations (Insights / At-Risk tabs) ──────────────────────────────
+
+export type ExplainArea = "Attendance" | "Academics" | "Fees" | "Admissions";
+
+/** The AI's reading of one Insights area, plus the server-computed metrics it was given (shown, never re-derived). */
+export interface InsightExplanation {
+  area: ExplainArea;
+  summary: string;
+  findings: { finding: string; evidence: string }[];
+  possibleReasons: string[];
+  suggestedActions: string[];
+  metrics: Record<string, unknown>;
+}
+
+export interface AtRiskExplanation {
+  studentId: string;
+  studentName: string;
+  /** Rule-based, observed: identical to the At-Risk tab's flags. */
+  riskScore: number;
+  flags: { reason: "low_attendance" | "academic_risk" | "overdue_fees"; detail: string }[];
+  /** AI interpretation of those flags. */
+  summary: string;
+  factors: { reason: string; explanation: string }[];
+  interventions: string[];
+  familyConversationStarter: string;
+  metrics: Record<string, unknown>;
+}

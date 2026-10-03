@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { deleteConversation, listConversations } from "../assistant/api";
 import { CONVERSATIONS_KEY } from "../assistant/constants";
-import type { ConversationSummary } from "../assistant/types";
+import type { AssistantMode, ConversationSummary } from "../assistant/types";
 
 function when(iso: string) {
   const d = new Date(iso);
@@ -21,16 +21,19 @@ export default function ConversationHistory({
   onOpen,
   onDeleted,
   childName,
+  feature = "chat",
 }: {
   activeId?: string;
   onOpen: (conversation: ConversationSummary) => void;
   onDeleted: (id: string) => void;
   /** For parents: which child a conversation was about. */
   childName?: (studentId: string) => string | undefined;
+  /** Which assistant's conversations to list. */
+  feature?: AssistantMode;
 }) {
   const queryClient = useQueryClient();
   const [toDelete, setToDelete] = useState<ConversationSummary | null>(null);
-  const conversations = useQuery({ queryKey: CONVERSATIONS_KEY, queryFn: () => listConversations() });
+  const conversations = useQuery({ queryKey: [...CONVERSATIONS_KEY, feature], queryFn: () => listConversations(30, feature) });
 
   const remove = useMutation({
     mutationFn: deleteConversation,

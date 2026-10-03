@@ -33,6 +33,24 @@ export async function uploadAiDocument(input: UploadDocumentInput): Promise<AiDo
   return call(aiHttpClient.post<AiDocument>("api/ai/documents", form));
 }
 
+/** Prepare a study material for AI (staff). Processing continues in the background; poll getMaterialIndex. */
+export async function indexMaterial(materialId: string, rebuild = false): Promise<AiDocument> {
+  if (AI_MOCK_ENABLED) throw demoOff();
+  return call(aiHttpClient.post<AiDocument>(`api/ai/materials/${materialId}/index`, null, { params: rebuild ? { rebuild: true } : undefined }));
+}
+
+/** A material's AI index, or null when it was never prepared. */
+export async function getMaterialIndex(materialId: string): Promise<AiDocument | null> {
+  if (AI_MOCK_ENABLED) return null;
+  const res = await aiHttpClient.get<AiDocument | "">(`api/ai/materials/${materialId}/index`).catch((err) => {
+    throw new Error(extractApiErrorMessage(err));
+  });
+  return res.status === 204 || !res.data ? null : (res.data as AiDocument);
+}
+
+/** File types the AI can read (same list as direct uploads). */
+export const isAiReadableFile = (fileName?: string) => Boolean(fileName && UPLOAD_EXTENSIONS.some((e) => fileName.toLowerCase().endsWith(e)));
+
 export async function deleteAiDocument(id: string): Promise<void> {
   await call(aiHttpClient.delete<void>(`api/ai/documents/${id}`));
 }

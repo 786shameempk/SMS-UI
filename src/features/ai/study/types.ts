@@ -10,6 +10,8 @@ export interface StudyRequest {
   classId?: string;
   subjectId?: string;
   documentId?: string;
+  /** A study material (AcademicService id) to answer from; the server checks the caller may see it. */
+  materialId?: string;
 }
 
 export interface StudySource {

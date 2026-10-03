@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listClasses, listSubjects } from "@/features/academics/api";
 import GenerateQuestionsDialog from "@/features/ai/components/generation/GenerateQuestionsDialog";
 import { useAuthStore } from "@/store/authStore";
+import { useAiCapabilities } from "@/features/ai/capabilities";
 import { createQuestion, deleteQuestions, duplicateQuestion, importQuestions, listQuestions, listQuestionTopics, updateQuestion } from "../api";
 import { DIFFICULTIES, DIFFICULTY_TONE, formatMarks, isExamStaff, QUESTION_TYPE_LABEL, QUESTION_TYPES } from "../constants";
 import type { QuestionBankInput, QuestionBankItem, QuestionDifficulty, QuestionFilters, QuestionType } from "../types";
@@ -26,8 +27,10 @@ const ALL = "__all";
 
 export default function QuestionBankPage() {
   const role = useAuthStore((s) => s.user?.role);
-  // Same rule as the nav: the AI entry point only shows when the school and role include AI Features.
-  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const { can: canAi } = useAiCapabilities();
+  const canUseAi = aiModule && canAi("generate-questions");
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const [selected, setSelected] = useState<Set<string>>(new Set());

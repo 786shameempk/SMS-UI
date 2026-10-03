@@ -9,7 +9,18 @@ export const SOURCE_LABELS: Record<AssistantSource, string> = {
   notices: "Notices",
   homework: "Homework",
   materials: "Study materials",
+  admissions: "Admissions",
+  "at-risk students": "At-risk students",
+  leave: "Leave",
+  messages: "Messages",
 };
+
+const ANALYTICS_PROMPTS = [
+  "How is fee collection this term?",
+  "Which classes did worst in the latest exam?",
+  "How many students are at risk, and why?",
+  "How is attendance trending?",
+];
 
 const LEARNER_PROMPTS = [
   "What is tomorrow's timetable?",
@@ -27,7 +38,8 @@ const STAFF_PROMPTS = [
   "What notices were published this week?",
 ];
 
-export function suggestedPrompts(role: UserRole | undefined): string[] {
+export function suggestedPrompts(role: UserRole | undefined, mode: "chat" | "analytics" = "chat"): string[] {
+  if (mode === "analytics") return ANALYTICS_PROMPTS;
   return role === "student" || role === "parent" ? LEARNER_PROMPTS : STAFF_PROMPTS;
 }
 
