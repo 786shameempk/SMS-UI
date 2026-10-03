@@ -13,7 +13,10 @@ class FakeRecorder {
   state = "inactive";
   ondataavailable: ((e: { data: Blob }) => void) | null = null;
   onstop: (() => void) | null = null;
-  constructor(public stream: { getTracks: () => { stop: () => void }[] }) {}
+  stream: { getTracks: () => { stop: () => void }[] };
+  constructor(stream: { getTracks: () => { stop: () => void }[] }) {
+    this.stream = stream;
+  }
   start() {
     this.state = "recording";
   }
