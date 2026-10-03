@@ -1,7 +1,10 @@
 import { aiHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { AI_MOCK_ENABLED } from "../assistant/api";
 import type {
+  AtRiskExplanation,
   ExamPaper,
+  ExplainArea,
+  InsightExplanation,
   ExamInsights,
   ExamRequest,
   GeneratedQuestionSet,
@@ -38,3 +41,5 @@ export const generateReportCardRemark = (body: ReportCardRemarkRequest) =>
 export const analyzeOnlineExam = (examId: string) => generate<{ examId: string }, ExamInsights>("api/ai/exam-insights", { examId });
 export const analyzeStudentPerformance = (studentId: string) =>
   generate<{ studentId: string }, StudentPerformance>("api/ai/student-performance", { studentId });
+export const explainInsight = (area: ExplainArea) => generate<{ area: ExplainArea }, InsightExplanation>("api/ai/insights/explain", { area });
+export const explainAtRisk = (studentId: string) => generate<{ studentId: string }, AtRiskExplanation>("api/ai/at-risk/explain", { studentId });

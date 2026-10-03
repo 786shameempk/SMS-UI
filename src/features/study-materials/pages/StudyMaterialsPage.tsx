@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { listClasses, listSubjects } from "@/features/academics/api";
+import { useAiCapabilities } from "@/features/ai/capabilities";
+import { indexMaterial, isAiReadableFile } from "@/features/ai/study/api";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
 import {
@@ -88,6 +90,10 @@ export default function StudyMaterialsPage() {
   const role = useAuthStore((s) => s.user?.role);
   const isSuperAdmin = role === "superAdmin";
   const canUpload = isSuperAdmin || role === "teacher";
+  // New or replaced files are prepared for "Ask AI about this material" straight away when AI can index here.
+  const { can: canAi } = useAiCapabilities();
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const autoIndex = aiModule && canAi("upload-document");
   const isLearner = role === "student" || role === "parent";
   const isStaff = !isLearner;
 
@@ -135,8 +141,14 @@ export default function StudyMaterialsPage() {
         setProgress(null);
       }
     },
-    onSuccess: (m, { publish }) => {
+    onSuccess: (m, { publish, file }) => {
       invalidate();
+      if (autoIndex && file && isAiReadableFile(m.fileName)) {
+        // Best effort: the material itself is saved either way; the AI index can be rebuilt from its detail view.
+        indexMaterial(m.id, Boolean(editing))
+          .then(() => queryClient.invalidateQueries({ queryKey: ["ai", "material-index", m.id] }))
+          .catch(() => toast.error("Saved, but it couldn't be prepared for AI questions. Try again from the material."));
+      }
       toast.success(editing ? "Changes saved" : publish ? "Material published" : "Saved as draft");
       setFormOpen(false);
       setEditing(null);

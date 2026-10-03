@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RISK_REASON_CONFIG } from "../constants";
 import { dismissStudentFlags, getAtRiskStudents, listDismissedFlags, restoreStudentFlags } from "../api";
+import { useAiCapabilities } from "../capabilities";
+import AtRiskExplanationPanel from "./explain/AtRiskExplanationPanel";
 
 function riskLabel(score: number): { label: string; variant: "danger" | "warning" | "info" } {
   if (score >= 60) return { label: "High risk", variant: "danger" };
@@ -16,6 +18,7 @@ function riskLabel(score: number): { label: string; variant: "danger" | "warning
 
 export default function AtRiskStudentsTab() {
   const queryClient = useQueryClient();
+  const { can } = useAiCapabilities();
   const [showDismissed, setShowDismissed] = useState(false);
   const { data: students = [], isLoading } = useQuery({ queryKey: ["ai", "at-risk", showDismissed], queryFn: () => getAtRiskStudents(showDismissed) });
   const { data: dismissedFlags = [] } = useQuery({ queryKey: ["ai", "dismissed"], queryFn: listDismissedFlags });
@@ -85,6 +88,7 @@ export default function AtRiskStudentsTab() {
                         </li>
                       ))}
                     </ul>
+                    {can("explain-insight") && <AtRiskExplanationPanel studentId={row.student.id} />}
                   </div>
                 </div>
                 <Button

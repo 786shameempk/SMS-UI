@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, BookOpenCheck, CalendarCheck, CalendarOff, FileCheck2, LayoutGrid, MessageSquareText, Star, Video, Wallet, type LucideIcon } from "lucide-react";
+import { Bell, BookOpenCheck, CalendarCheck, CalendarOff, FileCheck2, GraduationCap, LayoutGrid, Sparkles, MessageSquareText, Star, Video, Wallet, type LucideIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/authStore";
@@ -17,8 +17,11 @@ import LeaveRequestsTab from "../components/LeaveRequestsTab";
 import NotificationsTab from "../components/NotificationsTab";
 import { PageSkeleton } from "@/components/ui/states";
 import { PageContainer } from "@/components/ui/page";
+import { useAiCapabilities } from "@/features/ai/capabilities";
+import AssistantChat from "@/features/ai/components/AssistantChat";
+import LearningProfilePanel from "@/features/ai/components/learning/LearningProfilePanel";
 
-const CHILD_SCOPED_TABS = new Set(["attendance", "homework", "exams", "fees", "messages", "leave"]);
+const CHILD_SCOPED_TABS = new Set(["attendance", "homework", "exams", "fees", "messages", "leave", "ask-ai", "learning"]);
 
 const TABS: { value: string; label: string; icon: LucideIcon }[] = [
   { value: "overview", label: "Overview", icon: LayoutGrid },
@@ -29,6 +32,8 @@ const TABS: { value: string; label: string; icon: LucideIcon }[] = [
   { value: "messages", label: "Messages", icon: MessageSquareText },
   { value: "leave", label: "Leave", icon: CalendarOff },
   { value: "notifications", label: "Notifications", icon: Bell },
+  { value: "ask-ai", label: "Ask School AI", icon: Sparkles },
+  { value: "learning", label: "Learning profile", icon: GraduationCap },
 ];
 
 function initialsOf(first: string, last: string) {
@@ -40,6 +45,7 @@ export default function ParentPortalPage() {
   const modulePermissions = useAuthStore((s) => s.modulePermissions);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const ai = useAiCapabilities();
 
   const { data: children = [], isLoading } = useQuery({
     queryKey: ["parent-portal", "children", user?.email],
@@ -61,6 +67,10 @@ export default function ParentPortalPage() {
   const teacherName = "Daniel Reyes";
   const firstName = user?.name?.split(" ")[0];
   const can = (key: string) => !modulePermissions || modulePermissions[key];
+  // AI answers only about the selected child; AiService checks the link to this parent on every request.
+  const askAi = can("aiFeatures") && ai.can("chat");
+  const learning = can("aiFeatures") && ai.allowed("learning-profile");
+  const tabs = TABS.filter((t) => (t.value !== "ask-ai" || askAi) && (t.value !== "learning" || learning));
 
   const quickActions: QuickAction[] = [
     ...(can("meetings")
@@ -72,6 +82,7 @@ export default function ParentPortalPage() {
     { label: "Pay fees", hint: "Invoices & online payment", icon: Wallet, onClick: () => setActiveTab("fees") },
     { label: "Apply for leave", hint: "Request a day off", icon: CalendarOff, onClick: () => setActiveTab("leave") },
     { label: "Message teacher", hint: "Talk to the class teacher", icon: MessageSquareText, onClick: () => setActiveTab("messages") },
+    ...(askAi ? [{ label: "Ask School AI", hint: "Attendance, homework, results & fees", icon: Sparkles, onClick: () => setActiveTab("ask-ai") }] : []),
   ];
 
   return (
@@ -115,7 +126,7 @@ export default function ParentPortalPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList variant="line">
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               <tab.icon className="h-4 w-4" aria-hidden="true" />
               {tab.label}
@@ -159,6 +170,16 @@ export default function ParentPortalPage() {
             <TabsContent value="leave">
               <LeaveRequestsTab studentId={selectedChild.id} />
             </TabsContent>
+            {learning && (
+              <TabsContent value="learning" className="mt-4">
+                <LearningProfilePanel key={selectedChild.id} studentId={selectedChild.id} />
+              </TabsContent>
+            )}
+            {askAi && (
+              <TabsContent value="ask-ai" className="mt-4">
+                <AssistantChat key={selectedChild.id} studentId={selectedChild.id} page="Parent Portal" />
+              </TabsContent>
+            )}
           </>
         ) : (
           CHILD_SCOPED_TABS.has(activeTab) && <p className="text-sm text-muted-foreground mt-4">No children linked to this account.</p>

@@ -6,6 +6,7 @@ import Header from "@/components/layouts/Header";
 import { useMobileNav } from "@/components/layouts/mobileNav";
 import { PageSkeleton } from "@/components/ui/states";
 import { useAuthStore } from "@/store/authStore";
+import AskAiLauncher from "@/features/ai/components/AskAiLauncher";
 
 export default function AppLayout() {
   const { pathname } = useLocation();
@@ -84,6 +85,7 @@ export default function AppLayout() {
           </Suspense>
         </main>
       </div>
+      <AskAiLauncher />
     </div>
   );
 }

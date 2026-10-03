@@ -1,9 +1,16 @@
 # AI Roadmap — Phase 1 plan for EduCore (SMS UI)
 
-## Where we are (updated 2026-10-02)
-- AiService (`E:\Personal\AiService`, port 5142) is built: chat + tools, 5 generators, RAG documents + study assistant, quotas, usage log. Its README phase table is stale (Phase 3 RAG is done).
-- UI (route `/ai`, permission `aiFeatures`): Ask School AI, Teacher Tools generators, **Study Assistant** (all roles) and **Study Materials** (staff: upload, live indexing status, delete) call AiService. Insights / At-Risk / Content Assistant are still rule-based.
-- Real endpoints differ from the table below: RAG is `/api/ai/documents` + `/api/ai/study-assistant` (a separate upload, not indexing of study-materials ids); there is no `/capabilities` and no server-side paper drafts.
+## Where we are (updated 2026-10-03)
+- AiService (`E:\Personal\AiService`, port 5142) covers the whole roadmap; its README has the endpoint list, safety model and status.
+  Since 2026-10-02: capabilities, SSE streaming, notice drafter + rewrite/translate, study-material indexing and "Ask AI about this
+  material", admin analytics tools + analytics assistant, Insights / At-Risk explanations, the Draft → Reviewed → Approved → Published
+  content workflow (notices → announcements, lesson plans → Lesson Plans module), learning profile, voice (OpenAI, off by default)
+  and agent actions (leave application, draft notice; confirmed by the user).
+- UI: floating "Ask School AI" in the app shell (page-aware), Parent Portal "Ask School AI" and "Learning profile" tabs, `/ai` tabs
+  gated by `GET /api/ai/capabilities` (Analytics Assistant, Review & Publish, My Learning for students), "Explain with AI" on
+  Insights / At-Risk, learning profile on each student profile, voice input / read-aloud in chat, confirmation cards for agent actions.
+- Mobile (`E:\Personal\SMS Mobile`): streamed Ask School AI with voice + action cards (both apps), study materials with AI, learning
+  profile (student/parent app), notice drafting + Review & Publish + analytics assistant (teacher/staff app).
 - Services: Auth, Academic(5136), Finance(5137), Campus(5139), Engagement(5140), Meeting(5141). All clients come from `createServiceHttpClient` in `src/lib/httpClient.ts` (bearer + `X-Tenant-Id`/`X-Branch-Id`, 401 refresh).
 - Conventions: `src/features/<module>/{api.ts,types.ts,constants.ts,components,pages}`, React Query, RHF+zod, shadcn-style `components/ui`, `@/` alias, colocated tests.
 
@@ -72,15 +79,15 @@ AiService will run on exactly one of: `OpenAIProvider`, `AzureOpenAIProvider`, `
 ## Next up
 - Access (done 2026-10-02): AuthService gives AI Features to principal/teacher/parent/student (`TenantDefaults.DefaultMatrix`, seeded role claims; migration `20261002190000_GrantAiFeaturesToTeachersParentsStudents` for existing schools), and `/ai` is wrapped in `RequireModule`. Plans still gate it (not in Starter). `AI.*` permissions are optional overrides; AiService's role audiences already cover the defaults.
 - Done 2026-10-02: homework/worksheet drafts → "Assign as homework" (prefilled `HomeworkFormDialog`, saved as Draft, answers never included); "Generate with AI" on the Question Bank page (`GenerateQuestionsDialog`, prefilled from filters).
-- Lesson plans still print-only (no lesson-plan module to save into).
+- Done 2026-10-03: AI lesson plans "Save for review" → on publish they are filed in the existing Lesson Plans module (AcademicService `api/lesson-plans`) under the author's staff record.
 - Done 2026-10-02: report card remarks. `POST /api/ai/report-card-remark {examId, studentId, observations?, tone, length}`; AiService reads `class-results` (+ transcript for trend) with the teacher's token, sends no name/admission number to the model (`[STUDENT]` placeholder), returns a Draft. UI: "Draft with AI" under Remarks in Examinations → Report Cards; the teacher must "Use this remark" then Save.
 - Done 2026-10-02: whole-class remarks. `POST /api/ai/report-card-remarks/batch` (≤10 students, one model call each, per-student errors, stops on quota). UI: "Draft remarks with AI" in Examinations → Results & Ranking; sends chunks of 5 with progress, skips students who already have a remark unless included, saves only ticked drafts.
 - Done 2026-10-02: exam insights for online exams. AcademicService `GET /api/online-exams/{id}/analysis` now also returns each question's bank `topic`/`difficulty`; AiService `POST /api/ai/exam-insights {examId}` computes topic averages + weakest questions itself, the model explains them (cited question numbers validated). UI: "AI insights" card on Online Exams → Reports.
 - Done 2026-10-02: conversation history in Ask School AI (History / New chat; `GET /api/ai/conversations?feature=chat`, new `DELETE /api/ai/conversations/{id}`).
 - Done 2026-10-02: AI Usage tab (admin/principal) — totals, monthly token allowance (`limits` added to `GET /api/ai/usage`), requests per day, by feature, top users (names from AuthService `school-users`).
 - Done 2026-10-02: student progress summary. `POST /api/ai/student-performance {studentId}`: transcript + subject trends over the last 3 exams + 90-day attendance, computed by AiService; UI card on Examinations → Transcript.
-- Backend still to expose: notification generator, translation (prompts + engine exist; controllers do not).
-- Conversation history (`GET /api/ai/conversations`) and an admin usage view (`GET /api/ai/usage`).
+- Done 2026-10-03: downstream scoping fixes (exam results, transcripts, attendance records, announcements), per-role `AI.*` permissions from AuthService (Roles & Permissions → AI permissions), OCR for scanned PDFs (optional provider), agent actions for messages to the class teacher and draft homework, mobile Insights and At-Risk screens.
+- Remaining: an EAS build of both mobile apps (needed for voice; projects not yet linked to EAS).
 
 ## Risks
 - Student data going to a third-party LLM: needs tenant consent, a data-minimization policy, and a no-training provider agreement.

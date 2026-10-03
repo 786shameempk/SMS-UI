@@ -1,4 +1,4 @@
-import type { Homework, Worksheet } from "./types";
+import type { Homework, LessonPlan, Worksheet } from "./types";
 
 /** AcademicService's homework limits (CreateHomeworkCommandValidator). */
 export const HOMEWORK_TITLE_MAX = 200;
@@ -27,4 +27,31 @@ export function worksheetToAssignmentText(sheet: Worksheet): string {
     }
   }
   return lines.join("\n");
+}
+
+/** AcademicService's lesson plan description limit (CreateLessonPlanCommandValidator). */
+export const LESSON_PLAN_DESCRIPTION_MAX = 4000;
+
+/** A lesson plan as the plain text stored in the Lesson Plans module, trimmed to fit its limit. */
+export function lessonPlanToText(p: LessonPlan): string {
+  const act = (a: { title: string; minutes: number; description: string }) => `- ${a.title} (${a.minutes} min): ${a.description.trim()}`;
+  const lines = [
+    "Learning objectives:",
+    ...p.learningObjectives.map((o) => `- ${o.trim()}`),
+    "",
+    "Introduction:",
+    act(p.introduction),
+    "",
+    "Teaching activities:",
+    ...p.teachingActivities.map(act),
+    "",
+    "Student activities:",
+    ...p.studentActivities.map(act),
+  ];
+  if (p.examples.length) lines.push("", "Examples:", ...p.examples.map((e) => `- ${e.trim()}`));
+  lines.push("", `Assessment: ${p.assessment.trim()}`, `Homework: ${p.homework.trim()}`);
+  if (p.materialsRequired.length) lines.push(`Materials: ${p.materialsRequired.join(", ")}`);
+  if (p.differentiationSuggestions.length) lines.push("", "Differentiation:", ...p.differentiationSuggestions.map((d) => `- ${d.trim()}`));
+  const text = lines.join("\n").trim();
+  return text.length > LESSON_PLAN_DESCRIPTION_MAX ? `${text.slice(0, LESSON_PLAN_DESCRIPTION_MAX - 1)}…` : text;
 }

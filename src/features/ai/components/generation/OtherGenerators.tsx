@@ -14,6 +14,8 @@ import { AI_DIFFICULTIES } from "../../generation/mapping";
 import { homeworkToHtml, lessonPlanToHtml, printDocument, worksheetToHtml } from "../../generation/printable";
 import type { AiDifficulty, Homework, LessonPlan, Worksheet } from "../../generation/types";
 import AssignHomeworkButton from "./AssignHomeworkButton";
+import SaveLessonPlanForReview from "./SaveLessonPlanForReview";
+import { useAiCapabilities } from "../../capabilities";
 import { ClassSubjectFields, DraftBar, FormError, GenerateButton } from "./shared";
 
 const popupHint = "Allow pop-ups to print or save as PDF.";
@@ -137,6 +139,7 @@ export function LessonPlanGenerator() {
   const [level, setLevel] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<LessonPlan | null>(null);
+  const { can } = useAiCapabilities();
 
   const generate = useMutation({ mutationFn: generateLessonPlan, onSuccess: (r) => setPlan(r.content), onError: (e: Error) => toast.error(e.message) });
 
@@ -186,6 +189,7 @@ export function LessonPlanGenerator() {
                 Print / PDF
               </Button>
             </DraftBar>
+            {can("author-content") && <SaveLessonPlanForReview key={plan.title} plan={plan} classId={target.classId} subjectId={target.subjectId} />}
             <div>
               <h4 className="font-semibold">Learning objectives</h4>
               <ul className="list-disc pl-5">{plan.learningObjectives.map((o, i) => <li key={i}>{o}</li>)}</ul>

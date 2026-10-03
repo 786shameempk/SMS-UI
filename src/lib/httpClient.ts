@@ -129,6 +129,28 @@ function createServiceHttpClient(baseURL: string): AxiosInstance {
   return client;
 }
 
+/**
+ * fetch() with the same auth as the service clients (bearer token, tenant/branch headers, one renew-and-retry on 401).
+ * For responses axios cannot stream in the browser, e.g. server-sent events from AiService.
+ */
+export async function authorizedFetch(baseURL: string, path: string, init: RequestInit = {}): Promise<Response> {
+  const send = (token: string | null) => {
+    const { activeTenantId, activeBranchId } = useAuthStore.getState();
+    const headers = new Headers(init.headers);
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    if (activeTenantId) headers.set("X-Tenant-Id", activeTenantId);
+    if (activeBranchId) headers.set("X-Branch-Id", activeBranchId);
+    return fetch(new URL(path, baseURL).toString(), { ...init, headers });
+  };
+
+  const response = await send(useAuthStore.getState().token);
+  if (response.status !== 401 || !useAuthStore.getState().token) return response;
+  const fresh = await renewAccessToken();
+  if (fresh) return send(fresh);
+  useAuthStore.getState().clearAuth("expired");
+  return response;
+}
+
 export const authHttpClient = createServiceHttpClient(AUTH_API_BASE_URL);
 
 export const academicHttpClient = createServiceHttpClient(ACADEMIC_API_BASE_URL);

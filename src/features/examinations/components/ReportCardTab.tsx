@@ -11,13 +11,16 @@ import { Textarea } from "@/components/ui/textarea";
 import RemarkAssistant from "@/features/ai/components/generation/RemarkAssistant";
 import { listStudents } from "@/features/students/api";
 import { useAuthStore } from "@/store/authStore";
+import { useAiCapabilities } from "@/features/ai/capabilities";
 import { getRemark, getReportCard, listExams, saveRemark } from "../api";
 import { EXAM_TYPE_LABELS, gradeBadgeVariant } from "../constants";
 
 export default function ReportCardTab() {
   const queryClient = useQueryClient();
-  // Same rule as the nav: the AI helper only shows when the school and role include AI Features.
-  const canUseAi = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
+  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
+  const { can: canAi } = useAiCapabilities();
+  const canUseAi = aiModule && canAi("report-card-comment");
   const { data: students = [] } = useQuery({ queryKey: ["examinations", "all-students"], queryFn: listStudents });
   const { data: exams = [] } = useQuery({ queryKey: ["examinations", "exams"], queryFn: listExams });
 

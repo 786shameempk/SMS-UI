@@ -7,15 +7,22 @@ import GeneratorsTab from "../components/GeneratorsTab";
 import StudyAssistantTab from "../components/study/StudyAssistantTab";
 import StudyMaterialsPanel from "../components/study/StudyMaterialsPanel";
 import UsageTab from "../components/UsageTab";
-import { USAGE_ROLES } from "../usage/constants";
-import { PageContainer, PageHeader } from "@/components/ui/page";
-import { isExamStaff } from "@/features/online-exams/constants";
+import AssistantChat from "../components/AssistantChat";
+import ContentReviewTab from "../components/content/ContentReviewTab";
+import LearningProfilePanel from "../components/learning/LearningProfilePanel";
 import { useAuthStore } from "@/store/authStore";
+import { useAiCapabilities } from "../capabilities";
+import NotAvailableNotice from "../components/NotAvailableNotice";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function AIFeaturesPage() {
-  const role = useAuthStore((s) => s.user?.role);
-  const isStaff = isExamStaff(role);
-  const canSeeUsage = Boolean(role && USAGE_ROLES.includes(role));
+  // The backend decides what AI this user may use and what the configured provider supports.
+  const { can, unsupported, allowed } = useAiCapabilities();
+  // Students see their own profile here; parents have it in the Parent Portal, staff on each student profile.
+  const myLearning = useAuthStore((s) => s.user?.role === "student") && allowed("learning-profile");
+  const toolsAllowed = can("generate-questions") || unsupported("generate-questions");
+  const toolsUnsupported = unsupported("generate-questions");
+  const analyticsAllowed = can("analytics") || unsupported("analytics");
 
   return (
     <PageContainer>
@@ -27,29 +34,37 @@ export default function AIFeaturesPage() {
       <Tabs defaultValue="ask">
         <TabsList variant="line">
           <TabsTrigger value="ask">Ask School AI</TabsTrigger>
-          <TabsTrigger value="study">Study Assistant</TabsTrigger>
-          {isStaff && <TabsTrigger value="tools">Teacher Tools</TabsTrigger>}
-          {isStaff && <TabsTrigger value="materials">Study Materials</TabsTrigger>}
+          {can("study-assistant") && <TabsTrigger value="study">Study Assistant</TabsTrigger>}
+          {myLearning && <TabsTrigger value="learning">My Learning</TabsTrigger>}
+          {toolsAllowed && <TabsTrigger value="tools">Teacher Tools</TabsTrigger>}
+          {can("upload-document") && <TabsTrigger value="materials">Study Materials</TabsTrigger>}
           <TabsTrigger value="insights">Insights</TabsTrigger>
           <TabsTrigger value="at-risk">At-Risk Students</TabsTrigger>
+          {analyticsAllowed && <TabsTrigger value="analytics">Analytics Assistant</TabsTrigger>}
           <TabsTrigger value="assistant">Content Assistant</TabsTrigger>
-          {canSeeUsage && <TabsTrigger value="usage">AI Usage</TabsTrigger>}
+          {can("author-content") && <TabsTrigger value="review">Review &amp; Publish</TabsTrigger>}
+          {can("view-usage") && <TabsTrigger value="usage">AI Usage</TabsTrigger>}
         </TabsList>
         <TabsContent value="ask">
-          <AssistantTab />
+          {unsupported("chat") ? <NotAvailableNotice what="Ask School AI" /> : <AssistantTab />}
         </TabsContent>
-        <TabsContent value="study">
-          <StudyAssistantTab />
-        </TabsContent>
-        {isStaff && (
+        {can("study-assistant") && (
+          <TabsContent value="study">
+            <StudyAssistantTab />
+          </TabsContent>
+        )}
+        {myLearning && (
+          <TabsContent value="learning">
+            <LearningProfilePanel />
+          </TabsContent>
+        )}
+        {can("upload-document") && (
           <TabsContent value="materials">
             <StudyMaterialsPanel />
           </TabsContent>
         )}
-        {isStaff && (
-          <TabsContent value="tools">
-            <GeneratorsTab />
-          </TabsContent>
+        {toolsAllowed && (
+          <TabsContent value="tools">{toolsUnsupported ? <NotAvailableNotice what="AI teacher tools" /> : <GeneratorsTab />}</TabsContent>
         )}
         <TabsContent value="insights">
           <InsightsTab />
@@ -57,10 +72,20 @@ export default function AIFeaturesPage() {
         <TabsContent value="at-risk">
           <AtRiskStudentsTab />
         </TabsContent>
+        {analyticsAllowed && (
+          <TabsContent value="analytics">
+            {unsupported("analytics") ? <NotAvailableNotice what="The analytics assistant" /> : <AssistantChat mode="analytics" page="AI Features" />}
+          </TabsContent>
+        )}
         <TabsContent value="assistant">
           <ContentAssistantTab />
         </TabsContent>
-        {canSeeUsage && (
+        {can("author-content") && (
+          <TabsContent value="review">
+            <ContentReviewTab />
+          </TabsContent>
+        )}
+        {can("view-usage") && (
           <TabsContent value="usage">
             <UsageTab />
           </TabsContent>
