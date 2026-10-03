@@ -375,6 +375,73 @@ export const QUOTE_MODULE_OPTIONS: string[] = AVAILABLE_MODULE_LABELS.filter(
 
 export const STAFF_COUNT_OPTIONS = ["Under 25", "25 – 50", "50 – 100", "100 – 250", "250+"] as const;
 
+// ── Mobile apps ─────────────────────────────────────────────────────
+
+export type MobileAppId = "family" | "teacher" | "staff";
+
+export interface MobileApp {
+  id: MobileAppId;
+  icon: LucideIcon;
+  name: string;
+  audience: string;
+  description: string;
+  features: string[];
+}
+
+export const MOBILE_APPS: MobileApp[] = [
+  {
+    id: "family",
+    icon: UsersRound,
+    name: "School Sphere for Students & Parents",
+    audience: "Students and parents",
+    description: "Everything about a child's school day in one place, with a quick switch between children for parents.",
+    features: [
+      "Homework, timetable, attendance and results",
+      "Pay fees online and share receipts",
+      "Live school bus status and stop timeline",
+      "Leave requests and messages to the class teacher",
+      "Online classes and study materials",
+      "Ask School AI about fees, homework and exams",
+    ],
+  },
+  {
+    id: "teacher",
+    icon: GraduationCap,
+    name: "School Sphere for Teachers",
+    audience: "Teachers",
+    description: "The classroom in your pocket: today's periods, registers to take and work to grade, all on one screen.",
+    features: [
+      "Mark attendance in a tap, even without a signal",
+      "Set and grade homework on the go",
+      "Enter exam marks subject by subject",
+      "Reply to parents and approve student leave",
+      "Host online classes from your phone",
+      "AI insights, drafting and students who may need attention",
+    ],
+  },
+  {
+    id: "staff",
+    icon: Building2,
+    name: "School Sphere for Staff",
+    audience: "Non-teaching staff",
+    description: "Office, accounts, transport and support teams stay connected to the school wherever their work takes them.",
+    features: [
+      "A home screen built around your role",
+      "School notices and announcements",
+      "Instant push notifications for what needs action",
+      "Messages with colleagues and the school office",
+      "Secure sign-in with the same school account",
+    ],
+  },
+];
+
+export const MOBILE_APP_HIGHLIGHTS: Array<{ icon: LucideIcon; label: string }> = [
+  { icon: Smartphone, label: "Android and iOS" },
+  { icon: BellRing, label: "Instant push notifications" },
+  { icon: KeyRound, label: "Secure sign-in, one school account" },
+  { icon: Cloud, label: "Always in sync with the web app" },
+];
+
 // ── FAQ ─────────────────────────────────────────────────────────────
 // Plain-text answers: the same strings feed the visible FAQ and its FAQPage JSON-LD, so they never drift apart.
 
@@ -398,6 +465,11 @@ export const FAQS: FaqItem[] = [
     question: "What features are included in School Sphere?",
     answer:
       "School Sphere covers student management, attendance, academics, timetables, examinations and online exams, homework, fee management and accounting, parent communication, online classes, study materials, transport, library, reports, and more — all under one login with role-based access.",
+  },
+  {
+    question: "Does School Sphere have mobile apps?",
+    answer:
+      "Yes. School Sphere has three mobile apps for Android and iOS: one for students and parents, one for teachers, and one for non-teaching staff. Students and parents follow homework, attendance, results, fees and the school bus. Teachers take attendance (even offline), grade homework and enter marks. Non-teaching staff get notices, messages and alerts for their role. All three use the same school account and stay in sync with the web app.",
   },
   {
     question: "Does School Sphere provide student management?",

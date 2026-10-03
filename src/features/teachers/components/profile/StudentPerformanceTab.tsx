@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { BarChart3, Loader2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { StaffMember } from "@/features/staff/types";
 import { getTeacherPerformanceOverview } from "../../api";
 
@@ -87,40 +88,30 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
             {row.students.length === 0 ? (
               <p className="text-sm text-muted-foreground">No students found for this class.</p>
             ) : (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-secondary/60 border-b border-border">
-                    <tr>
-                      <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Student
-                      </th>
-                      <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Roll no.
-                      </th>
-                      <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Avg. score
-                      </th>
-                      <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Grade
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {row.students.map(({ student, averageScore, grade }) => (
-                      <tr key={student.id} className="border-b border-border last:border-0">
-                        <td className="px-3 py-2 text-foreground">
-                          {student.firstName} {student.lastName}
-                        </td>
-                        <td className="px-3 py-2 text-secondary-foreground">{student.rollNumber ?? "—"}</td>
-                        <td className="px-3 py-2 text-secondary-foreground">{averageScore}</td>
-                        <td className="px-3 py-2">
-                          <Badge variant={gradeVariant(grade)}>{grade}</Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table containerClassName="rounded-lg border border-border">
+                <TableHeader>
+                  <TableRow hover={false}>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Roll no.</TableHead>
+                    <TableHead>Avg. score</TableHead>
+                    <TableHead>Grade</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {row.students.map(({ student, averageScore, grade }) => (
+                    <TableRow key={student.id}>
+                      <TableCell>
+                        {student.firstName} {student.lastName}
+                      </TableCell>
+                      <TableCell className="text-secondary-foreground">{student.rollNumber ?? "—"}</TableCell>
+                      <TableCell className="text-secondary-foreground tabular-nums">{averageScore}</TableCell>
+                      <TableCell>
+                        <Badge variant={gradeVariant(grade)}>{grade}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>

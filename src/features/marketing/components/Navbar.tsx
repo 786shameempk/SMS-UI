@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ChevronDown, GraduationCap, LifeBuoy, Menu, ShieldCheck, Workflow, X, type LucideIcon } from "lucide-react";
+import { ArrowRight, ChevronDown, CircleHelp, GraduationCap, LifeBuoy, ListChecks, Menu, ShieldCheck, Workflow, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { useLeadCapture } from "./LeadCapture";
@@ -10,9 +10,8 @@ const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "AI", href: "#ai" },
   { label: "Solutions", href: "#solutions" },
-  { label: "How It Works", href: "#how-it-works" },
+  { label: "Mobile Apps", href: "#mobile-apps" },
   { label: "Plans", href: "#plans" },
-  { label: "FAQ", href: "#faq" },
 ];
 
 interface ResourceLink {
@@ -24,6 +23,8 @@ interface ResourceLink {
 }
 
 const RESOURCES: ResourceLink[] = [
+  { icon: ListChecks, label: "How it works", description: "From sign-up to go-live in a few steps", href: "#how-it-works" },
+  { icon: CircleHelp, label: "FAQ", description: "Answers to common questions", href: "#faq" },
   { icon: ShieldCheck, label: "Security", description: "How we protect your school's data", href: "#security" },
   { icon: Workflow, label: "AI insights", description: "Trends and students who may need attention", href: "#insights" },
   { icon: LifeBuoy, label: "Help & support", description: "Talk to our team", action: "contact" },
@@ -86,7 +87,7 @@ export default function Navbar() {
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-900">
+            <a key={link.href} href={link.href} className="whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 xl:px-3 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-900">
               {link.label}
             </a>
           ))}

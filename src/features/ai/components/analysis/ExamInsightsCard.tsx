@@ -3,6 +3,7 @@ import { BookOpenCheck, Lightbulb, Loader2, RefreshCw, Sparkles, TriangleAlert }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { analyzeOnlineExam } from "../../generation/api";
 
 const pct = (n: number) => `${Math.round(n * 10) / 10}%`;
@@ -104,26 +105,26 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
               {insights.topics.length > 0 && (
                 <section className="space-y-2" aria-label="Results by topic">
                   <h3 className="text-sm font-semibold">Results by topic</h3>
-                  <table className="w-full text-sm">
-                    <thead className="text-left text-xs text-muted-foreground">
-                      <tr>
-                        <th className="py-1 font-medium">Topic</th>
-                        <th className="py-1 font-medium">Questions</th>
-                        <th className="py-1 text-right font-medium">Average correct</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <Table density="compact">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Topic</TableHead>
+                        <TableHead>Questions</TableHead>
+                        <TableHead className="text-right">Average correct</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {insights.topics.map((t) => (
-                        <tr key={t.topic} className="border-t border-border/70">
-                          <td className="py-1.5">{t.topic}</td>
-                          <td className="py-1.5 text-muted-foreground">{t.questionNumbers.map((n) => `Q${n}`).join(", ")}</td>
-                          <td className="py-1.5 text-right tabular-nums">
+                        <TableRow key={t.topic}>
+                          <TableCell>{t.topic}</TableCell>
+                          <TableCell className="text-muted-foreground">{t.questionNumbers.map((n) => `Q${n}`).join(", ")}</TableCell>
+                          <TableCell className="text-right tabular-nums">
                             <Badge variant={t.averageCorrect < 40 ? "danger" : t.averageCorrect < 60 ? "warning" : "success"}>{pct(t.averageCorrect)}</Badge>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </section>
               )}
 

@@ -16,6 +16,7 @@ const COLUMNS: Array<{ title: string; links: FooterLink[] }> = [
       { label: "School Management Features", href: "#features" },
       { label: "AI School Insights", href: "#insights" },
       { label: "Solutions by Role", href: "#solutions" },
+      { label: "School Mobile Apps", href: "#mobile-apps" },
       { label: "School ERP Plans", href: "#plans" },
       { label: "Data Security", href: "#security" },
     ],

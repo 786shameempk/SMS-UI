@@ -6,6 +6,7 @@ import ValueStrip from "../components/ValueStrip";
 import FeaturesGrid from "../components/FeaturesGrid";
 import AiSection from "../components/AiSection";
 import ShowcaseSection from "../components/ShowcaseSection";
+import MobileAppsSection from "../components/MobileAppsSection";
 import InsightsSection from "../components/InsightsSection";
 import HowItWorks from "../components/HowItWorks";
 import SecuritySection from "../components/SecuritySection";
@@ -34,6 +35,7 @@ export default function LandingPage() {
           <FeaturesGrid />
           <AiSection />
           <ShowcaseSection />
+          <MobileAppsSection />
           <InsightsSection />
           <HowItWorks />
           <SecuritySection />

@@ -1,4 +1,4 @@
-import type { UserRole } from "@/types/auth";
+import type { ModulePermissions, UserRole } from "@/types/auth";
 
 export type DashboardWidgetId =
   | "stats"
@@ -27,6 +27,8 @@ export interface DashboardWidgetDef {
   roles?: UserRole[];
   /** Only for users whose role covers every branch. */
   allBranchesOnly?: boolean;
+  /** Only for users who can open this module (its data is refused otherwise). */
+  module?: keyof ModulePermissions;
 }
 
 const FINANCE_ROLES: UserRole[] = ["admin", "superAdmin", "principal", "accountant"];
@@ -49,7 +51,7 @@ export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
   { id: "upcomingExams", label: "Upcoming exams", description: "Next scheduled exam papers." },
   { id: "pendingAssignments", label: "Pending assignments", description: "Homework due soon and submission progress." },
   { id: "feesDue", label: "Fees due", description: "Outstanding and overdue invoices." },
-  { id: "libraryDue", label: "Library due books", description: "Loans overdue or due in the next 3 days." },
+  { id: "libraryDue", label: "Library due books", description: "Loans overdue or due in the next 3 days.", module: "library" },
   { id: "busStatus", label: "Bus status", description: "Live fleet status or your child's bus." },
   { id: "hostel", label: "Hostel occupancy", description: "Beds occupied per hostel." },
   { id: "recentActivity", label: "Recent activity", description: "Latest actions across the school." },
@@ -57,6 +59,8 @@ export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
 ];
 
 /** `allBranches`: the user's role covers every branch (see canSwitchScopeView), whatever it is called. */
-export function widgetsForRole(role: UserRole, allBranches: boolean): DashboardWidgetDef[] {
-  return DASHBOARD_WIDGETS.filter((w) => (!w.roles || w.roles.includes(role)) && (!w.allBranchesOnly || allBranches));
+export function widgetsForRole(role: UserRole, allBranches: boolean, modules?: ModulePermissions | null): DashboardWidgetDef[] {
+  return DASHBOARD_WIDGETS.filter(
+    (w) => (!w.roles || w.roles.includes(role)) && (!w.allBranchesOnly || allBranches) && (!w.module || !modules || modules[w.module]),
+  );
 }

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ClipboardCheck, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
@@ -114,9 +114,7 @@ export default function HomeworkListTab() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge variant={row.original.status === "published" ? "success" : "neutral"}>
-          {HOMEWORK_STATUSES.find((s) => s.value === row.original.status)?.label ?? row.original.status}
-        </Badge>
+        <StatusBadge status={row.original.status} label={HOMEWORK_STATUSES.find((s) => s.value === row.original.status)?.label} />
       ),
     },
     {

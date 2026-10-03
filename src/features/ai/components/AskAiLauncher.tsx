@@ -55,7 +55,7 @@ export default function AskAiLauncher() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="fixed bottom-20 right-4 z-40 flex max-h-[calc(100dvh-7rem)] w-[min(26rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+            className="fixed bottom-4 right-4 z-40 flex max-h-[calc(100dvh-2rem)] w-[min(26rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
           >
             <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
               <div className="min-w-0">
@@ -74,15 +74,18 @@ export default function AskAiLauncher() {
           </motion.section>
         )}
       </AnimatePresence>
-      <Button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-label={open ? "Close Ask School AI" : "Ask School AI"}
-        className="fixed bottom-4 right-4 z-40 h-12 rounded-full px-4 shadow-lg shadow-primary/25"
-      >
-        {open ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-        <span className="hidden sm:inline">{open ? "Close" : "Ask School AI"}</span>
-      </Button>
+      {/* While the panel is open its header X is the only close control, so the launcher steps aside. */}
+      {!open && (
+        <Button
+          onClick={() => setOpen(true)}
+          aria-expanded={false}
+          aria-label="Ask School AI"
+          className="fixed bottom-4 right-4 z-40 h-12 rounded-full px-4 shadow-lg shadow-primary/25"
+        >
+          <Sparkles className="h-5 w-5" />
+          <span className="hidden sm:inline">Ask School AI</span>
+        </Button>
+      )}
     </>
   );
 }

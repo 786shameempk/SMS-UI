@@ -9,6 +9,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import type { DatesSetArg, EventClickArg, EventContentArg } from "@fullcalendar/core";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ToggleChip } from "@/components/ui/toggle-chip";
 import { cn } from "@/utils/cn";
 import { listCalendarEvents } from "../api";
 import { MEETING_TYPES, TYPE_LEGEND } from "../constants";
@@ -85,19 +86,14 @@ export default function MeetingCalendarPage() {
         {TYPE_LEGEND.map((g) => {
           const on = !hidden.has(g.label);
           return (
-            <button
+            <ToggleChip
               key={g.label}
-              type="button"
-              aria-pressed={on}
+              pressed={on}
               onClick={() => setHidden((prev) => { const next = new Set(prev); if (on) next.add(g.label); else next.delete(g.label); return next; })}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-opacity cursor-pointer",
-                on ? "border-border bg-card text-foreground" : "border-dashed border-border text-muted-foreground opacity-60",
-              )}
             >
               <span className={cn("h-2.5 w-2.5 rounded-full", g.dot)} aria-hidden />
               {g.label}
-            </button>
+            </ToggleChip>
           );
         })}
         {isFetching && <span className="text-xs text-muted-foreground">Updating…</span>}

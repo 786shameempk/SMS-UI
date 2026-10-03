@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleChip } from "@/components/ui/toggle-chip";
 import { cn } from "@/utils/cn";
 import { listMeetings, listTodayMeetings, listUpcomingMeetings } from "../api";
 import { TYPE_LEGEND } from "../constants";
@@ -137,18 +138,16 @@ export default function MeetingsHomePage() {
             {canSchedule && <TabsTrigger value="drafts">Drafts</TabsTrigger>}
           </TabsList>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by type">
-            <button type="button" onClick={() => setType(undefined)} aria-pressed={!group}
-              className={cn("rounded-full border px-3 py-1 text-xs font-medium cursor-pointer", !group ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:bg-secondary")}>
+            <ToggleChip pressed={!group} onClick={() => setType(undefined)}>
               All
-            </button>
+            </ToggleChip>
             {TYPE_LEGEND.map((g) => {
               const on = group?.label === g.label;
               return (
-                <button key={g.label} type="button" onClick={() => setType(on ? undefined : g.label)} aria-pressed={on}
-                  className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium cursor-pointer", on ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:bg-secondary")}>
+                <ToggleChip key={g.label} pressed={on} onClick={() => setType(on ? undefined : g.label)}>
                   <span className={cn("h-2 w-2 rounded-full", g.dot)} aria-hidden />
                   {g.label}
-                </button>
+                </ToggleChip>
               );
             })}
           </div>

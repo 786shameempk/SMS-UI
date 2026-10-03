@@ -12,12 +12,12 @@ const TONE_BY_STATUS: Record<string, BadgeVariant> = {
   // in-flight / attention
   pending: "warning", partial: "warning", partiallypaid: "warning", late: "warning", draft: "neutral", review: "warning",
   inreview: "warning", inprogress: "info", processing: "info", scheduled: "info", upcoming: "info", reserved: "info",
-  onleave: "warning", leave: "warning", halfday: "warning", due: "warning", lowstock: "warning", waitlisted: "warning",
+  onleave: "warning", leave: "warning", transferring: "warning", halfday: "warning", due: "warning", lowstock: "warning", waitlisted: "warning",
   live: "danger",
   // negative / stopped
   inactive: "neutral", absent: "danger", rejected: "danger", overdue: "danger", failed: "danger", cancelled: "neutral",
   canceled: "neutral", suspended: "danger", expired: "neutral", closed: "neutral", archived: "neutral", blocked: "danger",
-  outofstock: "danger", resigned: "neutral", terminated: "danger", graduated: "info", transferred: "neutral", refunded: "info",
+  outofstock: "danger", resigned: "neutral", terminated: "danger", graduated: "info", alumni: "info", transferred: "neutral", locked: "danger", refunded: "info",
   unpaid: "danger", lost: "danger", checkedout: "neutral", ended: "neutral",
 };
 

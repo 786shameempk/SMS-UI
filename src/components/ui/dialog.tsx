@@ -53,8 +53,9 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {/* A direct <form> child is stretched to fill the body so its DialogFooter's mt-auto can reach the
-          bottom edge even when the form is short. */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-6 flex flex-col gap-4 [&>form]:flex [&>form]:flex-1 [&>form]:flex-col">
+          bottom edge even when the form is short. Table headers don't stick here: they'd slide under the
+          pinned DialogHeader. */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-6 flex flex-col gap-4 [&>form]:flex [&>form]:flex-1 [&>form]:flex-col [--thead-position:static]">
         {children}
       </div>
       <DialogPrimitive.Close className="absolute right-3 top-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none cursor-pointer">
