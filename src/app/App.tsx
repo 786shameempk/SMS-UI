@@ -13,6 +13,7 @@ import {
 } from "@/features/settings/theme";
 import { router } from "./router";
 import { GoogleAnalytics } from "./GoogleAnalytics";
+import { OverflowTooltip } from "@/components/common/OverflowTooltip";
 
 // Runs once at module load, before first paint, so no saved appearance setting ever flashes its
 // default. Theme mode must apply first: applyBrandPreset reads document.documentElement's
@@ -30,6 +31,8 @@ export default function App() {
       <Suspense fallback={<div className="min-h-dvh bg-background" />}>
         <RouterProvider router={router} />
       </Suspense>
+      {/* Full text on hover/focus for any label the layout cuts off with "…", app-wide. */}
+      <OverflowTooltip />
     </MotionConfig>
   );
 }
