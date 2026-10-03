@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -121,10 +121,7 @@ export default function ChartOfAccountsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Search by code or name" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
+        <SearchInput value={search} onValueChange={setSearch} placeholder="Search by code or name" containerClassName="sm:w-72" />
         <div className="flex items-center gap-2">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-40">

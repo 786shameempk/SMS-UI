@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { listStudents } from "@/features/students/api";
 import { formatDateTime } from "@/utils/format";
@@ -83,103 +84,101 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/60 border-b border-border">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Student</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Submission</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Grade</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Feedback</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                    Loading submissions…
-                  </td>
-                </tr>
-              )}
-              {!isLoading && submissions.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    No students are eligible for this homework yet.
-                  </td>
-                </tr>
-              )}
-              {!isLoading &&
-                submissions.map((s: HomeworkSubmission) => {
-                  const draft = drafts[s.id] ?? { grade: "", feedback: "" };
-                  const config = SUBMISSION_STATUS_CONFIG[s.status];
-                  const hasContent = s.status !== "not_submitted";
-                  const busy = gradeMutation.isPending || resubmitMutation.isPending;
-                  return (
-                    <tr key={s.id} className="border-b border-border last:border-0 align-top">
-                      <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">{studentName(s.studentId)}</td>
-                      <td className="px-4 py-3 max-w-xs">
-                        {hasContent ? (
-                          <>
-                            <p className="text-secondary-foreground line-clamp-2">{s.content}</p>
-                            {s.submittedAt && <p className="text-xs text-muted-foreground mt-1">Submitted {formatDateTime(s.submittedAt)}</p>}
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground">Not submitted yet</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant={config.variant}>{config.label}</Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          className="w-24"
-                          placeholder="e.g. A / 85"
-                          disabled={!hasContent}
-                          value={draft.grade}
-                          onChange={(e) => setDrafts((prev) => ({ ...prev, [s.id]: { ...draft, grade: e.target.value } }))}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Textarea
-                          className="w-56 min-h-[36px]"
-                          rows={2}
-                          placeholder="Feedback for the student"
-                          disabled={!hasContent}
-                          value={draft.feedback}
-                          onChange={(e) => setDrafts((prev) => ({ ...prev, [s.id]: { ...draft, feedback: e.target.value } }))}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1.5">
-                          <Button
-                            size="sm"
-                            disabled={!hasContent || !draft.grade.trim() || busy}
-                            onClick={() => gradeMutation.mutate({ id: s.id, grade: draft.grade.trim(), feedback: draft.feedback.trim() })}
-                          >
-                            <Save className="w-3.5 h-3.5" />
-                            Save grade
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!hasContent || !draft.feedback.trim() || busy}
-                            onClick={() => resubmitMutation.mutate({ id: s.id, feedback: draft.feedback.trim() })}
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            Request resubmit
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
+      <div className="rounded-xl border border-border bg-card overflow-clip">
+        <Table stickyHeader>
+          <TableHeader>
+            <TableRow hover={false}>
+              <TableHead>Student</TableHead>
+              <TableHead>Submission</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Grade</TableHead>
+              <TableHead>Feedback</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow hover={false}>
+                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                  Loading submissions…
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && submissions.length === 0 && (
+              <TableRow hover={false}>
+                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                  No students are eligible for this homework yet.
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading &&
+              submissions.map((s: HomeworkSubmission) => {
+                const draft = drafts[s.id] ?? { grade: "", feedback: "" };
+                const config = SUBMISSION_STATUS_CONFIG[s.status];
+                const hasContent = s.status !== "not_submitted";
+                const busy = gradeMutation.isPending || resubmitMutation.isPending;
+                return (
+                  <TableRow key={s.id} className="[&>td]:align-top">
+                    <TableCell className="font-medium whitespace-nowrap">{studentName(s.studentId)}</TableCell>
+                    <TableCell className="max-w-xs">
+                      {hasContent ? (
+                        <>
+                          <p className="text-secondary-foreground line-clamp-2">{s.content}</p>
+                          {s.submittedAt && <p className="text-xs text-muted-foreground mt-1">Submitted {formatDateTime(s.submittedAt)}</p>}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">Not submitted yet</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={config.variant}>{config.label}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="w-24"
+                        placeholder="e.g. A / 85"
+                        disabled={!hasContent}
+                        value={draft.grade}
+                        onChange={(e) => setDrafts((prev) => ({ ...prev, [s.id]: { ...draft, grade: e.target.value } }))}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Textarea
+                        className="w-56 min-h-[36px]"
+                        rows={2}
+                        placeholder="Feedback for the student"
+                        disabled={!hasContent}
+                        value={draft.feedback}
+                        onChange={(e) => setDrafts((prev) => ({ ...prev, [s.id]: { ...draft, feedback: e.target.value } }))}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1.5">
+                        <Button
+                          size="sm"
+                          disabled={!hasContent || !draft.grade.trim() || busy}
+                          onClick={() => gradeMutation.mutate({ id: s.id, grade: draft.grade.trim(), feedback: draft.feedback.trim() })}
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          Save grade
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!hasContent || !draft.feedback.trim() || busy}
+                          onClick={() => resubmitMutation.mutate({ id: s.id, feedback: draft.feedback.trim() })}
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          Request resubmit
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Pencil, Trash2, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
@@ -74,7 +75,7 @@ export default function BranchesTab() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => <Badge variant={row.original.status === "active" ? "success" : "neutral"}>{row.original.status === "active" ? "Active" : "Inactive"}</Badge>,
+      cell: ({ row }) => <StatusBadge status={row.original.status === "active" ? "active" : "inactive"} />,
     },
     {
       id: "actions",

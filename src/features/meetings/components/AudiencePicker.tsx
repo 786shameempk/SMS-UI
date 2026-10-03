@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, GraduationCap, Search, UserRound, UsersRound, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/utils/cn";
+import { ToggleChip } from "@/components/ui/toggle-chip";
 import { searchDirectory } from "../api";
 import type { AudienceRule, AudienceType, DirectoryPerson, MeetingType } from "../types";
 import { audienceKey } from "../utils";
@@ -110,22 +110,17 @@ export default function AudiencePicker({ meetingType, sectionId, sectionLabel, v
           };
           const on = selected.has(item.key);
           return (
-            <button
+            <ToggleChip
               key={option.type}
-              type="button"
               disabled={disabled}
               onClick={() => toggle(item)}
               title={disabled ? "Pick a class first" : option.hint}
-              aria-pressed={on}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-                on ? "border-primary bg-accent text-accent-foreground" : "border-border bg-card text-secondary-foreground hover:bg-secondary",
-              )}
+              pressed={on}
+              size="lg"
             >
-              {on && <Check className="h-3.5 w-3.5" aria-hidden />}
+              {on && <Check aria-hidden />}
               {option.label}
-            </button>
+            </ToggleChip>
           );
         })}
       </div>

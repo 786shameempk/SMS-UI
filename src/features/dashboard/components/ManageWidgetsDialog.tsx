@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check, Eye, LayoutGrid, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/utils/cn";
 import type { DashboardWidgetDef, DashboardWidgetId } from "../widgets";
 import WidgetPreview from "./WidgetPreview";
@@ -136,24 +137,7 @@ export default function ManageWidgetsDialog({
             </div>
           </div>
 
-          <div role="radiogroup" aria-label="Filter widgets" className="inline-flex max-w-full gap-1 overflow-x-auto rounded-lg bg-secondary p-1">
-            {FILTERS.map((f) => (
-              <button
-                key={f.value}
-                type="button"
-                role="radio"
-                aria-checked={filter === f.value}
-                onClick={() => setFilter(f.value)}
-                className={cn(
-                  "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors cursor-pointer",
-                  filter === f.value ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {f.label}
-                <span className={cn("rounded px-1 tabular-nums", filter === f.value ? "bg-secondary text-foreground" : "text-muted-foreground")}>{f.count}</span>
-              </button>
-            ))}
-          </div>
+          <SegmentedControl aria-label="Filter widgets" size="sm" value={filter} onValueChange={setFilter} options={FILTERS} />
         </div>
 
         {grouped.length === 0 ? (

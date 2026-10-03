@@ -2,15 +2,14 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, RotateCcw, Search, TrendingUp, UserCog, UserMinus } from "lucide-react";
+import { Pencil, Plus, RotateCcw, TrendingUp, UserCog, UserMinus, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
+import { DataTable, type ActiveFilter } from "@/components/tables/DataTable";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DESIGNATIONS } from "../constants";
 import { createStaff, listStaff, promoteStaff, reactivateStaff, resignStaff, updateStaff } from "../api";
@@ -22,6 +21,13 @@ import LeaveRequestsTab from "../components/LeaveRequestsTab";
 import type { PromoteStaffFormValues, ResignStaffFormValues, StaffFormValues, StaffMember } from "../types";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { RowActions } from "@/components/ui/row-actions";
+
+const STATUS_OPTIONS: { value: StaffMember["status"]; label: string }[] = [
+  { value: "active", label: "Active" },
+  { value: "on-leave", label: "On leave" },
+  { value: "resigned", label: "Resigned" },
+  { value: "terminated", label: "Terminated" },
+];
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
@@ -103,10 +109,25 @@ function StaffDirectoryTab() {
     });
   }, [staffList, search, designationFilter, statusFilter]);
 
+  const clearFilters = () => {
+    setSearch("");
+    setDesignationFilter("all");
+    setStatusFilter("all");
+  };
+  const activeFilters: ActiveFilter[] = [];
+  if (search.trim()) activeFilters.push({ id: "search", label: "Search", value: search.trim(), onRemove: () => setSearch("") });
+  if (designationFilter !== "all")
+    activeFilters.push({ id: "designation", label: "Designation", value: designationFilter, onRemove: () => setDesignationFilter("all") });
+  if (statusFilter !== "all") {
+    const label = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? statusFilter;
+    activeFilters.push({ id: "status", label: "Status", value: label, onRemove: () => setStatusFilter("all") });
+  }
+
   const columns: ColumnDef<StaffMember, unknown>[] = [
     {
       accessorKey: "firstName",
       header: "Staff",
+      meta: { exportValue: (s) => `${s.firstName} ${s.lastName}` },
       cell: ({ row }) => {
         const s = row.original;
         return (
@@ -202,42 +223,48 @@ function StaffDirectoryTab() {
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar>
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Search by name or employee ID" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Select value={designationFilter} onValueChange={setDesignationFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Designation" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All designations</SelectItem>
-              {DESIGNATIONS.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="on-leave">On leave</SelectItem>
-              <SelectItem value="resigned">Resigned</SelectItem>
-              <SelectItem value="terminated">Terminated</SelectItem>
-            </SelectContent>
-          </Select>
-          {(designationFilter !== "all" || statusFilter !== "all" || search) && (
-            <Badge variant="neutral" className="whitespace-nowrap">
-              {filtered.length} of {staffList.length}
-            </Badge>
-          )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        getRowId={(s) => s.id}
+        empty={{ icon: Users, title: "No staff yet", description: "Record a new joining to start building the staff directory." }}
+        filters={
+          <>
+            <SearchInput value={search} onValueChange={setSearch} placeholder="Search by name or employee ID" containerClassName="sm:w-72" />
+            <Select value={designationFilter} onValueChange={setDesignationFilter}>
+              <SelectTrigger className="sm:w-40" aria-label="Filter by designation">
+                <SelectValue placeholder="Designation" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All designations</SelectItem>
+                {DESIGNATIONS.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="sm:w-36" aria-label="Filter by status">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUS_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
+        activeFilters={activeFilters}
+        onClearFilters={clearFilters}
+        actions={
           <Button
             onClick={() => {
               setEditingStaff(null);
@@ -247,10 +274,12 @@ function StaffDirectoryTab() {
             <Plus className="w-4 h-4" />
             New joining
           </Button>
-        </div>
-      </DataTableToolbar>
-
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No staff match your filters." />
+        }
+        columnToggle
+        exportFileName="staff"
+        selectable
+        pageSize={25}
+      />
 
       <StaffFormDialog
         open={formOpen}

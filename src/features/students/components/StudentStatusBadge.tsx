@@ -1,15 +1,15 @@
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { StudentStatus } from "../types";
 
-const STATUS_CONFIG: Record<StudentStatus, { label: string; variant: "success" | "neutral" | "danger" | "info" | "warning" }> = {
-  active: { label: "Active", variant: "success" },
-  inactive: { label: "Inactive", variant: "neutral" },
-  transferred: { label: "Transferred", variant: "warning" },
-  graduated: { label: "Graduated", variant: "info" },
-  alumni: { label: "Alumni", variant: "info" },
+// Colours come from the shared status map, so "Active" / "Transferred" look the same in every module.
+const LABEL: Record<StudentStatus, string> = {
+  active: "Active",
+  inactive: "Inactive",
+  transferred: "Transferred",
+  graduated: "Graduated",
+  alumni: "Alumni",
 };
 
 export default function StudentStatusBadge({ status }: { status: StudentStatus }) {
-  const config = STATUS_CONFIG[status];
-  return <StatusBadge status={status} label={config.label} variant={config.variant} />;
+  return <StatusBadge status={status} label={LABEL[status]} />;
 }

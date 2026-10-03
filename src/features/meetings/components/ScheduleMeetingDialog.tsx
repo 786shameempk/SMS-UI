@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleChip } from "@/components/ui/toggle-chip";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/utils/cn";
@@ -386,22 +387,13 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
           {/* Reminders */}
           <div className="space-y-2">
             <Label>Remind everyone</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Reminders">
               {REMINDER_OPTIONS.map((r) => {
                 const on = reminders.includes(r.value);
                 return (
-                  <button
-                    key={r.value}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => setReminders(on ? reminders.filter((x) => x !== r.value) : [...reminders, r.value])}
-                    className={cn(
-                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      on ? "border-primary bg-accent text-accent-foreground" : "border-border text-secondary-foreground hover:bg-secondary",
-                    )}
-                  >
+                  <ToggleChip key={r.value} pressed={on} onClick={() => setReminders(on ? reminders.filter((x) => x !== r.value) : [...reminders, r.value])}>
                     {r.label}
-                  </button>
+                  </ToggleChip>
                 );
               })}
             </div>

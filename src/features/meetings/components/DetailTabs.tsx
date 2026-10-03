@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -183,44 +184,42 @@ export function AttendanceTab({ meeting }: { meeting: MeetingDetail }) {
         {upcoming ? "Attendance is taken automatically once the class starts. " : live ? "Updating live. " : data.isFinalized ? "Final. " : ""}
         Late = joined more than {data.lateAfterMinutes} min after the start; Partial = stayed less than {data.presentMinPercent}% of the time.
       </p>
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
-        <table className="w-full text-sm">
-          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-2 font-semibold">Name</th>
-              <th className="px-4 py-2 font-semibold">Joined</th>
-              <th className="px-4 py-2 font-semibold">Left</th>
-              <th className="px-4 py-2 font-semibold">Time in class</th>
-              <th className="px-4 py-2 font-semibold">Status</th>
-              {meeting.can.editAttendance && <th className="px-2 py-2"><span className="sr-only">Correct</span></th>}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {data.rows.map((r) => (
-              <tr key={r.userId}>
-                <td className="px-4 py-2.5">
-                  <span className="block font-medium text-foreground">{r.name}</span>
-                  <span className="block text-xs text-muted-foreground">{r.detail}</span>
-                </td>
-                <td className="px-4 py-2.5 tabular-nums">{r.firstJoinUtc ? formatTime(r.firstJoinUtc) : "—"}</td>
-                <td className="px-4 py-2.5 tabular-nums">{r.inRoomNow ? <span className="font-medium text-success-strong">In class</span> : r.lastLeaveUtc ? formatTime(r.lastLeaveUtc) : "—"}</td>
-                <td className="px-4 py-2.5 tabular-nums">{formatDuration(r.durationMinutes)}</td>
-                <td className="px-4 py-2.5">
-                  {upcoming ? <span className="text-xs text-muted-foreground">Not started</span> : <AttendanceBadge status={r.status} overridden={r.isOverridden} />}
-                  {r.isOverridden && r.overrideReason && <span className="mt-0.5 block text-[11px] text-muted-foreground">{r.overrideReason}</span>}
-                </td>
-                {meeting.can.editAttendance && (
-                  <td className="px-2 py-2.5 text-right">
-                    <Button size="icon" variant="ghost" aria-label={`Correct attendance for ${r.name}`} onClick={() => setEditing(r)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table stickyHeader containerClassName="rounded-xl border border-border bg-card">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Joined</TableHead>
+            <TableHead>Left</TableHead>
+            <TableHead>Time in class</TableHead>
+            <TableHead>Status</TableHead>
+            {meeting.can.editAttendance && <TableHead className="px-2"><span className="sr-only">Correct</span></TableHead>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.rows.map((r) => (
+            <TableRow key={r.userId}>
+              <TableCell>
+                <span className="block font-medium text-foreground">{r.name}</span>
+                <span className="block text-xs text-muted-foreground">{r.detail}</span>
+              </TableCell>
+              <TableCell className="tabular-nums">{r.firstJoinUtc ? formatTime(r.firstJoinUtc) : "—"}</TableCell>
+              <TableCell className="tabular-nums">{r.inRoomNow ? <span className="font-medium text-success-strong">In class</span> : r.lastLeaveUtc ? formatTime(r.lastLeaveUtc) : "—"}</TableCell>
+              <TableCell className="tabular-nums">{formatDuration(r.durationMinutes)}</TableCell>
+              <TableCell>
+                {upcoming ? <span className="text-xs text-muted-foreground">Not started</span> : <AttendanceBadge status={r.status} overridden={r.isOverridden} />}
+                {r.isOverridden && r.overrideReason && <span className="mt-0.5 block text-[11px] text-muted-foreground">{r.overrideReason}</span>}
+              </TableCell>
+              {meeting.can.editAttendance && (
+                <TableCell className="px-2 text-right">
+                  <Button size="icon" variant="ghost" aria-label={`Correct attendance for ${r.name}`} onClick={() => setEditing(r)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       <CorrectAttendanceDialog meetingId={id} row={editing} onClose={() => setEditing(null)} />
     </div>
   );

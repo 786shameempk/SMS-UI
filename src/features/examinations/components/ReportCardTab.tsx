@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import RemarkAssistant from "@/features/ai/components/generation/RemarkAssistant";
 import { listStudents } from "@/features/students/api";
@@ -130,40 +131,38 @@ export default function ReportCardTab() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-secondary/60 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Subject</th>
-                    <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Marks obtained</th>
-                    <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Max marks</th>
-                    <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Grade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.subjects.map((s) => (
-                    <tr key={s.subjectId} className="border-b border-border last:border-0">
-                      <td className="px-4 py-2.5 font-medium text-foreground">
-                        {s.subjectName} <span className="text-xs text-muted-foreground">({s.subjectCode})</span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-foreground">{s.isAbsent ? "Absent" : s.marksObtained}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-secondary-foreground">{s.maxMarks}</td>
-                      <td className="px-4 py-2.5 text-right">
-                        <Badge variant={gradeBadgeVariant(s.grade)}>{s.grade}</Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-secondary/40">
-                    <td className="px-4 py-2.5 font-semibold text-foreground">Total</td>
-                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-foreground">{report.totalObtained}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-foreground">{report.totalMax}</td>
-                    <td />
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+            <Table containerClassName="rounded-xl border border-border">
+              <TableHeader>
+                <TableRow hover={false}>
+                  <TableHead>Subject</TableHead>
+                  <TableHead className="text-right">Marks obtained</TableHead>
+                  <TableHead className="text-right">Max marks</TableHead>
+                  <TableHead className="text-right">Grade</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {report.subjects.map((s) => (
+                  <TableRow key={s.subjectId}>
+                    <TableCell className="font-medium">
+                      {s.subjectName} <span className="text-xs text-muted-foreground">({s.subjectCode})</span>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{s.isAbsent ? "Absent" : s.marksObtained}</TableCell>
+                    <TableCell className="text-right tabular-nums text-secondary-foreground">{s.maxMarks}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={gradeBadgeVariant(s.grade)}>{s.grade}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                <TableRow hover={false}>
+                  <TableCell className="font-semibold">Total</TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums">{report.totalObtained}</TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums">{report.totalMax}</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
 
             <div className="flex flex-wrap items-center gap-6">
               <div>

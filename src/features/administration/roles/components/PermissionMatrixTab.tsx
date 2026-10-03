@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Info } from "lucide-react";
 import { getMatrixModules, getRolePermissions, listPermissions, listRoles, MATRIX_MODULES_QUERY_KEY, setRolePermission } from "../api";
 import { CATEGORY_DESCRIPTION, CATEGORY_LABEL } from "../constants";
@@ -75,52 +76,48 @@ export default function PermissionMatrixTab() {
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="p-4 space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-9 w-full" />
-              ))}
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-secondary/60 border-b border-border">
-                <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide sticky left-0 bg-secondary/60">
-                    Module
-                  </th>
-                  {roles.map((role) => (
-                    <th key={role.id} className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground whitespace-nowrap">
-                      {role.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rowsForCategory.map((perm) => (
-                  <tr key={perm.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-2.5 text-sm text-foreground font-medium sticky left-0 bg-card">{perm.module}</td>
-                    {roles.map((role) => {
-                      const granted = (rolePermissions[role.id] ?? []).includes(perm.id);
-                      return (
-                        <td key={role.id} className="px-3 py-2.5 text-center">
-                          <Checkbox
-                            checked={granted}
-                            onCheckedChange={(checked) =>
-                              toggleMutation.mutate({ roleId: role.id, permissionId: perm.id, granted: checked === true })
-                            }
-                            aria-label={`${perm.label} for ${role.name}`}
-                          />
-                        </td>
-                      );
-                    })}
-                  </tr>
+      <div className="rounded-xl border border-border bg-card overflow-clip">
+        {isLoading ? (
+          <div className="p-4 space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full" />
+            ))}
+          </div>
+        ) : (
+          <Table stickyHeader>
+            <TableHeader>
+              <TableRow hover={false}>
+                <TableHead className="sticky left-0 bg-muted">Module</TableHead>
+                {roles.map((role) => (
+                  <TableHead key={role.id} className="text-center">
+                    {role.name}
+                  </TableHead>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rowsForCategory.map((perm) => (
+                <TableRow key={perm.id}>
+                  <TableCell className="sticky left-0 bg-card font-medium">{perm.module}</TableCell>
+                  {roles.map((role) => {
+                    const granted = (rolePermissions[role.id] ?? []).includes(perm.id);
+                    return (
+                      <TableCell key={role.id} className="text-center">
+                        <Checkbox
+                          checked={granted}
+                          onCheckedChange={(checked) =>
+                            toggleMutation.mutate({ roleId: role.id, permissionId: perm.id, granted: checked === true })
+                          }
+                          aria-label={`${perm.label} for ${role.name}`}
+                        />
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
     </div>
   );

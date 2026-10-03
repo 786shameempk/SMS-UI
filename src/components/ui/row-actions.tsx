@@ -8,7 +8,7 @@ export function RowActions({ label = "Row actions", children }: { label?: string
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={label} className="text-muted-foreground data-[state=open]:bg-secondary data-[state=open]:text-foreground">
+        <Button variant="ghost" size="icon-sm" aria-label={label} className="text-muted-foreground pointer-coarse:size-10 data-[state=open]:bg-secondary data-[state=open]:text-foreground">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 
 export interface MultiSelectOption {
@@ -46,10 +45,7 @@ export default function MultiSelectList({
           <span className="text-xs text-muted-foreground">{selected.length} selected</span>
         </div>
       )}
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={searchPlaceholder} className="pl-8 h-8 text-sm" />
-      </div>
+      <SearchInput value={search} onValueChange={setSearch} placeholder={searchPlaceholder} containerClassName="sm:w-full" className="h-8 text-sm" />
       <div className="max-h-48 overflow-y-auto rounded-lg border border-border divide-y divide-border">
         {filtered.length === 0 && <p className="px-3 py-4 text-sm text-muted-foreground text-center">{emptyMessage}</p>}
         {filtered.map((option) => (

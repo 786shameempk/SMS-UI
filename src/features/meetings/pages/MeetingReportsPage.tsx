@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ToggleChip } from "@/components/ui/toggle-chip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/utils/cn";
@@ -178,57 +180,53 @@ export default function MeetingReportsPage() {
             <ExportButtons kind="attendance" filters={filters} />
           </div>
           {students.isLoading ? <Skeleton className="h-48 w-full rounded-xl" /> : (
-            <div className="overflow-x-auto rounded-xl border border-border bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr>
-                    {["Student", "Classes", "Present", "Late", "Partial", "Absent", "Attendance"].map((h) => <th key={h} className="px-4 py-2 font-semibold">{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border tabular-nums">
-                  {(students.data ?? []).length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No finished classes in this period.</td></tr>}
-                  {(students.data ?? []).map((r) => (
-                    <tr key={r.userId}>
-                      <td className="px-4 py-2.5"><span className="block font-medium text-foreground">{r.name}</span><span className="text-xs text-muted-foreground">{r.detail}</span></td>
-                      <td className="px-4 py-2.5">{r.totalClasses}</td>
-                      <td className="px-4 py-2.5">{r.present}</td>
-                      <td className="px-4 py-2.5">{r.late}</td>
-                      <td className="px-4 py-2.5">{r.partial}</td>
-                      <td className="px-4 py-2.5">{r.absent}</td>
-                      <td className="px-4 py-2.5"><PercentBar value={r.attendancePercent} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table stickyHeader containerClassName="rounded-xl border border-border bg-card">
+              <TableHeader>
+                <TableRow>
+                  {["Student", "Classes", "Present", "Late", "Partial", "Absent", "Attendance"].map((h) => <TableHead key={h}>{h}</TableHead>)}
+                </TableRow>
+              </TableHeader>
+              <TableBody className="tabular-nums">
+                {(students.data ?? []).length === 0 && <TableRow hover={false}><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No finished classes in this period.</TableCell></TableRow>}
+                {(students.data ?? []).map((r) => (
+                  <TableRow key={r.userId}>
+                    <TableCell><span className="block font-medium text-foreground">{r.name}</span><span className="text-xs text-muted-foreground">{r.detail}</span></TableCell>
+                    <TableCell>{r.totalClasses}</TableCell>
+                    <TableCell>{r.present}</TableCell>
+                    <TableCell>{r.late}</TableCell>
+                    <TableCell>{r.partial}</TableCell>
+                    <TableCell>{r.absent}</TableCell>
+                    <TableCell><PercentBar value={r.attendancePercent} /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </TabsContent>
 
         <TabsContent value="teachers" className="mt-4 space-y-3">
           <div className="flex justify-end"><ExportButtons kind="teachers" filters={filters} /></div>
           {teachers.isLoading ? <Skeleton className="h-48 w-full rounded-xl" /> : (
-            <div className="overflow-x-auto rounded-xl border border-border bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr>
-                    {["Teacher", "Classes held", "Cancelled", "Students reached", "Avg. attendance", "Time taught"].map((h) => <th key={h} className="px-4 py-2 font-semibold">{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border tabular-nums">
-                  {(teachers.data ?? []).length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No classes in this period.</td></tr>}
-                  {(teachers.data ?? []).map((r) => (
-                    <tr key={r.hostUserId}>
-                      <td className="px-4 py-2.5 font-medium text-foreground">{r.teacher}</td>
-                      <td className="px-4 py-2.5">{r.classesConducted}</td>
-                      <td className="px-4 py-2.5">{r.classesCancelled}</td>
-                      <td className="px-4 py-2.5">{r.totalStudents}</td>
-                      <td className="px-4 py-2.5"><PercentBar value={r.averageAttendancePercent} /></td>
-                      <td className="px-4 py-2.5">{formatDuration(r.minutesTaught)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table stickyHeader containerClassName="rounded-xl border border-border bg-card">
+              <TableHeader>
+                <TableRow>
+                  {["Teacher", "Classes held", "Cancelled", "Students reached", "Avg. attendance", "Time taught"].map((h) => <TableHead key={h}>{h}</TableHead>)}
+                </TableRow>
+              </TableHeader>
+              <TableBody className="tabular-nums">
+                {(teachers.data ?? []).length === 0 && <TableRow hover={false}><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No classes in this period.</TableCell></TableRow>}
+                {(teachers.data ?? []).map((r) => (
+                  <TableRow key={r.hostUserId}>
+                    <TableCell className="font-medium">{r.teacher}</TableCell>
+                    <TableCell>{r.classesConducted}</TableCell>
+                    <TableCell>{r.classesCancelled}</TableCell>
+                    <TableCell>{r.totalStudents}</TableCell>
+                    <TableCell><PercentBar value={r.averageAttendancePercent} /></TableCell>
+                    <TableCell>{formatDuration(r.minutesTaught)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </TabsContent>
 
@@ -287,14 +285,13 @@ function SettingsForm() {
       </div>
       <div className="space-y-2">
         <Label>Default reminders</Label>
-        <div className="flex flex-wrap gap-2">
+        <div role="group" aria-label="Default reminders" className="flex flex-wrap gap-2">
           {REMINDER_OPTIONS.map((r) => {
             const on = form.defaultReminderOffsetsMinutes.includes(r.value);
             return (
-              <button key={r.value} type="button" aria-pressed={on} onClick={() => toggleReminder(r.value)}
-                className={cn("rounded-full border px-3 py-1 text-xs font-medium cursor-pointer", on ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-secondary")}>
+              <ToggleChip key={r.value} pressed={on} onClick={() => toggleReminder(r.value)}>
                 {r.label}
-              </button>
+              </ToggleChip>
             );
           })}
         </div>

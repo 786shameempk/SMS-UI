@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight, Loader2, MessageCircle, Refre
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { analyzeStudentPerformance } from "../../generation/api";
 import type { SubjectTrend } from "../../generation/types";
 
@@ -24,37 +25,35 @@ function Change({ value }: { value: number | null }) {
 
 function TrendTable({ exams, subjects }: { exams: string[]; subjects: SubjectTrend[] }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[28rem] text-sm">
-        <caption className="sr-only">Subject results in the recent exams</caption>
-        <thead className="text-left text-xs text-muted-foreground">
-          <tr>
-            <th className="py-1 font-medium">Subject</th>
-            {exams.map((e, i) => (
-              <th key={`${e}-${i}`} className="py-1 text-right font-medium">
-                {e}
-              </th>
-            ))}
-            <th className="py-1 text-right font-medium">Change</th>
-          </tr>
-        </thead>
-        <tbody>
-          {subjects.map((s) => (
-            <tr key={s.subject} className="border-t border-border/70">
-              <td className="py-1.5">{s.subject}</td>
-              {s.percentages.map((p, i) => (
-                <td key={i} className="py-1.5 text-right tabular-nums">
-                  {pct(p)}
-                </td>
-              ))}
-              <td className="py-1.5 text-right">
-                <Change value={s.change} />
-              </td>
-            </tr>
+    <Table density="compact" className="min-w-[28rem]">
+      <caption className="sr-only">Subject results in the recent exams</caption>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Subject</TableHead>
+          {exams.map((e, i) => (
+            <TableHead key={`${e}-${i}`} className="text-right">
+              {e}
+            </TableHead>
           ))}
-        </tbody>
-      </table>
-    </div>
+          <TableHead className="text-right">Change</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {subjects.map((s) => (
+          <TableRow key={s.subject}>
+            <TableCell>{s.subject}</TableCell>
+            {s.percentages.map((p, i) => (
+              <TableCell key={i} className="text-right tabular-nums">
+                {pct(p)}
+              </TableCell>
+            ))}
+            <TableCell className="text-right">
+              <Change value={s.change} />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 

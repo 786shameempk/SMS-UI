@@ -2,14 +2,14 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BookOpen, Pencil, Plus, Search, UserCog, Users2 } from "lucide-react";
+import { BookOpen, Pencil, Plus, UserCog, Users2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
+import { DataTable } from "@/components/tables/DataTable";
 import { listClasses, listSubjects } from "@/features/academics/api";
 import { createStaff, updateStaff } from "@/features/staff/api";
 import StaffFormDialog from "@/features/staff/components/StaffFormDialog";
@@ -177,29 +177,40 @@ export default function TeachersManagementPage() {
         description="Subject &amp; class assignments, lesson plans, and student performance for teaching staff."
       />
 
-      <DataTableToolbar>
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Search by name, ID, or department" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setClassTeacherDialogOpen(true)}>
-            <Users2 className="w-4 h-4" />
-            Assign class teachers
-          </Button>
-          <Button
-            onClick={() => {
-              setEditingTeacher(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            New teacher
-          </Button>
-        </div>
-      </DataTableToolbar>
-
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No teachers match your search." />
+      <DataTable
+        columns={columns}
+        data={filtered}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        getRowId={(t) => t.id}
+        empty={{ icon: Users2, title: "No teachers yet", description: "Add your first teacher to start assigning subjects and classes." }}
+        filters={
+          <SearchInput value={search} onValueChange={setSearch} placeholder="Search by name, ID, or department" containerClassName="sm:w-72" />
+        }
+        activeFilters={search.trim() ? [{ id: "search", label: "Search", value: search.trim(), onRemove: () => setSearch("") }] : []}
+        onClearFilters={() => setSearch("")}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setClassTeacherDialogOpen(true)}>
+              <Users2 className="w-4 h-4" />
+              Assign class teachers
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingTeacher(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              New teacher
+            </Button>
+          </>
+        }
+        columnToggle
+        exportFileName="teachers"
+        pageSize={25}
+      />
 
       <StaffFormDialog
         open={formOpen}

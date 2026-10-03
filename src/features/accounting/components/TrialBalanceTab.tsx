@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/utils/format";
 import { ACCOUNT_TYPE_CONFIG } from "../constants";
 import { getTrialBalance } from "../api";
@@ -24,44 +25,40 @@ export default function TrialBalanceTab() {
       <CardContent>
         {data.rows.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No posted entries yet.</p>}
         {data.rows.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="py-2 pr-3 font-medium">Code</th>
-                  <th className="py-2 pr-3 font-medium">Account</th>
-                  <th className="py-2 pr-3 font-medium">Type</th>
-                  <th className="py-2 pr-3 font-medium text-right">Debit</th>
-                  <th className="py-2 font-medium text-right">Credit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.rows.map((row) => {
-                  const config = ACCOUNT_TYPE_CONFIG[row.type];
-                  return (
-                    <tr key={row.accountId} className="border-b border-border last:border-0">
-                      <td className="py-2.5 pr-3 tabular-nums text-secondary-foreground">{row.accountCode}</td>
-                      <td className="py-2.5 pr-3 text-foreground">{row.accountName}</td>
-                      <td className="py-2.5 pr-3">
-                        <Badge variant={config.variant}>{config.label}</Badge>
-                      </td>
-                      <td className="py-2.5 pr-3 text-right tabular-nums">{row.totalDebit > 0 ? formatCurrency(row.totalDebit) : "—"}</td>
-                      <td className="py-2.5 text-right tabular-nums">{row.totalCredit > 0 ? formatCurrency(row.totalCredit) : "—"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="border-t-2 border-border font-semibold">
-                  <td className="py-2.5 pr-3" colSpan={3}>
-                    Total
-                  </td>
-                  <td className="py-2.5 pr-3 text-right tabular-nums">{formatCurrency(data.totalDebit)}</td>
-                  <td className="py-2.5 text-right tabular-nums">{formatCurrency(data.totalCredit)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Code</TableHead>
+                <TableHead>Account</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Debit</TableHead>
+                <TableHead className="text-right">Credit</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.rows.map((row) => {
+                const config = ACCOUNT_TYPE_CONFIG[row.type];
+                return (
+                  <TableRow key={row.accountId}>
+                    <TableCell className="tabular-nums text-secondary-foreground">{row.accountCode}</TableCell>
+                    <TableCell>{row.accountName}</TableCell>
+                    <TableCell>
+                      <Badge variant={config.variant}>{config.label}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{row.totalDebit > 0 ? formatCurrency(row.totalDebit) : "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.totalCredit > 0 ? formatCurrency(row.totalCredit) : "—"}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+            <TableFooter>
+              <TableRow className="font-semibold">
+                <TableCell colSpan={3}>Total</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCurrency(data.totalDebit)}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCurrency(data.totalCredit)}</TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
         )}
       </CardContent>
     </Card>

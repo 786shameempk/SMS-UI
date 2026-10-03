@@ -90,7 +90,7 @@ export default function DashboardPage() {
   const setHiddenWidgets = useUiStore((s) => s.setHiddenDashboardWidgets);
 
   const scopeEnabled = canSwitchScopeView(user);
-  const availableWidgets = widgetsForRole(role, scopeEnabled);
+  const availableWidgets = widgetsForRole(role, scopeEnabled, modulePermissions);
   const show = (id: DashboardWidgetId) => availableWidgets.some((w) => w.id === id) && !hiddenWidgets.includes(id);
   const rangeLabel = describeDateRange(dateRange);
 

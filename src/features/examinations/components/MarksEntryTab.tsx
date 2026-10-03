@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { listSubjects } from "@/features/academics/api";
 import { getExamResults, getExamRoster, listExamSchedules, listExams, saveExamResults } from "../api";
 import type { ExamResultEntryRow } from "../types";
@@ -149,62 +150,60 @@ export default function MarksEntryTab() {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="rounded-xl border border-border overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-secondary/60 border-b border-border">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Admission No.</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Student</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Section</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Marks obtained</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Absent</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {roster.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                          No students found in this exam's class.
-                        </td>
-                      </tr>
-                    )}
-                    {roster.map((student) => {
-                      const draft = drafts[student.id] ?? { marksObtained: "", isAbsent: false };
-                      return (
-                        <tr key={student.id} className="border-b border-border last:border-0">
-                          <td className="px-4 py-2.5 text-secondary-foreground">{student.admissionNumber}</td>
-                          <td className="px-4 py-2.5 font-medium text-foreground">
-                            {student.firstName} {student.lastName}
-                          </td>
-                          <td className="px-4 py-2.5 text-secondary-foreground">{student.section}</td>
-                          <td className="px-4 py-2.5">
-                            <Input
-                              type="number"
-                              min={0}
-                              max={schedule.maxMarks}
-                              className="w-28"
-                              disabled={draft.isAbsent}
-                              value={draft.marksObtained}
-                              onChange={(e) =>
-                                setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, marksObtained: e.target.value } }))
-                              }
-                            />
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <Checkbox
-                              checked={draft.isAbsent}
-                              onCheckedChange={(checked) =>
-                                setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, isAbsent: Boolean(checked) } }))
-                              }
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            <div className="rounded-xl border border-border overflow-clip">
+              <Table stickyHeader>
+                <TableHeader>
+                  <TableRow hover={false}>
+                    <TableHead>Admission No.</TableHead>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Section</TableHead>
+                    <TableHead>Marks obtained</TableHead>
+                    <TableHead>Absent</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roster.length === 0 && (
+                    <TableRow hover={false}>
+                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        No students found in this exam's class.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {roster.map((student) => {
+                    const draft = drafts[student.id] ?? { marksObtained: "", isAbsent: false };
+                    return (
+                      <TableRow key={student.id}>
+                        <TableCell className="text-secondary-foreground">{student.admissionNumber}</TableCell>
+                        <TableCell className="font-medium">
+                          {student.firstName} {student.lastName}
+                        </TableCell>
+                        <TableCell className="text-secondary-foreground">{student.section}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={schedule.maxMarks}
+                            className="w-28"
+                            disabled={draft.isAbsent}
+                            value={draft.marksObtained}
+                            onChange={(e) =>
+                              setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, marksObtained: e.target.value } }))
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={draft.isAbsent}
+                            onCheckedChange={(checked) =>
+                              setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, isAbsent: Boolean(checked) } }))
+                            }
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

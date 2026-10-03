@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import toast from "react-hot-toast";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/utils/cn";
 import { DAYS_OF_WEEK, MEAL_TYPES } from "../constants";
 import { listHostels, listMessMenu, updateMessMenuEntry } from "../api";
@@ -65,44 +66,38 @@ export default function MessMenuTab() {
       {isLoading && <p className="text-sm text-muted-foreground">Loading menu…</p>}
 
       {!isLoading && hostelId && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-secondary/60 border-b border-border">
-                <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Day</th>
-                  {MEAL_TYPES.map((meal) => (
-                    <th key={meal.value} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {meal.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DAYS_OF_WEEK.map((day, index) => (
-                  <tr key={day.value} className={cn("border-b border-border last:border-0", index % 2 === 1 && "bg-secondary/20")}>
-                    <td className="px-4 py-3 align-top text-sm font-medium text-foreground whitespace-nowrap">{day.label}</td>
-                    {MEAL_TYPES.map((meal) => {
-                      const entry = entryFor(day.value, meal.value);
-                      return (
-                        <td key={meal.value} className="px-4 py-3 align-top">
-                          <button
-                            type="button"
-                            onClick={() => setEditingCell({ day: day.value, meal: meal.value })}
-                            className="group flex items-start gap-1.5 text-left cursor-pointer"
-                          >
-                            <span className="text-sm text-secondary-foreground">{entry?.items || "—"}</span>
-                            <Pencil className="w-3 h-3 text-muted-foreground/70 group-hover:text-muted-foreground shrink-0 mt-0.5" />
-                          </button>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Table containerClassName="rounded-xl border border-border bg-card">
+          <TableHeader>
+            <TableRow hover={false}>
+              <TableHead>Day</TableHead>
+              {MEAL_TYPES.map((meal) => (
+                <TableHead key={meal.value}>{meal.label}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {DAYS_OF_WEEK.map((day, index) => (
+              <TableRow key={day.value} className={cn(index % 2 === 1 && "bg-secondary/20")}>
+                <TableCell className="align-top font-medium whitespace-nowrap">{day.label}</TableCell>
+                {MEAL_TYPES.map((meal) => {
+                  const entry = entryFor(day.value, meal.value);
+                  return (
+                    <TableCell key={meal.value} className="align-top">
+                      <button
+                        type="button"
+                        onClick={() => setEditingCell({ day: day.value, meal: meal.value })}
+                        className="group flex items-start gap-1.5 text-left cursor-pointer"
+                      >
+                        <span className="text-sm text-secondary-foreground">{entry?.items || "—"}</span>
+                        <Pencil className="w-3 h-3 text-muted-foreground/70 group-hover:text-muted-foreground shrink-0 mt-0.5" />
+                      </button>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       <MessMenuCellDialog
