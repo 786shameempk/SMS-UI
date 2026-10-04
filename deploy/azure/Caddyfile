@@ -1,16 +1,52 @@
-# Caddy gets and renews Let's Encrypt certificates automatically. DOMAIN must point at the VM's
-# public IP, and ports 80 + 443 must be open, before the first `docker compose up`.
+# Caddy gets and renews Let's Encrypt certificates automatically. DOMAIN and APP_DOMAIN must both point at the
+# VM's public IP, and ports 80 + 443 must be open, before the first `docker compose up`.
+#
+#   DOMAIN      (sms-schoolsphere.com)       marketing site: landing page only
+#   APP_DOMAIN  (demo.sms-schoolsphere.com)  the application: login, dashboard and every feature, plus the APIs
 {
 	email {$ACME_EMAIL}
 }
 
-# EXTRA_DOMAINS (optional, space-separated) also point at this VM: Caddy gets certificates for them and
-# permanently redirects them to DOMAIN, so the SPA, CORS and auth all keep working on the one main origin.
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+# EXTRA_DOMAINS (optional, space-separated, e.g. www.) get certificates and permanently redirect to DOMAIN.
+# Marketing site: serves the landing page and its static files; any other path is an application route and is
+# sent to APP_DOMAIN (so /login, /dashboard, /students ... never run on the marketing origin).
 {$DOMAIN} {$EXTRA_DOMAINS} {
 	@extra not host {$DOMAIN}
 	redir @extra https://{$DOMAIN}{uri} permanent
 
 	encode zstd gzip
+	import security_headers
+
+	@marketing {
+		path / /product /product/ /founder /founder/ /assets/* /favicon.svg /icons.svg /manifest.webmanifest /robots.txt /sitemap.xml /sw.js /config.js /google*.html
+	}
+	handle @marketing {
+		reverse_proxy ui:80
+	}
+
+	# Everything else is the application.
+	handle {
+		redir https://{$APP_DOMAIN}{uri} 302
+	}
+}
+
+# Application. "/" has nothing to show here (the landing page lives on DOMAIN), so it goes to the login screen,
+# which sends already-signed-in users on to their dashboard.
+{$APP_DOMAIN} {
+	encode zstd gzip
+	import security_headers
+
+	@root path /
+	redir @root /login 302
 
 	# APIs: the gateway routes /services/<name>/... to each service; /api/... are its own endpoints.
 	handle /services/* {
@@ -20,7 +56,7 @@
 		reverse_proxy apigateway:8080
 	}
 
-	# LiveKit signalling (WebSocket). The prefix is stripped, so wss://DOMAIN/livekit/rtc reaches LiveKit's /rtc.
+	# LiveKit signalling (WebSocket). The prefix is stripped, so wss://APP_DOMAIN/livekit/rtc reaches LiveKit's /rtc.
 	# Media doesn't come through here: it goes straight to LiveKit on 7881/tcp, 7882/udp and 3478/udp.
 	handle_path /livekit/* {
 		reverse_proxy livekit:7880
@@ -30,12 +66,4 @@
 	handle {
 		reverse_proxy ui:80
 	}
-
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		-Server
-	}
 }
-

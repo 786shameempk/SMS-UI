@@ -1,12 +1,14 @@
 // Seeds a realistic school into the local services so load tests run against real data volumes:
-// classes + sections, students, fee structures, invoices (some paid -> receipts) and daily attendance.
+// classes + sections, students, fee structures, invoices (some paid -> receipts), daily attendance, and exams
+// with marks (terms + core subjects created if missing).
 //
 //   node loadtest/seed-data.mjs                       # 300 students, 30 school days of attendance
 //   node loadtest/seed-data.mjs --students 600 --days 60
+//   node loadtest/seed-data.mjs --only exams          # just the exams (dashboard results trend, top performers)
 //
 // Goes through the public APIs as the admin from loadtest/users.json, so validation and tenant scoping apply.
 // Safe to re-run: it tops up to the target counts, invoice generation skips existing ones, attendance for a
-// section/date is replaced, and only unpaid (Due/Overdue) invoices get paid.
+// section/date is replaced, only unpaid (Due/Overdue) invoices get paid, and an exam that already exists is skipped.
 import { readFileSync } from "node:fs";
 
 const arg = (name, fallback) => {
@@ -125,8 +127,16 @@ async function linkParents(students) {
 
 async function ensureClassesAndSections() {
   const years = await call("academic", "GET", "/api/academicyears");
-  const year = years.find((y) => y.isCurrent) ?? years[0];
-  if (!year) throw new Error("No academic year found - create one in the UI first");
+  let year = years.find((y) => y.isCurrent) ?? years[0];
+  if (!year) {
+    // A fresh database: the Indian school year (June - March) that contains today.
+    const now = new Date();
+    const y0 = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+    year = await call("academic", "POST", "/api/academicyears", {
+      name: `${y0}-${String(y0 + 1).slice(2)}`, startDate: `${y0}-06-01`, endDate: `${y0 + 1}-03-31`, isCurrent: true, status: "Active",
+    });
+    console.log(`academic year ${year.name} created`);
+  }
 
   const classes = await call("academic", "GET", "/api/classes");
   for (let g = 1; g <= GRADES; g++) {
@@ -283,13 +293,112 @@ async function seedAttendance(sections, students) {
   console.log(`attendance: ${jobs.length} section-days, ${records} records (${days[0]} .. ${days.at(-1)})`);
 }
 
+/** Days from today as yyyy-mm-dd (negative = past). */
+function dayOffset(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+const CORE_SUBJECTS = [
+  ["English", "ENG"],
+  ["Mathematics", "MATH"],
+  ["Science", "SCI"],
+  ["Social Studies", "SST"],
+];
+
+/**
+ * Three completed exams per class spread over the last ~5 months (unit test, mid-term, unit test), each with a
+ * paper per core subject and marks for every active student, so the dashboard's results trend and top performers
+ * have data inside the default "last 6 months" range. Dates are relative to today and the month is part of each
+ * exam's name, so re-running later adds newer exams instead of duplicating these.
+ *
+ * Marks are deterministic: each student has a steady ability, subjects shift it a little, later exams are a few
+ * points better (so the trend rises), about 3% of papers are absences and a handful of students fall below the
+ * pass mark of 35.
+ */
+async function ensureExams(year, classes, sections, students) {
+  // Exams belong to a term; the load-test school may not have any yet.
+  let terms = (await call("academic", "GET", "/api/terms")).filter((t) => t.academicYearId === year.id);
+  if (terms.length === 0) {
+    const y0 = Number(year.startDate.slice(0, 4));
+    terms = [
+      await call("academic", "POST", "/api/terms", { name: "Term 1", academicYearId: year.id, startDate: year.startDate, endDate: `${y0}-10-15`, status: "Ongoing" }),
+      await call("academic", "POST", "/api/terms", { name: "Term 2", academicYearId: year.id, startDate: `${y0}-10-26`, endDate: year.endDate, status: "Upcoming" }),
+    ];
+  }
+  const termFor = (date) => terms.find((t) => t.startDate <= date && date <= t.endDate) ?? terms[0];
+
+  const subjects = await call("academic", "GET", "/api/subjects");
+  const core = [];
+  for (const [name, code] of CORE_SUBJECTS) {
+    core.push(
+      subjects.find((s) => s.name === name) ??
+        (await call("academic", "POST", "/api/subjects", { name, code, type: "Core", classIds: classes.map((c) => c.id) })),
+    );
+  }
+
+  const label = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+  const plan = [
+    { kind: "Unit Test 1", type: "Internal", start: dayOffset(-140), days: 1, boost: 0 },
+    { kind: "Mid-term Examination", type: "Midterm", start: dayOffset(-84), days: 4, boost: 3 },
+    { kind: "Unit Test 2", type: "Internal", start: dayOffset(-28), days: 1, boost: 6 },
+  ];
+
+  const existing = await call("academic", "GET", "/api/exams");
+  const jobs = [];
+  for (const cls of classes) {
+    const roster = students.filter((s) => s.status === "Active" && sections.some((sec) => sec.id === s.sectionId && sec.classId === cls.id));
+    if (roster.length === 0) continue;
+    for (const p of plan) jobs.push({ cls, roster, p, name: `${p.kind} (${label(p.start)}) - ${cls.name}` });
+  }
+
+  let created = 0;
+  let marks = 0;
+  await pool(jobs, async ({ cls, roster, p, name }) => {
+    if (existing.some((e) => e.classId === cls.id && e.name === name)) return;
+    const endDate = dayOffset(Math.round((new Date(`${p.start}T12:00:00`) - new Date()) / 86_400_000) + p.days - 1);
+    const exam = await call("academic", "POST", "/api/exams", {
+      name, examType: p.type, termId: termFor(p.start).id, classId: cls.id, startDate: p.start, endDate, status: "Completed",
+    });
+    for (const [i, subject] of core.entries()) {
+      const date = new Date(`${p.start}T12:00:00`);
+      date.setDate(date.getDate() + Math.min(i, p.days - 1));
+      await call("academic", "POST", `/api/exams/${exam.id}/schedules`, {
+        subjectId: subject.id, date: date.toISOString().slice(0, 10), startTime: "09:30", endTime: "11:30", maxMarks: 100, passMarks: 35, room: null,
+      });
+      await call("academic", "POST", `/api/exams/${exam.id}/results`, {
+        subjectId: subject.id,
+        maxMarks: 100,
+        entries: roster.map((s) => {
+          const absent = hash(`${s.id}:${name}:${subject.id}:absent`) < 0.03;
+          const weak = hash(`${s.id}:weak`) < 0.06; // a few students who struggle across the board
+          const ability = weak ? 22 + hash(`${s.id}:ability`) * 14 : 48 + hash(`${s.id}:ability`) * 42;
+          const subjectShift = (hash(`${s.id}:${subject.id}`) - 0.5) * 16;
+          const noise = (hash(`${s.id}:${name}:${subject.id}`) - 0.5) * 14;
+          const mark = Math.round(Math.max(8, Math.min(100, ability + subjectShift + noise + p.boost)));
+          return { studentId: s.id, marksObtained: absent ? 0 : mark, isAbsent: absent };
+        }),
+      });
+      marks += roster.length;
+    }
+    created++;
+  });
+  console.log(`exams: ${created} new (${jobs.length} planned, ${core.length} subjects each), ${marks} marks entered`);
+}
+
 // ── main ─────────────────────────────────────────────────────────────────────
+
+// --only exams,attendance runs just those steps (classes, sections and students are always loaded).
+const ONLY = arg("only", "").split(",").map((s) => s.trim()).filter(Boolean);
+const runs = (step) => ONLY.length === 0 || ONLY.includes(step);
 
 const started = Date.now();
 await login();
 const { year, classes, sections } = await ensureClassesAndSections();
 const students = await ensureStudents(sections, classes);
-await linkParents(students);
-await ensureFees(year, classes, sections, students);
-await seedAttendance(sections, students);
+if (runs("parents")) await linkParents(students);
+if (runs("fees")) await ensureFees(year, classes, sections, students);
+if (runs("attendance")) await seedAttendance(sections, students);
+if (runs("exams")) await ensureExams(year, classes, sections, students);
 console.log(`done in ${((Date.now() - started) / 1000).toFixed(1)}s`);

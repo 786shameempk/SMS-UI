@@ -13,6 +13,9 @@
  * Each URL must be reachable from the user's browser and end with a slash, e.g. "https://api.example.com/auth/".
  */
 window.__EDUCORE_CONFIG__ = {
+  // Public address of the application (login etc.) when it runs on a different host than this site, e.g.
+  // "https://demo.sms-schoolsphere.com". Empty = same origin.
+  appUrl: "",
   authApiUrl: "",
   academicApiUrl: "",
   financeApiUrl: "",
@@ -20,4 +23,7 @@ window.__EDUCORE_CONFIG__ = {
   engagementApiUrl: "",
   meetingApiUrl: "",
   aiApiUrl: "",
+  // Dashboard sample figures. "true" allows them (never in production); dashboardDataSource picks the default.
+  allowDemoData: "",
+  dashboardDataSource: "",
 };
