@@ -3,13 +3,20 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-/** Dev-server twin of nginx.conf's /founder rule: serves the standalone public/founder-card.html at /founder. */
-function founderPage(): Plugin {
+/** Standalone static pages in public/, served at a clean URL. Keep in step with the matching rules in nginx.conf. */
+const STATIC_PAGES: Record<string, string> = {
+  founder: "/founder-card.html",
+  product: "/schoolsphere.html",
+};
+
+/** Dev-server twin of nginx.conf's /founder and /product rules. */
+function staticPages(): Plugin {
   return {
-    name: "founder-page",
+    name: "static-pages",
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        if (req.url && /^\/founder\/?(\?.*)?$/.test(req.url)) req.url = "/founder-card.html";
+        const page = req.url?.match(/^\/([a-z-]+)\/?(\?.*)?$/)?.[1];
+        if (page && STATIC_PAGES[page]) req.url = STATIC_PAGES[page];
         next();
       });
     },
@@ -17,7 +24,7 @@ function founderPage(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), founderPage()],
+  plugins: [react(), tailwindcss(), staticPages()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),
