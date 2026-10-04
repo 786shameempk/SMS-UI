@@ -1,8 +1,5 @@
-# Production stack for a single Azure Linux VM: every SMS service pulled from GHCR, plus SQL Server, Redis
-# and Caddy as the only public entry point (automatic HTTPS).
-#
-# LiveKit (built-in video classes + recording) is not deployed yet: MeetingService still starts and
-# external-link meetings (Zoom/Meet/Teams URLs) work, but "in-app video" classes won't connect.
+# Production stack for a single Azure Linux VM: every SMS service pulled from GHCR, plus SQL Server, Redis,
+# LiveKit + Egress (in-app video classes and their recordings) and Caddy as the HTTPS entry point.
 #
 #   cp .env.example .env            # then fill in real values
 #   docker login ghcr.io            # GitHub username + PAT with read:packages (GHCR packages are private by default)
@@ -12,6 +9,8 @@
 #   https://${DOMAIN}/               -> ui (SPA)
 #   https://${DOMAIN}/services/*     -> apigateway -> each service (YARP routes; /services/ai/* -> aiservice)
 #   https://${DOMAIN}/api/*          -> apigateway's own endpoints (reports)
+#   wss://${DOMAIN}/livekit/*        -> livekit (video signalling)
+# Video media goes straight to LiveKit, so the VM also publishes 7881/tcp, 7882/udp and 3478/udp (TURN).
 # Nothing else is published on the host: SQL Server, Redis and the services are only on the Docker network.
 
 x-logging: &logging
@@ -59,6 +58,7 @@ services:
     depends_on:
       - ui
       - apigateway
+      - livekit
 
   ui:
     <<: *logging
@@ -177,18 +177,88 @@ services:
       Services__AcademicServiceUrl: http://academicservice:8080/
       Services__EngagementServiceUrl: http://engagementservice:8080/
       ServiceAuth__Secret: ${SERVICE_AUTH_SECRET}
-      # LiveKit is not deployed yet, but MeetingService refuses to start without a key + secret (32+ chars),
-      # so these must still be set. In-app video classes stay unavailable until LiveKit is added back.
-      LiveKit__Url: wss://${DOMAIN}/livekit-not-deployed
-      LiveKit__ApiUrl: http://livekit-not-deployed:7880
+      # Browsers and the mobile apps get this address with their join ticket; Caddy forwards /livekit/* to LiveKit.
+      # This service talks to LiveKit directly on the Docker network.
+      LiveKit__Url: wss://${DOMAIN}/livekit
+      LiveKit__ApiUrl: http://livekit:7880
       LiveKit__ApiKey: ${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required - set it in .env next to docker-compose.yml (see .env.example)}
       LiveKit__ApiSecret: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
-      LiveKit__EgressEnabled: "false"
+      # Recording: Egress writes MP4s into the shared meeting-files volume (mounted at /out there), then this
+      # service uploads them to blob storage.
+      LiveKit__EgressEnabled: ${LIVEKIT_EGRESS_ENABLED:-true}
+      LiveKit__EgressOutputRoot: /out
     volumes:
       - meeting-files:/app/App_Data/meeting-files # recordings land here before upload; meeting-link key ring
     depends_on:
       sqlserver:
         condition: service_healthy
+      livekit:
+        condition: service_started
+
+  # Self-hosted video server for in-app classes and meetings. Signalling comes in through Caddy
+  # (wss://${DOMAIN}/livekit); media (WebRTC) goes straight to the VM on the ports below, which must also be open
+  # in the Azure network security group. The VM's public IP is found with STUN (use_external_ip).
+  livekit:
+    <<: *logging
+    image: livekit/livekit-server:v1.13.7
+    restart: unless-stopped
+    ports:
+      - "7881:7881"     # WebRTC over TCP, for networks that block UDP
+      - "7882:7882/udp" # WebRTC over UDP (all media, one port)
+      - "3478:3478/udp" # built-in TURN relay, for strict school/office firewalls
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: true
+          # Egress shares this container's network (below) and joins rooms over loopback.
+          enable_loopback_candidate: true
+        turn:
+          enabled: true
+          domain: ${DOMAIN}
+          udp_port: 3478
+        room:
+          empty_timeout: 300
+          departure_timeout: 20
+        webhook:
+          api_key: ${LIVEKIT_API_KEY}
+          urls:
+            - http://meetingservice:8080/webhooks/livekit
+        # Redis lets LiveKit hand recording jobs to Egress.
+        redis:
+          address: redis:6379
+        logging:
+          level: info
+    depends_on:
+      - redis
+
+  # Class recording: headless Chrome joins the room and composites it into an MP4. It shares LiveKit's network
+  # namespace so it reaches the media server over loopback; LiveKit's public IP isn't reachable from inside the VM.
+  # Each recording uses roughly 2-4 vCPUs while it runs.
+  egress:
+    <<: *logging
+    image: livekit/egress:v1.14.1
+    restart: unless-stopped
+    network_mode: "service:livekit"
+    cap_add:
+      - SYS_ADMIN # Chrome's sandbox
+    shm_size: "1gb"
+    environment:
+      EGRESS_CONFIG_BODY: |
+        api_key: ${LIVEKIT_API_KEY}
+        api_secret: ${LIVEKIT_API_SECRET}
+        ws_url: ws://127.0.0.1:7880
+        redis:
+          address: redis:6379
+        log_level: info
+    volumes:
+      - meeting-files:/out
+    depends_on:
+      - livekit
+      - redis
 
   # AI assistant, generators, study-material Q&A and report-card remarks. Reads school data only through the
   # other services with the caller's own token. The provider key stays in this container's environment and never

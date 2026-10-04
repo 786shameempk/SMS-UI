@@ -1,25 +1,28 @@
 # Deploying SMS to an Azure Linux VM
 
-One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, SQL Server, Redis and
-Caddy, which is the only public entry point and handles HTTPS.
-
-LiveKit (in-app video classes + recording) is **not deployed yet**. MeetingService still runs and
-external-link meetings (Zoom/Meet/Teams URLs) work; in-app video classes won't connect until LiveKit is added.
+One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, SQL Server, Redis,
+LiveKit + Egress (in-app video classes and recordings) and Caddy, which handles HTTPS.
 
 ```
 Browser ──443──> Caddy ─┬─ /            -> ui
                         ├─ /services/*  -> apigateway -> auth / academic / finance / campus / engagement / meeting / ai
-                        └─ /api/*       -> apigateway (reports)
+                        ├─ /api/*       -> apigateway (reports)
+                        └─ /livekit/*   -> livekit (video signalling, WebSocket)
+
+Browser ── 7882/udp, 7881/tcp, 3478/udp (TURN) ──> livekit   (video and audio media, direct)
+livekit ── Redis ──> egress (records a class to MP4 in meeting-files) ──> meetingservice uploads it to blob storage
 ```
 
 ## 1. VM
 
 - Ubuntu 24.04 LTS, x86_64 (SQL Server has no ARM image).
 - Size: at least **4 vCPU / 8 GB** (e.g. `Standard_B4ms` or `D2s_v5` with 8 GB for a small start).
-  SQL Server wants 2 GB+ and each .NET service ~200-300 MB.
-- A static public IP.
-- Network security group, inbound: `22/tcp` (your IP only), `80/tcp`, `443/tcp`, `443/udp`.
-  Do **not** open 1433 or 6379.
+  SQL Server wants 2 GB+ and each .NET service ~200-300 MB. Recording classes adds about 2-4 vCPU per
+  recording in progress, so for regular recordings use **8 vCPU / 16 GB** (e.g. `D4s_v5`), or set
+  `LIVEKIT_EGRESS_ENABLED=false` to run live classes without recording.
+- A static public IP (LiveKit advertises it to browsers for media).
+- Network security group, inbound: `22/tcp` (your IP only), `80/tcp`, `443/tcp`, `443/udp`, and for video
+  `7881/tcp`, `7882/udp`, `3478/udp`. Do **not** open 1433, 6379 or 7880.
 
 ## 2. DNS
 
