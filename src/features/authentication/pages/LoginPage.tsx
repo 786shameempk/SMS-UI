@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { isSiteOnOtherOrigin, siteHref } from "@/lib/appUrl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -337,9 +338,17 @@ export default function LoginPage() {
         </div>
 
         <footer className="relative flex flex-col items-center gap-1.5 px-5 pb-6 text-xs text-muted-foreground sm:flex-row sm:justify-center sm:gap-4 lg:justify-end lg:px-10">
-          <Link to="/" className="rounded hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            &larr; Back to website
-          </Link>
+          {/* On the public site the landing page lives on its own host (sms-schoolsphere.com): a full-page link
+              there. Locally (one origin) it's the in-app "/" route. */}
+          {isSiteOnOtherOrigin ? (
+            <a href={siteHref("/")} className="rounded hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              &larr; Back to website
+            </a>
+          ) : (
+            <Link to="/" className="rounded hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              &larr; Back to website
+            </Link>
+          )}
           <span aria-hidden="true" className="hidden sm:inline">&middot;</span>
           <span>Need help? Contact your school administrator</span>
         </footer>

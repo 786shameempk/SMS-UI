@@ -72,6 +72,8 @@ services:
     # domain whatever URLs were baked into the image at build time.
     environment:
       APP_URL: https://${APP_DOMAIN}
+      # The marketing site, where the login page's "Back to website" goes.
+      SITE_URL: https://${DOMAIN}
       AUTH_API_URL: https://${APP_DOMAIN}/services/identity/
       ACADEMIC_API_URL: https://${APP_DOMAIN}/services/academic/
       FINANCE_API_URL: https://${APP_DOMAIN}/services/finance/
