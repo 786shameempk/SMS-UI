@@ -14,3 +14,16 @@ export const isAppOnOtherOrigin = APP_URL !== "" && (typeof window === "undefine
 export function appHref(path: string): string {
   return `${APP_URL}${path}`;
 }
+
+/**
+ * The public marketing site (landing page), e.g. "https://sms-schoolsphere.com", when the app runs on another host.
+ * Resolved like APP_URL: runtime config.js (siteUrl), then VITE_SITE_URL, then "" = same origin.
+ */
+export const SITE_URL = (runtimeConfig.siteUrl?.trim() || import.meta.env.VITE_SITE_URL?.trim() || "").replace(/\/+$/, "");
+
+/** True when the marketing site is on another origin than this page, so "Back to website" must be a full link. */
+export const isSiteOnOtherOrigin = SITE_URL !== "" && (typeof window === "undefined" || SITE_URL !== window.location.origin);
+
+export function siteHref(path: string): string {
+  return `${SITE_URL}${path}`;
+}

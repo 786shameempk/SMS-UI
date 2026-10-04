@@ -17,6 +17,7 @@ target=/usr/share/nginx/html/config.js
 cat > "$target" <<EOF
 window.__EDUCORE_CONFIG__ = {
   appUrl: "$(esc "${APP_URL:-}")",
+  siteUrl: "$(esc "${SITE_URL:-}")",
   authApiUrl: "$(esc "${AUTH_API_URL:-}")",
   academicApiUrl: "$(esc "${ACADEMIC_API_URL:-}")",
   financeApiUrl: "$(esc "${FINANCE_API_URL:-}")",
