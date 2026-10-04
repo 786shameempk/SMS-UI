@@ -18,6 +18,9 @@ export default mergeConfig(
       setupFiles: ["./src/test/setup.ts"],
       include: ["src/**/*.test.{ts,tsx}"],
       css: false,
+      // Interaction-heavy page tests (lazy chunks, Radix menus, userEvent) take 2-6 s each when the whole suite runs
+      // in parallel on a busy machine; the 5 s default cut some off mid-run. A hung test still fails, just later.
+      testTimeout: 15_000,
       clearMocks: true,
       restoreMocks: true,
       unstubEnvs: true,

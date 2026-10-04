@@ -4,7 +4,7 @@ import { AxiosError, AxiosHeaders, type AxiosResponse } from "axios";
 import { useUiStore } from "@/store/useUiStore";
 import { allModules, renderWithProviders, signIn, signOut } from "@/test/utils";
 import DashboardPage from "./pages/DashboardPage";
-import WidgetShell from "./components/WidgetShell";
+import WidgetShell, { type WidgetQuery } from "./components/WidgetShell";
 import { toSavedLayout } from "./layout";
 
 // Demo data normally arrives after a random 250-600 ms "network" delay; under a busy parallel test run that made
@@ -225,12 +225,12 @@ describe("WidgetShell states", () => {
     const response = { status, data: {}, headers: {}, statusText: "", config: { headers: new AxiosHeaders() } } as AxiosResponse;
     return new AxiosError("failed", String(status), undefined, undefined, response);
   };
-  const query = (over: Partial<Parameters<typeof WidgetShell>[0]["query"]>) => ({
+  const query = (over: Partial<WidgetQuery<string>>) => ({
     data: undefined,
     error: null,
     isError: false,
     isRefetching: false,
-    refetch: vi.fn(),
+    refetch: vi.fn<() => unknown>(),
     ...over,
   });
   const shell = (q: ReturnType<typeof query>) => render(<WidgetShell query={q} title="Fees due">{(d: string) => <p>data: {d}</p>}</WidgetShell>);
