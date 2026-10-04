@@ -38,6 +38,10 @@ services:
     container_name: school-ui
     ports:
       - "8080:80"
+    environment:
+      # Dashboard: sample figures allowed here and on by default for now; each browser can switch to live data.
+      ALLOW_DEMO_DATA: "true"
+      DASHBOARD_DATA_SOURCE: mock
     restart: unless-stopped
     depends_on:
       - authservice

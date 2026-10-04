@@ -36,7 +36,10 @@ export default function AppLayout() {
   }, [open, setOpen]);
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-background">
+    // Pinned to the window (fixed, inset 0) rather than sized with viewport units: at some browser zoom levels
+    // `100dvh` doesn't match the visible window, which let the whole page scroll and pushed the header off screen.
+    // Only <main> and the sidebar scroll; the document itself never does.
+    <div className="fixed inset-0 flex overflow-hidden bg-background">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"

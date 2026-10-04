@@ -59,6 +59,112 @@ const PREVIEWS: Record<DashboardWidgetId, () => React.ReactElement> = {
       ))}
     </g>
   ),
+  schools: () => (
+    <g>
+      <rect x={10} y={8} width={140} height={10} rx={3} fill={LINE} />
+      {[0, 1, 2].map((i) => (
+        <g key={i} transform={`translate(10 ${24 + i * 15})`}>
+          <rect width={8} height={8} rx={2} fill={[P, INFO, WARN][i]} opacity={0.85} />
+          <Bar x={14} y={2} w={[52, 44, 48][i]} />
+          <rect x={80} y={0} width={24} height={8} rx={4} fill={[OK, INFO, WARN][i]} opacity={0.3} />
+          <Bar x={112} y={2} w={[24, 18, 14][i]} o={0.3} />
+        </g>
+      ))}
+    </g>
+  ),
+  alerts: () => (
+    <g>
+      {[0, 1, 2, 3].map((i) => (
+        <g key={i} transform={`translate(${10 + (i % 2) * 72} ${10 + Math.floor(i / 2) * 28})`}>
+          <rect width={68} height={22} rx={5} fill={[BAD, WARN, INFO, INFO][i]} opacity={0.14} stroke={[BAD, WARN, INFO, INFO][i]} strokeOpacity={0.35} />
+          <circle cx={9} cy={11} r={3.5} fill={[BAD, WARN, INFO, INFO][i]} />
+          <Bar x={17} y={7} w={40} c={[BAD, WARN, INFO, INFO][i]} o={0.5} />
+          <Bar x={17} y={13} w={28} h={3} o={0.15} />
+        </g>
+      ))}
+    </g>
+  ),
+  learnerAttendance: () => (
+    <g>
+      {[0, 1].map((i) => (
+        <g key={i} transform={`translate(12 ${12 + i * 28})`}>
+          <Bar x={0} y={0} w={52} />
+          <text x={136} y={6} textAnchor="end" fontSize={9} fontWeight={700} fill={i ? WARN : OK}>
+            {i ? "86%" : "95%"}
+          </text>
+          <rect x={0} y={10} width={136} height={6} rx={3} fill={LINE} />
+          <rect x={0} y={10} width={i ? 100 : 120} height={6} rx={3} fill={OK} />
+          <rect x={i ? 100 : 120} y={10} width={i ? 18 : 8} height={6} fill={WARN} />
+          <rect x={i ? 118 : 128} y={10} width={i ? 18 : 8} height={6} rx={3} fill={BAD} />
+        </g>
+      ))}
+    </g>
+  ),
+  feeStatus: () => (
+    <g>
+      <g transform="translate(40 36)">
+        <circle r={24} fill="none" stroke={OK} strokeWidth={9} strokeDasharray="90 151" />
+        <circle r={24} fill="none" stroke={INFO} strokeWidth={9} strokeDasharray="14 151" strokeDashoffset={-92} />
+        <circle r={24} fill="none" stroke={WARN} strokeWidth={9} strokeDasharray="28 151" strokeDashoffset={-108} />
+        <circle r={24} fill="none" stroke={BAD} strokeWidth={9} strokeDasharray="12 151" strokeDashoffset={-138} />
+      </g>
+      {[OK, INFO, WARN, BAD].map((c, i) => (
+        <g key={i} transform={`translate(80 ${18 + i * 12})`}>
+          <circle cx={3} cy={3} r={3} fill={c} />
+          <Bar x={10} y={1} w={[44, 36, 30, 40][i]} />
+        </g>
+      ))}
+    </g>
+  ),
+  classAttendance: () => (
+    <g>
+      {[0.96, 0.9, 0.82, 0.68].map((v, i) => (
+        <g key={i} transform={`translate(12 ${10 + i * 14})`}>
+          <Bar x={0} y={0} w={36} />
+          <rect x={44} y={0} width={92} height={5} rx={2.5} fill={LINE} />
+          <rect x={44} y={0} width={92 * v} height={5} rx={2.5} fill={v >= 0.9 ? OK : v >= 0.75 ? WARN : BAD} />
+        </g>
+      ))}
+    </g>
+  ),
+  topPerformers: () => (
+    <g>
+      {[0.96, 0.92, 0.88].map((v, i) => (
+        <g key={i} transform={`translate(10 ${12 + i * 18})`}>
+          <circle cx={6} cy={4} r={6} fill={[WARN, MUTED, P][i]} opacity={0.3} />
+          <text x={6} y={7} textAnchor="middle" fontSize={7} fontWeight={700} fill={INK}>
+            {i + 1}
+          </text>
+          <Bar x={18} y={0} w={50} />
+          <rect x={18} y={6} width={118} height={4} rx={2} fill={LINE} />
+          <rect x={18} y={6} width={118 * v} height={4} rx={2} fill={OK} />
+        </g>
+      ))}
+    </g>
+  ),
+  feeDefaulters: () => (
+    <g>
+      <rect x={10} y={8} width={140} height={9} rx={3} fill={LINE} />
+      {[0, 1, 2].map((i) => (
+        <g key={i} transform={`translate(10 ${24 + i * 15})`}>
+          <Bar x={0} y={1} w={[56, 48, 52][i]} />
+          <rect x={72} y={-1} width={30} height={8} rx={4} fill={BAD} opacity={0.18} />
+          <Bar x={112} y={1} w={26} c={BAD} o={0.55} />
+        </g>
+      ))}
+    </g>
+  ),
+  quickActions: () => (
+    <g>
+      {[0, 1, 2, 3].map((i) => (
+        <g key={i} transform={`translate(${12 + (i % 2) * 70} ${8 + Math.floor(i / 2) * 30})`}>
+          <rect width={64} height={26} rx={5} fill="var(--color-card)" stroke={LINE} />
+          <rect x={6} y={6} width={14} height={14} rx={4} fill={[P, INFO, OK, WARN][i]} opacity={0.85} />
+          <Bar x={25} y={11} w={30} />
+        </g>
+      ))}
+    </g>
+  ),
   performance: () => (
     <g>
       {[20, 34, 48].map((y) => (

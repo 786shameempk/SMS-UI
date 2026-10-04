@@ -26,7 +26,7 @@ Edit the config to add schools or change sizes. The code is split per service: `
 | | **Staff**: teachers + principal/VP, accountant, librarian, nurse, warden, 2 drivers, receptionist, with salaries and qualifications, teacher-subject assignments, class teachers |
 | | **Students** with guardians and medical records |
 | | Auto-generated timetables, 10 days of student + staff attendance, calendar events |
-| | Homework with submissions and grades, mid-term exams with schedules, marks and remarks, lesson plans, learning resources, quizzes |
+| | Homework with submissions and grades, two unit tests and a mid-term exam per class (July-September) with schedules, marks and remarks, lesson plans, learning resources, quizzes |
 | | Question bank (8 questions) + a scheduled **online exam** for Grade 8 |
 | | Admissions, staff leave requests (approved/rejected) |
 | | Fee structures, Term 1 invoices, payments (paid / part-paid / instalments), discounts, a refund, chart of accounts + journal entries |

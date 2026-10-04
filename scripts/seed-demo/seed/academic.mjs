@@ -295,30 +295,43 @@ export async function seedAcademic(ctx) {
   });
 
   // ── Exams & results ──
-  await S("Examinations", "mid-term exams, schedules & results", async () => {
+  // Two unit tests and the mid-term, so the dashboard's results trend has several months to plot. Later exams
+  // score a little higher on average, so the trend reads as steady progress.
+  await S("Examinations", "unit tests & mid-term exams, schedules & results", async () => {
+    const plan = [
+      { name: "Unit Test 1", type: "Internal", start: `${y0}-07-14`, days: 1, boost: -3 },
+      { name: "Unit Test 2", type: "Internal", start: `${y0}-08-18`, days: 1, boost: 0 },
+      { name: "Mid-term Examination", type: "Midterm", start: `${y0}-09-21`, days: 6, boost: 3 },
+    ];
+    const core = ctx.subjects.filter((x) => x.type === "Core");
+    let exams = 0;
     let results = 0;
     for (const c of ctx.classes) {
-      const exam = await s.post("academic", "/api/exams", { name: `Mid-term Examination - Grade ${c.grade}`, examType: "Midterm", termId: ctx.term1.id, classId: c.id, startDate: `${y0}-09-21`, endDate: `${y0}-09-26`, status: "Completed" });
-      const core = ctx.subjects.filter((x) => x.type === "Core");
-      for (const [i, sub] of core.entries()) {
-        await s.post("academic", `/api/exams/${exam.id}/schedules`, { subjectId: sub.id, date: iso(addDays(new Date(`${y0}-09-21`), i)), startTime: "09:30", endTime: "12:00", maxMarks: 100, passMarks: 35, room: `Room ${101 + (c.grade % 5)}` });
-        const students = ctx.studentsIn(c.id);
-        await s.post("academic", `/api/exams/${exam.id}/results`, {
-          subjectId: sub.id,
-          maxMarks: 100,
-          entries: students.map((st) => {
-            const absent = r.chance(0.03);
-            const base = 45 + ((st.first.charCodeAt(0) * 7 + st.last.charCodeAt(0)) % 40);
-            return { studentId: st.id, marksObtained: absent ? 0 : Math.max(18, Math.min(100, base + r.int(-12, 15))), isAbsent: absent };
-          }),
-        });
-        results += students.length;
-      }
-      for (const st of ctx.studentsIn(c.id).slice(0, 3)) {
-        await s.post("academic", `/api/exams/${exam.id}/remarks/${st.id}`, { remarks: r.pick(["Consistent performer. Keep it up!", "Needs to focus on mathematics.", "Excellent improvement since the last test."]) });
+      for (const p of plan) {
+        const end = iso(addDays(new Date(p.start), p.days - 1));
+        const exam = await s.post("academic", "/api/exams", { name: `${p.name} - Grade ${c.grade}`, examType: p.type, termId: ctx.term1.id, classId: c.id, startDate: p.start, endDate: end, status: "Completed" });
+        exams++;
+        for (const [i, sub] of core.entries()) {
+          await s.post("academic", `/api/exams/${exam.id}/schedules`, { subjectId: sub.id, date: iso(addDays(new Date(p.start), Math.min(i, p.days - 1))), startTime: "09:30", endTime: "12:00", maxMarks: 100, passMarks: 35, room: `Room ${101 + (c.grade % 5)}` });
+          const students = ctx.studentsIn(c.id);
+          await s.post("academic", `/api/exams/${exam.id}/results`, {
+            subjectId: sub.id,
+            maxMarks: 100,
+            entries: students.map((st) => {
+              const absent = r.chance(0.03);
+              const base = 45 + ((st.first.charCodeAt(0) * 7 + st.last.charCodeAt(0)) % 40);
+              return { studentId: st.id, marksObtained: absent ? 0 : Math.max(18, Math.min(100, base + p.boost + r.int(-12, 15))), isAbsent: absent };
+            }),
+          });
+          results += students.length;
+        }
+        if (p.type !== "Midterm") continue;
+        for (const st of ctx.studentsIn(c.id).slice(0, 3)) {
+          await s.post("academic", `/api/exams/${exam.id}/remarks/${st.id}`, { remarks: r.pick(["Consistent performer. Keep it up!", "Needs to focus on mathematics.", "Excellent improvement since the last test."]) });
+        }
       }
     }
-    return `${ctx.classes.length} exams, ${results} marks entered`;
+    return `${exams} exams, ${results} marks entered`;
   });
 
   // ── Lesson plans & learning ──

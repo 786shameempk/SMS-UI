@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronDown, CircleHelp, GraduationCap, LifeBuoy, ListChecks, Menu, ShieldCheck, Workflow, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
+import { appHref } from "@/lib/appUrl";
 import { useLeadCapture } from "./LeadCapture";
 
 const NAV_LINKS = [
@@ -142,7 +143,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Button variant="ghost" asChild>
-            <Link to="/login">Sign In</Link>
+            <a href={appHref("/login")}>Sign In</a>
           </Button>
           <Button onClick={openDemo} className="group">
             Get Started
@@ -190,7 +191,7 @@ export default function Navbar() {
               )}
               <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
                 <Button variant="outline" size="lg" asChild>
-                  <Link to="/login">Sign In</Link>
+                  <a href={appHref("/login")}>Sign In</a>
                 </Button>
                 <Button
                   size="lg"

@@ -6,10 +6,11 @@
 #   docker compose pull && docker compose up -d
 #
 # Public layout (see Caddyfile):
-#   https://${DOMAIN}/               -> ui (SPA)
-#   https://${DOMAIN}/services/*     -> apigateway -> each service (YARP routes; /services/ai/* -> aiservice)
-#   https://${DOMAIN}/api/*          -> apigateway's own endpoints (reports)
-#   wss://${DOMAIN}/livekit/*        -> livekit (video signalling)
+#   https://${DOMAIN}/               -> marketing site only (landing page; /login etc. redirect to APP_DOMAIN)
+#   https://${APP_DOMAIN}/           -> the application (ui SPA; / redirects to /login)
+#   https://${APP_DOMAIN}/services/*     -> apigateway -> each service (YARP routes; /services/ai/* -> aiservice)
+#   https://${APP_DOMAIN}/api/*          -> apigateway's own endpoints (reports)
+#   wss://${APP_DOMAIN}/livekit/*        -> livekit (video signalling)
 # Video media goes straight to LiveKit, so the VM also publishes 7881/tcp, 7882/udp and 3478/udp (TURN).
 # Nothing else is published on the host: SQL Server, Redis and the services are only on the Docker network.
 
@@ -34,6 +35,8 @@ x-dotnet-env: &dotnet-env
   # A second site allowed to call the APIs from another origin (e.g. the Azure Static Web Apps frontend).
   # Unset = just the main domain again (harmless duplicate).
   Cors__AllowedOrigins__1: ${CORS_EXTRA_ORIGIN:-https://${DOMAIN}}
+  # The application host (demo.<domain>): the marketing site and the app are different origins.
+  Cors__AllowedOrigins__2: https://${APP_DOMAIN:?APP_DOMAIN is required - set it in .env next to docker-compose.yml (see .env.example)}
   # Files (study materials, talent media, meeting files, student/staff photos and documents, avatars) live in Azure
   # Blob Storage, in private containers the services create themselves. Empty = the old local volumes (not for prod).
   BlobStorage__ConnectionString: ${AZURE_STORAGE_CONNECTION_STRING:-}
@@ -49,6 +52,7 @@ services:
       - "443:443/udp"
     environment:
       DOMAIN: ${DOMAIN}
+      APP_DOMAIN: ${APP_DOMAIN}
       EXTRA_DOMAINS: ${EXTRA_DOMAINS:-}
       ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required - set it in .env next to docker-compose.yml (see .env.example)}
     volumes:
@@ -67,13 +71,17 @@ services:
     # Runtime API addresses (written into config.js when the container starts), so the SPA calls this
     # domain whatever URLs were baked into the image at build time.
     environment:
-      AUTH_API_URL: https://${DOMAIN}/services/identity/
-      ACADEMIC_API_URL: https://${DOMAIN}/services/academic/
-      FINANCE_API_URL: https://${DOMAIN}/services/finance/
-      CAMPUS_API_URL: https://${DOMAIN}/services/campus/
-      ENGAGEMENT_API_URL: https://${DOMAIN}/services/engagement/
-      MEETING_API_URL: https://${DOMAIN}/services/meetings/
-      AI_API_URL: https://${DOMAIN}/services/ai/
+      APP_URL: https://${APP_DOMAIN}
+      AUTH_API_URL: https://${APP_DOMAIN}/services/identity/
+      ACADEMIC_API_URL: https://${APP_DOMAIN}/services/academic/
+      FINANCE_API_URL: https://${APP_DOMAIN}/services/finance/
+      CAMPUS_API_URL: https://${APP_DOMAIN}/services/campus/
+      ENGAGEMENT_API_URL: https://${APP_DOMAIN}/services/engagement/
+      MEETING_API_URL: https://${APP_DOMAIN}/services/meetings/
+      AI_API_URL: https://${APP_DOMAIN}/services/ai/
+      # Production never shows sample dashboard figures (see src/features/dashboard/dataSource.ts).
+      ALLOW_DEMO_DATA: "false"
+      DASHBOARD_DATA_SOURCE: live
 
   apigateway:
     <<: *logging
@@ -142,7 +150,7 @@ services:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinanceServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
       Services__AcademicServiceUrl: http://academicservice:8080/
-      # Webhook URL to set on the Razorpay dashboard: https://${DOMAIN}/services/finance/api/payments/razorpay/webhook
+      # Webhook URL to set on the Razorpay dashboard: https://${APP_DOMAIN}/services/finance/api/payments/razorpay/webhook
       Razorpay__KeyId: ${RAZORPAY_KEY_ID:-}
       Razorpay__KeySecret: ${RAZORPAY_KEY_SECRET:-}
       Razorpay__WebhookSecret: ${RAZORPAY_WEBHOOK_SECRET:-}
@@ -179,7 +187,7 @@ services:
       ServiceAuth__Secret: ${SERVICE_AUTH_SECRET}
       # Browsers and the mobile apps get this address with their join ticket; Caddy forwards /livekit/* to LiveKit.
       # This service talks to LiveKit directly on the Docker network.
-      LiveKit__Url: wss://${DOMAIN}/livekit
+      LiveKit__Url: wss://${APP_DOMAIN}/livekit
       LiveKit__ApiUrl: http://livekit:7880
       LiveKit__ApiKey: ${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required - set it in .env next to docker-compose.yml (see .env.example)}
       LiveKit__ApiSecret: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}

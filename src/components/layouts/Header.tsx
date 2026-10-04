@@ -188,8 +188,8 @@ export default function Header() {
       <CommandMenu />
 
       {/* School/branch scope: header on tablet+, phone nav drawer below md. */}
-      {isSuperAdmin && <TenantSwitcher className="hidden md:flex md:w-44 xl:w-56" />}
-      {canSwitchBranch && <BranchSwitcher className="hidden md:flex md:w-40 xl:w-48" />}
+      {isSuperAdmin && <TenantSwitcher className="hidden md:flex md:w-44 lg:w-56" />}
+      {canSwitchBranch && <BranchSwitcher className="hidden md:flex md:w-40 lg:w-48" />}
 
       <div className="flex items-center gap-0.5">
         <ThemeModeToggle />

@@ -82,12 +82,13 @@ export default function CommandMenu() {
       <DialogPrimitive.Trigger asChild>
         <button
           type="button"
-          className="group flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/60 px-2.5 text-sm text-muted-foreground transition-colors hover:border-input hover:bg-card hover:text-foreground cursor-pointer w-9 shrink justify-center lg:w-52 lg:justify-start xl:w-64"
+          className="group flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/60 px-2.5 text-sm text-muted-foreground transition-colors hover:border-input hover:bg-card hover:text-foreground cursor-pointer w-9 shrink-0 justify-center whitespace-nowrap xl:w-56 xl:justify-start 2xl:w-64"
           aria-label="Search pages"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span className="hidden lg:inline">Search pages…</span>
-          <kbd className="ml-auto hidden rounded border border-border bg-card px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-foreground lg:inline">
+          {/* Icon-only until there's room: a super admin's school + branch pickers need the space on laptop widths. */}
+          <span className="hidden xl:inline">Search pages…</span>
+          <kbd className="ml-auto hidden rounded border border-border bg-card px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-foreground xl:inline">
             {isMac ? "⌘" : "Ctrl"} K
           </kbd>
         </button>

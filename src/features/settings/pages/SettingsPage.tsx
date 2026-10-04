@@ -7,6 +7,7 @@ import LocalizationTab from "../components/LocalizationTab";
 import SchoolProfileTab from "../components/SchoolProfileTab";
 import SubscriptionTab from "../components/SubscriptionTab";
 import TemplatesTab from "../components/TemplatesTab";
+import WidgetManagementTab from "@/features/dashboard/admin/WidgetManagementTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function SettingsPage() {
@@ -16,7 +17,7 @@ export default function SettingsPage() {
     <PageContainer>
       <PageHeader
         title="Settings &amp; administration"
-        description="School profile, subscription plan, appearance, localization, system templates, backups, and the audit log."
+        description="School profile, subscription plan, appearance, dashboard widgets, localization, system templates, backups, and the audit log."
       />
 
       <Tabs defaultValue="profile">
@@ -24,6 +25,7 @@ export default function SettingsPage() {
           <TabsTrigger value="profile">School Profile</TabsTrigger>
           <TabsTrigger value="subscription">Plan &amp; Subscription</TabsTrigger>
           <TabsTrigger value="branding">Appearance</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="localization">Localization</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="backup">Backup &amp; Restore</TabsTrigger>
@@ -40,6 +42,10 @@ export default function SettingsPage() {
               re-apply TenantSwitcher already does, and a fresh mount is the one guaranteed way
               to avoid this tab ever showing a stale selection if it's open during a switch. */}
           <AppearanceTab key={activeTenantId} />
+        </TabsContent>
+        <TabsContent value="dashboard">
+          {/* Remounts on tenant switch so a super admin never edits one school's widgets while viewing another. */}
+          <WidgetManagementTab key={activeTenantId} />
         </TabsContent>
         <TabsContent value="localization">
           <LocalizationTab />

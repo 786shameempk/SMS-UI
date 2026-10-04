@@ -132,7 +132,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
         animate={{ width: isSidebarCollapsed ? W_COLLAPSED : W_EXPANDED }}
         transition={SPRING}
         aria-label="Main navigation"
-        className="flex h-dvh shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar"
+        className="flex h-full shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar"
       >
         <div className={cn("flex h-14 shrink-0 items-center border-b border-sidebar-border", isSidebarCollapsed ? "justify-center" : "gap-2.5 px-4")}>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">

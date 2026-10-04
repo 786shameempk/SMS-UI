@@ -14,8 +14,10 @@ Engagement `5140` and Meeting `5141`.
 3. Start the services (Release build or Docker for meaningful numbers; Debug `dotnet run` is much slower).
 4. Seed realistic data (safe to re-run; it tops up to the targets):
    `node loadtest/seed-data.mjs` creates Grades 1-10 with sections A/B, 300 students, term + annual fee invoices
-   (most paid, some partial or overdue, with receipts) and 30 school days of attendance (~9,000 records).
-   Scale up with `--students 1000 --days 60`.
+   (most paid, some partial or overdue, with receipts), 30 school days of attendance (~9,000 records), and three
+   completed exams per class over the last five months with marks in four core subjects (~3,600 marks; terms and
+   subjects are created if missing), which feed the dashboard's results trend and top performers.
+   Scale up with `--students 1000 --days 60`. Run a single step with `--only exams` (or `fees`, `attendance`, `parents`).
 
 Run every command from the repo root.
 
