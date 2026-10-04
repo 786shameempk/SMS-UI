@@ -20,6 +20,12 @@
 		reverse_proxy apigateway:8080
 	}
 
+	# LiveKit signalling (WebSocket). The prefix is stripped, so wss://DOMAIN/livekit/rtc reaches LiveKit's /rtc.
+	# Media doesn't come through here: it goes straight to LiveKit on 7881/tcp, 7882/udp and 3478/udp.
+	handle_path /livekit/* {
+		reverse_proxy livekit:7880
+	}
+
 	# Everything else is the SPA (nginx inside the ui image already falls back to index.html).
 	handle {
 		reverse_proxy ui:80
