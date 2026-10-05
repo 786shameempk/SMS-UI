@@ -23,7 +23,7 @@
 # checked as <school>.DOMAIN; any other name is passed to AuthService unchanged.
 http://127.0.0.1:9123 {
 	map {query.domain} {checked_domain} {
-		~^www\.([a-z0-9-]+\.{$DOMAIN})$ {1}
+		~^www\.([a-z0-9-]+\.{$DOMAIN})$ $1
 		default {query.domain}
 	}
 	rewrite * /services/identity/api/tenant/domain-check?domain={checked_domain}
