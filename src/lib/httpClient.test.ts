@@ -1,4 +1,5 @@
 import axios, { AxiosError, type AxiosAdapter, type InternalAxiosRequestConfig } from "axios";
+import toast from "react-hot-toast";
 import {
   extractApiErrorMessage,
   financeHttpClient,
@@ -117,6 +118,45 @@ describe("service http clients", () => {
 
     expect(refresh).not.toHaveBeenCalled();
     expect(useAuthStore.getState().token).toBeNull();
+  });
+});
+
+describe("403 and 404 errors", () => {
+  beforeEach(() => {
+    useAuthStore.getState().setSession(makeUser("admin"), "access-1", allModules(), true, "refresh-1");
+    vi.spyOn(toast, "error").mockImplementation(() => "toast-id");
+  });
+
+  async function failWith(status: number, data: unknown, config: { silentErrors?: boolean } = {}) {
+    const transport = fakeTransport(financeHttpClient, () => ({ status, data }));
+    await expect(financeHttpClient.get("/api/x", config)).rejects.toBeTruthy();
+    transport.restore();
+  }
+
+  it("show the server's title and code in a toast", async () => {
+    await failWith(403, { title: "You do not have permission to perform this action.", code: "forbidden" });
+
+    expect(toast.error).toHaveBeenCalledWith("You do not have permission to perform this action. (forbidden)", expect.objectContaining({ id: expect.any(String) }));
+  });
+
+  it("explain a 404 with no body in plain words", async () => {
+    await failWith(404, undefined);
+
+    expect(toast.error).toHaveBeenCalledWith("We couldn't find what you asked for.", expect.anything());
+  });
+
+  it("fall back to a generic 403 message", async () => {
+    await failWith(403, undefined);
+
+    expect(toast.error).toHaveBeenCalledWith("You don't have permission to do that.", expect.anything());
+  });
+
+  it("stay quiet for password_change_required (the route guard handles it), silent requests and other statuses", async () => {
+    await failWith(403, { title: "Password change required before accessing this resource.", code: "password_change_required" });
+    await failWith(404, { title: "Missing" }, { silentErrors: true });
+    await failWith(500, { title: "Boom" });
+
+    expect(toast.error).not.toHaveBeenCalled();
   });
 });
 

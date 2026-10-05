@@ -10,6 +10,7 @@ const LandingPage = lazy(() => import("@/features/marketing/pages/LandingPage"))
 const LoginPage = lazy(() => import("@/features/authentication/pages/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("@/features/authentication/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/features/authentication/pages/ResetPasswordPage"));
+const ChangePasswordRequiredPage = lazy(() => import("@/features/authentication/pages/ChangePasswordRequiredPage"));
 const SecuritySettingsPage = lazy(() => import("@/features/authentication/pages/SecuritySettingsPage"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/DashboardPage"));
 const UserManagementPage = lazy(() => import("@/features/administration/users/pages/UserManagementPage"));
@@ -82,6 +83,16 @@ export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
+  {
+    // Where an account with a temporary password must go first; the only signed-in page it may open.
+    path: "/change-password",
+    element: (
+      <ProtectedRoute allowPasswordChange>
+        <ChangePasswordRequiredPage />
+      </ProtectedRoute>
+    ),
+    errorElement: <RouteError />,
+  },
   {
     // The live classroom is full screen, outside the app shell (no sidebar/header), but still signed-in only.
     path: "/online-classes/:id/room",

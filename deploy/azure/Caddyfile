@@ -2,18 +2,32 @@
 # VM's public IP, and ports 80 + 443 must be open, before the first `docker compose up`.
 #
 #   DOMAIN      (sms-schoolsphere.com)       marketing site: landing page only
-#   APP_DOMAIN  (demo.sms-schoolsphere.com)  the application: login, dashboard and every feature, plus the APIs
+#   APP_DOMAIN  (www.sms-schoolsphere.com)  the application: login, dashboard and every feature, plus the APIs
 #   *.DOMAIN    (greenvalley.sms-schoolsphere.com ...)  one host per school, each serving the same application; the
 #               school is identified from the hostname. Needs a wildcard DNS record (*.DOMAIN -> the VM's IP).
+#   www.<school>.DOMAIN  (www.greenvalley.sms-schoolsphere.com)  redirects to <school>.DOMAIN. A wildcard record only
+#               covers one label, so each school that wants this needs its own record: www.<school> -> the VM's IP.
 {
 	email {$ACME_EMAIL}
 
 	# Certificates for school hosts are issued on their first visit (HTTP-01, so no DNS provider plugin is needed),
 	# but only when AuthService says the subdomain belongs to a live school. That keeps strangers from making this
-	# server request certificates for arbitrary names.
+	# server request certificates for arbitrary names. The check goes through the internal :9123 site below, which
+	# lets www.<school>.DOMAIN ask about <school>.DOMAIN.
 	on_demand_tls {
-		ask http://apigateway:8080/services/identity/api/tenant/domain-check
+		ask http://127.0.0.1:9123/
 	}
+}
+
+# Internal only (not published): Caddy asks it before issuing an on-demand certificate. A www.<school>.DOMAIN name is
+# checked as <school>.DOMAIN; any other name is passed to AuthService unchanged.
+http://127.0.0.1:9123 {
+	map {query.domain} {checked_domain} {
+		~^www\.([a-z0-9-]+\.{$DOMAIN})$ {1}
+		default {query.domain}
+	}
+	rewrite * /services/identity/api/tenant/domain-check?domain={checked_domain}
+	reverse_proxy apigateway:8080
 }
 
 (security_headers) {
@@ -83,9 +97,17 @@
 }
 
 # One host per school. APP_DOMAIN and DOMAIN above are more specific, so they never land here.
-*.{$DOMAIN} {
+# This is a catch-all (https://) rather than a "*.DOMAIN" site on purpose: a wildcard site address makes Caddy skip the
+# up-front certificates for the explicit hosts above (APP_DOMAIN, www), which then have no certificate at all.
+# The AuthService domain-check still refuses every name that is not a live school.
+https:// {
 	tls {
 		on_demand
 	}
+
+	# www.<school>.DOMAIN -> <school>.DOMAIN (only for a school: the certificate check above refuses other names).
+	@wwwschool header_regexp wwwschool Host ^www\.([a-z0-9-]+)\.{$DOMAIN}$
+	redir @wwwschool https://{re.wwwschool.1}.{$DOMAIN}{uri} permanent
+
 	import app_site
 }
