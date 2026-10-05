@@ -78,9 +78,10 @@ services:
       ENGAGEMENT_API_URL: https://${APP_DOMAIN}/services/engagement/
       MEETING_API_URL: https://${APP_DOMAIN}/services/meetings/
       AI_API_URL: https://${APP_DOMAIN}/services/ai/
-      # Production never shows sample dashboard figures (see src/features/dashboard/dataSource.ts).
-      ALLOW_DEMO_DATA: "false"
-      DASHBOARD_DATA_SOURCE: live
+      # Sample dashboard figures are enabled in production (see src/features/dashboard/dataSource.ts): each browser can switch
+      # between demo and live from the dashboard toolbar. Set ALLOW_DEMO_DATA=false in .env to hide the switch and force live data.
+      ALLOW_DEMO_DATA: ${ALLOW_DEMO_DATA:-true}
+      DASHBOARD_DATA_SOURCE: ${DASHBOARD_DATA_SOURCE:-mock}
 
   apigateway:
     <<: *logging
