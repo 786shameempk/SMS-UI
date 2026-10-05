@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tenantDomainFor } from "@/lib/tenantHost";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CreditCard, PauseCircle, PlayCircle, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
@@ -97,7 +98,7 @@ export default function TenantsTab() {
               </span>
             )}
           </p>
-          <p className="text-xs text-muted-foreground">{row.original.subdomain}.educore.app</p>
+          <p className="text-xs text-muted-foreground">{tenantDomainFor(row.original.subdomain)}</p>
         </div>
       ),
     },

@@ -3,8 +3,17 @@
 #
 #   DOMAIN      (sms-schoolsphere.com)       marketing site: landing page only
 #   APP_DOMAIN  (demo.sms-schoolsphere.com)  the application: login, dashboard and every feature, plus the APIs
+#   *.DOMAIN    (greenvalley.sms-schoolsphere.com ...)  one host per school, each serving the same application; the
+#               school is identified from the hostname. Needs a wildcard DNS record (*.DOMAIN -> the VM's IP).
 {
 	email {$ACME_EMAIL}
+
+	# Certificates for school hosts are issued on their first visit (HTTP-01, so no DNS provider plugin is needed),
+	# but only when AuthService says the subdomain belongs to a live school. That keeps strangers from making this
+	# server request certificates for arbitrary names.
+	on_demand_tls {
+		ask http://apigateway:8080/services/identity/api/tenant/domain-check
+	}
 }
 
 (security_headers) {
@@ -39,9 +48,10 @@
 	}
 }
 
-# Application. "/" has nothing to show here (the landing page lives on DOMAIN), so it goes to the login screen,
-# which sends already-signed-in users on to their dashboard.
-{$APP_DOMAIN} {
+# The application, served identically on APP_DOMAIN and on every school host. "/" has nothing to show here (the
+# landing page lives on DOMAIN), so it goes to the login screen, which sends already-signed-in users on to their
+# dashboard.
+(app_site) {
 	encode zstd gzip
 	import security_headers
 
@@ -66,4 +76,16 @@
 	handle {
 		reverse_proxy ui:80
 	}
+}
+
+{$APP_DOMAIN} {
+	import app_site
+}
+
+# One host per school. APP_DOMAIN and DOMAIN above are more specific, so they never land here.
+*.{$DOMAIN} {
+	tls {
+		on_demand
+	}
+	import app_site
 }

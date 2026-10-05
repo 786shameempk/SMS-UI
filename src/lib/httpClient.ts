@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/store/authStore";
+import { getTenantSubdomain } from "@/lib/tenantHost";
 
 /**
  * Service base URLs, resolved in order:
@@ -8,12 +9,23 @@ import { useAuthStore } from "@/store/authStore";
  * 2. build-time VITE_* variables (.env locally, CI variables in a pipeline);
  * 3. the local development ports.
  * Empty strings count as "not set", so a blank config.js or an empty CI variable falls through.
+ * On a school's own subdomain (greenvalley.sms-schoolsphere.com) an absolute "/services/..." URL is called on that same
+ * host instead (the reverse proxy serves /services/* on every school host), so one config works for all schools with
+ * no cross-origin requests.
  */
 const runtimeConfig: Partial<Record<string, string>> =
   (typeof window !== "undefined" && (window as Window & { __EDUCORE_CONFIG__?: Record<string, string> }).__EDUCORE_CONFIG__) || {};
 
 function resolveUrl(runtimeKey: string, buildTime: string | undefined, fallback: string): string {
-  const value = runtimeConfig[runtimeKey]?.trim() || buildTime?.trim() || fallback;
+  let value = runtimeConfig[runtimeKey]?.trim() || buildTime?.trim() || fallback;
+  if (getTenantSubdomain() !== null) {
+    try {
+      const url = new URL(value);
+      if (url.pathname.startsWith("/services/")) value = `${window.location.origin}${url.pathname}`;
+    } catch {
+      /* not an absolute URL: leave as is */
+    }
+  }
   return value.endsWith("/") ? value : `${value}/`;
 }
 

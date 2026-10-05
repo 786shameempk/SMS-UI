@@ -34,6 +34,28 @@ More domains on the same VM: add an A record for each to the same IP, list them 
 `EXTRA_DOMAINS` (space-separated), then `docker compose up -d caddy`. Caddy gets a certificate for each and
 redirects them to `DOMAIN`.
 
+### School subdomains (multi-tenant)
+
+Each school opens the one shared app at `{subdomain}.sms-schoolsphere.com` (e.g. `greenvalley.sms-schoolsphere.com`);
+the school is identified from the hostname, so there is no school picker and no per-school build.
+
+1. Add one wildcard A record: `*.sms-schoolsphere.com` -> the VM's public IP (the explicit records for `DOMAIN`,
+   `www` and `APP_DOMAIN` keep working; more specific names win).
+2. `TENANT_BASE_DOMAIN` in `.env` (default `sms-schoolsphere.com`) is the suffix schools live under.
+3. HTTPS: Caddy issues a certificate for a school's host on its first visit (on-demand TLS, plain HTTP-01, no DNS plugin),
+   but only after AuthService confirms the subdomain belongs to a live tenant (`GET /api/tenant/domain-check`), so unknown
+   names get no certificate. Let's Encrypt rate limits apply (50 new certificates per week per registered domain); if you
+   expect to onboard more schools than that, switch to a wildcard certificate via a DNS-challenge Caddy build.
+4. `PLATFORM_SUBDOMAINS` (default `www,demo`) lists hosts that are the platform itself, not a school: no tenant lookup and
+   any account (including the Super Admin) can sign in there. `APP_DOMAIN`'s subdomain (`demo`) belongs in this list until
+   you create a tenant with that subdomain; then remove it so `demo.sms-schoolsphere.com` becomes that school.
+5. Create the school in Platform Console -> Tenants -> New tenant: enter only the subdomain, the full address is generated.
+   Subdomains are unique, lowercase letters/digits/hyphens, and `www`, `api`, `admin` and other platform names are reserved.
+6. On a school host, only that school's users can sign in (checked on the server; a mismatch looks like a wrong password),
+   and the API is called on the same host (`/services/*`), so no extra CORS setup is needed.
+7. Each school sets its logo, name, email and contact number in Settings -> School Profile. Anything it leaves empty falls
+   back to School Sphere's logo/name, and an empty email/contact number is simply not shown.
+
 ## 3. Build the images
 
 The 8 service repos already publish to `ghcr.io/786shameempk/<service>` on every push to `master`.

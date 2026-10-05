@@ -1,6 +1,7 @@
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Letterhead from "@/features/tenant/Letterhead";
 import { formatDateTime } from "@/utils/format";
 import { CERTIFICATE_TYPE_CONFIG } from "../constants";
 import type { IssuedCertificate } from "../types";
@@ -40,7 +41,7 @@ export default function CertificateView({
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 {CERTIFICATE_TYPE_CONFIG[certificate.type].label}
               </p>
-              <h2 className="text-lg font-bold text-slate-900">EduCore School</h2>
+              <Letterhead />
               <p className="text-sm text-slate-500">Certificate No: {certificate.certificateNumber}</p>
             </div>
 

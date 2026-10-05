@@ -11,6 +11,7 @@
 #   https://${APP_DOMAIN}/services/*     -> apigateway -> each service (YARP routes; /services/ai/* -> aiservice)
 #   https://${APP_DOMAIN}/api/*          -> apigateway's own endpoints (reports)
 #   wss://${APP_DOMAIN}/livekit/*        -> livekit (video signalling)
+#   https://{subdomain}.${DOMAIN}/      -> the same application for each school (wildcard DNS; see Caddyfile)
 # Video media goes straight to LiveKit, so the VM also publishes 7881/tcp, 7882/udp and 3478/udp (TURN).
 # Nothing else is published on the host: Redis and the services are only on the Docker network.
 
@@ -33,6 +34,7 @@ x-dotnet-env: &dotnet-env
   # Unset = just the main domain again (harmless duplicate).
   Cors__AllowedOrigins__1: ${CORS_EXTRA_ORIGIN:-https://${DOMAIN}}
   # The application host (demo.<domain>): the marketing site and the app are different origins.
+  # Every school host ({subdomain}.TENANT_BASE_DOMAIN) is allowed by AuthService itself (Tenancy__BaseDomain below).
   Cors__AllowedOrigins__2: https://${APP_DOMAIN:?APP_DOMAIN is required - set it in .env next to docker-compose.yml (see .env.example)}
   # Files (study materials, talent media, meeting files, student/staff photos and documents, avatars) live in Azure
   # Blob Storage, in private containers the services create themselves. Empty = the old local volumes (not for prod).
@@ -82,6 +84,11 @@ services:
       # between demo and live from the dashboard toolbar. Set ALLOW_DEMO_DATA=false in .env to hide the switch and force live data.
       ALLOW_DEMO_DATA: ${ALLOW_DEMO_DATA:-true}
       DASHBOARD_DATA_SOURCE: ${DASHBOARD_DATA_SOURCE:-mock}
+      # Schools open the app at {subdomain}.TENANT_BASE_DOMAIN. PLATFORM_SUBDOMAINS are hosts that belong to the platform,
+      # not a school (no tenant lookup, any account may sign in there): the marketing "www" and the shared demo host.
+      # Remove "demo" once it is a real tenant.
+      TENANT_BASE_DOMAIN: ${TENANT_BASE_DOMAIN:-sms-schoolsphere.com}
+      PLATFORM_SUBDOMAINS: ${PLATFORM_SUBDOMAINS:-www,demo}
 
   apigateway:
     <<: *logging
@@ -113,6 +120,7 @@ services:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=AuthServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       ConnectionStrings__Redis: "redis:6379"
+      Tenancy__BaseDomain: ${TENANT_BASE_DOMAIN:-sms-schoolsphere.com}
       ClientApp__BaseUrl: https://${DOMAIN}
       LeadNotifications__NotifyEmail: ${LEAD_NOTIFY_EMAIL:-info@schoolsphrere.com}
       LeadNotifications__NotifyWhatsAppNumber: ${LEAD_NOTIFY_WHATSAPP:-}

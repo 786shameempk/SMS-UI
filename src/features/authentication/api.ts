@@ -1,5 +1,6 @@
 import type { AuthUser, LoginCredentials, ModulePermissions, UserRole } from "@/types/auth";
 import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { getTenantSubdomain } from "@/lib/tenantHost";
 import { mapDevice, mapSession, type ApiDevice, type ApiUserSession } from "@/features/administration/users/api";
 import type { DeviceRecord, SessionRecord } from "./types";
 
@@ -119,6 +120,8 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
     const { data } = await authHttpClient.post<ApiAuthResponseDto>("/api/auth/login", {
       email: credentials.email,
       password: credentials.password,
+      // On a school's address only that school's members can sign in; the server re-checks it against the account.
+      subdomain: getTenantSubdomain(),
     });
     return {
       user: mapAuthUser(data.user),

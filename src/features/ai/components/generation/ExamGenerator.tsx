@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, Printer, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -15,6 +16,7 @@ import type { AiQuestionKind, ExamPaper, ExamRequest, ExamSectionRequest } from 
 import { ClassSubjectFields, DraftBar, FormError, GenerateButton, QuestionReviewList } from "./shared";
 
 export default function ExamGenerator() {
+  const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [chapters, setChapters] = useState("");
   const [duration, setDuration] = useState(60);
@@ -162,11 +164,11 @@ export default function ExamGenerator() {
               approveLabel="Approve & add questions to bank"
               canApprove={paper.sections.every((s) => s.questions.length > 0 && s.questions.every((q) => q.question.trim() && q.correctAnswer.trim()))}
             >
-              <Button variant="outline" onClick={() => !printDocument(paper.title, examToHtml(paper, false)) && toast.error("Allow pop-ups to print or save as PDF.")}>
+              <Button variant="outline" onClick={() => !printDocument(paper.title, examToHtml(paper, false), branding) && toast.error("Allow pop-ups to print or save as PDF.")}>
                 <Printer className="h-4 w-4" />
                 Print / PDF
               </Button>
-              <Button variant="outline" onClick={() => !printDocument(`${paper.title} - answer key`, examToHtml(paper, true)) && toast.error("Allow pop-ups to print or save as PDF.")}>
+              <Button variant="outline" onClick={() => !printDocument(`${paper.title} - answer key`, examToHtml(paper, true), branding) && toast.error("Allow pop-ups to print or save as PDF.")}>
                 <Printer className="h-4 w-4" />
                 With answer key
               </Button>

@@ -1,4 +1,4 @@
-import { academicHttpClient, authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { academicHttpClient, AUTH_API_BASE_URL, authHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
 import { applyBrandPreset, applyDensityPreset, applyRadiusPreset } from "./theme";
 import type { BrandPresetKey, DensityPresetKey, RadiusPresetKey } from "./theme";
 import type {
@@ -7,6 +7,7 @@ import type {
   LocalizationSettings,
   PlanUsage,
   SchoolProfile,
+  SchoolProfileFormValues,
   Subscription,
   SystemTemplate,
   SystemTemplateFormValues,
@@ -23,6 +24,7 @@ interface ApiSchoolProfile {
   email: string;
   principalName: string | null;
   establishedYear: number | null;
+  logoUrl?: string | null;
 }
 
 interface ApiAppearance {
@@ -58,6 +60,7 @@ const mapProfile = (p: ApiSchoolProfile): SchoolProfile => ({
   email: p.email,
   principalName: p.principalName ?? undefined,
   establishedYear: p.establishedYear ?? undefined,
+  logoUrl: resolveFileUrl(p.logoUrl || undefined, AUTH_API_BASE_URL),
 });
 
 const mapTemplate = (t: ApiTemplate): SystemTemplate => ({
@@ -77,7 +80,7 @@ export async function getSchoolProfile(): Promise<SchoolProfile> {
   return mapProfile((await getSettings()).profile);
 }
 
-export async function updateSchoolProfile(values: SchoolProfile): Promise<SchoolProfile> {
+export async function updateSchoolProfile(values: SchoolProfileFormValues): Promise<SchoolProfile> {
   return mapProfile(
     await unwrap(
       authHttpClient.put<ApiSchoolProfile>("/api/settings/profile", {
@@ -88,6 +91,11 @@ export async function updateSchoolProfile(values: SchoolProfile): Promise<School
       }),
     ),
   );
+}
+
+/** Sets the school logo from an image data URL, or removes it (null) so School Sphere's logo is shown again. */
+export async function updateSchoolLogo(logoDataUrl: string | null): Promise<SchoolProfile> {
+  return mapProfile(await unwrap(authHttpClient.put<ApiSchoolProfile>("/api/settings/profile/logo", { logoDataUrl })));
 }
 
 // ── Localization ─────────────────────────────────────────────────────────
