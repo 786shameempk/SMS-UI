@@ -1,8 +1,10 @@
-name: Docker image (GHCR)
+name: Docker image (GHCR + ACR)
 
 # Builds the SMS UI image and publishes it to GitHub Container Registry as ghcr.io/<owner>/sms-ui, the image
 # deploy/azure/docker-compose.yml runs. Pull requests only build it, as a check; pushes to main and version
 # tags (v1.2.3) also publish. Uses the built-in GITHUB_TOKEN, so no extra secret is needed.
+# It is also pushed to Azure Container Registry (schoolsphere.azurecr.io) using the repository/organisation
+# secrets ACR_USERNAME and ACR_PASSWORD (a service principal with the AcrPush role).
 #
 # Vite bakes the API URLs into the bundle, so the image is built for one public address: set the repository
 # variable PUBLIC_URL (Settings > Secrets and variables > Actions > Variables), e.g. https://app.example.com.
@@ -18,6 +20,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  ACR_REGISTRY: schoolsphere.azurecr.io
   IMAGE_NAME: sms-ui
 
 jobs:
@@ -57,7 +60,7 @@ jobs:
   build_and_push_image:
     needs: test
     runs-on: ubuntu-latest
-    name: Build and Push Docker Image (GHCR)
+    name: Build and Push Docker Image (GHCR + ACR)
     permissions:
       contents: read
       packages: write
@@ -77,13 +80,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Azure Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
       # Tags: "latest" on main (the default branch), the short commit SHA on every build (for rollbacks), "1.2.3" + "1.2" for
       # version tags, "pr-<n>" on pull requests.
       - name: Docker metadata (tags and labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+            ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=short
