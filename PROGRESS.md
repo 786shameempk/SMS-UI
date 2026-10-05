@@ -229,3 +229,9 @@ Shared files extended along the way (additive only): `src/app/router.tsx`, `src/
     - `testTimeout` raised to 15 s.
     - Testing Library's async timeout raised to 5 s in `src/test/setup.ts`.
     - The dashboard page tests no longer wait on the demo data's random delay.
+- **Public site split: marketing vs app** (2026-10-04, deployed to the Azure VM `educore-1`).
+  - **Domains:** `sms-schoolsphere.com` serves only the landing page (and `/product`, `/founder`). `/login` and every other app path redirect to `demo.sms-schoolsphere.com` (Caddy). The VM's `.env` gained `APP_DOMAIN=demo.sms-schoolsphere.com`. Config backups are in `~/sms/backup-20261004-164148/`, and the pre-deploy images are tagged `predeploy-20261004`.
+  - **Landing page:** no longer jumps to `/dashboard` when the app is on another origin (`isAppOnOtherOrigin`). A session stored on the marketing host from before the split would otherwise have opened the dashboard there.
+  - **"Back to website" on the login page:** a full link to the marketing site via a new runtime `siteUrl`, read like `appUrl` (`config.js`, then `VITE_SITE_URL`). The container sets it from `SITE_URL` (`deploy/azure`: `https://${DOMAIN}`). On a single origin it stays the in-app `/` route.
+  - **Demo data on the public demo:** `deploy/azure` now sets `ALLOW_DEMO_DATA: "true"` and `DASHBOARD_DATA_SOURCE: mock`. Dashboards open on bannered sample figures, with a Live/Demo switch. A school's own production install should set `"false"` / `live`.
+  - **Open item:** the VM's `ACME_EMAIL` is still an `@example.com` placeholder. Let's Encrypt refuses it, so certificates currently come from the ZeroSSL fallback.

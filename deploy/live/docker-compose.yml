@@ -1,3 +1,6 @@
+# LIVE deployment. Same stack as ../azure (kept as is), run from this folder: Azure SQL, wildcard school subdomains,
+# school branding and demo data switch included. Keep the two folders in step when changing shared settings.
+#
 # Production stack for a single Azure Linux VM: every SMS service pulled from GHCR, plus Redis,
 # LiveKit + Egress (in-app video classes and their recordings) and Caddy as the HTTPS entry point.
 #

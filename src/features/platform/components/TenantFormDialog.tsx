@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TENANT_BASE_DOMAIN } from "@/lib/tenantHost";
 import { isValidSubdomain } from "../constants";
 import { listPlans } from "../api";
 import type { TenantFormValues } from "../types";
@@ -18,7 +19,7 @@ const tenantSchema = z.object({
   subdomain: z
     .string()
     .min(1, "Subdomain is required")
-    .refine((v) => isValidSubdomain(v), "Lowercase letters, numbers, and hyphens only"),
+    .refine((v) => isValidSubdomain(v.trim().toLowerCase()), "Letters, numbers, and hyphens only (no spaces)"),
   planId: z.string().min(1, "Select a plan"),
   billingContactName: z.string().min(1, "Billing contact name is required"),
   billingContactEmail: z.string().email("Enter a valid email"),
@@ -46,8 +47,11 @@ export default function TenantFormDialog({
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(tenantSchema), defaultValues: emptyValues });
+
+  const subdomain = watch("subdomain") ?? "";
 
   useEffect(() => {
     if (open) reset(emptyValues);
@@ -60,7 +64,7 @@ export default function TenantFormDialog({
           <DialogTitle>New tenant</DialogTitle>
           <DialogDescription>Onboards a new school onto the platform as a trial tenant.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit((values) => onSubmit({ ...values, subdomain: values.subdomain.toLowerCase() }))} className="space-y-4">
+        <form onSubmit={handleSubmit((values) => onSubmit({ ...values, subdomain: values.subdomain.trim().toLowerCase() }))} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="tenant-schoolName" required>School name</Label>
             <Input id="tenant-schoolName" aria-invalid={errors.schoolName ? true : undefined} {...register("schoolName")} />
@@ -71,9 +75,15 @@ export default function TenantFormDialog({
             <Label htmlFor="tenant-subdomain">Subdomain</Label>
             <div className="flex items-center gap-1.5">
               <Input id="tenant-subdomain" placeholder="riverside-intl" aria-invalid={errors.subdomain ? true : undefined} {...register("subdomain")} />
-              <span className="text-sm text-muted-foreground shrink-0">.educore.app</span>
+              <span className="text-sm text-muted-foreground shrink-0">.{TENANT_BASE_DOMAIN}</span>
             </div>
-            {errors.subdomain && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subdomain.message}</p>}
+            {errors.subdomain ? (
+              <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subdomain.message}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Schools sign in at {subdomain.trim() ? subdomain.trim().toLowerCase() : "subdomain"}.{TENANT_BASE_DOMAIN}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">

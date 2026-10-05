@@ -1,4 +1,4 @@
-# Deploying SMS to an Azure Linux VM
+# Deploying SMS live (Azure Linux VM, Azure SQL + Blob Storage)
 
 One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, Redis,
 LiveKit + Egress (in-app video classes and recordings) and Caddy, which handles HTTPS. The databases are on
@@ -119,7 +119,7 @@ Who sees AI Features is decided by AuthService (role defaults, the school's plan
 Copy this folder (`docker-compose.yml`, `Caddyfile`, `.env.example`) to the VM, e.g. `~/sms`:
 
 ```bash
-scp -r deploy/azure azureuser@<vm-ip>:~/sms
+scp -r deploy/live azureuser@<vm-ip>:~/sms
 ```
 
 On the VM:

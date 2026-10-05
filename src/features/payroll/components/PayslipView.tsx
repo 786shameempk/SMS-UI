@@ -2,6 +2,7 @@ import { Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Letterhead from "@/features/tenant/Letterhead";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import { monthLabel } from "../constants";
 import type { PayslipRow } from "../types";
@@ -39,7 +40,7 @@ export default function PayslipView({
           <div id="payslip" className="rounded-xl border border-border bg-white p-5 space-y-4">
             <div className="text-center space-y-1 border-b border-border pb-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Payslip</p>
-              <h2 className="text-lg font-bold text-slate-900">EduCore School</h2>
+              <Letterhead />
               <p className="text-sm text-slate-500">{monthLabel(payslip.month)}</p>
             </div>
 

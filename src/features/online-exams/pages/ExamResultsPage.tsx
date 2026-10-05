@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -22,6 +23,7 @@ const ALL = "__all";
 const STATUSES: ResultRowStatus[] = ["Passed", "Failed", "PendingEvaluation", "InProgress", "Absent", "NotStarted"];
 
 export default function ExamResultsPage() {
+  const branding = useTenantBranding();
   const { id } = useParams();
   const navigate = useNavigate();
   const role = useAuthStore((s) => s.user?.role);
@@ -111,7 +113,7 @@ export default function ExamResultsPage() {
               <Download className="h-4 w-4" />
               Export CSV
             </Button>
-            <Button variant="outline" onClick={() => printResults(r) || toast.error("Allow pop-ups to print the results sheet")} disabled={r.rows.length === 0}>
+            <Button variant="outline" onClick={() => printResults(r, branding) || toast.error("Allow pop-ups to print the results sheet")} disabled={r.rows.length === 0}>
               <Printer className="h-4 w-4" />
               Print
             </Button>

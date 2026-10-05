@@ -26,10 +26,26 @@ describe("authentication api", () => {
 
     const result = await auth.login({ email: "asha@school.test", password: "x", rememberMe: true });
 
-    expect(calls[0].body).toEqual({ email: "asha@school.test", password: "x" });
+    expect(calls[0].body).toEqual({ email: "asha@school.test", password: "x", subdomain: null });
     expect(result.user).toMatchObject({ name: "Asha Nair", role: "teacher", tenantId: "tenant-a", allBranchAccess: false });
     expect(result.permissions).toMatchObject({ students: true, attendance: true, fees: false });
     expect([result.token, result.refreshToken]).toEqual(["a", "r"]);
+  });
+
+  it("sends the school subdomain the page was opened on so the server can check membership", async () => {
+    const original = window.location;
+    Object.defineProperty(window, "location", { value: { ...original, hostname: "greenvalley.sms-schoolsphere.com" }, writable: true, configurable: true });
+    try {
+      const calls = stubClient(authHttpClient, {
+        "POST /api/auth/login": { accessToken: "a", refreshToken: "r", accessTokenExpiresAt: "", user: apiUser() },
+      });
+
+      await auth.login({ email: "asha@school.test", password: "x" });
+
+      expect(calls[0].body).toMatchObject({ subdomain: "greenvalley" });
+    } finally {
+      Object.defineProperty(window, "location", { value: original, writable: true, configurable: true });
+    }
   });
 
   it("treats unknown roles as a school's custom staff role", async () => {

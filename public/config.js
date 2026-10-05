@@ -29,4 +29,8 @@ window.__EDUCORE_CONFIG__ = {
   // Dashboard sample figures. "true" allows them (never in production); dashboardDataSource picks the default.
   allowDemoData: "",
   dashboardDataSource: "",
+  // Schools are reached at {subdomain}.tenantBaseDomain (greenvalley.sms-schoolsphere.com). Empty = sms-schoolsphere.com.
+  tenantBaseDomain: "",
+  // Comma-separated subdomains of tenantBaseDomain that are the platform itself, not a school (e.g. "www,demo"). Empty = "www".
+  platformSubdomains: "",
 };
