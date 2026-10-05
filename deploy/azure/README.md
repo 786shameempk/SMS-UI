@@ -1,7 +1,8 @@
 # Deploying SMS to an Azure Linux VM
 
-One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, SQL Server, Redis,
-LiveKit + Egress (in-app video classes and recordings) and Caddy, which handles HTTPS.
+One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, Redis,
+LiveKit + Egress (in-app video classes and recordings) and Caddy, which handles HTTPS. The databases are on
+Azure SQL (`AZURE_SQL_SERVER` in `.env`); create the seven service databases there first and allow the VM through the server firewall.
 
 ```
 Browser ──443──> Caddy ─┬─ /            -> ui
@@ -126,20 +127,10 @@ Pin `IMAGE_TAG` / `UI_IMAGE_TAG` in `.env` to a `sha-xxxxxxx` tag to deploy or r
 ## Backups
 
 Uploaded files are in Azure Blob Storage (see section 5; turn on soft delete and versioning there). On the VM, the
-stateful volumes are `sqlserver-data`, `redis-data`, `meeting-files` (the meeting encryption key ring, and
+stateful volumes are `redis-data`, `meeting-files` (the meeting encryption key ring, and
 recordings until they're uploaded) and `caddy-data` (certificates).
-At minimum, back up the databases regularly, for example:
-
-```bash
-docker compose exec sqlserver mkdir -p /var/opt/mssql/backup
-docker compose exec sqlserver sh -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C \
-  -Q "BACKUP DATABASE AuthServiceDb TO DISK='"'"'/var/opt/mssql/backup/AuthServiceDb.bak'"'"' WITH INIT"'
-```
-
-(repeat per database, then copy the `.bak` files off the VM, e.g. to Azure Blob Storage), and enable
-Azure Backup / disk snapshots for the VM.
+Databases are on Azure SQL, which has automatic backups with point-in-time restore (check the retention setting on the
+server). Enable Azure Backup / disk snapshots for the VM as well.
 
 ## Notes
 
-- SQL Server runs as **Express** (free, 10 GB per database). The Developer edition is not licensed for
-  production; set `MSSQL_PID=Standard` only if you have a licence.
