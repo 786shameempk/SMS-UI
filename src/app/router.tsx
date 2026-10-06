@@ -5,6 +5,7 @@ import { createBrowserRouter } from "react-router-dom";
 import RouteError from "./RouteError";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import RequireModule from "@/routes/RequireModule";
+import RequireSuperAdmin from "@/routes/RequireSuperAdmin";
 import AppLayout from "@/layouts/AppLayout";
 const LandingPage = lazy(() => import("@/features/marketing/pages/LandingPage"));
 const LoginPage = lazy(() => import("@/features/authentication/pages/LoginPage"));
@@ -39,6 +40,18 @@ const VisitorManagementPage = lazy(() => import("@/features/visitors/pages/Visit
 const HelpDeskPage = lazy(() => import("@/features/helpdesk/pages/HelpDeskPage"));
 const SurveysFeedbackPage = lazy(() => import("@/features/surveys/pages/SurveysFeedbackPage"));
 const PlatformConsolePage = lazy(() => import("@/features/platform/pages/PlatformConsolePage"));
+const AzureLayout = lazy(() => import("@/features/azure-dashboard/components/AzureLayout"));
+const AzureOverviewPage = lazy(() => import("@/features/azure-dashboard/pages/AzureOverviewPage"));
+const AzureCostPage = lazy(() => import("@/features/azure-dashboard/pages/AzureCostPage"));
+const AzureResourcesPage = lazy(() => import("@/features/azure-dashboard/pages/AzureResourcesPage"));
+const AzureResourceDetailPage = lazy(() => import("@/features/azure-dashboard/pages/AzureResourceDetailPage"));
+const AzureComputePage = lazy(() => import("@/features/azure-dashboard/pages/AzureComputePage"));
+const AzureDatabasesPage = lazy(() => import("@/features/azure-dashboard/pages/AzureDatabasesPage"));
+const AzureStoragePage = lazy(() => import("@/features/azure-dashboard/pages/AzureStoragePage"));
+const AzureContainersPage = lazy(() => import("@/features/azure-dashboard/pages/AzureContainersPage"));
+const AzureMonitoringPage = lazy(() => import("@/features/azure-dashboard/pages/AzureMonitoringPage"));
+const AzureAlertsPage = lazy(() => import("@/features/azure-dashboard/pages/AzureAlertsPage"));
+const AzureSettingsPage = lazy(() => import("@/features/azure-dashboard/pages/AzureSettingsPage"));
 const AIFeaturesPage = lazy(() => import("@/features/ai/pages/AIFeaturesPage"));
 const LibraryManagementPage = lazy(() => import("@/features/library/pages/LibraryManagementPage"));
 const TransportManagementPage = lazy(() => import("@/features/transport/pages/TransportManagementPage"));
@@ -151,6 +164,24 @@ export const router = createBrowserRouter([
       { path: "helpdesk", element: <HelpDeskPage /> },
       { path: "surveys", element: <SurveysFeedbackPage /> },
       { path: "platform", element: <PlatformConsolePage /> },
+      {
+        // Platform owner only (by role). Deliberately not a school module: never in roles, the permission matrix or plans.
+        path: "admin/azure",
+        element: <RequireSuperAdmin><AzureLayout /></RequireSuperAdmin>,
+        children: [
+          { index: true, element: <AzureOverviewPage /> },
+          { path: "cost", element: <AzureCostPage /> },
+          { path: "resources", element: <AzureResourcesPage /> },
+          { path: "resources/detail", element: <AzureResourceDetailPage /> },
+          { path: "compute", element: <AzureComputePage /> },
+          { path: "databases", element: <AzureDatabasesPage /> },
+          { path: "storage", element: <AzureStoragePage /> },
+          { path: "containers", element: <AzureContainersPage /> },
+          { path: "monitoring", element: <AzureMonitoringPage /> },
+          { path: "alerts", element: <AzureAlertsPage /> },
+          { path: "settings", element: <AzureSettingsPage /> },
+        ],
+      },
       { path: "ai", element: <RequireModule module="aiFeatures"><AIFeaturesPage /></RequireModule> },
       { path: "library", element: <LibraryManagementPage /> },
       { path: "transport", element: <TransportManagementPage /> },
