@@ -14,7 +14,8 @@ export function useVisibleNav() {
   const modulePermissions = useAuthStore((s) => s.modulePermissions);
   const role = useAuthStore((s) => s.user?.role);
   const hasPermission = (key?: NavItem["permissionKey"]) => !key || !modulePermissions || modulePermissions[key];
-  const visible = (item: NavItem) => hasPermission(item.permissionKey) && matchesAudience(item.audience, role);
+  const visible = (item: NavItem) =>
+    hasPermission(item.permissionKey) && matchesAudience(item.audience, role) && (!item.superAdminOnly || role === "superAdmin");
 
   const coreItems = CORE_NAV_ITEMS.filter(visible);
   const sections = NAV_SECTIONS.filter((section) => hasPermission(section.permissionKey))

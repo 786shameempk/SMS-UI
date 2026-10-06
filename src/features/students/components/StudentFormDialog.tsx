@@ -30,6 +30,8 @@ const studentFormSchema = z.object({
   guardianName: z.string().min(1, "Guardian name is required"),
   guardianRelation: z.enum(["father", "mother", "guardian"]),
   guardianPhone: z.string().min(1, "Guardian phone is required"),
+  studentEmail: z.union([z.literal(""), z.string().trim().email("Enter a valid email address")]).optional(),
+  parentEmail: z.union([z.literal(""), z.string().trim().email("Enter a valid email address")]).optional(),
 });
 
 interface StudentFormDialogProps {
@@ -65,6 +67,8 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
       guardianName: "",
       guardianRelation: "father",
       guardianPhone: "",
+      studentEmail: "",
+      parentEmail: "",
     },
   });
 
@@ -90,6 +94,8 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
               guardianName: primaryGuardian?.name ?? "",
               guardianRelation: primaryGuardian?.relation ?? "father",
               guardianPhone: primaryGuardian?.phone ?? "",
+              studentEmail: "",
+              parentEmail: "",
             }
           : {
               branchId: getCurrentBranchId(),
@@ -104,6 +110,8 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
               guardianName: "",
               guardianRelation: "father",
               guardianPhone: "",
+              studentEmail: "",
+              parentEmail: "",
             },
       );
     }
@@ -291,6 +299,24 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
                 {errors.guardianPhone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.guardianPhone.message}</p>}
               </div>
             </div>
+
+            {!isEdit && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="studentEmail">Student email</Label>
+                  <Input id="studentEmail" type="email" autoComplete="off" placeholder="Optional" aria-invalid={errors.studentEmail ? true : undefined} {...register("studentEmail")} />
+                  {errors.studentEmail && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentEmail.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="parentEmail">Parent email</Label>
+                  <Input id="parentEmail" type="email" autoComplete="off" placeholder="Optional" aria-invalid={errors.parentEmail ? true : undefined} {...register("parentEmail")} />
+                  {errors.parentEmail && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.parentEmail.message}</p>}
+                </div>
+                <p className="text-xs text-muted-foreground sm:col-span-2">
+                  Each email you enter gets a login created automatically (student / parent), linked to this student, with a temporary password emailed to it.
+                </p>
+              </div>
+            )}
           </FormSection>
 
           <DialogFooter>

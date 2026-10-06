@@ -135,6 +135,10 @@ services:
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-info@schoolsphrere.com}
       Smtp__FromName: ${SMTP_FROM_NAME:-School Sphere}
+      # SuperAdmin Azure Infrastructure dashboard (read-only). No Azure secret here: the VM's system-assigned managed identity signs in
+      # (it needs Reader + Cost Management Reader on the subscription). Empty subscription id = the page shows "not configured".
+      AzureDashboard__SubscriptionId: ${AZURE_SUBSCRIPTION_ID:-}
+      AzureDashboard__MonthlyBudget: ${AZURE_MONTHLY_BUDGET:-}
     depends_on:
       redis:
         condition: service_started

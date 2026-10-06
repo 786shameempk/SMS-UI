@@ -14,6 +14,7 @@ import {
   ChartColumn,
   ChartNoAxesColumn,
   CircleCheckBig,
+  Cloud,
   ClipboardPenLine,
   Award,
   FileQuestionMark,
@@ -53,6 +54,8 @@ export interface NavItem {
   permissionKey?: keyof ModulePermissions;
   /** Show only to staff (who author/evaluate) or only to students, within a module both can open. */
   audience?: NavAudience;
+  /** Only the platform super admin, by role - for platform-owner tools that are not a school module. */
+  superAdminOnly?: boolean;
 }
 
 /** "staff": admins, principals, teachers. "student": student logins. */
@@ -169,6 +172,10 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Platform",
     permissionKey: "platformConsole",
     items: [{ label: "Platform Console", to: "/platform", icon: Globe }],
+  },
+  {
+    title: "Infrastructure",
+    items: [{ label: "Azure Infrastructure", to: "/admin/azure", icon: Cloud, superAdminOnly: true }],
   },
 ];
 
