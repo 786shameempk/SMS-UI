@@ -119,6 +119,9 @@ export interface StudentFormValues {
   guardianName: string;
   guardianRelation: GuardianRelation;
   guardianPhone: string;
+  /** Registering only: each email given creates a login (student / parent role) linked to the student. */
+  studentEmail?: string;
+  parentEmail?: string;
 }
 
 export interface AdmissionApplication {

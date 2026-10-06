@@ -426,6 +426,8 @@ export async function createStudent(values: StudentFormValues): Promise<Student>
       guardianName: values.guardianName.trim(),
       guardianRelation: GUARDIAN_RELATION_TO_API[values.guardianRelation],
       guardianPhone: values.guardianPhone.trim(),
+      studentEmail: values.studentEmail?.trim() || null,
+      parentEmail: values.parentEmail?.trim() || null,
     }),
   );
   return mapStudent(dto, index);
