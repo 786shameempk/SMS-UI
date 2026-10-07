@@ -66,6 +66,17 @@ describe("library api", () => {
       mapped: { shelfLocation: undefined, coverNote: "Signed", availableCopies: 2 },
     }));
 
+  it("bulk add: sends everyone in one call and maps the result", async () => {
+    const dto = { id: "m9", tenantId: "t", branchId: "b", personType: "Student", personId: "s1", membershipId: "LM-S-009", joinedOn: "", status: "Active" };
+    const calls = stubClient(campusHttpClient, { "POST /api/librarymembers/bulk": { created: 1, alreadyMembers: 2, members: [dto] } });
+
+    const result = await library.bulkCreateMembers([{ personType: "student", personId: "s1" }, { personType: "staff", personId: "t1" }]);
+
+    expect(calls[0].body).toEqual({ people: [{ personType: "Student", personId: "s1" }, { personType: "Staff", personId: "t1" }], status: "Active" });
+    expect(result).toMatchObject({ created: 1, alreadyMembers: 2 });
+    expect(result.members[0]).toMatchObject({ personType: "student", membershipId: "LM-S-009", status: "active" });
+  });
+
   it("members", () =>
     checkCrud({
       client: campusHttpClient,

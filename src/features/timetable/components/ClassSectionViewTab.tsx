@@ -68,6 +68,7 @@ export default function ClassSectionViewTab() {
       toast.success("Slot updated");
       setEditorContext(null);
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const clearMutation = useMutation({
@@ -78,6 +79,7 @@ export default function ClassSectionViewTab() {
       toast.success("Slot cleared");
       setEditorContext(null);
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const autoGenerateMutation = useMutation({
@@ -86,6 +88,7 @@ export default function ClassSectionViewTab() {
       invalidateSlots();
       toast.success("Draft timetable generated. Review and adjust manually before publishing.");
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const sectionSlots = allSlots.filter((s) => s.sectionId === activeSectionId);

@@ -15,6 +15,7 @@ import { listAuditLog } from "@/features/settings/api";
 import * as staffApi from "@/features/staff/api";
 import * as studentsApi from "@/features/students/api";
 import { listSlots } from "@/features/timetable/api";
+import { getTimetableSetup } from "@/features/timetable/api";
 import { PERIOD_DEFINITIONS, dateToDayOfWeek } from "@/features/timetable/constants";
 import { listAssignments, listLiveStatuses } from "@/features/transport/api";
 import type { BusTrackingStatus } from "@/features/transport/types";
@@ -500,30 +501,31 @@ async function todayClasses(ctx: DashboardContext): Promise<ClassSession[]> {
     return [];
   }
 
-  const [subjects, sections, classes] = await Promise.all([listSubjects(), listSections(), listClasses()]);
+  const [subjects, sections, classes, setup] = await Promise.all([
+    listSubjects(),
+    listSections(),
+    listClasses(),
+    // The branch's own periods; the standard ones if the setup can't be read.
+    getTimetableSetup().catch(() => null),
+  ]);
   const subjectById = new Map(subjects.map((s) => [s.id, s.name] as const));
   const sectionById = new Map(sections.map((s) => [s.id, s] as const));
   const classById = new Map(classes.map((c) => [c.id, c.name] as const));
-  const periodByNumber = new Map(PERIOD_DEFINITIONS.map((p) => [p.periodNumber, p] as const));
-  const toTime = (t: string) => {
-    const [h, m] = t.trim().split(":").map(Number);
-    // Period times are written 8:00-3:30 without am/pm; school hours before 7 are afternoon.
-    return `${String(h < 7 ? h + 12 : h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-  };
-
+  const periodByNumber = new Map((setup?.periods ?? PERIOD_DEFINITIONS).map((p) => [p.periodNumber, p] as const));
   return slots
     .filter((s) => s.dayOfWeek === dow && !s.isBreak && s.subjectId)
-    .sort((a, b) => a.periodNumber - b.periodNumber)
+    // Lessons in the order the bell rings (a branch can add a period between two others).
+    .sort((a, b) => (periodByNumber.get(a.periodNumber)?.startTime ?? "").localeCompare(periodByNumber.get(b.periodNumber)?.startTime ?? "") || a.periodNumber - b.periodNumber)
     .map((s) => {
       const section = sectionById.get(s.sectionId);
-      const [start = "00:00", end = "00:00"] = (periodByNumber.get(s.periodNumber)?.time ?? "").split("-");
+      const period = periodByNumber.get(s.periodNumber);
       return {
         id: s.id,
         subject: subjectById.get(s.subjectId!) ?? "Subject",
         className: section ? `${classById.get(section.classId) ?? "Class"} - ${section.name}` : "—",
         room: s.room ?? "—",
-        startTime: toTime(start),
-        endTime: toTime(end),
+        startTime: period?.startTime ?? "00:00",
+        endTime: period?.endTime ?? "00:00",
       };
     });
 }

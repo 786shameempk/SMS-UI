@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { Branch, BranchFormValues } from "../types";
+import { TEACHER_CLASS_SCOPE_OPTIONS, type Branch, type BranchFormValues } from "../types";
 
 const branchFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -16,9 +16,10 @@ const branchFormSchema = z.object({
   address: z.string().optional(),
   phone: z.string().optional(),
   status: z.enum(["active", "inactive"]),
+  teacherClassScope: z.enum(["assigned_and_subject", "assigned", "all"]),
 });
 
-const EMPTY_VALUES: BranchFormValues = { name: "", code: "", address: "", phone: "", status: "active" };
+const EMPTY_VALUES: BranchFormValues = { name: "", code: "", address: "", phone: "", status: "active", teacherClassScope: "assigned_and_subject" };
 
 interface BranchFormDialogProps {
   open: boolean;
@@ -38,9 +39,11 @@ export default function BranchFormDialog({ open, onOpenChange, branch, onSubmit,
     formState: { errors },
   } = useForm<BranchFormValues>({ resolver: zodResolver(branchFormSchema), defaultValues: EMPTY_VALUES });
 
+  const scope = useWatch({ control, name: "teacherClassScope" });
+
   useEffect(() => {
     if (open) {
-      reset(branch ? { name: branch.name, code: branch.code, address: branch.address, phone: branch.phone, status: branch.status } : EMPTY_VALUES);
+      reset(branch ? { name: branch.name, code: branch.code, address: branch.address, phone: branch.phone, status: branch.status, teacherClassScope: branch.teacherClassScope } : EMPTY_VALUES);
     }
   }, [open, branch, reset]);
 
@@ -89,6 +92,30 @@ export default function BranchFormDialog({ open, onOpenChange, branch, onSubmit,
                 </Select>
               )}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="teacherClassScope">Classes teachers see in the mobile app</Label>
+            <Controller
+              control={control}
+              name="teacherClassScope"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="teacherClassScope">
+                    <SelectValue placeholder="Select what teachers see" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEACHER_CLASS_SCOPE_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <p className="text-xs text-muted-foreground">
+              {TEACHER_CLASS_SCOPE_OPTIONS.find((o) => o.value === scope)?.description}
+            </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

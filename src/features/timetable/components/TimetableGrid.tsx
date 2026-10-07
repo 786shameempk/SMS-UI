@@ -3,8 +3,8 @@ import { CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/utils/cn";
-import { DAY_DEFINITIONS, PERIOD_DEFINITIONS } from "../constants";
 import type { DayOfWeek, TimetableSlot } from "../types";
+import { useTimetableSetup } from "../useTimetableSetup";
 
 interface TimetableGridProps {
   slots: TimetableSlot[];
@@ -14,12 +14,14 @@ interface TimetableGridProps {
 }
 
 export default function TimetableGrid({ slots, renderCell, onCellClick, holidayDays }: TimetableGridProps) {
+  // The branch's own periods and school days (the standard ones until it sets up its own).
+  const { periods, days } = useTimetableSetup();
   return (
     <Table containerClassName="rounded-xl border border-border bg-card" className="border-collapse">
       <TableHeader>
         <TableRow hover={false}>
           <TableHead className="w-32 border-r border-border px-3">Period</TableHead>
-          {DAY_DEFINITIONS.map((day) => {
+          {days.map((day) => {
             const isHoliday = holidayDays?.has(day.value);
             return (
               <TableHead key={day.value} className="min-w-[150px] px-3">
@@ -38,17 +40,17 @@ export default function TimetableGrid({ slots, renderCell, onCellClick, holidayD
         </TableRow>
       </TableHeader>
       <TableBody>
-        {PERIOD_DEFINITIONS.map((period) => (
+        {periods.map((period) => (
           <TableRow key={period.periodNumber} hover={false} className="border-border">
             <TableCell className="border-r border-border px-3 py-2 align-top">
               <p className="text-sm font-medium text-foreground">{period.label}</p>
               <p className="text-xs text-muted-foreground">{period.time}</p>
             </TableCell>
-            {DAY_DEFINITIONS.map((day) => {
+            {days.map((day) => {
               if (period.isBreak) {
                 return (
                   <TableCell key={day.value} className="bg-secondary/30 px-3 py-2 text-center text-xs text-muted-foreground">
-                    Lunch Break
+                    {period.label}
                   </TableCell>
                 );
               }

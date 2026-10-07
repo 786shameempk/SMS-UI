@@ -45,6 +45,21 @@ describe("timetable api", () => {
     expect((calls[2].config as { params: unknown }).params).toEqual({ sectionId: "s5a", dayOfWeek: 1, periodNumber: 2 });
   });
 
+  it("periods and school days: reads the branch setup and saves it whole", async () => {
+    const dto = { periods: [{ periodNumber: 2, label: "Lesson", startTime: "09:00", endTime: "09:45", isBreak: false }, { periodNumber: 3, label: "Break", startTime: "09:45", endTime: "10:00", isBreak: true }], workingDays: [0, 1, 2], isCustom: true };
+    const calls = stubClient(academicHttpClient, { "GET /api/timetable/setup": dto, "PUT /api/timetable/setup": dto });
+
+    const setup = await timetable.getTimetableSetup();
+    await timetable.saveTimetableSetup({ periods: [{ periodNumber: 2, label: "Lesson", startTime: "09:00", endTime: "09:45", isBreak: false }], workingDays: [0, 1, 2] });
+
+    expect(setup).toEqual({
+      periods: [{ periodNumber: 2, label: "Lesson", startTime: "09:00", endTime: "09:45", time: "9:00 - 9:45" }, { periodNumber: 3, label: "Break", startTime: "09:45", endTime: "10:00", time: "9:45 - 10:00", isBreak: true }],
+      workingDays: [0, 1, 2],
+      isCustom: true,
+    });
+    expect(calls[1].body).toEqual({ periods: [{ periodNumber: 2, label: "Lesson", startTime: "09:00", endTime: "09:45", isBreak: false }], workingDays: [0, 1, 2] });
+  });
+
   it("flags a teacher double-booked in another section at the same period", () => {
     const all = [slot(), slot({ id: "sl2", sectionId: "s6a" }), slot({ id: "sl3", sectionId: "s7a", periodNumber: 3 })].map((s) => ({ ...s, subjectId: undefined, room: undefined }));
 

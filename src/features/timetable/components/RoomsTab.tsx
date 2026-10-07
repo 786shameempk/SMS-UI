@@ -29,6 +29,7 @@ export default function RoomsTab() {
       toast.success("Room added");
       setFormOpen(false);
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const updateMutation = useMutation({
@@ -39,6 +40,7 @@ export default function RoomsTab() {
       setFormOpen(false);
       setEditing(null);
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const deleteMutation = useMutation({
@@ -48,6 +50,7 @@ export default function RoomsTab() {
       toast.success("Room deleted");
       setDeleteTarget(null);
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const columns: ColumnDef<Room, unknown>[] = [
