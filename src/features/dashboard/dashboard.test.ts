@@ -5,6 +5,7 @@ import { liveSource, __test } from "./sources/live";
 import { mockSource } from "./sources/mock";
 import type { DashboardContext, DashboardIdentity, WidgetDataKey } from "./sources/types";
 import { WIDGET_CATALOG } from "./widgets";
+import { getTimetableSetup } from "@/features/timetable/api";
 
 const day = (offset: number) => {
   const d = new Date();
@@ -192,6 +193,10 @@ vi.mock("@/features/timetable/api", () => ({
     { id: "t0", sectionId: "s5a", dayOfWeek: todayDow ?? 0, periodNumber: 1, subjectId: "math", staffId: "sf1", room: "204" },
     { id: "tb", sectionId: "s5a", dayOfWeek: todayDow ?? 0, periodNumber: 4, isBreak: true },
   ]),
+  // Not reachable by default, so the standard schedule applies; a test can return the branch's own.
+  getTimetableSetup: vi.fn(async () => {
+    throw new Error("setup unavailable");
+  }),
 }));
 vi.mock("@/features/visitors/api", () => ({
   listVisitorEntries: vi.fn(async (status?: string) =>
@@ -285,6 +290,23 @@ describe("live source: school-wide widgets", () => {
     const classes = await W.todayClasses(ctx("teacher"));
     if (todayDow === null) return expect(classes).toEqual([]);
     expect(classes.map((c) => [c.id, c.className, c.startTime])).toEqual([["t0", "Class 5 - A", "08:00"], ["t1", "Class 5 - A", "08:40"]]);
+  });
+});
+
+describe("live source: today's classes use the branch's own periods", () => {
+  it("takes times and order from the branch setup, not the standard schedule", async () => {
+    vi.mocked(getTimetableSetup).mockResolvedValueOnce({
+      periods: [
+        { periodNumber: 1, label: "Late start", time: "9:30 - 10:15", startTime: "09:30", endTime: "10:15" },
+        { periodNumber: 2, label: "Early bird", time: "6:30 - 7:15", startTime: "06:30", endTime: "07:15" },
+      ],
+      workingDays: [0, 1, 2, 3, 4, 5],
+      isCustom: true,
+    });
+    const classes = await W.todayClasses(ctx("teacher"));
+    if (todayDow === null) return expect(classes).toEqual([]);
+    // Period 2 rings first here, and a 6:30 start stays 06:30 (it is not read as an afternoon time).
+    expect(classes.map((c) => [c.id, c.startTime, c.endTime])).toEqual([["t1", "06:30", "07:15"], ["t0", "09:30", "10:15"]]);
   });
 });
 

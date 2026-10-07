@@ -196,14 +196,19 @@ describe("administration: branches", () => {
       "DELETE /api/branches/tenant%20a": null,
     });
 
-    expect((await branches.listBranches())[0]).toMatchObject({ status: "active", address: undefined });
-    const created = await branches.createBranch({ name: "North", code: "N", address: "", phone: "99", status: "inactive" });
-    await branches.updateBranch("tenant a", { name: "North", code: "N", address: "Road", phone: "", status: "active" });
+    expect((await branches.listBranches())[0]).toMatchObject({ status: "active", address: undefined, teacherClassScope: "assigned_and_subject" });
+    const created = await branches.createBranch({ name: "North", code: "N", address: "", phone: "99", status: "inactive", teacherClassScope: "assigned" });
+    await branches.updateBranch("tenant a", { name: "North", code: "N", address: "Road", phone: "", status: "active", teacherClassScope: "all" });
     await branches.deleteBranch("tenant a");
 
     expect(created.status).toBe("inactive");
-    expect(calls[1].body).toEqual({ name: "North", code: "N", address: null, phone: "99", status: "Inactive" });
-    expect(calls[2].body).toMatchObject({ address: "Road", phone: null, status: "Active" });
+    expect(calls[1].body).toEqual({ name: "North", code: "N", address: null, phone: "99", status: "Inactive", teacherClassScope: "Assigned" });
+    expect(calls[2].body).toMatchObject({ address: "Road", phone: null, status: "Active", teacherClassScope: "All" });
+  });
+
+  it("reads the teacher class scope the server sends", async () => {
+    stubClient(authHttpClient, { "GET /api/branches": [{ ...apiBranch, teacherClassScope: "All" }, { ...apiBranch, id: "b2", teacherClassScope: "Assigned" }] });
+    expect((await branches.listBranches()).map((b) => b.teacherClassScope)).toEqual(["all", "assigned"]);
   });
 });
 

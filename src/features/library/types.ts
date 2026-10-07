@@ -78,6 +78,13 @@ export interface LibraryMemberFormValues {
   status: LibraryMemberStatus;
 }
 
+/** What a bulk add did: new members, and chosen people skipped for already being members. */
+export interface LibraryBulkResult {
+  created: number;
+  alreadyMembers: number;
+  members: LibraryMember[];
+}
+
 export type BookLoanStatus = "issued" | "returned" | "overdue";
 
 export interface BookLoan {
