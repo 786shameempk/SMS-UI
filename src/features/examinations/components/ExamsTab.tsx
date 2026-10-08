@@ -243,7 +243,7 @@ export default function ExamsTab() {
             <CardTitle>Subject schedule</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">Per-subject date, time, room, and marks for the selected exam.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={activeScheduleExamId} onValueChange={setScheduleFilter}>
               <SelectTrigger className="w-56">
                 <SelectValue placeholder="Select an exam" />

@@ -3,7 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { Activity, BellRing, Boxes, ChartLine, Cloud, Container, Cpu, Database, HardDrive, LayoutDashboard, RefreshCw, Settings, Wallet, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageContainer } from "@/components/ui/page";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { cn } from "@/utils/cn";
 import { useAzureOverview, useRefreshAzure } from "../hooks";
 import { relativeTime } from "../utils";
@@ -54,36 +54,32 @@ export default function AzureLayout() {
 
   return (
     <PageContainer width="wide">
-      <header className="flex flex-col gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground ring-1 ring-inset ring-primary/20">
-            <Cloud className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-page-title">Azure Infrastructure</h1>
-            <p className="truncate text-sm text-muted-foreground">
-              {subscription ? (
-                <>
-                  <span className="font-medium text-foreground">{subscription.name ?? "Subscription"}</span>
-                  {subscription.primaryLocation && <> · {subscription.primaryLocation}</>}
-                  <span className="hidden sm:inline"> · {subscription.id}</span>
-                </>
-              ) : (
-                "SchoolSphere hosting, cost and health"
-              )}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground" aria-live="polite">
-            {updatedAt ? `Last updated: ${relativeTime(updatedAt, now)}` : "Loading…"}
-          </span>
-          <Button variant="outline" size="sm" onClick={() => void refresh()} loading={overview.isFetching}>
-            {!overview.isFetching && <RefreshCw className="h-3.5 w-3.5" />}
-            Refresh
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        icon={Cloud}
+        title="Azure Infrastructure"
+        description={
+          subscription ? (
+            <>
+              <span className="font-medium text-foreground">{subscription.name ?? "Subscription"}</span>
+              {subscription.primaryLocation && <> · {subscription.primaryLocation}</>}
+              <span className="hidden sm:inline"> · {subscription.id}</span>
+            </>
+          ) : (
+            "SchoolSphere hosting, cost and health"
+          )
+        }
+        actions={
+          <>
+            <span className="text-xs text-muted-foreground" aria-live="polite">
+              {updatedAt ? `Last updated: ${relativeTime(updatedAt, now)}` : "Loading…"}
+            </span>
+            <Button variant="outline" size="sm" onClick={() => void refresh()} loading={overview.isFetching}>
+              {!overview.isFetching && <RefreshCw className="h-3.5 w-3.5" />}
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)]">
         <nav aria-label="Azure sections" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:mx-0 lg:block lg:space-y-5 lg:overflow-visible lg:px-0 lg:pb-0">

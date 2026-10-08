@@ -119,8 +119,8 @@ export default function MyTalentsPage() {
                 View my profile
               </Link>
             )}
-            <Link to="/talents/new" className="rounded-full bg-white text-[#1e1b4b] px-4 py-2 text-sm font-bold inline-flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-violet-600" /> New
+            <Link to="/talents/new" className="rounded-full bg-white text-[var(--cc-ink)] px-4 py-2 text-sm font-bold inline-flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-brand-600" /> New
             </Link>
           </div>
         </div>
@@ -128,8 +128,8 @@ export default function MyTalentsPage() {
 
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatTile label="Showcases" value={stats.total} emoji="🎨" gradient="from-violet-500 to-fuchsia-500" />
-          <StatTile label="Total views" value={stats.totalViews} emoji="👁" gradient="from-sky-500 to-teal-400" />
+          <StatTile label="Showcases" value={stats.total} emoji="🎨" gradient="from-brand-500 to-brand-500" />
+          <StatTile label="Total views" value={stats.totalViews} emoji="👁" gradient="from-brand-500 to-brand-400" />
           <StatTile label="Appreciations" value={stats.totalReactions} emoji="💖" gradient="from-rose-400 to-amber-400" />
           <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground mb-2">Reaction breakdown</p>

@@ -7,11 +7,11 @@ import type { TalentCategory, TalentCreator, TalentStatus, TalentVisibility } fr
 import { Sparkle } from "./Decor";
 
 const AVATAR_GRADIENTS = [
-  "from-violet-500 to-sky-400",
-  "from-fuchsia-500 to-amber-400",
-  "from-teal-400 to-indigo-500",
-  "from-rose-400 to-purple-500",
-  "from-sky-400 to-emerald-400",
+  "from-brand-500 to-brand-400",
+  "from-brand-500 to-amber-400",
+  "from-brand-400 to-brand-500",
+  "from-rose-400 to-brand-500",
+  "from-brand-400 to-emerald-400",
 ];
 
 function hash(text: string): number {
@@ -80,7 +80,7 @@ export function CreatorLine({ creator, schoolName, tenantId, compact = false, on
 }
 
 const CREATOR_TYPE_PILL: Record<TalentCreator["type"], { label: string; light: string; dark: string }> = {
-  student: { label: "Student", light: "bg-sky-500/12 text-sky-700 dark:text-sky-300", dark: "bg-sky-300/20 text-sky-200" },
+  student: { label: "Student", light: "bg-brand-500/12 text-brand-700 dark:text-brand-300", dark: "bg-brand-300/20 text-brand-200" },
   teacher: { label: "Teacher", light: "bg-amber-500/12 text-amber-700 dark:text-amber-300", dark: "bg-amber-300/20 text-amber-200" },
   parent: { label: "Parent", light: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300", dark: "bg-emerald-300/20 text-emerald-200" },
 };
@@ -115,7 +115,7 @@ export function VisibilityBadge({ visibility, onDark = false, className }: { vis
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-        onDark ? "bg-black/35 text-white backdrop-blur-md" : visibility === "public" ? "bg-teal-500/12 text-teal-700 dark:text-teal-300" : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
+        onDark ? "bg-black/35 text-white backdrop-blur-md" : visibility === "public" ? "bg-brand-500/12 text-brand-700 dark:text-brand-300" : "bg-brand-500/10 text-brand-700 dark:text-brand-300",
         className,
       )}
       title={VISIBILITY_CONFIG[visibility].description}
@@ -184,8 +184,8 @@ export function SectionHeader({ emoji, title, subtitle, action }: { emoji?: stri
 export function EmptyState({ emoji = "✨", title, body, action }: { emoji?: string; title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
-      <Sparkle className="cc-sparkle absolute top-6 left-[20%] w-4 h-4 text-violet-400" />
-      <Sparkle className="cc-sparkle absolute bottom-8 right-[18%] w-3 h-3 text-sky-400 [animation-delay:1s]" />
+      <Sparkle className="cc-sparkle absolute top-6 left-[20%] w-4 h-4 text-brand-400" />
+      <Sparkle className="cc-sparkle absolute bottom-8 right-[18%] w-3 h-3 text-brand-400 [animation-delay:1s]" />
       <div className="text-4xl mb-3" aria-hidden="true">
         {emoji}
       </div>

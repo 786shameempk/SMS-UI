@@ -95,7 +95,7 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
                 <span className={cn("rounded-full px-2.5 py-1 font-medium", CATEGORY_CONFIG[talent.category].tint)}>
                   {CATEGORY_CONFIG[talent.category].emoji} {CATEGORY_CONFIG[talent.category].label}
                 </span>
-                <span className={cn("rounded-full px-2.5 py-1 font-medium", talent.visibility === "public" ? "bg-teal-500/12 text-teal-700 dark:text-teal-300" : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300")}>
+                <span className={cn("rounded-full px-2.5 py-1 font-medium", talent.visibility === "public" ? "bg-brand-500/12 text-brand-700 dark:text-brand-300" : "bg-brand-500/10 text-brand-700 dark:text-brand-300")}>
                   Requested: {VISIBILITY_CONFIG[talent.visibility].emoji} {VISIBILITY_CONFIG[talent.visibility].label}
                 </span>
                 {talent.tags.map((t) => (
@@ -107,7 +107,7 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
               <h3 className="cc-display text-2xl font-bold text-foreground">{talent.title}</h3>
               <MediaShowcase talent={talent} onMeaningfulPlay={() => undefined} />
               {talent.media.length > 0 && (talent.description ? <p className="text-sm text-foreground/90 whitespace-pre-line">{talent.description}</p> : <p className="text-sm italic text-muted-foreground">No description provided.</p>)}
-              <Link to={`/talents/${talent.id}`} className="inline-flex items-center gap-1 text-xs text-violet-600 dark:text-violet-300 hover:underline">
+              <Link to={`/talents/${talent.id}`} className="inline-flex items-center gap-1 text-xs text-brand-600 dark:text-brand-300 hover:underline">
                 Open full page <ExternalLink className="w-3 h-3" />
               </Link>
             </div>
@@ -124,7 +124,7 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
 
                 {decision === "approve" && talent.visibility === "public" && (
                   <label className="flex items-start gap-2.5 rounded-2xl bg-secondary/60 px-3.5 py-3 cursor-pointer">
-                    <input type="checkbox" checked={narrowToSchool} onChange={(e) => setNarrowToSchool(e.target.checked)} className="mt-0.5 accent-violet-600" />
+                    <input type="checkbox" checked={narrowToSchool} onChange={(e) => setNarrowToSchool(e.target.checked)} className="mt-0.5 accent-brand-600" />
                     <span className="text-sm">
                       <span className="font-medium text-foreground">Publish as School Only instead</span>
                       <span className="block text-xs text-muted-foreground">The creator asked for Public. You can narrow it to your school - never widen it.</span>

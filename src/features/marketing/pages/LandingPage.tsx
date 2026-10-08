@@ -1,5 +1,7 @@
+import { useLayoutEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { isAppOnOtherOrigin } from "@/lib/appUrl";
+import { applyLandingTheme } from "@/features/settings/theme";
 import { useAuthStore } from "@/store/authStore";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
@@ -21,6 +23,9 @@ import { LeadCaptureProvider } from "../components/LeadCapture";
 export default function LandingPage() {
   const token = useAuthStore((s) => s.token);
   const isSessionValid = useAuthStore((s) => s.isSessionValid);
+
+  // The marketing site is always amber/light, regardless of the theme a signed-in user chose in Settings.
+  useLayoutEffect(() => applyLandingTheme(), []);
 
   // Someone already signed in landing on "/" should go straight to their dashboard, not see marketing copy -
   // but only when the app lives on this same origin (local dev). On the public site the landing page has its own

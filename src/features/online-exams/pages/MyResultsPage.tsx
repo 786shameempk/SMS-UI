@@ -21,7 +21,7 @@ export default function MyResultsPage() {
   const waiting = submitted.filter((e) => !e.resultAvailable);
 
   return (
-    <PageContainer width="medium">
+    <PageContainer>
       <PageHeader icon={Award} title="My results" description="Your marks for submitted exams. Results appear once your teacher publishes them." />
       {exams.isLoading ? (
         <div className="space-y-3">

@@ -13,9 +13,10 @@ import { listPayrollRuns, listPayslips, markPayslipPaid } from "../api";
 import type { PayslipRow } from "../types";
 import PayslipView from "./PayslipView";
 
-export default function PayslipsTab() {
+/** `mine`: a staff member's own payslips - read-only, with no payroll-run controls. */
+export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
   const queryClient = useQueryClient();
-  const { data: runs = [] } = useQuery({ queryKey: ["payroll", "runs"], queryFn: listPayrollRuns });
+  const { data: runs = [] } = useQuery({ queryKey: ["payroll", "runs"], queryFn: listPayrollRuns, enabled: !mine });
   const { data: payslips = [], isLoading, isError, refetch } = useQuery({ queryKey: ["payroll", "payslips"], queryFn: () => listPayslips() });
 
   const [monthFilter, setMonthFilter] = useState<string>("all");
@@ -41,7 +42,10 @@ export default function PayslipsTab() {
     });
   }, [payslips, monthFilter, statusFilter]);
 
-  const months = useMemo(() => Array.from(new Set(runs.map((r) => r.month))).sort((a, b) => b.localeCompare(a)), [runs]);
+  const months = useMemo(
+    () => Array.from(new Set((mine ? payslips : runs).map((r) => r.month))).sort((a, b) => b.localeCompare(a)),
+    [mine, payslips, runs],
+  );
 
   const columns: ColumnDef<PayslipRow, unknown>[] = [
     {
@@ -83,7 +87,7 @@ export default function PayslipsTab() {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewing(slip)}>
               <Eye className="w-3.5 h-3.5" />
             </Button>
-            {!slip.paid && (
+            {!slip.paid && !mine && (
               <Button size="sm" variant="outline" onClick={() => payMutation.mutate(slip.id)} disabled={payMutation.isPending}>
                 <Wallet className="w-3.5 h-3.5" />
                 Mark paid
@@ -125,7 +129,7 @@ export default function PayslipsTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No payslips match your filters." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={mine ? "No payslips have been issued to you yet." : "No payslips match your filters."} pageSize={10} />
 
       <PayslipView open={Boolean(viewing)} onOpenChange={(v) => !v && setViewing(null)} payslip={viewing} />
     </div>

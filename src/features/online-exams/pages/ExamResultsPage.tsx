@@ -92,7 +92,7 @@ export default function ExamResultsPage() {
   const rows = status === ALL ? r.rows : r.rows.filter((row) => row.status === status);
 
   return (
-    <PageContainer width="wide">
+    <PageContainer>
       <Link to={`/online-exams/exams/${r.exam.id}`} className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Back to exam

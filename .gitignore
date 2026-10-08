@@ -48,4 +48,4 @@ loadtest/users.seeded.json
 coverage
 
 # Marketing poster (local only)
-marketing/
+/marketing/

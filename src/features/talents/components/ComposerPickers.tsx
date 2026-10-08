@@ -20,7 +20,7 @@ export function CategoryPicker({ value, onChange }: { value: TalentCategory; onC
             onClick={() => onChange(c)}
             className={cn(
               "relative overflow-hidden rounded-2xl border p-3 text-left transition-all cursor-pointer",
-              active ? "border-transparent text-white shadow-lg shadow-violet-900/20" : "border-border bg-card hover:border-violet-300 hover:-translate-y-0.5",
+              active ? "border-transparent text-white shadow-lg shadow-brand-900/20" : "border-border bg-card hover:border-brand-300 hover:-translate-y-0.5",
             )}
           >
             {active && <span className={cn("absolute inset-0 bg-gradient-to-br", config.gradient)} />}
@@ -48,8 +48,8 @@ export function CategoryPicker({ value, onChange }: { value: TalentCategory; onC
  */
 export function VisibilityPicker({ value, onChange, publicAllowed = true }: { value: TalentVisibility; onChange: (v: TalentVisibility) => void; publicAllowed?: boolean }) {
   const options: Array<{ value: TalentVisibility; icon: typeof School; gradient: string; who: string[] }> = [
-    { value: "school_only", icon: School, gradient: "from-indigo-600 to-violet-600", who: ["Students & teachers at your school", "Parents at your school"] },
-    { value: "public", icon: Globe2, gradient: "from-sky-500 to-teal-500", who: ["Everyone at your school", "Students, teachers & parents at other schools"] },
+    { value: "school_only", icon: School, gradient: "from-brand-600 to-brand-600", who: ["Students & teachers at your school", "Parents at your school"] },
+    { value: "public", icon: Globe2, gradient: "from-brand-500 to-brand-500", who: ["Everyone at your school", "Students, teachers & parents at other schools"] },
   ];
 
   return (
@@ -70,7 +70,7 @@ export function VisibilityPicker({ value, onChange, publicAllowed = true }: { va
               onClick={() => onChange(o.value)}
               className={cn(
                 "relative text-left rounded-2xl border-2 p-4 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-55",
-                active ? "border-violet-500 bg-violet-500/[0.06] shadow-lg shadow-violet-900/10" : "border-border bg-card hover:border-violet-300",
+                active ? "border-brand-500 bg-brand-500/[0.06] shadow-lg shadow-brand-900/10" : "border-border bg-card hover:border-brand-300",
               )}
             >
               <div className="flex items-start gap-3">
@@ -84,7 +84,7 @@ export function VisibilityPicker({ value, onChange, publicAllowed = true }: { va
                   </p>
                   <p className="text-sm text-muted-foreground mt-0.5">{locked ? "Your school has turned off public sharing for this content." : config.description}</p>
                 </div>
-                <span className={cn("w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center", active ? "border-violet-500 bg-violet-500" : "border-border")}>
+                <span className={cn("w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center", active ? "border-brand-500 bg-brand-500" : "border-border")}>
                   {active && <Check className="w-3 h-3 text-white" />}
                 </span>
               </div>

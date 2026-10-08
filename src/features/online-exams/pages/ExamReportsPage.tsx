@@ -111,7 +111,7 @@ export default function ExamReportsPage() {
   const hardest = a ? [...a.questions].filter((q) => q.answered > 0).sort((x, y) => x.correctPercentage - y.correctPercentage).slice(0, 3) : [];
 
   return (
-    <PageContainer width="wide">
+    <PageContainer>
       <PageHeader
         icon={BarChart3}
         title="Reports"

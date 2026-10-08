@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "@/utils/cn";
+import { ScrollArrow, useScrollStrip } from "./scroll-strip";
 
 type TabsVariant = "pill" | "line";
 const TabsVariantContext = React.createContext<TabsVariant>("pill");
@@ -21,53 +22,32 @@ function revealInline(container: HTMLElement, el: HTMLElement) {
 /**
  * `pill` (default): a compact segmented control for in-card switches.
  * `line`: an underlined strip for a page's primary sections.
- * Both scroll horizontally instead of wrapping, so long tab sets stay one row on phones; the edges fade while
- * more tabs are hidden in that direction, and the active tab is kept in view.
+ * Both stay on one row. When the tabs don't fit they scroll sideways: by touch or trackpad, with the mouse wheel,
+ * or with the arrow buttons that appear at an edge while more tabs are hidden past it. The active tab is scrolled into view.
  */
 const TabsList = React.forwardRef<
   React.ComponentRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List> & { variant?: TabsVariant }
->(({ className, variant = "pill", ...props }, ref) => {
-  const innerRef = React.useRef<HTMLDivElement>(null);
-  React.useImperativeHandle(ref, () => innerRef.current as HTMLDivElement);
-
-  React.useEffect(() => {
-    const list = innerRef.current;
-    if (!list) return;
-    const update = () => {
-      const max = list.scrollWidth - list.clientWidth;
-      list.toggleAttribute("data-overflow-start", list.scrollLeft > 1);
-      list.toggleAttribute("data-overflow-end", list.scrollLeft < max - 1);
-    };
-    const active = list.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
-    if (active) revealInline(list, active);
-    update();
-    list.addEventListener("scroll", update, { passive: true });
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : undefined;
-    ro?.observe(list);
-    return () => {
-      list.removeEventListener("scroll", update);
-      ro?.disconnect();
-    };
-  }, []);
+>(({ className, variant = "pill", ...props }, forwardedRef) => {
+  const { setRef, more, nudge } = useScrollStrip('[role="tab"][data-state="active"]', forwardedRef);
 
   return (
     <TabsVariantContext.Provider value={variant}>
-      <TabsPrimitive.List
-        ref={innerRef}
-        data-variant={variant}
-        className={cn(
-          "max-w-full items-center overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-          // Fade whichever edge still has tabs scrolled out of view.
-          "data-[overflow-end]:[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)]",
-          "data-[overflow-start]:[mask-image:linear-gradient(to_right,transparent,#000_2.5rem)]",
-          "data-[overflow-start]:data-[overflow-end]:[mask-image:linear-gradient(to_right,transparent,#000_2.5rem,#000_calc(100%-2.5rem),transparent)]",
-          variant === "pill" && "inline-flex h-9 gap-1 rounded-lg bg-secondary p-1 text-secondary-foreground",
-          variant === "line" && "flex w-full gap-1 shadow-[inset_0_-1px_0_var(--color-border)]",
-          className,
-        )}
-        {...props}
-      />
+      <div className={cn("relative min-w-0 max-w-full", variant === "line" ? "w-full" : "inline-flex")}>
+        <TabsPrimitive.List
+          ref={setRef}
+          data-variant={variant}
+          className={cn(
+            "min-w-0 max-w-full items-center overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            variant === "pill" && "inline-flex h-9 gap-1 rounded-lg bg-secondary p-1 text-secondary-foreground",
+            variant === "line" && "flex w-full gap-1 shadow-[inset_0_-1px_0_var(--color-border)]",
+            className,
+          )}
+          {...props}
+        />
+        {more.start && <ScrollArrow dir={-1} onClick={() => nudge(-1)} className={variant === "line" ? "-translate-y-[60%]" : undefined} />}
+        {more.end && <ScrollArrow dir={1} onClick={() => nudge(1)} className={variant === "line" ? "-translate-y-[60%]" : undefined} />}
+      </div>
     </TabsVariantContext.Provider>
   );
 });

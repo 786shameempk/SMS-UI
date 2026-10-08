@@ -39,7 +39,7 @@ export default function TeacherProfilePage() {
 
   if (isError || !staff) {
     return (
-      <PageContainer width="narrow">
+      <PageContainer>
         <EmptyState
           icon={SearchX}
           title="Record not found"
@@ -56,7 +56,7 @@ export default function TeacherProfilePage() {
   }
 
   return (
-    <PageContainer width="narrow">
+    <PageContainer>
       <div>
         <Button variant="ghost" size="sm" onClick={() => navigate("/teachers")} className="-ml-2 mb-2">
           <ArrowLeft className="w-3.5 h-3.5" />

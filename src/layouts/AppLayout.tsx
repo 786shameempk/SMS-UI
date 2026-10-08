@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
+import SectionSubNav from "@/components/layouts/SectionSubNav";
 import { useMobileNav } from "@/components/layouts/mobileNav";
 import { PageSkeleton } from "@/components/ui/states";
 import { useAuthStore } from "@/store/authStore";
@@ -81,6 +82,8 @@ export default function AppLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header />
+        {/* The pages of the section being viewed, like Talent Showcase's menu: right under the header. */}
+        <SectionSubNav />
         <main id="main-content" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto bg-app-glow focus:outline-none">
           {/* Pages are lazy chunks: the shell stays put while the next page loads. */}
           <Suspense key={scopeKey} fallback={<PageSkeleton />}>

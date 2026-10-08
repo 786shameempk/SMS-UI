@@ -22,7 +22,7 @@ export default function EvaluationsPage() {
   const totalAttempts = items.reduce((n, i) => n + i.attemptsPending, 0);
 
   return (
-    <PageContainer width="medium">
+    <PageContainer>
       <PageHeader
         icon={ClipboardPenLine}
         title="Pending evaluation"

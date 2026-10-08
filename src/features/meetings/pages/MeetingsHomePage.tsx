@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, CalendarDays, CalendarPlus, ClipboardCheck, Film, History, Plus, Search, Users } from "lucide-react";
@@ -80,22 +81,18 @@ export default function MeetingsHomePage() {
   const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">{todayLabel}</p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {firstName ? `Hi ${firstName}` : "Online Classes"}
-          </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {today.data ? `${today.data.filter((m) => m.status !== "Cancelled").length} ${isParent ? "classes and meetings" : "sessions"} today` : "Your classes and meetings"}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline"><Link to="/online-classes/calendar"><CalendarDays className="h-4 w-4" /> Calendar</Link></Button>
-          {canSchedule && <Button onClick={() => openSchedule("OnlineClass")}><Plus className="h-4 w-4" /> Schedule class</Button>}
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader
+        eyebrow={<p className="text-sm text-muted-foreground">{todayLabel}</p>}
+        title={firstName ? `Hi ${firstName}` : "Online Classes"}
+        description={today.data ? `${today.data.filter((m) => m.status !== "Cancelled").length} ${isParent ? "classes and meetings" : "sessions"} today` : "Your classes and meetings"}
+        actions={
+          <>
+            <Button asChild variant="outline"><Link to="/online-classes/calendar"><CalendarDays className="h-4 w-4" /> Calendar</Link></Button>
+            {canSchedule && <Button onClick={() => openSchedule("OnlineClass")}><Plus className="h-4 w-4" /> Schedule class</Button>}
+          </>
+        }
+      />
 
       {today.isLoading || upcoming.isLoading ? <Skeleton className="h-32 w-full rounded-2xl" /> : <NextUpCard meeting={next} />}
 
@@ -200,6 +197,6 @@ export default function MeetingsHomePage() {
       </Tabs>
 
       {canSchedule && <ScheduleMeetingDialog open={scheduleOpen} onOpenChange={setScheduleOpen} initialType={scheduleType} />}
-    </div>
+    </PageContainer>
   );
 }

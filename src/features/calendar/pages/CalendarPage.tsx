@@ -74,7 +74,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <PageContainer width="medium">
+    <PageContainer>
       <PageHeader
         title="Calendar"
         description="Holidays, exams, the academic calendar, homework due dates, staff leave, and birthdays — all in one place."

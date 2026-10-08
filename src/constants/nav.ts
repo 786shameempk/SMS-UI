@@ -63,6 +63,8 @@ export type NavAudience = "staff" | "student";
 
 export interface NavSection {
   title: string;
+  /** Shown beside the section in the sidebar; the section's own pages appear as the sub-menu under the header. */
+  icon: LucideIcon;
   items: NavItem[];
   permissionKey?: keyof ModulePermissions;
 }
@@ -84,6 +86,7 @@ export const CORE_NAV_ITEMS: NavItem[] = [
 export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Academics",
+    icon: GraduationCap,
     permissionKey: "students",
     items: [
       { label: "Students", to: "/students", icon: GraduationCap },
@@ -99,6 +102,7 @@ export const NAV_SECTIONS: NavSection[] = [
     // Online Exams: staff author, evaluate and report; students sit exams. Both share module.onlineExams, so
     // each item says who it's for (see useVisibleNav).
     title: "Online Exams",
+    icon: MonitorCheck,
     permissionKey: "onlineExams",
     items: [
       { label: "Exam Dashboard", to: "/online-exams", icon: MonitorCheck, end: true, permissionKey: "onlineExams", audience: "staff" },
@@ -115,6 +119,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: "Human Resources",
+    icon: Briefcase,
     permissionKey: "staff",
     items: [
       { label: "Staff Management", to: "/staff", icon: Briefcase },
@@ -123,6 +128,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: "Finance",
+    icon: Wallet,
     permissionKey: "fees",
     items: [
       { label: "Fee Management", to: "/fees", icon: Wallet },
@@ -133,6 +139,7 @@ export const NAV_SECTIONS: NavSection[] = [
     // Single-module areas grouped by what the school is doing, instead of one-item sections each.
     // Each item carries the permission its old one-item section had, so visibility is unchanged.
     title: "Campus Operations",
+    icon: Building2,
     items: [
       { label: "Library", to: "/library", icon: Library, permissionKey: "library" },
       { label: "Transport", to: "/transport", icon: Bus, permissionKey: "transport" },
@@ -144,6 +151,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: "Engagement",
+    icon: Megaphone,
     items: [
       { label: "Communication Center", to: "/communication", icon: Megaphone, permissionKey: "communication" },
       { label: "Surveys & Feedback", to: "/surveys", icon: Vote, permissionKey: "surveys" },
@@ -153,6 +161,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: "Insights",
+    icon: ChartColumn,
     items: [
       { label: "Reports & Analytics", to: "/reports", icon: ChartColumn, permissionKey: "reports" },
       { label: "AI Features", to: "/ai", icon: Sparkles, permissionKey: "aiFeatures" },
@@ -160,6 +169,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: "Administration",
+    icon: ShieldCheck,
     permissionKey: "administration",
     items: [
       { label: "User Management", to: "/admin/users", icon: Users },
@@ -170,11 +180,13 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: "Platform",
+    icon: Globe,
     permissionKey: "platformConsole",
     items: [{ label: "Platform Console", to: "/platform", icon: Globe }],
   },
   {
     title: "Infrastructure",
+    icon: Cloud,
     items: [{ label: "Azure Infrastructure", to: "/admin/azure", icon: Cloud, superAdminOnly: true }],
   },
 ];

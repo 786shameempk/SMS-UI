@@ -42,14 +42,14 @@ export default function MediaDropzone({
         }}
         className={cn(
           "relative overflow-hidden rounded-3xl border-2 border-dashed p-6 sm:p-8 text-center transition-all",
-          dragging ? "border-violet-500 bg-violet-500/10 scale-[1.01]" : "border-border bg-card",
+          dragging ? "border-brand-500 bg-brand-500/10 scale-[1.01]" : "border-border bg-card",
           disabled && "opacity-60",
         )}
       >
-        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-violet-500/10 blur-2xl" />
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-sky-500/10 blur-2xl" />
+        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-brand-500/10 blur-2xl" />
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-brand-500/10 blur-2xl" />
         <div className="relative">
-          <div className="mx-auto w-14 h-14 rounded-2xl cc-gradient-bg flex items-center justify-center shadow-lg shadow-violet-900/25 cc-float">
+          <div className="mx-auto w-14 h-14 rounded-2xl cc-gradient-bg flex items-center justify-center shadow-lg shadow-brand-900/25 cc-float">
             <CloudUpload className="w-7 h-7 text-white" />
           </div>
           <p className="cc-display mt-4 text-lg font-bold text-foreground">Drop your photos, videos or recordings</p>
@@ -112,7 +112,7 @@ export default function MediaDropzone({
                 <p className="text-xs text-muted-foreground">
                   {(item.sizeBytes / (1024 * 1024)).toFixed(1)} MB
                   {item.durationSeconds ? ` · ${formatDuration(item.durationSeconds)}` : ""}
-                  {!item.serverId && <span className="ml-1.5 text-violet-600 dark:text-violet-300">· ready to upload</span>}
+                  {!item.serverId && <span className="ml-1.5 text-brand-600 dark:text-brand-300">· ready to upload</span>}
                 </p>
                 <input
                   value={item.caption}
@@ -120,7 +120,7 @@ export default function MediaDropzone({
                   maxLength={300}
                   disabled={disabled}
                   placeholder="Add a caption (optional)"
-                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 border-b border-transparent focus:border-violet-400 outline-none py-0.5"
+                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 border-b border-transparent focus:border-brand-400 outline-none py-0.5"
                 />
               </div>
               <div className="flex flex-col gap-1 shrink-0">

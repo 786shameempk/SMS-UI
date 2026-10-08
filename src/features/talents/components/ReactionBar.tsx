@@ -90,8 +90,8 @@ export default function ReactionBar({ talent, disabled, compact = false }: { tal
               "relative inline-flex items-center gap-1.5 rounded-full border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
               compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm",
               active
-                ? "border-transparent bg-gradient-to-r from-violet-500/15 via-fuchsia-500/15 to-sky-500/15 ring-1 ring-violet-400/60 text-foreground font-semibold"
-                : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-violet-300",
+                ? "border-transparent bg-gradient-to-r from-brand-500/15 via-brand-500/15 to-brand-500/15 ring-1 ring-brand-400/60 text-foreground font-semibold"
+                : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-brand-300",
             )}
           >
             <motion.span

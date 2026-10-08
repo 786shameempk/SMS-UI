@@ -161,7 +161,7 @@ export default function TalentDetailPage() {
                 <CreatorTypePill type={talent.creator.type} />
                 {talent.creator.subtitle && <span className="truncate">{talent.creator.subtitle}</span>}
               </div>
-              <Link to={`/talents/schools/${encodeURIComponent(talent.tenantId)}`} className="block text-sm text-violet-600 dark:text-violet-300 mt-1 hover:underline truncate">
+              <Link to={`/talents/schools/${encodeURIComponent(talent.tenantId)}`} className="block text-sm text-brand-600 dark:text-brand-300 mt-1 hover:underline truncate">
                 🏫 {talent.schoolName}
               </Link>
               <Link to={`/talents/creators/${talent.creator.userId}`} className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">

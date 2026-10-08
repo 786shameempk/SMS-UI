@@ -1,5 +1,5 @@
 import { academicHttpClient, AUTH_API_BASE_URL, authHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
-import { applyBrandPreset, applyDensityPreset, applyRadiusPreset } from "./theme";
+import { applyBrandPreset, applyDensityPreset, applyRadiusPreset, normalizeBrandPreset } from "./theme";
 import type { BrandPresetKey, DensityPresetKey, RadiusPresetKey } from "./theme";
 import type {
   AuditLogEntry,
@@ -111,7 +111,7 @@ export async function updateLocalization(values: LocalizationSettings): Promise<
 // ── Appearance (brand / corner style / density) ─────────────────────────
 
 export async function getBrandPreset(): Promise<BrandPresetKey> {
-  return (await getSettings()).appearance.brandPreset;
+  return normalizeBrandPreset((await getSettings()).appearance.brandPreset);
 }
 
 export async function updateBrandPreset(preset: BrandPresetKey): Promise<BrandPresetKey> {

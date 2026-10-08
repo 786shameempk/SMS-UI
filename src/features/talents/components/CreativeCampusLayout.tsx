@@ -53,7 +53,7 @@ export default function CreativeCampusLayout() {
       <div className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div className="max-w-[1400px] mx-auto flex items-center gap-3 px-4 sm:px-6 h-14">
           <NavLink to="/talents" className="flex items-center gap-2 shrink-0">
-            <span className="w-8 h-8 rounded-xl cc-gradient-bg flex items-center justify-center shadow-md shadow-violet-900/25">
+            <span className="w-8 h-8 rounded-xl cc-gradient-bg flex items-center justify-center shadow-md shadow-brand-900/25">
               <Sparkles className="w-4 h-4 text-white" />
             </span>
             <span className="cc-display font-bold text-foreground hidden sm:inline">{MODULE_NAME}</span>
@@ -89,7 +89,7 @@ export default function CreativeCampusLayout() {
               <button
                 type="button"
                 onClick={() => navigate("/talents/new")}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full cc-gradient-bg px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-900/25 hover:shadow-violet-900/40 hover:-translate-y-px transition-all cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full cc-gradient-bg px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-900/25 hover:shadow-brand-900/40 hover:-translate-y-px transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 Share your talent
@@ -112,7 +112,7 @@ export default function CreativeCampusLayout() {
           ))}
           {canCreate ? (
             <button type="button" onClick={() => navigate("/talents/new")} className="relative -mt-5 flex flex-col items-center cursor-pointer" aria-label="Share your talent">
-              <span className="w-14 h-14 rounded-2xl cc-gradient-bg flex items-center justify-center shadow-xl shadow-violet-900/40 rotate-3">
+              <span className="w-14 h-14 rounded-2xl cc-gradient-bg flex items-center justify-center shadow-xl shadow-brand-900/40 rotate-3">
                 <Plus className="w-7 h-7 text-white -rotate-3" />
               </span>
               <span className="text-[10px] font-medium text-muted-foreground mt-0.5">Share</span>
@@ -129,7 +129,7 @@ export default function CreativeCampusLayout() {
 
 function MobileTab({ to, label, icon: Icon, end, badge }: { to: string; label: string; icon: typeof Compass; end?: boolean; badge?: number }) {
   return (
-    <NavLink to={to} end={end} className={({ isActive }) => cn("relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium", isActive ? "text-violet-600 dark:text-violet-300" : "text-muted-foreground")}>
+    <NavLink to={to} end={end} className={({ isActive }) => cn("relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium", isActive ? "text-brand-600 dark:text-brand-300" : "text-muted-foreground")}>
       <span className="relative">
         <Icon className="w-5 h-5" />
         {!!badge && <span className="absolute -top-1.5 -right-2.5 min-w-4 h-4 px-1 rounded-full bg-amber-400 text-[9px] font-bold text-amber-950 flex items-center justify-center">{badge}</span>}

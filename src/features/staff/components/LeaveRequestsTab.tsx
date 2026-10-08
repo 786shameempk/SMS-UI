@@ -6,7 +6,8 @@ import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
-import { createLeaveRequest, listLeaveRequests, listStaff, setLeaveStatus } from "../api";
+import { useIsHrManager } from "../access";
+import { createLeaveRequest, getMyStaffId, listLeaveRequests, listStaff, setLeaveStatus } from "../api";
 import { LEAVE_TYPES } from "../constants";
 import type { LeaveRequestFormValues, LeaveStatus, StaffLeaveRequest } from "../types";
 import LeaveRequestFormDialog from "./LeaveRequestFormDialog";
@@ -19,8 +20,13 @@ const STATUS_CONFIG: Record<LeaveStatus, { label: string; variant: "success" | "
 
 export default function LeaveRequestsTab() {
   const queryClient = useQueryClient();
-  const { data: requests = [], isLoading, isError, refetch } = useQuery({ queryKey: ["staff", "leave"], queryFn: listLeaveRequests });
+  const { data: allRequests = [], isLoading, isError, refetch } = useQuery({ queryKey: ["staff", "leave"], queryFn: listLeaveRequests });
   const { data: staffList = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
+  // HR records and approves leave for anyone; everyone else requests leave only for themselves.
+  const canManage = useIsHrManager();
+  const { data: myStaffId = null } = useQuery({ queryKey: ["staff", "me"], queryFn: getMyStaffId, enabled: !canManage });
+  // Everyone else sees only their own requests here (the full list still feeds the calendar).
+  const requests = canManage ? allRequests : allRequests.filter((r) => r.staffId === myStaffId);
   const [formOpen, setFormOpen] = useState(false);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["staff", "leave"] });
@@ -88,7 +94,7 @@ export default function LeaveRequestsTab() {
       header: "",
       cell: ({ row }) => {
         const req = row.original;
-        if (req.status !== "pending") return null;
+        if (req.status !== "pending" || !canManage) return null;
         return (
           <div className="flex items-center gap-1.5 justify-end">
             <Button
@@ -118,10 +124,10 @@ export default function LeaveRequestsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Review and record leave across all staff.</p>
+        <p className="text-sm text-muted-foreground">{canManage ? "Review and record leave across all staff." : "Request leave for yourself and follow its status."}</p>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          New leave request
+          {canManage ? "New leave request" : "Request leave"}
         </Button>
       </DataTableToolbar>
 
@@ -131,6 +137,8 @@ export default function LeaveRequestsTab() {
         open={formOpen}
         onOpenChange={setFormOpen}
         staffList={staffList}
+        selfOnly={!canManage}
+        selfStaffId={myStaffId}
         submitting={createMutation.isPending}
         onSubmit={async (values: LeaveRequestFormValues) => {
           await createMutation.mutateAsync(values);

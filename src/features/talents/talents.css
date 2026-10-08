@@ -2,20 +2,20 @@
  * Creative Campus — Talent Showcase's visual identity. Scoped under .cc-root so nothing leaks into the
  * rest of the ERP. Surfaces still use the app's semantic tokens (bg-card, text-foreground...), so light
  * and dark themes both work; the module layers its own palette on top:
- * deep navy / indigo + purple + sky + teal, with a warm amber accent.
+ * the active brand palette (settings/theme.ts), with a warm amber accent.
  */
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650;12..96,800&display=swap");
 
 .cc-root {
-  --cc-navy: #0b1030;
-  --cc-indigo: #3730a3;
-  --cc-purple: #7c3aed;
-  --cc-sky: #38bdf8;
-  --cc-teal: #14b8a6;
-  --cc-warm: #f59e0b;
-  --cc-coral: #fb7185;
-  --cc-ink: #1e1b4b;
-  --cc-glow: 0 18px 40px -18px rgb(76 29 149 / 0.45);
+  --cc-navy: var(--color-sidebar);
+  --cc-indigo: var(--color-brand-700);
+  --cc-purple: var(--color-brand-600);
+  --cc-sky: var(--color-brand-300);
+  --cc-teal: var(--color-brand-400);
+  --cc-warm: var(--color-warning);
+  --cc-coral: color-mix(in oklab, var(--color-warning) 55%, var(--color-destructive));
+  --cc-ink: var(--color-sidebar);
+  --cc-glow: 0 18px 40px -18px color-mix(in oklab, var(--color-brand-700) 45%, transparent);
 }
 
 .cc-display {
@@ -25,25 +25,25 @@
 
 /* Signature gradient: indigo → purple → sky, with a warm spark. */
 .cc-gradient-text {
-  background: linear-gradient(100deg, #a78bfa 0%, #f0abfc 35%, #7dd3fc 70%, #fcd34d 100%);
+  background: linear-gradient(100deg, var(--color-brand-300) 0%, var(--color-brand-100) 40%, var(--color-brand-200) 70%, var(--cc-warm) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .cc-gradient-text-strong {
-  background: linear-gradient(100deg, var(--cc-indigo), var(--cc-purple) 45%, #0ea5e9 80%, var(--cc-teal));
+  background: linear-gradient(100deg, var(--cc-indigo), var(--cc-purple) 45%, var(--color-brand-500) 80%, var(--cc-warm));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .cc-gradient-bg {
-  background: linear-gradient(120deg, var(--cc-indigo), var(--cc-purple) 50%, #0ea5e9);
+  background: linear-gradient(120deg, var(--cc-indigo), var(--cc-purple) 60%, var(--color-brand-500));
 }
 
 .cc-warm-bg {
-  background: linear-gradient(120deg, #f59e0b, #fb7185);
+  background: linear-gradient(120deg, var(--cc-warm), var(--cc-coral));
 }
 
 /* The hero: deep navy canvas with drifting colour fields. */
@@ -52,11 +52,11 @@
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(60% 80% at 12% 10%, rgb(124 58 237 / 0.55), transparent 60%),
-    radial-gradient(50% 70% at 88% 20%, rgb(56 189 248 / 0.35), transparent 60%),
-    radial-gradient(45% 60% at 70% 110%, rgb(20 184 166 / 0.35), transparent 60%),
-    radial-gradient(40% 50% at 20% 120%, rgb(245 158 11 / 0.25), transparent 60%),
-    linear-gradient(160deg, #0b1030 0%, #1e1b4b 55%, #0b1030 100%);
+    radial-gradient(60% 80% at 12% 10%, color-mix(in oklab, var(--color-brand-600) 55%, transparent), transparent 60%),
+    radial-gradient(50% 70% at 88% 20%, color-mix(in oklab, var(--color-brand-300) 35%, transparent), transparent 60%),
+    radial-gradient(45% 60% at 70% 110%, color-mix(in oklab, var(--color-brand-400) 35%, transparent), transparent 60%),
+    radial-gradient(40% 50% at 20% 120%, color-mix(in oklab, var(--cc-warm) 25%, transparent), transparent 60%),
+    linear-gradient(160deg, color-mix(in oklab, var(--cc-navy) 80%, black) 0%, var(--cc-navy) 55%, color-mix(in oklab, var(--cc-navy) 80%, black) 100%);
   color: white;
 }
 
@@ -140,7 +140,7 @@
   inset: -2px;
   border-radius: inherit;
   padding: 2px;
-  background: conic-gradient(from 180deg, #7c3aed, #38bdf8, #14b8a6, #f59e0b, #fb7185, #7c3aed);
+  background: conic-gradient(from 180deg, var(--cc-purple), var(--cc-sky), var(--cc-teal), var(--cc-warm), var(--cc-coral), var(--cc-purple));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -193,13 +193,13 @@
 .cc-range::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #a78bfa var(--cc-progress, 0%), rgb(255 255 255 / 0.25) var(--cc-progress, 0%));
+  background: linear-gradient(90deg, var(--color-brand-300) var(--cc-progress, 0%), rgb(255 255 255 / 0.25) var(--cc-progress, 0%));
 }
 
 .cc-range::-moz-range-track {
   height: 4px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #a78bfa var(--cc-progress, 0%), rgb(255 255 255 / 0.25) var(--cc-progress, 0%));
+  background: linear-gradient(90deg, var(--color-brand-300) var(--cc-progress, 0%), rgb(255 255 255 / 0.25) var(--cc-progress, 0%));
 }
 
 .cc-range::-webkit-slider-thumb {
@@ -209,7 +209,7 @@
   margin-top: -5px;
   border-radius: 9999px;
   background: white;
-  box-shadow: 0 0 0 4px rgb(167 139 250 / 0.35);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-brand-300) 35%, transparent);
 }
 
 .cc-range::-moz-range-thumb {
@@ -233,4 +233,69 @@
   .cc-card .cc-card-media {
     transition: none;
   }
+}
+
+/*
+ * Classic themes (Yellow, Blue, Emerald, Violet, Amber, Rose) keep Creative Campus exactly as it was: its own
+ * indigo/purple/sky/teal identity, whatever the brand colour. The School themes above follow the brand instead.
+ */
+:root[data-style="classic"] .cc-root {
+  --cc-navy: #0b1030;
+  --cc-indigo: #3730a3;
+  --cc-purple: #7c3aed;
+  --cc-sky: #38bdf8;
+  --cc-teal: #14b8a6;
+  --cc-warm: #f59e0b;
+  --cc-coral: #fb7185;
+  --cc-ink: #1e1b4b;
+  --cc-glow: 0 18px 40px -18px rgb(76 29 149 / 0.45);
+  /* The page's brand-* utilities (bg-brand-500, text-brand-300 …) read as the original violet. */
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+}
+
+:root[data-style="classic"] .cc-gradient-text {
+  background: linear-gradient(100deg, #a78bfa 0%, #f0abfc 35%, #7dd3fc 70%, #fcd34d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:root[data-style="classic"] .cc-gradient-text-strong {
+  background: linear-gradient(100deg, var(--cc-indigo), var(--cc-purple) 45%, #0ea5e9 80%, var(--cc-teal));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:root[data-style="classic"] .cc-gradient-bg {
+  background: linear-gradient(120deg, var(--cc-indigo), var(--cc-purple) 50%, #0ea5e9);
+}
+
+:root[data-style="classic"] .cc-hero {
+  background:
+    radial-gradient(60% 80% at 12% 10%, rgb(124 58 237 / 0.55), transparent 60%),
+    radial-gradient(50% 70% at 88% 20%, rgb(56 189 248 / 0.35), transparent 60%),
+    radial-gradient(45% 60% at 70% 110%, rgb(20 184 166 / 0.35), transparent 60%),
+    radial-gradient(40% 50% at 20% 120%, rgb(245 158 11 / 0.25), transparent 60%),
+    linear-gradient(160deg, #0b1030 0%, #1e1b4b 55%, #0b1030 100%);
+}
+
+:root[data-style="classic"] .cc-ring-gradient::before {
+  background: conic-gradient(from 180deg, #7c3aed, #38bdf8, #14b8a6, #f59e0b, #fb7185, #7c3aed);
+}
+
+:root[data-style="classic"] .cc-range::-webkit-slider-runnable-track,
+:root[data-style="classic"] .cc-range::-moz-range-track {
+  background: linear-gradient(90deg, #a78bfa var(--cc-progress, 0%), rgb(255 255 255 / 0.25) var(--cc-progress, 0%));
+}
+
+:root[data-style="classic"] .cc-range::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgb(167 139 250 / 0.35);
 }

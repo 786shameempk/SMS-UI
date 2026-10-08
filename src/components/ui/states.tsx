@@ -109,7 +109,7 @@ export function LoadingState({ label = "Loading…", className }: { label?: stri
 /** Full-page placeholder shaped like a standard page (header + stat row + a content card). */
 export function PageSkeleton({ stats = 0, className }: { stats?: number; className?: string }) {
   return (
-    <div role="status" aria-label="Loading" className={cn("mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 space-y-6", className)}>
+    <div role="status" aria-label="Loading" className={cn("mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 space-y-6", className)}>
       <div className="space-y-2">
         <Skeleton className="h-6 w-56" />
         <Skeleton className="h-4 w-80 max-w-full" />

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/utils/cn";
 import { useUiStore } from "@/store/useUiStore";
 import type { ThemeMode } from "../theme";
-import { BRAND_PRESET_OPTIONS, DENSITY_PRESET_OPTIONS, RADIUS_PRESET_OPTIONS } from "../constants";
+import { BRAND_PRESET_GROUPS, BRAND_PRESET_OPTIONS, DENSITY_PRESET_OPTIONS, RADIUS_PRESET_OPTIONS } from "../constants";
 import { getBrandPreset, getDensityPreset, getRadiusPreset, updateBrandPreset, updateDensityPreset, updateRadiusPreset } from "../api";
 import { BRAND_PRESETS, DENSITY_PRESETS, RADIUS_PRESETS } from "../theme";
 
@@ -95,10 +95,17 @@ export default function AppearanceTab() {
           <CardDescription>Applies instantly across the whole portal — sidebar, buttons, badges, everything that uses the brand color.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {BRAND_PRESET_OPTIONS.map((option) => {
+          <div className="space-y-5">
+            {BRAND_PRESET_GROUPS.map((group) => (
+              <div key={group.id} className="space-y-2">
+                <div>
+                  <p className="text-label">{group.title}</p>
+                  <p className="text-helper">{group.hint}</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {BRAND_PRESET_OPTIONS.filter((o) => o.group === group.id).map((option) => {
               const isActive = brand === option.value;
-              const shades = BRAND_PRESETS[option.value].shades;
+              const swatch = BRAND_PRESETS[option.value].swatch;
               return (
                 <button
                   key={option.value}
@@ -110,7 +117,7 @@ export default function AppearanceTab() {
                     isActive ? "border-primary ring-2 ring-ring" : "border-border hover:bg-secondary/50",
                   )}
                 >
-                  <span className="relative w-9 h-9 rounded-full shrink-0" style={{ backgroundColor: shades[500] }}>
+                  <span className="relative w-9 h-9 rounded-full shrink-0" style={{ backgroundColor: swatch }}>
                     {isActive &&
                       (brandMutation.isPending && brandMutation.variables === option.value ? (
                         <Loader2 className="w-4 h-4 text-white absolute inset-0 m-auto animate-spin" />
@@ -122,6 +129,9 @@ export default function AppearanceTab() {
                 </button>
               );
             })}
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

@@ -175,7 +175,7 @@ export default function MyExamsPage({ view }: { view: View }) {
   const shown = view === "all" ? list : view === "upcoming" ? [...live, ...upcoming] : done;
 
   return (
-    <PageContainer width="wide">
+    <PageContainer>
       <PageHeader icon={MonitorCheck} title={TITLES[view].title} description={TITLES[view].description} />
 
       {exams.isLoading ? (

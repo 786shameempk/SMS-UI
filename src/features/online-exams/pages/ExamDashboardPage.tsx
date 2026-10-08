@@ -65,7 +65,7 @@ export default function ExamDashboardPage() {
   const passFail = d ? [{ name: "Passed", value: d.passed }, { name: "Failed", value: d.failed }] : [];
 
   return (
-    <PageContainer width="wide">
+    <PageContainer>
       <PageHeader
         icon={MonitorCheck}
         title="Online exams"

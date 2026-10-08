@@ -94,8 +94,8 @@ export default function VideoPlayer({ media, onMeaningfulPlay, className }: { me
 
       {!playing && (
         <button type="button" onClick={toggle} className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/50 to-transparent cursor-pointer" aria-label={ended ? "Replay" : "Play video"}>
-          <span className="relative w-20 h-20 rounded-full cc-gradient-bg flex items-center justify-center shadow-2xl shadow-violet-900/50">
-            <span className="absolute inset-0 rounded-full animate-ping bg-violet-400/30" />
+          <span className="relative w-20 h-20 rounded-full cc-gradient-bg flex items-center justify-center shadow-2xl shadow-brand-900/50">
+            <span className="absolute inset-0 rounded-full animate-ping bg-brand-400/30" />
             {ended ? <RotateCcw className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white fill-white ml-1" />}
           </span>
         </button>

@@ -65,9 +65,9 @@ export default function ReviewCenterPage() {
       {queue && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatTile label="Waiting for review" value={queue.pending} emoji="⏳" gradient="from-amber-400 to-orange-500" />
-          <StatTile label="From students" value={queue.studentPending} emoji="🎒" gradient="from-sky-400 to-indigo-500" />
-          <StatTile label="From teachers & parents" value={queue.teacherPending + (queue.parentPending ?? 0)} emoji="🍎" gradient="from-rose-400 to-fuchsia-500" />
-          <StatTile label="You reviewed this week" value={queue.reviewedThisWeek} emoji="✅" gradient="from-emerald-400 to-teal-500" />
+          <StatTile label="From students" value={queue.studentPending} emoji="🎒" gradient="from-brand-400 to-brand-500" />
+          <StatTile label="From teachers & parents" value={queue.teacherPending + (queue.parentPending ?? 0)} emoji="🍎" gradient="from-rose-400 to-brand-500" />
+          <StatTile label="You reviewed this week" value={queue.reviewedThisWeek} emoji="✅" gradient="from-emerald-400 to-brand-500" />
         </div>
       )}
 
@@ -299,7 +299,7 @@ function SettingsForm() {
 
       <section className="rounded-3xl border border-border bg-card p-5 space-y-4">
         <h2 className="cc-display text-lg font-bold text-foreground flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-teal-500" /> Approval rules
+          <ShieldCheck className="w-5 h-5 text-brand-500" /> Approval rules
         </h2>
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium text-foreground mb-1.5">Who reviews student submissions?</legend>
@@ -309,8 +309,8 @@ function SettingsForm() {
               { value: "admins_only", label: "School admins only", hint: "Only admins and the principal can approve student work." },
             ] as const
           ).map((o) => (
-            <label key={o.value} className={cn("flex items-start gap-3 rounded-2xl border px-3.5 py-3 cursor-pointer", form.studentReviewScope === o.value ? "border-violet-500 bg-violet-500/5" : "border-border")}>
-              <input type="radio" name="scope" checked={form.studentReviewScope === o.value} onChange={() => set("studentReviewScope", o.value)} className="mt-1 accent-violet-600" />
+            <label key={o.value} className={cn("flex items-start gap-3 rounded-2xl border px-3.5 py-3 cursor-pointer", form.studentReviewScope === o.value ? "border-brand-500 bg-brand-500/5" : "border-border")}>
+              <input type="radio" name="scope" checked={form.studentReviewScope === o.value} onChange={() => set("studentReviewScope", o.value)} className="mt-1 accent-brand-600" />
               <span>
                 <span className="block text-sm font-medium text-foreground">{o.label}</span>
                 <span className="block text-xs text-muted-foreground">{o.hint}</span>

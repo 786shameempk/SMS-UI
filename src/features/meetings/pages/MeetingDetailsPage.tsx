@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -56,21 +57,21 @@ export default function MeetingDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
+      <PageContainer>
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-24 w-full rounded-2xl" />
         <Skeleton className="h-64 w-full rounded-2xl" />
-      </div>
+      </PageContainer>
     );
   }
   if (error || !meeting) {
     return (
-      <div className="mx-auto max-w-lg p-6 text-center">
+      <PageContainer className="max-w-lg text-center">
         <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
         <h1 className="mt-3 text-lg font-semibold">This class isn't available</h1>
         <p className="mt-1 text-sm text-muted-foreground">It may have been deleted, or you aren't invited to it.</p>
         <Button asChild variant="outline" className="mt-4"><Link to="/online-classes">Back to Online Classes</Link></Button>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -80,53 +81,57 @@ export default function MeetingDetailsPage() {
   const hasMore = meeting.can.reschedule || meeting.can.cancel || meeting.can.delete || (meeting.recurrence && !meeting.recurrence.isEnded && meeting.can.edit);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
-      <Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Online Classes
-      </Link>
-
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <MeetingTypeBadge type={s.meetingType} />
-            <MeetingStatusBadge status={s.status} isRescheduled={s.isRescheduled} />
+    <PageContainer>
+      <PageHeader
+        eyebrow={
+          <div className="space-y-2">
+            <Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> Online Classes
+            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <MeetingTypeBadge type={s.meetingType} />
+              <MeetingStatusBadge status={s.status} isRescheduled={s.isRescheduled} />
+            </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        }
+        title={
+          <>
             {s.title}
             {s.classLabel && <span className="font-medium text-muted-foreground"> · {s.classLabel}</span>}
-          </h1>
-          {meeting.description && <p className="max-w-2xl whitespace-pre-line text-sm text-muted-foreground">{meeting.description}</p>}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {s.status === "Draft" && meeting.can.edit && (
-            <Button onClick={() => publish.mutate()} disabled={publish.isPending}>
-              {publish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Publish
-            </Button>
-          )}
-          <JoinMeetingButton meeting={s} showWaiting />
-          {meeting.can.end && (
-            <Button variant="outline" onClick={() => setDialog("end")}>
-              <Square className="h-4 w-4" /> End for everyone
-            </Button>
-          )}
-          {hasMore && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="More actions"><MoreHorizontal className="h-4 w-4" /></Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {meeting.can.reschedule && <DropdownMenuItem onSelect={() => setDialog("reschedule")}><CalendarClock className="h-4 w-4" /> Reschedule</DropdownMenuItem>}
-                {meeting.can.cancel && <DropdownMenuItem onSelect={() => setDialog("cancel")}><CalendarX2 className="h-4 w-4" /> Cancel {type.noun}</DropdownMenuItem>}
-                {meeting.recurrence && !meeting.recurrence.isEnded && meeting.can.edit && (
-                  <DropdownMenuItem onSelect={() => setDialog("endSeries")}><Repeat className="h-4 w-4" /> End the whole series</DropdownMenuItem>
-                )}
-                {meeting.can.delete && <DropdownMenuItem onSelect={() => setDialog("delete")} className="text-destructive-strong focus:text-destructive-strong" variant="destructive"><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </header>
+          </>
+        }
+        description={meeting.description ? <span className="whitespace-pre-line">{meeting.description}</span> : undefined}
+        actions={
+          <>
+      {s.status === "Draft" && meeting.can.edit && (
+        <Button onClick={() => publish.mutate()} disabled={publish.isPending}>
+          {publish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Publish
+        </Button>
+      )}
+      <JoinMeetingButton meeting={s} showWaiting />
+      {meeting.can.end && (
+        <Button variant="outline" onClick={() => setDialog("end")}>
+          <Square className="h-4 w-4" /> End for everyone
+        </Button>
+      )}
+      {hasMore && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" aria-label="More actions"><MoreHorizontal className="h-4 w-4" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {meeting.can.reschedule && <DropdownMenuItem onSelect={() => setDialog("reschedule")}><CalendarClock className="h-4 w-4" /> Reschedule</DropdownMenuItem>}
+            {meeting.can.cancel && <DropdownMenuItem onSelect={() => setDialog("cancel")}><CalendarX2 className="h-4 w-4" /> Cancel {type.noun}</DropdownMenuItem>}
+            {meeting.recurrence && !meeting.recurrence.isEnded && meeting.can.edit && (
+              <DropdownMenuItem onSelect={() => setDialog("endSeries")}><Repeat className="h-4 w-4" /> End the whole series</DropdownMenuItem>
+            )}
+            {meeting.can.delete && <DropdownMenuItem onSelect={() => setDialog("delete")} className="text-destructive-strong focus:text-destructive-strong" variant="destructive"><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+          </>
+        }
+      />
 
       {s.status === "Cancelled" && (
         <div role="status" className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive-soft px-4 py-3 text-sm text-red-800 dark:text-red-200">
@@ -201,6 +206,6 @@ export default function MeetingDetailsPage() {
         submitting={stopSeries.isPending}
         onConfirm={() => stopSeries.mutate()}
       />
-    </div>
+    </PageContainer>
   );
 }

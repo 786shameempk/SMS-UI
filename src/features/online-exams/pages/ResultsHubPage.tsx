@@ -76,7 +76,7 @@ export default function ResultsHubPage() {
   if (!isExamStaff(role)) return <Navigate to="/online-exams/my/results" replace />;
 
   return (
-    <PageContainer width="wide">
+    <PageContainer>
       <PageHeader icon={Award} title="Results" description="Scores for every exam that's open or finished. Publish results to share them with students." />
       <DataTable
         columns={columns}

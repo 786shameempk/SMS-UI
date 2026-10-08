@@ -88,14 +88,14 @@ export default function AudioPlayer({
         {/* Disc */}
         <button type="button" onClick={toggle} className="relative shrink-0 w-28 h-28 sm:w-32 sm:h-32 cursor-pointer" aria-label={playing ? "Pause" : "Play"}>
           <span
-            className={cn("absolute inset-0 rounded-full bg-gradient-to-br shadow-2xl shadow-violet-950/60", gradient)}
+            className={cn("absolute inset-0 rounded-full bg-gradient-to-br shadow-2xl shadow-brand-900/60", gradient)}
             style={{ animation: playing ? "spin 6s linear infinite" : undefined }}
           >
             <span className="absolute inset-3 rounded-full border border-white/20" />
             <span className="absolute inset-6 rounded-full border border-white/15" />
             <MusicNote className="absolute top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-white/50" />
           </span>
-          <span className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-[#0b1030] border-2 border-white/30 flex items-center justify-center">
+          <span className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-[var(--cc-navy)] border-2 border-white/30 flex items-center justify-center">
             {playing ? <Pause className="w-5 h-5 text-white fill-white" /> : <Play className="w-5 h-5 text-white fill-white ml-0.5" />}
           </span>
           <Sparkle className="cc-sparkle absolute -top-1 -right-1 w-4 h-4 text-amber-300" />
@@ -110,7 +110,7 @@ export default function AudioPlayer({
             {playing && (
               <span className="flex items-end gap-[3px] h-5 shrink-0" aria-hidden="true">
                 {[0, 1, 2, 3].map((i) => (
-                  <span key={i} className="cc-eq-bar w-1 h-full rounded-full bg-teal-300" style={{ animationDelay: `${i * 0.15}s` }} />
+                  <span key={i} className="cc-eq-bar w-1 h-full rounded-full bg-brand-300" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </span>
             )}
@@ -143,7 +143,7 @@ export default function AudioPlayer({
               return (
                 <span
                   key={i}
-                  className={cn("flex-1 rounded-full transition-colors duration-150", played ? "bg-gradient-to-t from-violet-400 to-sky-300" : "bg-white/25")}
+                  className={cn("flex-1 rounded-full transition-colors duration-150", played ? "bg-gradient-to-t from-brand-400 to-brand-300" : "bg-white/25")}
                   style={{ height: `${v * 100}%` }}
                 />
               );
@@ -156,7 +156,7 @@ export default function AudioPlayer({
               <button type="button" onClick={() => skip(-10)} className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label="Back 10 seconds">
                 <RotateCcw className="w-4 h-4" />
               </button>
-              <button type="button" onClick={toggle} className="w-10 h-10 rounded-full bg-white text-[#1e1b4b] flex items-center justify-center cursor-pointer shadow-lg" aria-label={playing ? "Pause" : "Play"}>
+              <button type="button" onClick={toggle} className="w-10 h-10 rounded-full bg-white text-[var(--cc-ink)] flex items-center justify-center cursor-pointer shadow-lg" aria-label={playing ? "Pause" : "Play"}>
                 {playing ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
               </button>
               <button type="button" onClick={() => skip(10)} className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label="Forward 10 seconds">

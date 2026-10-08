@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -95,14 +96,14 @@ export default function MeetingReportsPage() {
   const teachers = useQuery({ queryKey: ["meetings", "report", "teachers", filters], queryFn: () => getTeacherReport(filters), enabled: tab === "teachers" });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
-      <div>
-        <Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground print:hidden">
+    <PageContainer>
+      <PageHeader
+        eyebrow={<Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground print:hidden">
           <ArrowLeft className="h-4 w-4" /> Online Classes
-        </Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">Online class reports</h1>
-        <p className="text-sm text-muted-foreground">{isManager ? "Every class and meeting in your school." : "The classes you host."}</p>
-      </div>
+        </Link>}
+        title="Online class reports"
+        description={isManager ? "Every class and meeting in your school." : "The classes you host."}
+      />
 
       <div className="flex flex-wrap items-end gap-3 print:hidden">
         <div className="space-y-1">
@@ -236,7 +237,7 @@ export default function MeetingReportsPage() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
 
