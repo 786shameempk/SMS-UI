@@ -29,10 +29,10 @@ export default function TalentCard({ talent, variant = "grid", showStatus = fals
     return (
       <article
         onClick={open}
-        className={cn("cc-card group relative overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-indigo-950/10 aspect-[4/5] sm:aspect-[16/11]", className)}
+        className={cn("cc-card group relative overflow-hidden rounded-3xl cursor-pointer shadow-lg shadow-brand-900/10 aspect-[4/5] sm:aspect-[16/11]", className)}
       >
         <MediaCover talent={talent} className="absolute inset-0" showTypeBadge={false} overlay />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b1030]/95 via-[#0b1030]/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--cc-navy)]/95 via-[var(--cc-navy)]/35 to-transparent" />
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
           {talent.isFeatured ? <FeaturedRibbon /> : <span />}
           <VisibilityBadge visibility={talent.visibility} onDark />
@@ -77,7 +77,7 @@ export default function TalentCard({ talent, variant = "grid", showStatus = fals
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-3.5">
         <Link to={href} onClick={(e) => e.stopPropagation()} className="block">
-          <h3 className="font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-violet-600 dark:group-hover:text-violet-300 transition-colors">{talent.title}</h3>
+          <h3 className="font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">{talent.title}</h3>
         </Link>
         <CreatorLine creator={talent.creator} schoolName={variant === "compact" ? undefined : talent.schoolName} tenantId={talent.tenantId} compact />
         <div className="mt-auto flex items-center justify-between gap-2 pt-1 text-xs text-muted-foreground">

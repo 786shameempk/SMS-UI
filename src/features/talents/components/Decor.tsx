@@ -41,22 +41,22 @@ export function PaletteShape({ className }: { className?: string }) {
 /** Ambient decoration for dark hero panels: drifting colour blobs, twinkling sparkles, floating motifs. */
 export function HeroDecor({ dense = false }: { dense?: boolean }) {
   const sparkles = [
-    { top: "14%", left: "58%", size: 14, delay: "0s", color: "#fcd34d" },
-    { top: "70%", left: "8%", size: 10, delay: "1.1s", color: "#c4b5fd" },
-    { top: "24%", left: "92%", size: 18, delay: "0.5s", color: "#7dd3fc" },
-    { top: "80%", left: "66%", size: 12, delay: "2s", color: "#f0abfc" },
+    { top: "14%", left: "58%", size: 14, delay: "0s", color: "var(--color-warning)" },
+    { top: "70%", left: "8%", size: 10, delay: "1.1s", color: "var(--color-brand-200)" },
+    { top: "24%", left: "92%", size: 18, delay: "0.5s", color: "var(--color-brand-300)" },
+    { top: "80%", left: "66%", size: 12, delay: "2s", color: "var(--color-brand-100)" },
     ...(dense
       ? [
-          { top: "40%", left: "40%", size: 8, delay: "1.6s", color: "#5eead4" },
-          { top: "10%", left: "25%", size: 9, delay: "2.4s", color: "#fde68a" },
+          { top: "40%", left: "40%", size: 8, delay: "1.6s", color: "var(--color-brand-300)" },
+          { top: "10%", left: "25%", size: 9, delay: "2.4s", color: "var(--color-brand-100)" },
         ]
       : []),
   ];
   return (
     <>
-      <div className="cc-blob w-64 h-64 -top-16 -left-10" style={{ background: "#7c3aed" }} />
-      <div className="cc-blob w-72 h-72 -bottom-24 right-0" style={{ background: "#0ea5e9", animationDelay: "-6s" }} />
-      <div className="cc-blob w-40 h-40 top-10 right-1/3" style={{ background: "#14b8a6", animationDelay: "-11s", opacity: 0.35 }} />
+      <div className="cc-blob w-64 h-64 -top-16 -left-10" style={{ background: "var(--color-brand-600)" }} />
+      <div className="cc-blob w-72 h-72 -bottom-24 right-0" style={{ background: "var(--color-brand-500)", animationDelay: "-6s" }} />
+      <div className="cc-blob w-40 h-40 top-10 right-1/3" style={{ background: "var(--color-brand-400)", animationDelay: "-11s", opacity: 0.35 }} />
       {sparkles.map((s, i) => (
         <Sparkle key={i} className="cc-sparkle" style={{ top: s.top, left: s.left, width: s.size, height: s.size, color: s.color, animationDelay: s.delay }} />
       ))}
@@ -67,7 +67,7 @@ export function HeroDecor({ dense = false }: { dense?: boolean }) {
 }
 
 /** Heading with a painted underline accent. */
-export function BrushHeading({ children, className, accent = "#a78bfa" }: { children: React.ReactNode; className?: string; accent?: string }) {
+export function BrushHeading({ children, className, accent = "var(--color-brand-300)" }: { children: React.ReactNode; className?: string; accent?: string }) {
   return (
     <span className={cn("relative inline-block", className)}>
       <span className="relative z-10">{children}</span>

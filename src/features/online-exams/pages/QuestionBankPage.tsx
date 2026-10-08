@@ -195,7 +195,7 @@ export default function QuestionBankPage() {
   if (!isExamStaff(role)) return <Navigate to="/online-exams/my" replace />;
 
   return (
-    <PageContainer width="wide">
+    <PageContainer>
       <PageHeader
         icon={FileQuestionMark}
         title="Question bank"

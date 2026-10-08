@@ -209,7 +209,7 @@ export default function ExamWizardPage() {
   const className = classes.data?.find((c) => c.id === state.classId)?.name;
 
   return (
-    <PageContainer width="medium">
+    <PageContainer>
       <PageHeader
         title={isEdit ? `Edit ${existing.data?.name ?? "exam"}` : "Create exam"}
         description={isEdit && status !== "Draft" ? "This exam is scheduled. Students are notified again if you change its start time." : "Set it up in six steps. You can save a draft at any point."}

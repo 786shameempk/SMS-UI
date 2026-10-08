@@ -26,12 +26,18 @@ export default function LeaveRequestFormDialog({
   open,
   onOpenChange,
   staffList,
+  selfOnly = false,
+  selfStaffId = null,
   onSubmit,
   submitting,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   staffList: StaffMember[];
+  /** Teachers and other non-HR staff request leave only for themselves: the staff member is fixed to their own record. */
+  selfOnly?: boolean;
+  /** The signed-in login's own staff record, when it has one. */
+  selfStaffId?: string | null;
   onSubmit: (values: LeaveRequestFormValues) => Promise<void>;
   submitting: boolean;
 }) {
@@ -47,39 +53,59 @@ export default function LeaveRequestFormDialog({
   });
 
   useEffect(() => {
-    if (open) reset({ staffId: "", leaveType: "casual", fromDate: "", toDate: "", reason: "" });
-  }, [open, reset]);
+    if (open) reset({ staffId: selfOnly ? (selfStaffId ?? "") : "", leaveType: "casual", fromDate: "", toDate: "", reason: "" });
+  }, [open, reset, selfOnly, selfStaffId]);
+
+  const me = selfOnly ? staffList.find((s) => s.id === selfStaffId) : undefined;
+  const unlinked = selfOnly && !selfStaffId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New leave request</DialogTitle>
-          <DialogDescription>Record leave on behalf of a staff member.</DialogDescription>
+          <DialogDescription>{selfOnly ? "Request leave for yourself. It goes to HR for approval." : "Record leave on behalf of a staff member."}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="staffId">Staff member</Label>
-            <Controller
-              control={control}
-              name="staffId"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="staffId">
-                    <SelectValue placeholder="Select a staff member" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {staffList.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.firstName} {s.lastName} &middot; {s.designation}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {selfOnly ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="staffId">Staff member</Label>
+              {unlinked ? (
+                <p role="alert" className="rounded-md border border-warning/30 bg-warning-soft px-3 py-2 text-sm text-warning-strong">
+                  Your login isn&apos;t linked to a staff record, so leave can&apos;t be requested from here. Ask an administrator to link it.
+                </p>
+              ) : (
+                <>
+                  <Input id="staffId" readOnly value={me ? `${me.firstName} ${me.lastName} · ${me.designation}` : "You"} aria-describedby="staffId-hint" />
+                  <p id="staffId-hint" className="text-xs text-muted-foreground">Leave is requested for you; it can&apos;t be filed for someone else.</p>
+                </>
               )}
-            />
-            {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.staffId.message}</p>}
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="staffId">Staff member</Label>
+              <Controller
+                control={control}
+                name="staffId"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="staffId">
+                      <SelectValue placeholder="Select a staff member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staffList.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.firstName} {s.lastName} &middot; {s.designation}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.staffId.message}</p>}
+            </div>
+  
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5 col-span-1">
@@ -125,7 +151,7 @@ export default function LeaveRequestFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" loading={submitting}>
+            <Button type="submit" loading={submitting} disabled={unlinked}>
               Submit request
             </Button>
           </DialogFooter>

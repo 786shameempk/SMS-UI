@@ -86,7 +86,7 @@ export default function ParentPortalPage() {
   ];
 
   return (
-    <PageContainer width="medium">
+    <PageContainer>
       {/* Hero */}
       <WelcomeHero
         eyebrow="Parent portal"

@@ -17,7 +17,7 @@ vi.mock("@/features/staff/api", () => ({
     { id: "sf2", firstName: "Joy", lastName: "P", employeeId: "EMP-2", designation: "Driver", department: "Transport", joiningDate: "2010-01-01", resignation: { lastWorkingDate: "2026-03-31" } },
   ]),
 }));
-vi.mock("@/features/settings/theme", () => ({ applyBrandPreset: vi.fn(), applyRadiusPreset: vi.fn(), applyDensityPreset: vi.fn() }));
+vi.mock("@/features/settings/theme", () => ({ applyBrandPreset: vi.fn(), applyRadiusPreset: vi.fn(), applyDensityPreset: vi.fn(), normalizeBrandPreset: (v: string) => v }));
 
 const issued = (overrides: Record<string, unknown> = {}) => ({
   id: "c1", tenantId: "t", branchId: "b", certificateNumber: "BON-2026-0001", type: "StaffService", recipientType: "Staff", recipientId: "sf1",

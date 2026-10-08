@@ -157,7 +157,7 @@ export default function AttemptReviewPage() {
   };
 
   return (
-    <PageContainer width="medium">
+    <PageContainer>
       <Link to={`/online-exams/exams/${r.examId}/results`} className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         {r.examName} results

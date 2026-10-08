@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -197,9 +198,8 @@ function DevicesTab() {
 
 export default function SecuritySettingsPage() {
   return (
-    <div className="p-6 max-w-3xl space-y-1">
-      <h1 className="text-page-title">Security</h1>
-      <p className="text-sm text-muted-foreground mb-5">Manage your password, sessions, and trusted devices.</p>
+    <PageContainer>
+      <PageHeader title="Security" description="Manage your password, sessions, and trusted devices." />
 
       <Tabs defaultValue="password">
         <TabsList>
@@ -217,6 +217,6 @@ export default function SecuritySettingsPage() {
           <DevicesTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

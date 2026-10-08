@@ -17,7 +17,7 @@ export default function MyHomeworkPage() {
   }, [activeStudents, studentId]);
 
   return (
-    <PageContainer width="narrow">
+    <PageContainer>
       <PageHeader
         title="My homework"
         description="Assigned homework, learning resources, and quizzes for the selected student."

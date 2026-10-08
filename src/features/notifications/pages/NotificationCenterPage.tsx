@@ -73,7 +73,7 @@ export default function NotificationCenterPage() {
   };
 
   return (
-    <PageContainer width="narrow">
+    <PageContainer>
       <PageHeader
         title="Notification center"
         description={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "You're all caught up."}

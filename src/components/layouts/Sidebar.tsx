@@ -1,29 +1,25 @@
-import { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown, Mail, PanelLeftClose, PanelLeftOpen, Phone, X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Mail, PanelLeftClose, PanelLeftOpen, Phone, X } from "lucide-react";
 import BrandLogo from "@/components/common/BrandLogo";
 import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { cn } from "@/utils/cn";
 import { useUiStore } from "@/store/useUiStore";
 import { useAuthStore } from "@/store/authStore";
 import { hasAllBranchAccess } from "@/types/auth";
-import type { NavItem } from "@/constants/nav";
+import type { NavItem, NavSection } from "@/constants/nav";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVisibleNav } from "./useVisibleNav";
+import { isNavItemActive } from "./navMatch";
 import { BranchSwitcher, TenantSwitcher } from "./ScopeSwitchers";
 
 const W_EXPANDED = 256;
 const W_COLLAPSED = 68;
 const SPRING = { type: "spring" as const, bounce: 0, duration: 0.35 };
 
-function isItemActive(item: NavItem, pathname: string) {
-  return item.end ? pathname === item.to : pathname === item.to || pathname.startsWith(item.to + "/");
-}
-
-function NavItemLink({ item, isCollapsed }: { item: NavItem; isCollapsed: boolean }) {
+function NavItemLink({ item, isCollapsed, active }: { item: NavItem; isCollapsed: boolean; active?: boolean }) {
   const { pathname } = useLocation();
-  const isActive = isItemActive(item, pathname);
+  const isActive = active ?? isNavItemActive(item, pathname);
   const reduceMotion = useReducedMotion();
 
   const link = (
@@ -37,7 +33,7 @@ function NavItemLink({ item, isCollapsed }: { item: NavItem; isCollapsed: boolea
         isCollapsed ? "mx-auto h-10 w-10 justify-center" : "h-9 gap-3 px-2.5",
         isActive
           ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground shadow-xs ring-1 ring-inset ring-primary/15"
-          : "text-sidebar-foreground hover:bg-secondary hover:text-foreground",
+          : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-hover-foreground",
       )}
     >
       {isActive && !isCollapsed && (
@@ -50,7 +46,7 @@ function NavItemLink({ item, isCollapsed }: { item: NavItem; isCollapsed: boolea
       <item.icon
         className={cn(
           "h-4 w-4 shrink-0 transition-colors",
-          isActive ? "text-sidebar-accent-foreground" : "text-muted-foreground group-hover:text-foreground",
+          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-muted group-hover:text-sidebar-hover-foreground",
         )}
         aria-hidden="true"
       />
@@ -69,53 +65,12 @@ function NavItemLink({ item, isCollapsed }: { item: NavItem; isCollapsed: boolea
   return link;
 }
 
-function ExpandedNavSection({ title, items }: { title: string; items: NavItem[] }) {
+/** A sidebar section is one entry; its pages are the sub-menu under the header (see SectionSubNav). */
+function SectionLink({ section, isCollapsed }: { section: NavSection & { items: NavItem[] }; isCollapsed: boolean }) {
   const { pathname } = useLocation();
-  const isSectionCollapsed = useUiStore((s) => s.collapsedNavSections.includes(title));
-  const toggleNavSection = useUiStore((s) => s.toggleNavSection);
-  const expandNavSection = useUiStore((s) => s.expandNavSection);
-  const isOpen = !isSectionCollapsed;
-  const containsActive = items.some((item) => isItemActive(item, pathname));
-  const sectionId = `nav-section-${title.replace(/\W+/g, "-").toLowerCase()}`;
-
-  // Navigating into a collapsed section (e.g. via a link elsewhere) reveals it, so the active item is never hidden.
-  useEffect(() => {
-    if (containsActive) expandNavSection(title);
-  }, [containsActive, pathname, title, expandNavSection]);
-
-  return (
-    <div className="pt-4">
-      <button
-        type="button"
-        onClick={() => toggleNavSection(title)}
-        aria-expanded={isOpen}
-        aria-controls={sectionId}
-        className="group flex h-7 w-full items-center gap-2 rounded-md px-2.5 text-left cursor-pointer hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="flex-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/90 group-hover:text-foreground">{title}</span>
-        <ChevronDown
-          className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200", !isOpen && "-rotate-90")}
-          aria-hidden="true"
-        />
-      </button>
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            id={sectionId}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="mt-0.5 space-y-0.5 overflow-hidden"
-          >
-            {items.map((item) => (
-              <NavItemLink key={item.to} item={item} isCollapsed={false} />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+  const active = section.items.some((item) => isNavItemActive(item, pathname));
+  const entry: NavItem = { label: section.title, to: section.items[0].to, icon: section.icon };
+  return <NavItemLink item={entry} isCollapsed={isCollapsed} active={active} />;
 }
 
 /** `forceExpanded`: the phone drawer always shows labels, whatever the desktop collapse preference is. */
@@ -141,8 +96,8 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
           <BrandLogo />
           {!isSidebarCollapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-bold leading-none tracking-tight text-foreground">{branding.name}</p>
-              <p className="mt-1 truncate text-[11px] leading-none text-muted-foreground">{branding.isTenant ? "Powered by School Sphere" : "School management"}</p>
+              <p className="truncate text-[15px] font-bold leading-none tracking-tight text-sidebar-title">{branding.name}</p>
+              <p className="mt-1 truncate text-[11px] leading-none text-sidebar-muted">{branding.isTenant ? "Powered by School Sphere" : "School management"}</p>
             </div>
           )}
           {onClose && (
@@ -150,7 +105,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
               type="button"
               onClick={onClose}
               aria-label="Close menu"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-hover-foreground cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -171,30 +126,23 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
               <NavItemLink key={item.to} item={item} isCollapsed={isSidebarCollapsed} />
             ))}
           </div>
-          {sections.map((section) =>
-            isSidebarCollapsed ? (
-              <div key={section.title} className="space-y-0.5">
-                <div className="mx-3 my-3 h-px bg-sidebar-border" role="separator" />
-                {section.items.map((item) => (
-                  <NavItemLink key={item.to} item={item} isCollapsed />
-                ))}
-              </div>
-            ) : (
-              <ExpandedNavSection key={section.title} title={section.title} items={section.items} />
-            ),
-          )}
+          <div className="mt-3 space-y-0.5 border-t border-sidebar-border pt-3">
+            {sections.map((section) => (
+              <SectionLink key={section.title} section={section} isCollapsed={isSidebarCollapsed} />
+            ))}
+          </div>
         </nav>
 
         {!isSidebarCollapsed && (branding.email || branding.contactNumber) && (
-          <div className="shrink-0 space-y-1 border-t border-sidebar-border px-4 py-3 text-xs text-muted-foreground" aria-label="School contact">
+          <div className="shrink-0 space-y-1 border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-muted" aria-label="School contact">
             {branding.email && (
-              <a href={`mailto:${branding.email}`} className="flex items-center gap-2 truncate hover:text-foreground">
+              <a href={`mailto:${branding.email}`} className="flex items-center gap-2 truncate hover:text-sidebar-hover-foreground">
                 <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span className="truncate">{branding.email}</span>
               </a>
             )}
             {branding.contactNumber && (
-              <a href={`tel:${branding.contactNumber.replace(/[^+d]/g, "")}`} className="flex items-center gap-2 truncate hover:text-foreground">
+              <a href={`tel:${branding.contactNumber.replace(/[^+d]/g, "")}`} className="flex items-center gap-2 truncate hover:text-sidebar-hover-foreground">
                 <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 <span className="truncate">{branding.contactNumber}</span>
               </a>
@@ -210,7 +158,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
                   type="button"
                   onClick={toggleSidebar}
                   aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-hover-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {isSidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
                 </button>

@@ -46,3 +46,6 @@ loadtest/users.seeded.json
 
 # Test coverage output (npm run test:coverage)
 coverage
+
+# Marketing poster (local only)
+/marketing/

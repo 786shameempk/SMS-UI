@@ -46,13 +46,23 @@ export const DATE_FORMAT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
 ];
 
-export const BRAND_PRESET_OPTIONS: Array<{ value: BrandPresetKey; label: string }> = [
-  { value: "yellow", label: "Yellow" },
-  { value: "blue", label: "Blue" },
-  { value: "emerald", label: "Emerald" },
-  { value: "violet", label: "Violet" },
-  { value: "amber", label: "Amber" },
-  { value: "rose", label: "Rose" },
+/** `school` themes restyle the whole shell (deep sidebar, tinted surfaces); `classic` themes only recolour the brand. */
+export const BRAND_PRESET_OPTIONS: Array<{ value: BrandPresetKey; label: string; group: "school" | "classic" }> = [
+  { value: "green", label: "Green", group: "school" },
+  { value: "ocean", label: "Ocean Blue", group: "school" },
+  { value: "plum", label: "Royal Plum", group: "school" },
+  { value: "slate", label: "Slate & Saffron", group: "school" },
+  { value: "yellow", label: "Yellow", group: "classic" },
+  { value: "blue", label: "Blue", group: "classic" },
+  { value: "emerald", label: "Emerald", group: "classic" },
+  { value: "violet", label: "Violet", group: "classic" },
+  { value: "amber", label: "Amber", group: "classic" },
+  { value: "rose", label: "Rose", group: "classic" },
+];
+
+export const BRAND_PRESET_GROUPS: Array<{ id: "school" | "classic"; title: string; hint: string }> = [
+  { id: "school", title: "School themes", hint: "Deep-colour sidebar and softly tinted pages." },
+  { id: "classic", title: "Classic themes", hint: "The original light layout in a single brand colour." },
 ];
 
 export const RADIUS_PRESET_OPTIONS: Array<{ value: RadiusPresetKey; label: string }> = [

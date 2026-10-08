@@ -12,7 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable, type ActiveFilter } from "@/components/tables/DataTable";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DESIGNATIONS } from "../constants";
-import { createStaff, listStaff, promoteStaff, reactivateStaff, resignStaff, updateStaff } from "../api";
+import { createStaff, getMyStaffId, getStaffMember, listStaff, promoteStaff, reactivateStaff, resignStaff, updateStaff } from "../api";
+import { useIsHrManager } from "../access";
+import PayslipsTab from "@/features/payroll/components/PayslipsTab";
+import StaffOverviewTab from "../components/profile/StaffOverviewTab";
+import QualificationsExperienceTab from "../components/profile/QualificationsExperienceTab";
 import StaffStatusBadge from "../components/StaffStatusBadge";
 import StaffFormDialog from "../components/StaffFormDialog";
 import PromoteStaffDialog from "../components/PromoteStaffDialog";
@@ -21,6 +25,7 @@ import LeaveRequestsTab from "../components/LeaveRequestsTab";
 import type { PromoteStaffFormValues, ResignStaffFormValues, StaffFormValues, StaffMember } from "../types";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { RowActions } from "@/components/ui/row-actions";
+import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 
 const STATUS_OPTIONS: { value: StaffMember["status"]; label: string }[] = [
   { value: "active", label: "Active" },
@@ -318,13 +323,11 @@ function StaffDirectoryTab() {
   );
 }
 
-export default function StaffManagementPage() {
+/** HR's view: the staff directory and everyone's leave. */
+function HrManagementView() {
   return (
     <PageContainer>
-      <PageHeader
-        title="Staff management"
-        description="Joining, promotions, resignations, and leave across all staff."
-      />
+      <PageHeader title="Staff management" description="Joining, promotions, resignations, and leave across all staff." />
 
       <Tabs defaultValue="staff">
         <TabsList variant="line">
@@ -340,4 +343,72 @@ export default function StaffManagementPage() {
       </Tabs>
     </PageContainer>
   );
+}
+
+/** The signed-in staff member's own staff record: what the school holds about them. */
+function MyDetailsTab() {
+  const { data: myStaffId, isLoading: idLoading } = useQuery({ queryKey: ["staff", "me"], queryFn: getMyStaffId });
+  const { data: staff, isLoading, isError, refetch } = useQuery({
+    queryKey: ["staff", myStaffId],
+    queryFn: () => getStaffMember(myStaffId!),
+    enabled: Boolean(myStaffId),
+  });
+
+  if (idLoading || (myStaffId && isLoading)) return <LoadingState label="Loading your details…" />;
+  if (!myStaffId) {
+    return (
+      <EmptyState
+        icon={UserCog}
+        title="Your login isn't linked to a staff record"
+        description="Ask an administrator to link your login to your staff record, and your details, leave and payslips will appear here."
+      />
+    );
+  }
+  if (isError || !staff) return <ErrorState title="We couldn't load your details" onRetry={() => void refetch()} />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <h2 className="text-section-title">
+          {staff.firstName} {staff.lastName}
+        </h2>
+        <StaffStatusBadge status={staff.status} />
+        <p className="w-full text-sm text-muted-foreground">
+          {staff.designation} &middot; {staff.department} &middot; {staff.employeeId}
+        </p>
+      </div>
+      <StaffOverviewTab staff={staff} />
+      <QualificationsExperienceTab staff={staff} />
+    </div>
+  );
+}
+
+/** Teachers and other staff: only their own details, leave requests and payslips, as tabs. */
+function MyHrView() {
+  return (
+    <PageContainer>
+      <PageHeader title="Staff management" description="Your staff details, your leave requests and your payslips." />
+
+      <Tabs defaultValue="details">
+        <TabsList variant="line">
+          <TabsTrigger value="details">My Details</TabsTrigger>
+          <TabsTrigger value="leave">Leave Requests</TabsTrigger>
+          <TabsTrigger value="payslips">Payslips</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+          <MyDetailsTab />
+        </TabsContent>
+        <TabsContent value="leave">
+          <LeaveRequestsTab />
+        </TabsContent>
+        <TabsContent value="payslips">
+          <PayslipsTab mine />
+        </TabsContent>
+      </Tabs>
+    </PageContainer>
+  );
+}
+
+export default function StaffManagementPage() {
+  return useIsHrManager() ? <HrManagementView /> : <MyHrView />;
 }

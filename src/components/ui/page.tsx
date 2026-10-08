@@ -1,12 +1,11 @@
 import * as React from "react";
 import { cn } from "@/utils/cn";
 
-type PageWidth = "default" | "narrow" | "medium" | "wide" | "full";
+/** One shared content width for every page — the Dashboard's. `full` removes the cap. */
+type PageWidth = "default" | "wide" | "full";
 
 const WIDTH: Record<PageWidth, string> = {
-  narrow: "max-w-[900px]",
-  medium: "max-w-[1200px]",
-  default: "max-w-[1400px]",
+  default: "max-w-[1600px]",
   wide: "max-w-[1600px]",
   full: "max-w-none",
 };
@@ -19,7 +18,7 @@ export function PageContainer({
 }: React.HTMLAttributes<HTMLDivElement> & { width?: PageWidth }) {
   return (
     <div
-      className={cn("mx-auto w-full px-4 py-5 sm:px-6 sm:py-6 lg:px-8 space-y-6", WIDTH[width], className)}
+      className={cn("mx-auto w-full min-w-0 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 space-y-6 animate-in fade-in-0 slide-in-from-bottom-1 duration-300", WIDTH[width], className)}
       {...props}
     />
   );

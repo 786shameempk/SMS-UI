@@ -28,7 +28,7 @@ export default function CreatorProfilePage() {
           <div className="relative h-40" />
         ) : (
           <div className="relative flex flex-wrap items-end gap-6">
-            <CreatorAvatar creator={data.creator} size={112} ring className="shadow-2xl shadow-violet-950/50" />
+            <CreatorAvatar creator={data.creator} size={112} ring className="shadow-2xl shadow-brand-900/50" />
             <div className="flex-1 min-w-[15rem]">
               <CreatorTypePill type={data.creator.type} onDark />
               <h1 className="cc-display text-3xl sm:text-4xl font-extrabold mt-2">{data.creator.name}</h1>

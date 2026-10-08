@@ -41,7 +41,7 @@ export default function SchoolShowcasePage() {
             </h1>
             <p className="relative mt-3 text-lg text-white/80 max-w-2xl inline-block">
               {data?.tagline ?? "Celebrating the creativity of our students and teachers."}
-              <BrushStroke className="absolute -bottom-2 left-0 w-2/3 h-2.5" color="#5eead4" />
+              <BrushStroke className="absolute -bottom-2 left-0 w-2/3 h-2.5" color="var(--color-brand-300)" />
             </p>
           </div>
           {data && (

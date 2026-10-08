@@ -17,7 +17,7 @@ export default function ImageGallery({ images, title }: { images: TalentMedia[];
 
   return (
     <div className="space-y-2.5">
-      <div className="group relative overflow-hidden rounded-3xl bg-[#0b1030] aspect-[4/3] sm:aspect-[16/10]">
+      <div className="group relative overflow-hidden rounded-3xl bg-[var(--cc-navy)] aspect-[4/3] sm:aspect-[16/10]">
         {/* Blurred backdrop fills letterboxing for portrait artwork. */}
         <img src={current.url} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50" />
         <AnimatePresence mode="wait">
@@ -64,7 +64,7 @@ export default function ImageGallery({ images, title }: { images: TalentMedia[];
               onClick={() => setIndex(i)}
               className={cn(
                 "relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer transition-all",
-                i === index ? "ring-2 ring-violet-500 ring-offset-2 ring-offset-background" : "opacity-60 hover:opacity-100",
+                i === index ? "ring-2 ring-brand-500 ring-offset-2 ring-offset-background" : "opacity-60 hover:opacity-100",
               )}
               aria-label={`Show image ${i + 1}`}
             >
@@ -125,7 +125,7 @@ function Lightbox({ images, index, onIndex, onClose, title }: { images: TalentMe
       // pointer-events-auto + the data attribute let it work above a modal side panel (Radix disables
       // pointer events on <body> and would treat clicks here as "outside" - see ReviewPanel).
       data-cc-lightbox=""
-      className="fixed inset-0 z-[60] bg-[#05081c]/95 backdrop-blur-sm flex flex-col pointer-events-auto"
+      className="fixed inset-0 z-[60] bg-[var(--cc-navy)]/95 backdrop-blur-sm flex flex-col pointer-events-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       role="dialog"

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import FullCalendar from "@fullcalendar/react";
@@ -71,16 +72,14 @@ export default function MeetingCalendarPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 p-4 sm:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Online Classes
-          </Link>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground">Class calendar</h1>
-        </div>
-        {canSchedule && <Button onClick={() => setScheduleOpen(true)}><Plus className="h-4 w-4" /> Schedule</Button>}
-      </div>
+    <PageContainer>
+      <PageHeader
+        eyebrow={<Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> Online Classes
+        </Link>}
+        title="Class calendar"
+        actions={canSchedule && <Button onClick={() => setScheduleOpen(true)}><Plus className="h-4 w-4" /> Schedule</Button>}
+      />
 
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Show meeting types">
         {TYPE_LEGEND.map((g) => {
@@ -128,6 +127,6 @@ export default function MeetingCalendarPage() {
       </div>
 
       {canSchedule && <ScheduleMeetingDialog open={scheduleOpen} onOpenChange={setScheduleOpen} />}
-    </div>
+    </PageContainer>
   );
 }

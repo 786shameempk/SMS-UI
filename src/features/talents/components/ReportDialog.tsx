@@ -39,7 +39,7 @@ export default function ReportDialog({ talentId, title, open, onOpenChange }: { 
           <DialogDescription className="line-clamp-1">“{title}”</DialogDescription>
         </DialogHeader>
 
-        <div className="flex gap-3 rounded-2xl bg-teal-500/10 p-3 text-sm text-teal-800 dark:text-teal-200">
+        <div className="flex gap-3 rounded-2xl bg-brand-500/10 p-3 text-sm text-brand-800 dark:text-brand-200">
           <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5" />
           <p>Your report is private. It goes to the school's moderators - the creator won't see who reported it.</p>
         </div>
@@ -54,7 +54,7 @@ export default function ReportDialog({ talentId, title, open, onOpenChange }: { 
               aria-pressed={reason === r.value}
               className={cn(
                 "w-full text-left rounded-xl border px-3.5 py-2.5 transition-colors cursor-pointer",
-                reason === r.value ? "border-violet-500 bg-violet-500/8 ring-1 ring-violet-500" : "border-border hover:bg-secondary/60",
+                reason === r.value ? "border-brand-500 bg-brand-500/8 ring-1 ring-brand-500" : "border-border hover:bg-secondary/60",
               )}
             >
               <span className="block text-sm font-medium text-foreground">{r.label}</span>

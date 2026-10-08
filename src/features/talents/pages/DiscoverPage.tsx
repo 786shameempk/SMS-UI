@@ -52,7 +52,7 @@ export default function DiscoverPage() {
           >
             Every talent
             <br />
-            deserves to be <span className="relative inline-block cc-gradient-text">seen.<BrushStroke className="absolute -bottom-2 left-0 w-full h-3" color="#a78bfa" /></span>
+            deserves to be <span className="relative inline-block cc-gradient-text">seen.<BrushStroke className="absolute -bottom-2 left-0 w-full h-3" color="var(--color-brand-300)" /></span>
           </motion.h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="mt-4 text-white/75 text-base sm:text-lg max-w-xl">
             Art, music, dance, science, sport and everything in between - discover what your campus creates, and share your own.
@@ -78,9 +78,9 @@ export default function DiscoverPage() {
             {canCreate && (
               <Link
                 to="/talents/new"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white text-[#1e1b4b] px-6 h-12 text-sm font-bold shadow-xl shadow-black/20 hover:-translate-y-0.5 transition-transform"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white text-[var(--cc-ink)] px-6 h-12 text-sm font-bold shadow-xl shadow-black/20 hover:-translate-y-0.5 transition-transform"
               >
-                <Sparkles className="w-4 h-4 text-violet-600" />
+                <Sparkles className="w-4 h-4 text-brand-600" />
                 Share your talent
               </Link>
             )}
@@ -131,7 +131,7 @@ export default function DiscoverPage() {
       {/* Categories */}
       {data && data.categories.length > 0 && (
         <section>
-          <SectionHeader emoji="🧭" title="Browse by talent" action={<Link to="/talents/explore" className="text-sm font-medium text-violet-600 dark:text-violet-300 inline-flex items-center gap-1 hover:gap-2 transition-all">All categories <ArrowRight className="w-4 h-4" /></Link>} />
+          <SectionHeader emoji="🧭" title="Browse by talent" action={<Link to="/talents/explore" className="text-sm font-medium text-brand-600 dark:text-brand-300 inline-flex items-center gap-1 hover:gap-2 transition-all">All categories <ArrowRight className="w-4 h-4" /></Link>} />
           <div className="cc-rail -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto pb-2">
             {data.categories.map(({ category, count }) => {
               const config = CATEGORY_CONFIG[category];
@@ -155,7 +155,7 @@ export default function DiscoverPage() {
 
       <TalentRail emoji="🔥" title="Trending now" subtitle="The most appreciated work this month" talents={data?.trending} loading={isLoading} />
       <TalentRail emoji="🏫" title="From your school" subtitle="Celebrate the people you see every day" talents={data?.mySchool} loading={isLoading} />
-      <TalentRail emoji="🆕" title="Recently added" talents={data?.recent} loading={isLoading} action={<Link to="/talents/explore?sort=recent" className="text-sm font-medium text-violet-600 dark:text-violet-300 mr-1">See all</Link>} />
+      <TalentRail emoji="🆕" title="Recently added" talents={data?.recent} loading={isLoading} action={<Link to="/talents/explore?sort=recent" className="text-sm font-medium text-brand-600 dark:text-brand-300 mr-1">See all</Link>} />
       <TalentRail emoji="💖" title="Most appreciated" talents={data?.mostAppreciated} loading={isLoading} />
       <TalentRail emoji="👁" title="Most viewed" talents={data?.mostViewed} loading={isLoading} />
       <TalentRail emoji="🍎" title="Teacher talents" subtitle="Our teachers have talents too" talents={data?.teacherTalents} loading={isLoading} />
@@ -181,7 +181,7 @@ export default function DiscoverPage() {
         <ol className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-4">
           {JOURNEY.map((step, i) => (
             <li key={step.title} className="relative text-center">
-              <span className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/15 to-sky-500/15 flex items-center justify-center text-2xl">{step.emoji}</span>
+              <span className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500/15 to-brand-500/15 flex items-center justify-center text-2xl">{step.emoji}</span>
               <p className="mt-2 text-sm font-semibold text-foreground">
                 <span className="text-muted-foreground mr-1">{i + 1}.</span>
                 {step.title}

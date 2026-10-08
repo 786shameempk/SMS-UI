@@ -119,7 +119,7 @@ export default function ExamListPage() {
   if (!isExamStaff(role)) return <Navigate to="/online-exams/my" replace />;
 
   return (
-    <PageContainer width="wide">
+    <PageContainer>
       <PageHeader
         icon={ListChecks}
         title="Exams"

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import toast, { Toaster } from "react-hot-toast";
 import App from "./app/App";
+import { clearCacheOnUserChange } from "./app/clearCacheOnUserChange";
 import { registerServiceWorker } from "./features/meetings/push";
 import "./index.css";
 
@@ -21,6 +22,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// A different person signing in (or out) never sees the previous person's cached data.
+clearCacheOnUserChange(queryClient);
 
 // Installable PWA + Web Push for class reminders (public/sw.js). No offline caching.
 registerServiceWorker();

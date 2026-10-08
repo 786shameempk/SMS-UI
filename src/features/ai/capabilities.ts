@@ -106,8 +106,10 @@ export const AI_CAPABILITIES_KEY = ["ai", "capabilities"] as const;
 export function useAiCapabilities() {
   const signedIn = useAuthStore((s) => Boolean(s.token));
   const tenant = useAuthStore((s) => s.activeTenantId);
+  // What AI a login may use depends on who it is, so the answer is cached per user, not just per school.
+  const userId = useAuthStore((s) => s.user?.id);
   const query = useQuery({
-    queryKey: [...AI_CAPABILITIES_KEY, tenant],
+    queryKey: [...AI_CAPABILITIES_KEY, tenant, userId],
     queryFn: getAiCapabilities,
     enabled: signedIn,
     staleTime: 5 * 60_000,

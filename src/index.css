@@ -76,6 +76,12 @@
   --color-sidebar-border: #e5e8ee;
   --color-sidebar-accent: #FDF9EE;
   --color-sidebar-accent-foreground: #A06212;
+  /* Sidebar text roles. Here (the classic, light sidebar) they are the page's own text colours; the School palettes
+     (settings/theme.ts) restyle the sidebar as a deep block and override these. */
+  --color-sidebar-title: var(--color-foreground);
+  --color-sidebar-muted: var(--color-muted-foreground);
+  --color-sidebar-hover: var(--color-secondary);
+  --color-sidebar-hover-foreground: var(--color-foreground);
 
   /* Border radius */
   --radius: 0.75rem;

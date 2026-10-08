@@ -292,6 +292,12 @@ export async function listStaff(): Promise<StaffMember[]> {
   return staff.map(mapStaff);
 }
 
+/** The signed-in login's own staff record id (AcademicService GET /api/people/me), or null when it isn't linked to one. */
+export async function getMyStaffId(): Promise<string | null> {
+  const me = await unwrap(academicHttpClient.get<{ staffId: string | null }>("/api/people/me"));
+  return me.staffId ?? null;
+}
+
 export async function getStaffMember(id: string): Promise<StaffMember> {
   const dto = await unwrap(academicHttpClient.get<ApiStaffMember>(`/api/staff/${id}`));
   return mapStaff(dto);

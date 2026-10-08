@@ -198,9 +198,9 @@ export default function TalentComposerPage() {
           {STEPS.map((s, i) => (
             <li key={s.title}>
               <button type="button" onClick={() => (i <= step || validate(i - 1)) && setStep(i)} className="w-full text-left cursor-pointer group" disabled={busy}>
-                <span className={cn("block h-1.5 rounded-full transition-all", i <= step ? "bg-gradient-to-r from-violet-400 via-fuchsia-300 to-sky-300" : "bg-white/20")} />
+                <span className={cn("block h-1.5 rounded-full transition-all", i <= step ? "bg-gradient-to-r from-brand-400 via-brand-300 to-brand-300" : "bg-white/20")} />
                 <span className="mt-2 flex items-center gap-1.5 text-xs sm:text-sm font-medium">
-                  <span className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0", i < step ? "bg-emerald-400 text-emerald-950" : i === step ? "bg-white text-[#1e1b4b]" : "bg-white/15 text-white/70")}>
+                  <span className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0", i < step ? "bg-emerald-400 text-emerald-950" : i === step ? "bg-white text-[var(--cc-ink)]" : "bg-white/15 text-white/70")}>
                     {i < step ? <Check className="w-3 h-3" /> : i + 1}
                   </span>
                   <span className={i === step ? "text-white" : "text-white/65"}>{s.title}</span>
@@ -229,7 +229,7 @@ export default function TalentComposerPage() {
               <Field label="Tags" hint="Up to 8 - help others discover your work">
                 <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-input bg-card px-2 py-1.5 min-h-11 focus-within:ring-2 focus-within:ring-ring">
                   {values.tags.map((t) => (
-                    <span key={t} className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-300 px-2.5 py-0.5 text-sm">
+                    <span key={t} className="inline-flex items-center gap-1 rounded-full bg-brand-500/10 text-brand-700 dark:text-brand-300 px-2.5 py-0.5 text-sm">
                       #{t}
                       <button type="button" onClick={() => setValues((v) => ({ ...v, tags: v.tags.filter((x) => x !== t) }))} className="cursor-pointer" aria-label={`Remove ${t}`}>
                         <X className="w-3 h-3" />
@@ -325,7 +325,7 @@ export default function TalentComposerPage() {
       )}
 
       {/* Footer actions */}
-      <div className="sticky bottom-20 lg:bottom-4 z-20 flex items-center gap-2 rounded-2xl border border-border bg-card/95 backdrop-blur-xl p-2.5 shadow-xl shadow-indigo-950/10">
+      <div className="sticky bottom-20 lg:bottom-4 z-20 flex items-center gap-2 rounded-2xl border border-border bg-card/95 backdrop-blur-xl p-2.5 shadow-xl shadow-brand-900/10">
         <Button type="button" variant="ghost" disabled={busy || step === 0} onClick={() => setStep((s) => s - 1)}>
           <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back</span>
         </Button>
@@ -338,7 +338,7 @@ export default function TalentComposerPage() {
             Continue <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button type="button" className="cc-gradient-bg text-white shadow-lg shadow-violet-900/25" disabled={busy} onClick={() => void save(true)}>
+          <Button type="button" className="cc-gradient-bg text-white shadow-lg shadow-brand-900/25" disabled={busy} onClick={() => void save(true)}>
             {saving === "submit" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {existing && existing.status !== "draft" ? "Resubmit for approval" : "Submit for approval"}
           </Button>

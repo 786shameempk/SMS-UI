@@ -65,7 +65,7 @@ export default function ExplorePage() {
           <p className="text-muted-foreground mt-1">Search by title, creator or school - then narrow it down.</p>
         </div>
 
-        <label className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-violet-400">
+        <label className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-brand-400">
           <Search className="w-4 h-4 text-muted-foreground" />
           <input
             value={draft}

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ClipboardCheck, FileText, Loader2, Megaphone, Sparkles, Trash2, Undo2 } from "lucide-react";
+import {
+  BookOpenText, Check, CheckCircle2, ClipboardCheck, ClipboardList, ListChecks, Loader2, Megaphone, MessageSquare, NotebookPen, Pencil, ShieldCheck,
+  Sparkles, Trash2, Undo2, type LucideIcon,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,9 +11,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState, ErrorState } from "@/components/ui/states";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { AUDIENCE_OPTIONS } from "@/features/notifications/constants";
+import { cn } from "@/utils/cn";
 import { CONTENT_KEY, deleteContent, getContent, listContent, transitionContent, updateContent } from "../../content/api";
 import type { ContentAction, ContentItem, ContentKind, ContentStatus, ContentSummary } from "../../content/types";
 
@@ -21,16 +27,19 @@ const STATUS_BADGE: Record<ContentStatus, { label: string; variant: "neutral" | 
   Published: { label: "Published", variant: "success" },
 };
 
-const KIND_LABEL: Record<ContentKind, string> = {
-  Notice: "Notice",
-  Message: "Message",
-  LessonPlan: "Lesson plan",
-  Worksheet: "Worksheet",
-  QuestionSet: "Question set",
-  Homework: "Homework",
+/** The one path content takes, in order. */
+const STEPS: ContentStatus[] = ["Draft", "Reviewed", "Approved", "Published"];
+
+const KIND: Record<ContentKind, { label: string; icon: LucideIcon }> = {
+  Notice: { label: "Notice", icon: Megaphone },
+  Message: { label: "Message", icon: MessageSquare },
+  LessonPlan: { label: "Lesson plan", icon: BookOpenText },
+  Worksheet: { label: "Worksheet", icon: ClipboardList },
+  QuestionSet: { label: "Question set", icon: ListChecks },
+  Homework: { label: "Homework", icon: NotebookPen },
 };
 
-const ACTION: Record<ContentAction, { label: string; icon: typeof CheckCircle2; variant: "default" | "outline" }> = {
+const ACTION: Record<ContentAction, { label: string; icon: LucideIcon; variant: "default" | "outline" }> = {
   MarkReviewed: { label: "Mark reviewed", icon: ClipboardCheck, variant: "default" },
   Approve: { label: "Approve", icon: CheckCircle2, variant: "default" },
   SendBack: { label: "Send back", icon: Undo2, variant: "outline" },
@@ -48,15 +57,63 @@ const HISTORY_LABEL: Record<string, string> = {
 
 type Filter = "queue" | "approved" | "drafts" | "published" | "mine";
 
-const FILTERS: { value: Filter; label: string; params: Parameters<typeof listContent>[0] }[] = [
-  { value: "queue", label: "Awaiting approval", params: { status: "Reviewed" } },
-  { value: "approved", label: "Approved", params: { status: "Approved" } },
-  { value: "drafts", label: "Drafts", params: { status: "Draft" } },
-  { value: "published", label: "Published", params: { status: "Published" } },
-  { value: "mine", label: "Mine", params: { mine: true } },
+const FILTERS: { value: Filter; label: string; params: Parameters<typeof listContent>[0]; empty: { title: string; description: string } }[] = [
+  { value: "queue", label: "Awaiting approval", params: { status: "Reviewed" }, empty: { title: "Nothing waiting for approval", description: "Content marked as reviewed shows up here for an administrator to approve or send back." } },
+  { value: "approved", label: "Approved", params: { status: "Approved" }, empty: { title: "No approved content", description: "Approved items wait here until someone publishes them." } },
+  { value: "drafts", label: "Drafts", params: { status: "Draft" }, empty: { title: "No drafts", description: "Save an AI draft for review from the Content Assistant or Teacher Tools and it starts here." } },
+  { value: "published", label: "Published", params: { status: "Published" }, empty: { title: "Nothing published yet", description: "Published notices, lesson plans and other content are listed here for reference." } },
+  { value: "mine", label: "Mine", params: { mine: true }, empty: { title: "You haven't saved anything for review", description: "Content you save for review appears here, whatever stage it is at." } },
 ];
 
 const audienceLabel = (a: string | null) => AUDIENCE_OPTIONS.find((o) => o.value === a)?.label ?? a ?? "";
+
+function timeAgo(iso: string) {
+  const diff = new Date(iso).getTime() - Date.now();
+  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [["day", 86_400_000], ["hour", 3_600_000], ["minute", 60_000]];
+  for (const [unit, ms] of units) if (Math.abs(diff) >= ms) return rtf.format(Math.round(diff / ms), unit);
+  return "just now";
+}
+
+/** What this person can do with an item right now, in words (the server decides; this only labels it). */
+function nextStep(item: ContentSummary): string | null {
+  if (item.allowedActions.includes("Approve")) return "Ready to approve";
+  if (item.allowedActions.includes("Publish")) return "Ready to publish";
+  if (item.status === "Draft" && item.allowedActions.includes("MarkReviewed")) return "Ready to review";
+  return null;
+}
+
+/** Draft → Awaiting approval → Approved → Published. With a status it marks progress; without one it just shows the path. */
+function Stepper({ status, className }: { status?: ContentStatus; className?: string }) {
+  const current = status ? STEPS.indexOf(status) : -1;
+  return (
+    <ol aria-label="Review steps" className={cn("flex items-center gap-1.5 text-xs", className)}>
+      {STEPS.map((step, i) => {
+        const done = i < current || status === "Published";
+        const active = i === current && status !== "Published";
+        return (
+          <li key={step} aria-current={active ? "step" : undefined} className="flex min-w-0 items-center gap-1.5">
+            <span
+              className={cn(
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ring-1 ring-inset",
+                done && "bg-success text-success-foreground ring-success",
+                active && "bg-primary text-primary-foreground ring-primary",
+                !done && !active && "bg-secondary text-muted-foreground ring-border",
+              )}
+              aria-hidden="true"
+            >
+              {done ? <Check className="h-3 w-3" /> : i + 1}
+            </span>
+            <span className={cn("truncate font-medium", active ? "text-foreground" : done ? "text-secondary-foreground" : "text-muted-foreground")}>
+              {STATUS_BADGE[step].label}
+            </span>
+            {i < STEPS.length - 1 && <span aria-hidden="true" className={cn("h-px w-4 shrink-0 sm:w-8", i < current ? "bg-success" : "bg-border")} />}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 /**
  * Review & Publish: content (often AI drafts) moves Draft → Reviewed → Approved → Published. The buttons shown are the
@@ -65,60 +122,87 @@ const audienceLabel = (a: string | null) => AUDIENCE_OPTIONS.find((o) => o.value
 export default function ContentReviewTab() {
   const [filter, setFilter] = useState<Filter>("queue");
   const [openId, setOpenId] = useState<string | null>(null);
-  const params = FILTERS.find((f) => f.value === filter)!.params;
-  const list = useQuery({ queryKey: [...CONTENT_KEY, filter], queryFn: () => listContent(params) });
+  const current = FILTERS.find((f) => f.value === filter)!;
+  const list = useQuery({ queryKey: [...CONTENT_KEY, filter], queryFn: () => listContent(current.params) });
+  // Everything, only to put a count on each filter.
+  const everything = useQuery({ queryKey: [...CONTENT_KEY, "counts"], queryFn: () => listContent({}) });
+  const count = (f: Filter): number | undefined => {
+    if (!everything.data) return undefined;
+    if (f === "mine") return everything.data.filter((i) => i.isMine).length;
+    return everything.data.filter((i) => i.status === FILTERS.find((x) => x.value === f)!.params?.status).length;
+  };
 
   return (
-    <div className="space-y-4">
-      <p className="max-w-2xl text-sm text-muted-foreground">
-        Drafts are checked by their author, approved by an administrator, then published. Nothing reaches parents or students before it is approved, and every
-        step is recorded.
-      </p>
+    <div className="space-y-5">
+      <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-xs">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground ring-1 ring-inset ring-primary/20">
+            <ShieldCheck className="h-[18px] w-[18px]" aria-hidden="true" />
+          </div>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            Drafts are checked by their author, approved by an administrator, then published. Nothing reaches parents or students before it is approved, and every
+            step is recorded.
+          </p>
+        </div>
+        <Stepper className="flex-wrap pl-12" />
+      </div>
+
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <TabsList>
           {FILTERS.map((f) => (
-            <TabsTrigger key={f.value} value={f.value}>
+            <TabsTrigger key={f.value} value={f.value} count={count(f.value)}>
               {f.label}
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
 
-      {list.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-      {list.isError && (
-        <p role="alert" className="text-sm text-destructive">
-          {list.error.message}
-        </p>
+      {list.isLoading && (
+        <div className="space-y-2" role="status" aria-label="Loading">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-[68px] w-full rounded-xl" />
+          ))}
+        </div>
       )}
-      {list.data?.length === 0 && <p className="text-sm text-muted-foreground">Nothing here.</p>}
+      {list.isError && <ErrorState size="sm" title="We couldn't load this list" onRetry={() => void list.refetch()} retrying={list.isFetching} />}
+      {list.data?.length === 0 && <EmptyState icon={KIND.Notice.icon} title={current.empty.title} description={current.empty.description} />}
 
       <div className="space-y-2">
-        {list.data?.map((item: ContentSummary) => (
-          <Card key={item.id}>
-            <CardContent className="flex items-center justify-between gap-3 p-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {KIND_LABEL[item.kind]} · {item.isMine ? "you" : item.createdByRole} · {new Date(item.updatedAt).toLocaleString()}
-                  </p>
+        {list.data?.map((item: ContentSummary) => {
+          const { icon: KindIcon, label: kindLabel } = KIND[item.kind];
+          const next = nextStep(item);
+          return (
+            <Card key={item.id} className="transition-colors hover:border-primary/40">
+              <CardContent className="flex flex-col gap-3 p-3.5 md:flex-row md:items-center md:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground ring-1 ring-inset ring-border">
+                    <KindIcon className="h-[18px] w-[18px]" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {kindLabel} · {item.isMine ? "you" : item.createdByRole} · <time dateTime={item.updatedAt} title={new Date(item.updatedAt).toLocaleString()}>{timeAgo(item.updatedAt)}</time>
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {item.aiGenerated && (
-                  <Badge variant="neutral">
-                    <Sparkles className="h-3 w-3" /> AI
+                <div className="flex shrink-0 flex-wrap items-center gap-2 md:justify-end">
+                  {next && <span className="text-xs font-medium text-primary-text">{next}</span>}
+                  {item.aiGenerated && (
+                    <Badge variant="neutral">
+                      <Sparkles className="h-3 w-3" /> AI
+                    </Badge>
+                  )}
+                  <Badge variant={STATUS_BADGE[item.status].variant} dot>
+                    {STATUS_BADGE[item.status].label}
                   </Badge>
-                )}
-                <Badge variant={STATUS_BADGE[item.status].variant}>{STATUS_BADGE[item.status].label}</Badge>
-                <Button size="sm" variant="outline" onClick={() => setOpenId(item.id)}>
-                  Open
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <Button size="sm" variant={next ? "default" : "outline"} onClick={() => setOpenId(item.id)}>
+                    Open
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {openId && <ContentDialog id={openId} onClose={() => setOpenId(null)} />}
@@ -175,33 +259,53 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
   const item = detail.data;
   const needsConfirm = pending === "Publish" || pending === "SendBack";
+  const KindIcon = item ? KIND[item.kind].icon : Megaphone;
+  // A draft that was just sent back carries the reviewer's reason; show it above the text so the author sees what to fix.
+  const lastEntry = item?.history[item.history.length - 1];
+  const changesRequested = item?.status === "Draft" && lastEntry?.action === "SendBack" && lastEntry.comment ? lastEntry.comment : null;
 
   return (
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{item?.title ?? "Content"}</DialogTitle>
-          <DialogDescription>
-            {item ? (
-              <>
-                {KIND_LABEL[item.kind]}
-                {item.audience ? ` for ${audienceLabel(item.audience)}` : ""} · {STATUS_BADGE[item.status].label}
-                {item.aiGenerated ? " · first drafted by AI" : ""}
-              </>
-            ) : (
-              "Loading…"
-            )}
-          </DialogDescription>
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground ring-1 ring-inset ring-primary/20">
+              <KindIcon className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 space-y-1 text-left">
+              <DialogTitle className="truncate">{item?.title ?? "Content"}</DialogTitle>
+              <DialogDescription>
+                {item ? (
+                  <>
+                    {KIND[item.kind].label}
+                    {item.audience ? ` for ${audienceLabel(item.audience)}` : ""} · {STATUS_BADGE[item.status].label}
+                    {item.aiGenerated ? " · first drafted by AI" : ""}
+                  </>
+                ) : (
+                  "Loading…"
+                )}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        {detail.isError && (
-          <p role="alert" className="text-sm text-destructive">
-            {detail.error.message}
-          </p>
-        )}
+        {detail.isError && <ErrorState size="sm" bare title="We couldn't open this item" onRetry={() => void detail.refetch()} retrying={detail.isFetching} />}
+        {detail.isLoading && <Skeleton className="h-40 w-full rounded-lg" />}
 
         {item && (
-          <div className="max-h-[60vh] space-y-4 overflow-y-auto">
+          <div className="max-h-[60vh] space-y-5 overflow-y-auto pr-1">
+            <Stepper status={item.status} className="flex-wrap" />
+
+            {changesRequested && (
+              <div role="note" className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning-soft px-3.5 py-3 text-sm text-warning-strong">
+                <Undo2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <div>
+                  <p className="font-semibold">Changes requested</p>
+                  <p>{changesRequested}</p>
+                </div>
+              </div>
+            )}
+
             {edit ? (
               <div className="space-y-3">
                 <FormField label="Title" htmlFor="content-title">
@@ -220,11 +324,11 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 </div>
               </div>
             ) : (
-              <div className="whitespace-pre-wrap rounded-md border border-border bg-secondary/30 p-3 text-sm text-foreground">{item.body}</div>
+              <div className="whitespace-pre-wrap rounded-lg border border-border bg-secondary/30 p-4 text-sm leading-6 text-foreground">{item.body}</div>
             )}
 
             {pending && needsConfirm && (
-              <div className="space-y-2 rounded-md border border-border p-3">
+              <div className="space-y-3 rounded-lg border border-border bg-card p-3.5 shadow-xs">
                 {pending === "Publish" ? (
                   <p className="text-sm">
                     {item.kind === "Notice"
@@ -251,11 +355,13 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
             <section aria-label="History">
               <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">History</h4>
-              <ol className="mt-1 space-y-1 text-sm">
+              <ol className="mt-2 ml-1.5 space-y-3 border-l border-border pl-4">
                 {item.history.map((h, i) => (
-                  <li key={i} className="text-secondary-foreground">
-                    <span className="font-medium text-foreground">{HISTORY_LABEL[h.action] ?? h.action}</span> by {h.actorRole} · {new Date(h.at).toLocaleString()}
-                    {h.comment && <span className="block pl-3 text-muted-foreground">“{h.comment}”</span>}
+                  <li key={i} className="relative text-sm text-secondary-foreground">
+                    <span aria-hidden="true" className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-card" />
+                    <span className="font-medium text-foreground">{HISTORY_LABEL[h.action] ?? h.action}</span> by {h.actorRole} ·{" "}
+                    <time dateTime={h.at} className="text-muted-foreground">{new Date(h.at).toLocaleString()}</time>
+                    {h.comment && <span className="mt-0.5 block rounded-md bg-secondary/50 px-2.5 py-1.5 text-muted-foreground">“{h.comment}”</span>}
                   </li>
                 ))}
               </ol>
@@ -264,15 +370,15 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
         )}
 
         {item && !edit && (
-          <DialogFooter className="flex-wrap gap-2 sm:justify-between">
+          <DialogFooter className="flex-wrap gap-2 border-t border-border pt-4 sm:justify-between">
             <div className="flex gap-2">
               {item.canEdit && (
                 <Button variant="outline" onClick={() => setEdit({ title: item.title, body: item.body })}>
-                  Edit
+                  <Pencil className="h-4 w-4" /> Edit
                 </Button>
               )}
               {item.canEdit && (
-                <Button variant="ghost" onClick={() => remove.mutate()} disabled={remove.isPending}>
+                <Button variant="ghost" className="text-destructive-strong hover:text-destructive-strong" onClick={() => remove.mutate()} disabled={remove.isPending}>
                   <Trash2 className="h-4 w-4" /> Delete
                 </Button>
               )}
