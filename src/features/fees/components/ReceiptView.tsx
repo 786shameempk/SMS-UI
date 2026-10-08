@@ -1,6 +1,7 @@
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Letterhead from "@/features/tenant/Letterhead";
 import type { Student } from "@/features/students/types";
 import { formatCurrency } from "@/utils/format";
 import { FEE_TYPE_OPTIONS, PAYMENT_MODE_OPTIONS } from "../constants";
@@ -43,7 +44,7 @@ export default function ReceiptView({
           <div id="fee-receipt" className="rounded-xl border border-border bg-white p-5 space-y-4">
             <div className="text-center space-y-1 border-b border-border pb-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Payment Receipt</p>
-              <h2 className="text-lg font-bold text-slate-900">EduCore School</h2>
+              <Letterhead />
               <p className="text-sm text-slate-500">Receipt No: {receipt.receiptNumber}</p>
             </div>
 

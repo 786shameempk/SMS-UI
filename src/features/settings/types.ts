@@ -8,9 +8,11 @@ export interface SchoolProfile {
   email: string;
   principalName?: string;
   establishedYear?: number;
+  /** Ready-to-use link to the uploaded logo; undefined = School Sphere's logo is shown. Changed only through the logo upload. */
+  logoUrl?: string;
 }
 
-export type SchoolProfileFormValues = SchoolProfile;
+export type SchoolProfileFormValues = Omit<SchoolProfile, "logoUrl">;
 
 export interface LocalizationSettings {
   language: string;

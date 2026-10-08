@@ -1,18 +1,19 @@
-# Production stack for a single Azure Linux VM: every SMS service pulled from GHCR, plus SQL Server, Redis
-# and Caddy as the only public entry point (automatic HTTPS).
-#
-# LiveKit (built-in video classes + recording) is not deployed yet: MeetingService still starts and
-# external-link meetings (Zoom/Meet/Teams URLs) work, but "in-app video" classes won't connect.
+# Production stack for a single Azure Linux VM: every SMS service pulled from GHCR, plus Redis,
+# LiveKit + Egress (in-app video classes and their recordings) and Caddy as the HTTPS entry point.
 #
 #   cp .env.example .env            # then fill in real values
 #   docker login ghcr.io            # GitHub username + PAT with read:packages (GHCR packages are private by default)
 #   docker compose pull && docker compose up -d
 #
 # Public layout (see Caddyfile):
-#   https://${DOMAIN}/               -> ui (SPA)
-#   https://${DOMAIN}/services/*     -> apigateway -> each service (YARP routes; /services/ai/* -> aiservice)
-#   https://${DOMAIN}/api/*          -> apigateway's own endpoints (reports)
-# Nothing else is published on the host: SQL Server, Redis and the services are only on the Docker network.
+#   https://${DOMAIN}/               -> marketing site only (landing page; /login etc. redirect to APP_DOMAIN)
+#   https://${APP_DOMAIN}/           -> the application (ui SPA; / redirects to /login)
+#   https://${APP_DOMAIN}/services/*     -> apigateway -> each service (YARP routes; /services/ai/* -> aiservice)
+#   https://${APP_DOMAIN}/api/*          -> apigateway's own endpoints (reports)
+#   wss://${APP_DOMAIN}/livekit/*        -> livekit (video signalling)
+#   https://{subdomain}.${DOMAIN}/      -> the same application for each school (wildcard DNS; see Caddyfile)
+# Video media goes straight to LiveKit, so the VM also publishes 7881/tcp, 7882/udp and 3478/udp (TURN).
+# Nothing else is published on the host: Redis and the services are only on the Docker network.
 
 x-logging: &logging
   logging:
@@ -24,9 +25,6 @@ x-logging: &logging
 x-dotnet-service: &dotnet-service
   <<: *logging
   restart: unless-stopped
-  depends_on:
-    sqlserver:
-      condition: service_healthy
 
 x-dotnet-env: &dotnet-env
   ASPNETCORE_ENVIRONMENT: Production
@@ -35,6 +33,9 @@ x-dotnet-env: &dotnet-env
   # A second site allowed to call the APIs from another origin (e.g. the Azure Static Web Apps frontend).
   # Unset = just the main domain again (harmless duplicate).
   Cors__AllowedOrigins__1: ${CORS_EXTRA_ORIGIN:-https://${DOMAIN}}
+  # The application host (demo.<domain>): the marketing site and the app are different origins.
+  # Every school host ({subdomain}.TENANT_BASE_DOMAIN) is allowed by AuthService itself (Tenancy__BaseDomain below).
+  Cors__AllowedOrigins__2: https://${APP_DOMAIN:?APP_DOMAIN is required - set it in .env next to docker-compose.yml (see .env.example)}
   # Files (study materials, talent media, meeting files, student/staff photos and documents, avatars) live in Azure
   # Blob Storage, in private containers the services create themselves. Empty = the old local volumes (not for prod).
   BlobStorage__ConnectionString: ${AZURE_STORAGE_CONNECTION_STRING:-}
@@ -50,6 +51,7 @@ services:
       - "443:443/udp"
     environment:
       DOMAIN: ${DOMAIN}
+      APP_DOMAIN: ${APP_DOMAIN}
       EXTRA_DOMAINS: ${EXTRA_DOMAINS:-}
       ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required - set it in .env next to docker-compose.yml (see .env.example)}
     volumes:
@@ -59,6 +61,7 @@ services:
     depends_on:
       - ui
       - apigateway
+      - livekit
 
   ui:
     <<: *logging
@@ -67,13 +70,25 @@ services:
     # Runtime API addresses (written into config.js when the container starts), so the SPA calls this
     # domain whatever URLs were baked into the image at build time.
     environment:
-      AUTH_API_URL: https://${DOMAIN}/services/identity/
-      ACADEMIC_API_URL: https://${DOMAIN}/services/academic/
-      FINANCE_API_URL: https://${DOMAIN}/services/finance/
-      CAMPUS_API_URL: https://${DOMAIN}/services/campus/
-      ENGAGEMENT_API_URL: https://${DOMAIN}/services/engagement/
-      MEETING_API_URL: https://${DOMAIN}/services/meetings/
-      AI_API_URL: https://${DOMAIN}/services/ai/
+      APP_URL: https://${APP_DOMAIN}
+      # The marketing site, where the login page's "Back to website" goes.
+      SITE_URL: https://${DOMAIN}
+      AUTH_API_URL: https://${APP_DOMAIN}/services/identity/
+      ACADEMIC_API_URL: https://${APP_DOMAIN}/services/academic/
+      FINANCE_API_URL: https://${APP_DOMAIN}/services/finance/
+      CAMPUS_API_URL: https://${APP_DOMAIN}/services/campus/
+      ENGAGEMENT_API_URL: https://${APP_DOMAIN}/services/engagement/
+      MEETING_API_URL: https://${APP_DOMAIN}/services/meetings/
+      AI_API_URL: https://${APP_DOMAIN}/services/ai/
+      # Sample dashboard figures are enabled in production (see src/features/dashboard/dataSource.ts): each browser can switch
+      # between demo and live from the dashboard toolbar. Set ALLOW_DEMO_DATA=false in .env to hide the switch and force live data.
+      ALLOW_DEMO_DATA: ${ALLOW_DEMO_DATA:-true}
+      DASHBOARD_DATA_SOURCE: ${DASHBOARD_DATA_SOURCE:-mock}
+      # Schools open the app at {subdomain}.TENANT_BASE_DOMAIN. PLATFORM_SUBDOMAINS are hosts that belong to the platform,
+      # not a school (no tenant lookup, any account may sign in there): the marketing "www" and the shared demo host.
+      # Remove "demo" once it is a real tenant.
+      TENANT_BASE_DOMAIN: ${TENANT_BASE_DOMAIN:-sms-schoolsphere.com}
+      PLATFORM_SUBDOMAINS: ${PLATFORM_SUBDOMAINS:-www,demo}
 
   apigateway:
     <<: *logging
@@ -103,8 +118,9 @@ services:
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/authservice:${IMAGE_TAG:-latest}
     environment:
       <<: *dotnet-env
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AuthServiceDb;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=AuthServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       ConnectionStrings__Redis: "redis:6379"
+      Tenancy__BaseDomain: ${TENANT_BASE_DOMAIN:-sms-schoolsphere.com}
       ClientApp__BaseUrl: https://${DOMAIN}
       LeadNotifications__NotifyEmail: ${LEAD_NOTIFY_EMAIL:-info@schoolsphrere.com}
       LeadNotifications__NotifyWhatsAppNumber: ${LEAD_NOTIFY_WHATSAPP:-}
@@ -117,8 +133,6 @@ services:
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-info@schoolsphrere.com}
       Smtp__FromName: ${SMTP_FROM_NAME:-School Sphere}
     depends_on:
-      sqlserver:
-        condition: service_healthy
       redis:
         condition: service_started
 
@@ -127,7 +141,7 @@ services:
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/academicservice:${IMAGE_TAG:-latest}
     environment:
       <<: *dotnet-env
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AcademicServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=AcademicServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       Services__AuthServiceUrl: http://authservice:8080/
       # Online Exams notifications (scheduled, reminders, results...) go to EngagementService's internal events.
       Services__EngagementServiceUrl: http://engagementservice:8080/
@@ -140,9 +154,9 @@ services:
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/financeservice:${IMAGE_TAG:-latest}
     environment:
       <<: *dotnet-env
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinanceServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=FinanceServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       Services__AcademicServiceUrl: http://academicservice:8080/
-      # Webhook URL to set on the Razorpay dashboard: https://${DOMAIN}/services/finance/api/payments/razorpay/webhook
+      # Webhook URL to set on the Razorpay dashboard: https://${APP_DOMAIN}/services/finance/api/payments/razorpay/webhook
       Razorpay__KeyId: ${RAZORPAY_KEY_ID:-}
       Razorpay__KeySecret: ${RAZORPAY_KEY_SECRET:-}
       Razorpay__WebhookSecret: ${RAZORPAY_WEBHOOK_SECRET:-}
@@ -152,7 +166,7 @@ services:
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/campusservice:${IMAGE_TAG:-latest}
     environment:
       <<: *dotnet-env
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CampusServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=CampusServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       Services__AcademicServiceUrl: http://academicservice:8080/
 
   engagementservice:
@@ -160,7 +174,7 @@ services:
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/engagementservice:${IMAGE_TAG:-latest}
     environment:
       <<: *dotnet-env
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=EngagementServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=EngagementServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
       Push__PublicKey: ${PUSH_VAPID_PUBLIC_KEY:-}
       Push__PrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
@@ -173,22 +187,90 @@ services:
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/meetingservice:${IMAGE_TAG:-latest}
     environment:
       <<: *dotnet-env
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=MeetingServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=MeetingServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       Services__AcademicServiceUrl: http://academicservice:8080/
       Services__EngagementServiceUrl: http://engagementservice:8080/
       ServiceAuth__Secret: ${SERVICE_AUTH_SECRET}
-      # LiveKit is not deployed yet, but MeetingService refuses to start without a key + secret (32+ chars),
-      # so these must still be set. In-app video classes stay unavailable until LiveKit is added back.
-      LiveKit__Url: wss://${DOMAIN}/livekit-not-deployed
-      LiveKit__ApiUrl: http://livekit-not-deployed:7880
+      # Browsers and the mobile apps get this address with their join ticket; Caddy forwards /livekit/* to LiveKit.
+      # This service talks to LiveKit directly on the Docker network.
+      LiveKit__Url: wss://${APP_DOMAIN}/livekit
+      LiveKit__ApiUrl: http://livekit:7880
       LiveKit__ApiKey: ${LIVEKIT_API_KEY:?LIVEKIT_API_KEY is required - set it in .env next to docker-compose.yml (see .env.example)}
       LiveKit__ApiSecret: ${LIVEKIT_API_SECRET:?LIVEKIT_API_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
-      LiveKit__EgressEnabled: "false"
+      # Recording: Egress writes MP4s into the shared meeting-files volume (mounted at /out there), then this
+      # service uploads them to blob storage.
+      LiveKit__EgressEnabled: ${LIVEKIT_EGRESS_ENABLED:-true}
+      LiveKit__EgressOutputRoot: /out
     volumes:
       - meeting-files:/app/App_Data/meeting-files # recordings land here before upload; meeting-link key ring
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      livekit:
+        condition: service_started
+
+  # Self-hosted video server for in-app classes and meetings. Signalling comes in through Caddy
+  # (wss://${DOMAIN}/livekit); media (WebRTC) goes straight to the VM on the ports below, which must also be open
+  # in the Azure network security group. The VM's public IP is found with STUN (use_external_ip).
+  livekit:
+    <<: *logging
+    image: livekit/livekit-server:v1.13.7
+    restart: unless-stopped
+    ports:
+      - "7881:7881"     # WebRTC over TCP, for networks that block UDP
+      - "7882:7882/udp" # WebRTC over UDP (all media, one port)
+      - "3478:3478/udp" # built-in TURN relay, for strict school/office firewalls
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: true
+          # Egress shares this container's network (below) and joins rooms over loopback.
+          enable_loopback_candidate: true
+        turn:
+          enabled: true
+          domain: ${DOMAIN}
+          udp_port: 3478
+        room:
+          empty_timeout: 300
+          departure_timeout: 20
+        webhook:
+          api_key: ${LIVEKIT_API_KEY}
+          urls:
+            - http://meetingservice:8080/webhooks/livekit
+        # Redis lets LiveKit hand recording jobs to Egress.
+        redis:
+          address: redis:6379
+        logging:
+          level: info
+    depends_on:
+      - redis
+
+  # Class recording: headless Chrome joins the room and composites it into an MP4. It shares LiveKit's network
+  # namespace so it reaches the media server over loopback; LiveKit's public IP isn't reachable from inside the VM.
+  # Each recording uses roughly 2-4 vCPUs while it runs.
+  egress:
+    <<: *logging
+    image: livekit/egress:v1.14.1
+    restart: unless-stopped
+    network_mode: "service:livekit"
+    cap_add:
+      - SYS_ADMIN # Chrome's sandbox
+    shm_size: "1gb"
+    environment:
+      EGRESS_CONFIG_BODY: |
+        api_key: ${LIVEKIT_API_KEY}
+        api_secret: ${LIVEKIT_API_SECRET}
+        ws_url: ws://127.0.0.1:7880
+        redis:
+          address: redis:6379
+        log_level: info
+    volumes:
+      - meeting-files:/out
+    depends_on:
+      - livekit
+      - redis
 
   # AI assistant, generators, study-material Q&A and report-card remarks. Reads school data only through the
   # other services with the caller's own token. The provider key stays in this container's environment and never
@@ -198,7 +280,7 @@ services:
     image: ${GHCR_REGISTRY:-ghcr.io/786shameempk}/aiservice:${IMAGE_TAG:-latest}
     environment:
       <<: *dotnet-env
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AiServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=AiServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       ConnectionStrings__Redis: "redis:6379"
       Services__Academic: http://academicservice:8080/
       Services__Finance: http://financeservice:8080/
@@ -220,29 +302,8 @@ services:
     volumes:
       - ai-documents:/app/App_Data/ai-documents # only used when AZURE_STORAGE_CONNECTION_STRING is empty
     depends_on:
-      sqlserver:
-        condition: service_healthy
       redis:
         condition: service_started
-
-  sqlserver:
-    <<: *logging
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    restart: unless-stopped
-    environment:
-      ACCEPT_EULA: "Y"
-      # Express is free for production (10 GB per database). "Developer" is NOT licensed for production;
-      # use Standard/Enterprise only with a licence.
-      MSSQL_PID: ${MSSQL_PID:-Express}
-      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
-    volumes:
-      - sqlserver-data:/var/opt/mssql
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
 
   redis:
     <<: *logging
@@ -255,7 +316,6 @@ services:
 volumes:
   caddy-data:
   caddy-config:
-  sqlserver-data:
   redis-data:
   talent-media:
   study-materials:

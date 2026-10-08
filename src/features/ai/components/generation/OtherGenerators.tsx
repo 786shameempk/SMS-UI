@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { useMutation } from "@tanstack/react-query";
 import { Printer } from "lucide-react";
 import toast from "react-hot-toast";
@@ -40,6 +41,7 @@ function DifficultySelect({ id, value, onChange }: { id: string; value: AiDiffic
 }
 
 export function WorksheetGenerator() {
+  const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState<AiDifficulty>("Medium");
@@ -89,11 +91,11 @@ export function WorksheetGenerator() {
           </CardHeader>
           <CardContent className="space-y-4">
             <DraftBar busy={generate.isPending} onRegenerate={run} onReject={() => setSheet(null)}>
-              <Button variant="outline" onClick={() => !printDocument(sheet.title, worksheetToHtml(sheet, false)) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(sheet.title, worksheetToHtml(sheet, false), branding) && toast.error(popupHint)}>
                 <Printer className="h-4 w-4" />
                 Print / PDF
               </Button>
-              <Button variant="outline" onClick={() => !printDocument(`${sheet.title} - key`, worksheetToHtml(sheet, true)) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(`${sheet.title} - key`, worksheetToHtml(sheet, true), branding) && toast.error(popupHint)}>
                 <Printer className="h-4 w-4" />
                 With answers
               </Button>
@@ -132,6 +134,7 @@ export function WorksheetGenerator() {
 }
 
 export function LessonPlanGenerator() {
+  const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [topic, setTopic] = useState("");
   const [duration, setDuration] = useState(45);
@@ -184,7 +187,7 @@ export function LessonPlanGenerator() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <DraftBar busy={generate.isPending} onRegenerate={run} onReject={() => setPlan(null)}>
-              <Button variant="outline" onClick={() => !printDocument(plan.title, lessonPlanToHtml(plan)) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(plan.title, lessonPlanToHtml(plan), branding) && toast.error(popupHint)}>
                 <Printer className="h-4 w-4" />
                 Print / PDF
               </Button>
@@ -224,6 +227,7 @@ export function LessonPlanGenerator() {
 }
 
 export function HomeworkGenerator() {
+  const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState<AiDifficulty>("Medium");
@@ -279,7 +283,7 @@ export function HomeworkGenerator() {
           </CardHeader>
           <CardContent className="space-y-3">
             <DraftBar busy={generate.isPending} onRegenerate={run} onReject={() => setHomework(null)}>
-              <Button variant="outline" onClick={() => !printDocument(homework.title, homeworkToHtml(homework)) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(homework.title, homeworkToHtml(homework), branding) && toast.error(popupHint)}>
                 <Printer className="h-4 w-4" />
                 Print / PDF
               </Button>

@@ -2,7 +2,11 @@
 # Runs at container start (nginx's /docker-entrypoint.d hook): writes the SPA's runtime API addresses into
 # config.js from environment variables, so one image works in every environment without rebuilding.
 #
-#   AUTH_API_URL, ACADEMIC_API_URL, FINANCE_API_URL, CAMPUS_API_URL, ENGAGEMENT_API_URL, MEETING_API_URL, AI_API_URL
+#   APP_URL (marketing site: where Sign In sends people), AUTH_API_URL, ACADEMIC_API_URL, FINANCE_API_URL, CAMPUS_API_URL, ENGAGEMENT_API_URL, MEETING_API_URL, AI_API_URL
+#   ALLOW_DEMO_DATA ("true" lets the dashboard show sample figures - never set it in production),
+#   DASHBOARD_DATA_SOURCE ("mock" or "live": the dashboard default where demo data is allowed)
+#   TENANT_BASE_DOMAIN (schools live at {subdomain}.TENANT_BASE_DOMAIN, e.g. sms-schoolsphere.com),
+#   PLATFORM_SUBDOMAINS (comma-separated subdomains that belong to the platform, not a school, e.g. "www,demo")
 #
 # Each must be reachable from the user's browser (a public URL, not a Docker service name). Unset or empty
 # variables stay "", and the app then uses the addresses baked in at build time (VITE_* build args).
@@ -14,6 +18,8 @@ esc() { printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'; }
 target=/usr/share/nginx/html/config.js
 cat > "$target" <<EOF
 window.__EDUCORE_CONFIG__ = {
+  appUrl: "$(esc "${APP_URL:-}")",
+  siteUrl: "$(esc "${SITE_URL:-}")",
   authApiUrl: "$(esc "${AUTH_API_URL:-}")",
   academicApiUrl: "$(esc "${ACADEMIC_API_URL:-}")",
   financeApiUrl: "$(esc "${FINANCE_API_URL:-}")",
@@ -21,6 +27,10 @@ window.__EDUCORE_CONFIG__ = {
   engagementApiUrl: "$(esc "${ENGAGEMENT_API_URL:-}")",
   meetingApiUrl: "$(esc "${MEETING_API_URL:-}")",
   aiApiUrl: "$(esc "${AI_API_URL:-}")",
+  allowDemoData: "$(esc "${ALLOW_DEMO_DATA:-}")",
+  dashboardDataSource: "$(esc "${DASHBOARD_DATA_SOURCE:-}")",
+  tenantBaseDomain: "$(esc "${TENANT_BASE_DOMAIN:-}")",
+  platformSubdomains: "$(esc "${PLATFORM_SUBDOMAINS:-}")",
 };
 EOF
 echo "educore: wrote runtime API config to $target"

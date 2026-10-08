@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClassSectionViewTab from "../components/ClassSectionViewTab";
+import PeriodsTab from "../components/PeriodsTab";
 import RoomsTab from "../components/RoomsTab";
 import StudentParentViewTab from "../components/StudentParentViewTab";
 import SubstitutionsTab from "../components/SubstitutionsTab";
@@ -11,7 +12,7 @@ export default function TimetableManagementPage() {
     <PageContainer>
       <PageHeader
         title="Timetable management"
-        description="Weekly period grids per section, room allocation, substitute teachers, and holiday awareness."
+        description="Weekly period grids per section, your branch's periods and school days, room allocation, substitute teachers, and holiday awareness."
       />
 
       <Tabs defaultValue="class-section">
@@ -19,6 +20,7 @@ export default function TimetableManagementPage() {
           <TabsTrigger value="class-section">Class/Section View</TabsTrigger>
           <TabsTrigger value="teacher">Teacher View</TabsTrigger>
           <TabsTrigger value="student-parent">Student/Parent View</TabsTrigger>
+          <TabsTrigger value="periods">Periods</TabsTrigger>
           <TabsTrigger value="rooms">Rooms</TabsTrigger>
           <TabsTrigger value="substitutions">Substitutions</TabsTrigger>
         </TabsList>
@@ -30,6 +32,9 @@ export default function TimetableManagementPage() {
         </TabsContent>
         <TabsContent value="student-parent">
           <StudentParentViewTab />
+        </TabsContent>
+        <TabsContent value="periods">
+          <PeriodsTab />
         </TabsContent>
         <TabsContent value="rooms">
           <RoomsTab />

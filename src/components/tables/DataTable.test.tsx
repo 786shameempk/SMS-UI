@@ -111,6 +111,107 @@ describe("DataTable", () => {
     expect(onPageChange).toHaveBeenCalledWith(1);
   });
 
+  it("jumps straight to a numbered page and marks it current", async () => {
+    const user = userEvent.setup();
+    render(<DataTable columns={columns} data={students} pageSize={5} mobileLayout="scroll" />);
+
+    await user.click(screen.getByRole("button", { name: "Page 3" }));
+    expect(bodyRows()).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Page 3" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  });
+
+  it("asks the server for a new page size when rows-per-page is offered", () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={students.slice(0, 5)}
+        mobileLayout="scroll"
+        serverPagination={{ pageIndex: 0, pageSize: 25, totalCount: 1248, onPageChange: vi.fn(), onPageSizeChange: vi.fn() }}
+      />,
+    );
+
+    expect(screen.getByRole("combobox", { name: "Rows per page" })).toBeInTheDocument();
+    expect(screen.getByText("1,248")).toBeInTheDocument();
+  });
+
+  it("swaps the toolbar for a bulk bar while rows are selected", async () => {
+    const user = userEvent.setup();
+    const bulk = vi.fn((selected: Student[], clear: () => void) => (
+      <button type="button" onClick={clear}>
+        Archive {selected.length}
+      </button>
+    ));
+    render(<DataTable columns={columns} data={students.slice(0, 3)} searchable bulkActions={bulk} getRowId={(s) => s.id} mobileLayout="scroll" />);
+
+    const [, first, second] = within(table()).getAllByRole("checkbox", { name: /select/i });
+    await user.click(first);
+    await user.click(second);
+    expect(screen.getByRole("toolbar", { name: "Bulk actions" })).toHaveTextContent("2 selected");
+    // The normal toolbar keeps its space under the bar (so rows don't shift) but can't be reached.
+    expect(screen.getByRole("searchbox").closest("[inert]")).not.toBeNull();
+    expect(bodyRows()[0]).toHaveAttribute("data-state", "selected");
+
+    await user.click(screen.getByRole("button", { name: "Archive 2" }));
+    expect(screen.queryByRole("toolbar", { name: "Bulk actions" })).not.toBeInTheDocument();
+    expect(screen.getByRole("searchbox").closest("[inert]")).toBeNull();
+  });
+
+  it("select-all picks every row on the page", async () => {
+    const user = userEvent.setup();
+    render(<DataTable columns={columns} data={students} pageSize={5} selectable mobileLayout="scroll" />);
+
+    await user.click(screen.getByRole("checkbox", { name: "Select all rows on this page" }));
+    expect(screen.getByText("5 selected")).toBeInTheDocument();
+  });
+
+  it("shows active filters as chips and a filter-specific empty state", async () => {
+    const user = userEvent.setup();
+    const onRemove = vi.fn();
+    const onClearFilters = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={[]}
+        emptyMessage="No students yet"
+        activeFilters={[
+          { id: "status", label: "Status", value: "Active", onRemove },
+          { id: "class", label: "Class", value: "8A", onRemove: vi.fn() },
+        ]}
+        onClearFilters={onClearFilters}
+        mobileLayout="scroll"
+      />,
+    );
+
+    expect(screen.queryByText("No students yet")).not.toBeInTheDocument();
+    expect(screen.getByText("No results for these filters")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Remove Status filter" }));
+    expect(onRemove).toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Clear all" }));
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(onClearFilters).toHaveBeenCalledTimes(2);
+  });
+
+  it("hides a column from the Columns menu", async () => {
+    const user = userEvent.setup();
+    render(<DataTable columns={columns} data={students.slice(0, 2)} columnToggle mobileLayout="scroll" />);
+
+    await user.click(screen.getByRole("button", { name: "Choose columns" }));
+    await user.click(await screen.findByRole("menuitemcheckbox", { name: "Grade" }));
+    await user.keyboard("{Escape}");
+    expect(within(table()).queryByRole("columnheader", { name: /Grade/ })).not.toBeInTheDocument();
+  });
+
+  it("opens clickable rows from the keyboard", async () => {
+    const user = userEvent.setup();
+    const onRowClick = vi.fn();
+    render(<DataTable columns={columns} data={students.slice(0, 2)} onRowClick={onRowClick} mobileLayout="scroll" />);
+
+    bodyRows()[0].focus();
+    await user.keyboard("{Enter}");
+    expect(onRowClick).toHaveBeenCalledWith(students[0]);
+  });
+
   it("renders cards for phones as well as the table", () => {
     render(<DataTable columns={columns} data={students.slice(0, 1)} />);
 

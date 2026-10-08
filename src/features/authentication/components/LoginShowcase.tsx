@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { BookOpen, CalendarCheck, GraduationCap, Presentation, ShieldCheck, UserRound, UsersRound, Video } from "lucide-react";
+import BrandLogo from "@/components/common/BrandLogo";
+import { useTenantBranding } from "@/features/tenant/TenantProvider";
 
 /**
  * Left half of the sign-in screen: brand, tagline, and an illustration of the "sphere" — the school at the
@@ -121,13 +123,13 @@ function Sphere() {
   );
 }
 
+/** The school's logo and name once its subdomain is known, School Sphere's own until the school has set them. */
 export function BrandMark({ inverted }: { inverted?: boolean }) {
+  const { name } = useTenantBranding();
   return (
     <div className="flex items-center gap-2.5">
-      <div className="bg-brand-gradient flex h-9 w-9 items-center justify-center rounded-[11px] shadow-sm shadow-brand-700/30 ring-1 ring-inset ring-white/20">
-        <GraduationCap className="h-[18px] w-[18px] text-white" aria-hidden="true" />
-      </div>
-      <span className={`text-lg font-bold tracking-[-0.02em] ${inverted ? "text-white" : "text-foreground"}`}>School Sphere</span>
+      <BrandLogo />
+      <span className={`text-lg font-bold tracking-[-0.02em] ${inverted ? "text-white" : "text-foreground"}`}>{name}</span>
     </div>
   );
 }

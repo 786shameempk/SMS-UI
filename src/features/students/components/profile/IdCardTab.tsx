@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import JsBarcode from "jsbarcode";
-import { GraduationCap, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
+import BrandLogo from "@/components/common/BrandLogo";
+import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Student } from "../../types";
@@ -19,6 +21,7 @@ function initialsOf(first: string, last: string) {
 }
 
 export default function IdCardTab({ student }: { student: Student }) {
+  const branding = useTenantBranding();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const barcodeRef = useRef<SVGSVGElement | null>(null);
 
@@ -66,9 +69,9 @@ export default function IdCardTab({ student }: { student: Student }) {
             className="flex items-center gap-2 px-4 py-3"
             style={{ background: "linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-700) 100%)" }}
           >
-            <GraduationCap className="w-5 h-5 text-white" />
-            <div className="text-white">
-              <p className="text-sm font-bold leading-none">School Sphere</p>
+            <BrandLogo className="h-8 w-8 rounded-lg" iconClassName="h-4 w-4" />
+            <div className="min-w-0 text-white">
+              <p className="truncate text-sm font-bold leading-none">{branding.name}</p>
               <p className="text-[10px] opacity-80 leading-none mt-0.5">Student Identity Card</p>
             </div>
           </div>

@@ -1,0 +1,16 @@
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1350px}
+body{font-family:"Segoe UI","Inter",Arial,sans-serif;color:#0f172a;position:relative;overflow:hidden;background:#fff}
+.glow{position:absolute;border-radius:50%;filter:blur(10px)}
+.grid{position:absolute;inset:0;background-image:linear-gradient(to right,rgba(148,163,184,.18) 1px,transparent 1px),linear-gradient(to bottom,rgba(148,163,184,.18) 1px,transparent 1px);background-size:60px 60px;-webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 80%)}
+.wrap{position:relative;padding:80px 84px;height:100%;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:14px;font-weight:700;font-size:30px;letter-spacing:-.02em}
+.logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#F0CA6E,#D18818);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px}
+.pill{display:inline-block;padding:10px 22px;border-radius:999px;background:#FDF9EE;border:2px solid #F6E0A6;color:#A06212;font-weight:700;font-size:24px}
+h1{font-size:96px;line-height:1.03;letter-spacing:-.04em;font-weight:800}
+.g{background:linear-gradient(135deg,#ECA427,#A06212);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:34px;line-height:1.4;color:#475569;margin-top:30px}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:30px;border-top:2px solid #e2e8f0}
+.cta{background:linear-gradient(135deg,#ECA427,#D18818);color:#fff;font-weight:700;font-size:30px;padding:20px 38px;border-radius:18px;box-shadow:0 14px 30px rgba(209,136,24,.35)}
+.url{font-size:26px;color:#475569;line-height:1.5}.url b{color:#0f172a}
+.card{background:#fff;border:2px solid #e2e8f0;border-radius:26px;box-shadow:0 20px 50px rgba(15,23,42,.08)}

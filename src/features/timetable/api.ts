@@ -1,10 +1,13 @@
 import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { formatPeriodTime } from "./constants";
 import type {
   DayOfWeek,
   Room,
   RoomFormValues,
   SlotAssignmentValues,
   SubstitutionFormValues,
+  TimetableSetup,
+  TimetableSetupFormValues,
   TimetableSlot,
   TimetableSubstitution,
 } from "./types";
@@ -87,6 +90,36 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   } catch (err) {
     throw new Error(extractApiErrorMessage(err));
   }
+}
+
+// ── Periods and school days (per branch) ────────────────────────────────
+
+interface ApiTimetableSetup {
+  periods: { periodNumber: number; label: string; startTime: string; endTime: string; isBreak: boolean }[];
+  workingDays: number[];
+  isCustom: boolean;
+}
+
+const mapSetup = (dto: ApiTimetableSetup): TimetableSetup => ({
+  periods: dto.periods.map((p) => ({
+    periodNumber: p.periodNumber,
+    label: p.label,
+    startTime: p.startTime,
+    endTime: p.endTime,
+    time: formatPeriodTime(p.startTime, p.endTime),
+    ...(p.isBreak ? { isBreak: true } : {}),
+  })),
+  workingDays: dto.workingDays as DayOfWeek[],
+  isCustom: dto.isCustom,
+});
+
+/** The branch's periods and school days (the built-in schedule until the branch sets up its own). */
+export async function getTimetableSetup(): Promise<TimetableSetup> {
+  return mapSetup(await unwrap(academicHttpClient.get<ApiTimetableSetup>("/api/timetable/setup")));
+}
+
+export async function saveTimetableSetup(values: TimetableSetupFormValues): Promise<TimetableSetup> {
+  return mapSetup(await unwrap(academicHttpClient.put<ApiTimetableSetup>("/api/timetable/setup", values)));
 }
 
 // ── Rooms ────────────────────────────────────────────────────────────────

@@ -10,16 +10,41 @@ export const DAY_DEFINITIONS: { value: DayOfWeek; label: string; short: string }
   { value: 5, label: "Saturday", short: "Sat" },
 ];
 
+/** "08:00" → "8:00": how a time reads in the grid. */
+export function formatClock(hhmm: string): string {
+  const [h = "0", m = "00"] = hhmm.split(":");
+  return `${Number(h)}:${m}`;
+}
+
+export function formatPeriodTime(startTime: string, endTime: string): string {
+  return `${formatClock(startTime)} - ${formatClock(endTime)}`;
+}
+
+const period = (periodNumber: number, label: string, startTime: string, endTime: string, isBreak?: boolean): PeriodDefinition => ({
+  periodNumber,
+  label,
+  startTime,
+  endTime,
+  time: formatPeriodTime(startTime, endTime),
+  ...(isBreak ? { isBreak } : {}),
+});
+
+/**
+ * The schedule every branch starts with (until it sets up its own under Timetable → Periods). Must match
+ * AcademicService's TimetableSetup.DefaultPeriods.
+ */
 export const PERIOD_DEFINITIONS: PeriodDefinition[] = [
-  { periodNumber: 1, label: "Period 1", time: "8:00 - 8:40" },
-  { periodNumber: 2, label: "Period 2", time: "8:40 - 9:20" },
-  { periodNumber: 3, label: "Period 3", time: "9:20 - 10:00" },
-  { periodNumber: 4, label: "Period 4", time: "10:00 - 10:40" },
-  { periodNumber: 5, label: "Lunch Break", time: "10:40 - 11:20", isBreak: true },
-  { periodNumber: 6, label: "Period 5", time: "11:20 - 12:00" },
-  { periodNumber: 7, label: "Period 6", time: "12:00 - 12:40" },
-  { periodNumber: 8, label: "Period 7", time: "12:40 - 13:20" },
+  period(1, "Period 1", "08:00", "08:40"),
+  period(2, "Period 2", "08:40", "09:20"),
+  period(3, "Period 3", "09:20", "10:00"),
+  period(4, "Period 4", "10:00", "10:40"),
+  period(5, "Lunch Break", "10:40", "11:20", true),
+  period(6, "Period 5", "11:20", "12:00"),
+  period(7, "Period 6", "12:00", "12:40"),
+  period(8, "Period 7", "12:40", "13:20"),
 ];
+
+export const DEFAULT_WORKING_DAYS: DayOfWeek[] = [0, 1, 2, 3, 4, 5];
 
 export const TEACHING_PERIODS = PERIOD_DEFINITIONS.filter((p) => !p.isBreak);
 

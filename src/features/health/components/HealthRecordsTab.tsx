@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { formatRelativeDay } from "@/utils/format";
 import { listHealthRecords } from "../api";
@@ -96,10 +95,7 @@ export default function HealthRecordsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Search by name, class, or admission no." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
+        <SearchInput value={search} onValueChange={setSearch} placeholder="Search by name, class, or admission no." containerClassName="sm:w-72" />
         <p className="text-xs text-muted-foreground max-w-sm text-right">
           Blood group, allergies, and conditions are edited from a student's own profile in Student Management.
         </p>

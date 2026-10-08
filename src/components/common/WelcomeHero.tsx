@@ -26,8 +26,10 @@ export function WelcomeHero({
 }) {
   const today = new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   return (
-    <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="min-w-0 space-y-1">
+    // Wraps rather than squeezes: the greeting keeps at least ~20rem, and when the controls don't fit beside it
+    // (a super admin's toolbar is wide) they drop onto their own line instead of crushing the title.
+    <section className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+      <div className="min-w-0 flex-1 basis-80 space-y-1">
         <p className="flex flex-wrap items-center gap-x-2 text-[13px] font-medium text-muted-foreground">
           <span>{today}</span>
           <span aria-hidden="true" className="h-1 w-1 rounded-full bg-muted-foreground/50" />
@@ -36,7 +38,7 @@ export function WelcomeHero({
         <h1 className="text-2xl font-semibold leading-8 tracking-[-0.015em] text-foreground">{title}</h1>
         {subtitle && <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{subtitle}</p>}
       </div>
-      {aside && <div className="shrink-0">{aside}</div>}
+      {aside && <div className="min-w-0 max-w-full">{aside}</div>}
     </section>
   );
 }

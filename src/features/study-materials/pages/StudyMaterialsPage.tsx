@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { SearchInput } from "@/components/ui/search-input";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/states";
@@ -238,30 +239,16 @@ export default function StudyMaterialsPage() {
       )}
 
       {view === "mine" && (
-        <div role="radiogroup" aria-label="Status" className="inline-flex max-w-full gap-1 overflow-x-auto rounded-lg bg-secondary p-1">
-          {(
-            [
-              ["published", "Published", counts.data?.published],
-              ["draft", "Drafts", counts.data?.drafts],
-              ["archived", "Archived", counts.data?.archived],
-            ] as const
-          ).map(([value, label, count]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={status === value}
-              onClick={() => setStatus(value)}
-              className={cn(
-                "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors cursor-pointer",
-                status === value ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {label}
-              {count !== undefined && <span className="tabular-nums text-xs text-muted-foreground">{count}</span>}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl<StudyMaterialStatus>
+          aria-label="Status"
+          value={status}
+          onValueChange={setStatus}
+          options={[
+            { value: "published", label: "Published", count: counts.data?.published },
+            { value: "draft", label: "Drafts", count: counts.data?.drafts },
+            { value: "archived", label: "Archived", count: counts.data?.archived },
+          ]}
+        />
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">

@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown, GraduationCap, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { ChevronDown, Mail, PanelLeftClose, PanelLeftOpen, Phone, X } from "lucide-react";
+import BrandLogo from "@/components/common/BrandLogo";
+import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { cn } from "@/utils/cn";
 import { useUiStore } from "@/store/useUiStore";
 import { useAuthStore } from "@/store/authStore";
@@ -124,6 +126,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
   const isSuperAdmin = user?.role === "superAdmin";
   const canSwitchBranch = isSuperAdmin || hasAllBranchAccess(user);
   const { coreItems, sections } = useVisibleNav();
+  const branding = useTenantBranding();
 
   return (
     <TooltipProvider>
@@ -132,16 +135,14 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
         animate={{ width: isSidebarCollapsed ? W_COLLAPSED : W_EXPANDED }}
         transition={SPRING}
         aria-label="Main navigation"
-        className="flex h-dvh shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar"
+        className="flex h-full shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar"
       >
         <div className={cn("flex h-14 shrink-0 items-center border-b border-sidebar-border", isSidebarCollapsed ? "justify-center" : "gap-2.5 px-4")}>
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">
-            <GraduationCap className="h-[18px] w-[18px]" aria-hidden="true" />
-          </div>
+          <BrandLogo />
           {!isSidebarCollapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-bold leading-none tracking-tight text-foreground">School Sphere</p>
-              <p className="mt-1 truncate text-[11px] leading-none text-muted-foreground">School management</p>
+              <p className="truncate text-[15px] font-bold leading-none tracking-tight text-foreground">{branding.name}</p>
+              <p className="mt-1 truncate text-[11px] leading-none text-muted-foreground">{branding.isTenant ? "Powered by School Sphere" : "School management"}</p>
             </div>
           )}
           {onClose && (
@@ -183,6 +184,23 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
             ),
           )}
         </nav>
+
+        {!isSidebarCollapsed && (branding.email || branding.contactNumber) && (
+          <div className="shrink-0 space-y-1 border-t border-sidebar-border px-4 py-3 text-xs text-muted-foreground" aria-label="School contact">
+            {branding.email && (
+              <a href={`mailto:${branding.email}`} className="flex items-center gap-2 truncate hover:text-foreground">
+                <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{branding.email}</span>
+              </a>
+            )}
+            {branding.contactNumber && (
+              <a href={`tel:${branding.contactNumber.replace(/[^+d]/g, "")}`} className="flex items-center gap-2 truncate hover:text-foreground">
+                <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{branding.contactNumber}</span>
+              </a>
+            )}
+          </div>
+        )}
 
         {!forceExpanded && (
           <div className={cn("flex shrink-0 border-t border-sidebar-border p-2", isSidebarCollapsed ? "justify-center" : "justify-end")}>

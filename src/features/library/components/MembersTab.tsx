@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,10 @@ import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listStudents } from "@/features/students/api";
 import { listStaff } from "@/features/staff/api";
-import { createMember, deleteMember, listMembers, updateMember } from "../api";
+import { bulkCreateMembers, createMember, deleteMember, listMembers, updateMember } from "../api";
 import { MEMBER_STATUS_CONFIG } from "../constants";
 import type { LibraryMember, LibraryMemberFormValues } from "../types";
+import BulkMembersDialog from "./BulkMembersDialog";
 import MemberFormDialog from "./MemberFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
@@ -22,6 +23,7 @@ export default function MembersTab() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<LibraryMember | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LibraryMember | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const { data: members = [], isLoading, isError, refetch } = useQuery({ queryKey: ["library", "members"], queryFn: listMembers });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -49,6 +51,20 @@ export default function MembersTab() {
       setFormOpen(false);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add member"),
+  });
+
+  const bulkMutation = useMutation({
+    mutationFn: (people: { personType: "student" | "staff"; personId: string }[]) => bulkCreateMembers(people),
+    onSuccess: (result) => {
+      invalidate();
+      toast.success(
+        result.alreadyMembers > 0
+          ? `Added ${result.created} ${result.created === 1 ? "member" : "members"} (${result.alreadyMembers} already members)`
+          : `Added ${result.created} ${result.created === 1 ? "member" : "members"}`,
+      );
+      setBulkOpen(false);
+    },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const updateMutation = useMutation({
@@ -123,15 +139,21 @@ export default function MembersTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">Borrowers linked to existing student and staff records.</p>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          New member
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            <Users className="w-4 h-4" />
+            Add in bulk
+          </Button>
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            New member
+          </Button>
+        </div>
       </DataTableToolbar>
 
       <DataTable searchable columns={columns} data={members} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No library members yet." />
@@ -150,6 +172,18 @@ export default function MembersTab() {
         onSubmit={async (values) => {
           if (editing) await updateMutation.mutateAsync({ id: editing.id, values });
           else await createMutation.mutateAsync(values);
+        }}
+      />
+
+      <BulkMembersDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        students={students}
+        staff={staff}
+        members={members}
+        submitting={bulkMutation.isPending}
+        onSubmit={async (people) => {
+          await bulkMutation.mutateAsync(people).catch(() => undefined);
         }}
       />
 

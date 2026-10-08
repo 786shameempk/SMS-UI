@@ -1,3 +1,5 @@
+import { LETTERHEAD_CSS, letterheadHtml } from "@/features/tenant/printLetterhead";
+import type { TenantBranding } from "@/features/tenant/branding";
 import type { ExamPaper, GeneratedQuestion, Homework, LessonPlan, Worksheet } from "./types";
 
 /** AI output is untrusted text: every value is escaped before it goes into printable HTML. */
@@ -58,11 +60,14 @@ export function homeworkToHtml(h: Homework): string {
 const PRINT_STYLES =
   "body{font-family:Arial,sans-serif;margin:24px;color:#111}h1{font-size:20px}h2{font-size:16px;margin-top:20px}.q{margin:10px 0}.m,.a{color:#555;font-size:12px}table{border-collapse:collapse}td{border:1px solid #bbb;padding:4px 8px;font-size:13px}";
 
-/** Opens the browser's print dialog (Save as PDF) for a self-contained document. Returns false when the pop-up was blocked. */
-export function printDocument(title: string, bodyHtml: string): boolean {
+/**
+ * Opens the browser's print dialog (Save as PDF) for a self-contained document, under the school's letterhead when
+ * its branding is given. Returns false when the pop-up was blocked.
+ */
+export function printDocument(title: string, bodyHtml: string, branding?: TenantBranding): boolean {
   const win = window.open("", "_blank");
   if (!win) return false;
-  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${PRINT_STYLES}</style></head><body>${bodyHtml}</body></html>`);
+  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${PRINT_STYLES}${LETTERHEAD_CSS}</style></head><body>${branding ? letterheadHtml(branding) : ""}${bodyHtml}</body></html>`);
   win.document.close();
   win.focus();
   win.print();

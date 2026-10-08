@@ -26,10 +26,26 @@ describe("authentication api", () => {
 
     const result = await auth.login({ email: "asha@school.test", password: "x", rememberMe: true });
 
-    expect(calls[0].body).toEqual({ email: "asha@school.test", password: "x" });
+    expect(calls[0].body).toEqual({ email: "asha@school.test", password: "x", subdomain: null });
     expect(result.user).toMatchObject({ name: "Asha Nair", role: "teacher", tenantId: "tenant-a", allBranchAccess: false });
     expect(result.permissions).toMatchObject({ students: true, attendance: true, fees: false });
     expect([result.token, result.refreshToken]).toEqual(["a", "r"]);
+  });
+
+  it("sends the school subdomain the page was opened on so the server can check membership", async () => {
+    const original = window.location;
+    Object.defineProperty(window, "location", { value: { ...original, hostname: "greenvalley.sms-schoolsphere.com" }, writable: true, configurable: true });
+    try {
+      const calls = stubClient(authHttpClient, {
+        "POST /api/auth/login": { accessToken: "a", refreshToken: "r", accessTokenExpiresAt: "", user: apiUser() },
+      });
+
+      await auth.login({ email: "asha@school.test", password: "x" });
+
+      expect(calls[0].body).toMatchObject({ subdomain: "greenvalley" });
+    } finally {
+      Object.defineProperty(window, "location", { value: original, writable: true, configurable: true });
+    }
   });
 
   it("treats unknown roles as a school's custom staff role", async () => {
@@ -180,14 +196,19 @@ describe("administration: branches", () => {
       "DELETE /api/branches/tenant%20a": null,
     });
 
-    expect((await branches.listBranches())[0]).toMatchObject({ status: "active", address: undefined });
-    const created = await branches.createBranch({ name: "North", code: "N", address: "", phone: "99", status: "inactive" });
-    await branches.updateBranch("tenant a", { name: "North", code: "N", address: "Road", phone: "", status: "active" });
+    expect((await branches.listBranches())[0]).toMatchObject({ status: "active", address: undefined, teacherClassScope: "assigned_and_subject" });
+    const created = await branches.createBranch({ name: "North", code: "N", address: "", phone: "99", status: "inactive", teacherClassScope: "assigned" });
+    await branches.updateBranch("tenant a", { name: "North", code: "N", address: "Road", phone: "", status: "active", teacherClassScope: "all" });
     await branches.deleteBranch("tenant a");
 
     expect(created.status).toBe("inactive");
-    expect(calls[1].body).toEqual({ name: "North", code: "N", address: null, phone: "99", status: "Inactive" });
-    expect(calls[2].body).toMatchObject({ address: "Road", phone: null, status: "Active" });
+    expect(calls[1].body).toEqual({ name: "North", code: "N", address: null, phone: "99", status: "Inactive", teacherClassScope: "Assigned" });
+    expect(calls[2].body).toMatchObject({ address: "Road", phone: null, status: "Active", teacherClassScope: "All" });
+  });
+
+  it("reads the teacher class scope the server sends", async () => {
+    stubClient(authHttpClient, { "GET /api/branches": [{ ...apiBranch, teacherClassScope: "All" }, { ...apiBranch, id: "b2", teacherClassScope: "Assigned" }] });
+    expect((await branches.listBranches()).map((b) => b.teacherClassScope)).toEqual(["all", "assigned"]);
   });
 });
 

@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#ECA427" />
+<meta name="description" content="SMS-SchoolSphere: one cloud platform for school administration, academics, fees, communication and AI tools. Modules, benefits, plans and how to book a demo." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<title>SMS-SchoolSphere Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: a product brochure read top to bottom. A sticky section bar, then alternating plain and tinted bands
+     at one 1120px measure; the screenshots section is the one place the page shows the product itself. */
+  :root {
+    --bg: #F7F6F2;
+    --band: #EFEDE6;
+    --surface: #FFFFFF;
+    --ink: #1D2028;
+    --muted: #5B606E;
+    --line: #E2DFD5;
+    --brand: #D68F14;
+    --brand-deep: #9A5E10;
+    --brand-soft: #FBEFD7;
+    --on-brand: #FFFFFF;
+    --good: #2F8A5B;
+    --good-soft: #E1F2E8;
+    --bad: #C2503A;
+    --bad-soft: #F8E3DE;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15161A; --band: #1A1C21; --surface: #22242B; --ink: #EDEBE6; --muted: #A4A7B1; --line: #33353E;
+      --brand: #ECA427; --brand-deep: #F3BC5A; --brand-soft: #3A2E17; --on-brand: #1B1406;
+      --good: #5CC08A; --good-soft: #193326; --bad: #E58571; --bad-soft: #3B221D;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15161A; --band: #1A1C21; --surface: #22242B; --ink: #EDEBE6; --muted: #A4A7B1; --line: #33353E;
+    --brand: #ECA427; --brand-deep: #F3BC5A; --brand-soft: #3A2E17; --on-brand: #1B1406;
+    --good: #5CC08A; --good-soft: #193326; --bad: #E58571; --bad-soft: #3B221D;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1rem/1.6 var(--body); }
+  h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.015em; }
+  p { margin: 0; }
+  a { color: var(--brand-deep); }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 2px;
+  }
+  .container { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+  .band { background: var(--band); }
+  section.block { padding-block: 72px; }
+  .head { display: grid; gap: 10px; max-width: 680px; margin-bottom: 36px; }
+  .eyebrow { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand-deep); }
+  .head h2 { font-size: clamp(1.7rem, 3.6vw, 2.4rem); font-weight: 700; }
+  .head p { color: var(--muted); font-size: 1.05rem; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; cursor: pointer;
+    font: 600 0.95rem/1 var(--body); padding: 13px 20px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  }
+  .btn:hover { border-color: var(--brand); }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+  .btn.primary:hover { filter: brightness(1.05); }
+  .btn svg { width: 16px; height: 16px; flex: none; }
+
+  /* Top bar */
+  .topbar {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .container { display: flex; align-items: center; gap: 20px; height: 60px; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font: 800 1.05rem/1 var(--display); flex: none; }
+  .logo svg { width: 30px; height: 30px; }
+  .nav { display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+  .nav a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: 0.9rem; white-space: nowrap; }
+  .nav a:hover { color: var(--ink); }
+  .topbar .btn { padding: 9px 14px; font-size: 0.85rem; flex: none; }
+  @media (max-width: 900px) { .nav { display: none; } .topbar .container { justify-content: space-between; } }
+
+  /* Hero */
+  .hero { padding-block: 64px 72px; }
+  .hero-grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 48px; align-items: center; }
+  .hero-copy { display: grid; gap: 22px; min-width: 0; }
+  .hero h1 { font-size: clamp(2.2rem, 5.4vw, 3.6rem); font-weight: 800; line-height: 1.04; }
+  .hero h1 em { font-style: normal; color: var(--brand-deep); }
+  .hero-lead { font-size: 1.12rem; color: var(--muted); max-width: 56ch; }
+  .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; border-top: 1px solid var(--line); padding-top: 20px; }
+  .stat b { display: block; font: 800 1.7rem/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 0.82rem; color: var(--muted); }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) { .stats { grid-template-columns: repeat(2, 1fr); row-gap: 16px; } }
+
+  /* Product window (used by hero + screenshots) */
+  .window {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 30px 60px -36px rgb(40 30 10 / 0.45);
+  }
+  .window-bar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .window-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+  .window-bar span { margin-left: 10px; font: 500 0.72rem/1 var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app { display: grid; grid-template-columns: 150px 1fr; min-height: 330px; }
+  .side { background: var(--band); border-right: 1px solid var(--line); padding: 14px 10px; display: grid; align-content: start; gap: 4px; }
+  .side div { font-size: 0.75rem; padding: 6px 8px; border-radius: 6px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side div.on { background: var(--brand-soft); color: var(--ink); font-weight: 600; }
+  .main { padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .main h4 { margin: 0; font: 700 0.95rem/1.2 var(--display); }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+  .tile small { display: block; font-size: 0.66rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile b { font: 700 1rem/1.3 var(--display); font-variant-numeric: tabular-nums; }
+  .chart { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 6px; }
+  .chart small { font-size: 0.68rem; color: var(--muted); }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+  .bars i { flex: 1; background: var(--brand); border-radius: 3px 3px 0 0; opacity: 0.85; }
+  .bars i:nth-child(odd) { opacity: 0.55; }
+  .rows { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .rows div { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.74rem; padding: 7px 10px; border-top: 1px solid var(--line); }
+  .rows div:first-child { border-top: 0; color: var(--muted); font-weight: 600; background: var(--band); }
+  .rows span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill { font-size: 0.66rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; flex: none; }
+  .pill.ok { background: var(--good-soft); color: var(--good); }
+  .pill.due { background: var(--bad-soft); color: var(--bad); }
+  .pill.wait { background: var(--brand-soft); color: var(--brand-deep); }
+  .chat { display: grid; gap: 8px; }
+  .msg { font-size: 0.78rem; padding: 9px 12px; border-radius: 10px; max-width: 85%; }
+  .msg.q { justify-self: end; background: var(--brand); color: var(--on-brand); }
+  .msg.a { background: var(--band); border: 1px solid var(--line); }
+  .msg.a small { display: block; margin-top: 6px; font-size: 0.66rem; color: var(--muted); }
+  @media (max-width: 560px) {
+    .app { grid-template-columns: 1fr; }
+    .side { display: none; }
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Problems */
+  .problems { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .problem { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 12px; min-width: 0; }
+  .problem .before, .problem .after { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+  .problem .before { color: var(--muted); }
+  .problem .after { font-weight: 600; }
+  .mark { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 0.75rem/1 var(--body); }
+  .before .mark { background: var(--bad-soft); color: var(--bad); }
+  .after .mark { background: var(--good-soft); color: var(--good); }
+  @media (max-width: 720px) { .problems { grid-template-columns: 1fr; } }
+
+  /* Features + modules */
+  .features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 40px; }
+  .feature { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 8px; align-content: start; }
+  .feature .ico { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-soft); color: var(--brand-deep); display: grid; place-items: center; }
+  .feature .ico svg { width: 20px; height: 20px; }
+  .feature h3 { font-size: 1.05rem; font-weight: 700; }
+  .feature p { color: var(--muted); font-size: 0.92rem; }
+  .feature.ai { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+  .feature.ai p { color: var(--on-brand); opacity: 0.9; }
+  .feature.ai .ico { background: rgb(255 255 255 / 0.2); color: var(--on-brand); }
+  @media (max-width: 960px) { .features { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .features { grid-template-columns: 1fr; } }
+
+  .catalog-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .catalog-title h3 { font-size: 1.3rem; }
+  .catalog-title span { font: 500 0.8rem/1 var(--mono); color: var(--muted); }
+  .groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .group { border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 12px; align-content: start; background: var(--surface); }
+  .group h4 { margin: 0; font: 700 1rem/1.2 var(--display); display: flex; justify-content: space-between; gap: 8px; }
+  .group h4 span { font: 500 0.75rem/1.4 var(--mono); color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 0.82rem; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: var(--band); border: 1px solid var(--line); }
+  @media (max-width: 900px) { .groups { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .groups { grid-template-columns: 1fr; } }
+
+  /* AI */
+  .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .ai-card { border-top: 3px solid var(--brand); padding-top: 14px; display: grid; gap: 6px; align-content: start; }
+  .ai-card small { font: 500 0.7rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--brand-deep); }
+  .ai-card h3 { font-size: 1.05rem; font-weight: 700; }
+  .ai-card p { color: var(--muted); font-size: 0.92rem; }
+  .guards { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .guard { display: inline-flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 500; padding: 8px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+  .guard::before { content: "✓"; color: var(--good); font-weight: 700; }
+
+  /* Benefits by role */
+  .roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .role { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 10px; align-content: start; }
+  .role small { font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--brand-deep); }
+  .role h3 { font-size: 1.1rem; font-weight: 700; }
+  .role ul, .plan ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+  .role li, .plan li { display: grid; grid-template-columns: 16px 1fr; gap: 8px; font-size: 0.92rem; color: var(--muted); }
+  .role li::before, .plan li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); margin-top: 0.55em; }
+  .apps { margin-top: 28px; display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; padding: 22px; border-radius: 14px; background: var(--brand-soft); }
+  .apps h3 { font-size: 1.15rem; }
+  .apps p { color: var(--muted); font-size: 0.95rem; }
+  .apps .phone { width: 46px; height: 46px; border-radius: 12px; background: var(--brand); color: var(--on-brand); display: grid; place-items: center; }
+  .apps .phone svg { width: 24px; height: 24px; }
+  @media (max-width: 960px) { .roles { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .roles { grid-template-columns: 1fr; } .apps { grid-template-columns: 1fr; } }
+
+  /* Screenshots */
+  .shots { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: start; }
+  .tabs { display: grid; gap: 8px; }
+  .tab {
+    text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; font: inherit;
+  }
+  .tab b { font: 700 0.98rem/1.2 var(--display); }
+  .tab span { font-size: 0.84rem; color: var(--muted); }
+  .tab[aria-selected="true"] { border-color: var(--brand); box-shadow: inset 4px 0 0 var(--brand); }
+  .shot-note { margin-top: 16px; font-size: 0.85rem; color: var(--muted); }
+  .steps { margin-top: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: step; }
+  .step { display: grid; gap: 6px; padding: 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+  .step::before { counter-increment: step; content: "Step " counter(step); font: 500 0.72rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand-deep); }
+  .step h3 { font-size: 1.05rem; }
+  .step p { color: var(--muted); font-size: 0.92rem; }
+  @media (max-width: 860px) { .shots { grid-template-columns: 1fr; } .tabs { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Why */
+  .why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .why div { background: var(--surface); padding: 22px; display: grid; gap: 8px; align-content: start; }
+  .why h3 { font-size: 1.08rem; font-weight: 700; }
+  .why p { color: var(--muted); font-size: 0.93rem; }
+  @media (max-width: 860px) { .why { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .why { grid-template-columns: 1fr; } }
+
+  /* Plans */
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+  .plan { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 16px; grid-template-rows: auto auto 1fr auto; }
+  .plan.pop { border: 2px solid var(--brand); }
+  .plan-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .plan h3 { font-size: 1.4rem; font-weight: 800; }
+  .plan .tag { font: 600 0.7rem/1 var(--body); padding: 5px 9px; border-radius: 999px; background: var(--brand); color: var(--on-brand); }
+  .plan .sub { color: var(--muted); font-size: 0.93rem; }
+  .plan .price { font: 600 0.95rem/1.3 var(--body); color: var(--brand-deep); padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
+  .plan li { color: var(--ink); }
+  .assure { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .assure div { display: grid; gap: 4px; }
+  .assure b { font-weight: 700; }
+  .assure span { color: var(--muted); font-size: 0.92rem; }
+  @media (max-width: 860px) { .plans, .assure { grid-template-columns: 1fr; } }
+
+  /* Demo + contact */
+  .demo-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; align-items: start; }
+  .demo-copy { display: grid; gap: 18px; min-width: 0; }
+  .demo-copy ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .demo-copy li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; }
+  .demo-copy li::before { content: "✓"; width: 22px; height: 22px; border-radius: 50%; background: var(--good-soft); color: var(--good); display: grid; place-items: center; font-weight: 700; font-size: 0.75rem; }
+  form { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 14px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: grid; gap: 6px; min-width: 0; }
+  label { font-size: 0.85rem; font-weight: 600; }
+  label i { font-style: normal; color: var(--muted); font-weight: 400; }
+  input, select, textarea {
+    font: inherit; font-size: 0.95rem; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%;
+  }
+  textarea { resize: vertical; min-height: 88px; }
+  .form-note { font-size: 0.8rem; color: var(--muted); }
+  .status { font-size: 0.92rem; padding: 12px 14px; border-radius: 10px; }
+  .status.ok { background: var(--good-soft); color: var(--good); }
+  .status.err { background: var(--bad-soft); color: var(--bad); }
+  form .btn { width: 100%; }
+  form .btn[disabled] { opacity: 0.6; cursor: progress; }
+  @media (max-width: 860px) { .demo-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } form { padding: 18px; } }
+
+  .contact { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .contact > div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+  .contact small { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .contact .val { font-weight: 600; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .copy { font: 600 0.72rem/1 var(--body); padding: 5px 9px; border-radius: 7px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+  .copy:hover { color: var(--ink); border-color: var(--brand); }
+  @media (max-width: 860px) { .contact { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .contact { grid-template-columns: 1fr; } }
+
+  footer { border-top: 1px solid var(--line); padding-block: 28px; color: var(--muted); font-size: 0.88rem; }
+  footer .container { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container">
+    <a class="logo" href="#top">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ECA427"/><stop offset="1" stop-color="#A06212"/></linearGradient></defs>
+        <rect width="32" height="32" rx="8" fill="url(#lg)"/>
+        <g transform="translate(5 5) scale(0.9167)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>
+        </g>
+      </svg>
+      SMS-SchoolSphere
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#problems">Problems we solve</a>
+      <a href="#modules">Modules</a>
+      <a href="#benefits">Benefits</a>
+      <a href="#screens">Screens</a>
+      <a href="#why">Why us</a>
+      <a href="#plans">Plans</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="btn primary" href="#demo">Request a demo</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- What SchoolSphere is -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow">What SchoolSphere is</div>
+        <h1>The whole school, <em>in one place.</em></h1>
+        <p class="hero-lead">SMS-SchoolSphere is a cloud-based school management platform. It brings administrators, teachers, students and parents together, covering admissions, attendance, academics, fees, communication and online learning, with AI tools that take routine work off your staff.</p>
+        <div class="hero-ctas">
+          <a class="btn primary" href="#demo">Book a free demo</a>
+          <a class="btn" href="https://sms-schoolsphere.com/login" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            Try the live demo
+          </a>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>35</b><span>modules</span></div>
+          <div class="stat"><b>4</b><span>roles served</span></div>
+          <div class="stat"><b>3</b><span>mobile apps</span></div>
+          <div class="stat"><b>1</b><span>login for everyone</span></div>
+        </div>
+      </div>
+
+      <div class="window" aria-label="Illustration of the SchoolSphere dashboard">
+        <div class="window-bar"><i></i><i></i><i></i><span>yourschool.sms-schoolsphere.com/dashboard</span></div>
+        <div class="app">
+          <div class="side">
+            <div class="on">Dashboard</div><div>Students</div><div>Attendance</div><div>Examinations</div><div>Fee Management</div><div>Online Classes</div><div>Communication</div><div>Reports</div><div>Ask School AI</div>
+          </div>
+          <div class="main">
+            <h4>Good morning, Principal</h4>
+            <div class="tiles">
+              <div class="tile"><small>Students</small><b>1,248</b></div>
+              <div class="tile"><small>Present today</small><b>94.2%</b></div>
+              <div class="tile"><small>Fees collected</small><b>₹18.6L</b></div>
+              <div class="tile"><small>Classes live</small><b>6</b></div>
+            </div>
+            <div class="chart">
+              <small>Attendance, last 12 school days</small>
+              <div class="bars"><i style="height:82%"></i><i style="height:88%"></i><i style="height:91%"></i><i style="height:86%"></i><i style="height:93%"></i><i style="height:95%"></i><i style="height:90%"></i><i style="height:94%"></i><i style="height:92%"></i><i style="height:96%"></i><i style="height:93%"></i><i style="height:94%"></i></div>
+            </div>
+            <div class="rows">
+              <div><span>Needs attention</span><span>Status</span></div>
+              <div><span>Grade 8B attendance below 85% this week</span><span class="pill wait">Review</span></div>
+              <div><span>42 fee invoices overdue</span><span class="pill due">Overdue</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problems it solves -->
+  <section class="block band" id="problems">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Problems it solves</div>
+        <h2>Less paperwork. Fewer phone calls. Clearer answers.</h2>
+        <p>Most schools run on registers, spreadsheets, WhatsApp groups and separate fee software. SchoolSphere replaces that patchwork with one system everyone shares.</p>
+      </div>
+      <div class="problems">
+        <div class="problem">
+          <div class="before"><span class="mark">✕</span><span>Student records spread across files, registers and spreadsheets.</span></div>
+          <div class="after"><span class="mark">✓</span><span>One profile per student: admission, guardians, documents, attendance, marks and fees.</span></div>
+        </div>
+        <div class="problem">
+          <div class="before"><span class="mark">✕</span><span>Attendance taken on paper, then typed up again at the end of the month.</span></div>
+          <div class="after"><span class="mark">✓</span><span>Teachers mark a class in a couple of taps, even offline, and reports build themselves.</span></div>
+        </div>
+        <div class="problem">
+          <div class="before"><span class="mark">✕</span><span>Fee collection tracked by hand, with overdue amounts found too late.</span></div>
+          <div class="after"><span class="mark">✓</span><span>Fee structures, invoices, online payments, receipts and overdue tracking in one place.</span></div>
+        </div>
+        <div class="problem">
+          <div class="before"><span class="mark">✕</span><span>Parents call the office to ask about homework, attendance and fees.</span></div>
+          <div class="after"><span class="mark">✓</span><span>Parents see it all in the app, get notifications and can ask School AI.</span></div>
+        </div>
+        <div class="problem">
+          <div class="before"><span class="mark">✕</span><span>Teachers spend free periods writing question papers and report remarks.</span></div>
+          <div class="after"><span class="mark">✓</span><span>AI drafts papers, worksheets and remarks in minutes; teachers review and approve.</span></div>
+        </div>
+        <div class="problem">
+          <div class="before"><span class="mark">✕</span><span>Management has no live view of how the school is doing.</span></div>
+          <div class="after"><span class="mark">✓</span><span>Live dashboards and ready-made reports across attendance, academics and fees.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key modules -->
+  <section class="block" id="modules">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Key modules</div>
+        <h2>Everything a school runs on</h2>
+        <p>Start with the modules you need today and switch on more as your school grows.</p>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></div>
+          <h3>Student Management</h3>
+          <p>Profiles, admissions, enrollment, documents and academic records for every student.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></div>
+          <h3>Attendance</h3>
+          <p>Mark a class in seconds, with daily, monthly and yearly views for students and staff.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14M12 6v14M8 8v12M4 4v16"/></svg></div>
+          <h3>Academics</h3>
+          <p>Classes, subjects, timetables, homework, examinations and report cards that stay in sync.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></div>
+          <h3>Fees &amp; Accounts</h3>
+          <p>Fee structures, invoices, online payments, receipts, accounting and payroll.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></div>
+          <h3>Parent Communication</h3>
+          <p>Announcements and notifications by app, email or SMS, plus a parent portal.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></div>
+          <h3>Online Classes &amp; Exams</h3>
+          <p>Live video classes with recording, and online exams with automatic marking.</p>
+        </div>
+        <div class="feature">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
+          <h3>Reports &amp; Analytics</h3>
+          <p>Live dashboards and ready-made reports that turn daily data into clear answers.</p>
+        </div>
+        <div class="feature ai">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"/><path d="M19 17v4M17 19h4"/></svg></div>
+          <h3>AI Assistant &amp; Teacher Tools</h3>
+          <p>Ask School AI about fees, attendance or exams, and draft papers, worksheets and remarks.</p>
+        </div>
+      </div>
+
+      <div class="catalog-title"><h3>The full module catalog</h3><span>35 MODULES IN 6 AREAS</span></div>
+      <div class="groups">
+        <div class="group">
+          <h4>Teaching &amp; learning <span>8</span></h4>
+          <div class="chips"><span class="chip">Academic Setup</span><span class="chip">Timetable</span><span class="chip">Attendance</span><span class="chip">Homework</span><span class="chip">Examinations</span><span class="chip">Online Exams</span><span class="chip">Online Classes</span><span class="chip">Study Materials</span></div>
+        </div>
+        <div class="group">
+          <h4>Students &amp; parents <span>5</span></h4>
+          <div class="chips"><span class="chip">Students</span><span class="chip">Parent Portal</span><span class="chip">Talent Showcase</span><span class="chip">Certificate Generator</span><span class="chip">Health &amp; Medical</span></div>
+        </div>
+        <div class="group">
+          <h4>Staff &amp; finance <span>6</span></h4>
+          <div class="chips"><span class="chip">Teachers</span><span class="chip">Staff Management</span><span class="chip">Payroll</span><span class="chip">Fee Management</span><span class="chip">Accounting</span><span class="chip">Inventory Management</span></div>
+        </div>
+        <div class="group">
+          <h4>Campus operations <span>6</span></h4>
+          <div class="chips"><span class="chip">Transport Management</span><span class="chip">Library Management</span><span class="chip">Hostel Management</span><span class="chip">Visitor Management</span><span class="chip">Complaint / Help Desk</span><span class="chip">Surveys &amp; Feedback</span></div>
+        </div>
+        <div class="group">
+          <h4>Communication <span>3</span></h4>
+          <div class="chips"><span class="chip">Communication Center</span><span class="chip">Notifications</span><span class="chip">Calendar</span></div>
+        </div>
+        <div class="group">
+          <h4>Insight &amp; administration <span>7</span></h4>
+          <div class="chips"><span class="chip">Dashboard</span><span class="chip">Reports &amp; Analytics</span><span class="chip">AI Features</span><span class="chip">Branch Management</span><span class="chip">User Management</span><span class="chip">Roles &amp; Permissions</span><span class="chip">Settings</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI -->
+  <section class="block band" id="ai">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Built-in AI</div>
+        <h2>AI that works from your school's own records</h2>
+        <p>Every AI feature reads data with the same permissions as the person using it, and staff review every draft before anyone sees it.</p>
+      </div>
+      <div class="ai-grid">
+        <div class="ai-card"><small>Parents, students, staff</small><h3>Ask School AI</h3><p>Plain-language answers about fees, attendance, timetables, exams and homework, with the source shown.</p></div>
+        <div class="ai-card"><small>Teachers</small><h3>Question papers</h3><p>Pick a class, chapter and difficulty mix. Edit every question, then print, save or assign it.</p></div>
+        <div class="ai-card"><small>Students, parents</small><h3>Study help</h3><p>Explanations, summaries, flashcards and quizzes drawn from the teacher's own class notes.</p></div>
+        <div class="ai-card"><small>Teachers</small><h3>Report remarks</h3><p>Editable remarks for the whole class from marks and observations. Nothing saves until approved.</p></div>
+        <div class="ai-card"><small>Teachers, principals</small><h3>Exam insights</h3><p>Which topics the class found hard, what to reteach, and a progress summary for any student.</p></div>
+      </div>
+      <div class="guards">
+        <span class="guard">Staff review every draft</span>
+        <span class="guard">No student names sent for remarks or analysis</span>
+        <span class="guard">Answers respect each role's access</span>
+        <span class="guard">Usage limits and reports for admins</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section class="block" id="benefits">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Benefits for schools</div>
+        <h2>Designed for every person in the school</h2>
+        <p>Each role signs in to the same platform and sees exactly what it needs.</p>
+      </div>
+      <div class="roles">
+        <div class="role">
+          <small>Administrators</small>
+          <h3>Run every branch from one live view.</h3>
+          <ul><li>Enrollment, fees and staffing at a glance</li><li>Custom roles and permissions</li><li>Branch-by-branch reports and AI usage</li></ul>
+        </div>
+        <div class="role">
+          <small>Teachers</small>
+          <h3>Less paperwork, more teaching.</h3>
+          <ul><li>Attendance in a couple of taps</li><li>AI question papers, worksheets and remarks</li><li>Live online classes and online exams</li></ul>
+        </div>
+        <div class="role">
+          <small>Students</small>
+          <h3>The school day, always up to date.</h3>
+          <ul><li>Timetable and homework due dates</li><li>AI study help from class materials</li><li>A showcase for their talents</li></ul>
+        </div>
+        <div class="role">
+          <small>Parents</small>
+          <h3>Close to their child's school day.</h3>
+          <ul><li>Attendance, homework and results</li><li>Pay fees online in a few taps</li><li>Live school bus status</li></ul>
+        </div>
+      </div>
+      <div class="apps">
+        <div class="phone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></div>
+        <div>
+          <h3>Three mobile apps for Android and iOS</h3>
+          <p>One for students and parents, one for teachers and one for non-teaching staff. Same school account, instant push notifications, always in sync with the web app.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots / demo -->
+  <section class="block band" id="screens">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Screens &amp; demo</div>
+        <h2>See how it works</h2>
+        <p>A look at the screens schools use every day. For the real thing, open the live demo.</p>
+      </div>
+      <div class="shots">
+        <div class="tabs" role="tablist" aria-label="Product screens">
+          <button class="tab" role="tab" id="t-dash" aria-controls="p-dash" aria-selected="true" type="button"><b>Dashboard</b><span>The school at a glance</span></button>
+          <button class="tab" role="tab" id="t-att" aria-controls="p-att" aria-selected="false" type="button"><b>Attendance</b><span>A class marked in seconds</span></button>
+          <button class="tab" role="tab" id="t-fee" aria-controls="p-fee" aria-selected="false" type="button"><b>Fees</b><span>Invoices and payments</span></button>
+          <button class="tab" role="tab" id="t-ai" aria-controls="p-ai" aria-selected="false" type="button"><b>Ask School AI</b><span>Answers from your records</span></button>
+        </div>
+        <div>
+          <div class="window" role="tabpanel" id="p-dash" aria-labelledby="t-dash">
+            <div class="window-bar"><i></i><i></i><i></i><span>Dashboard</span></div>
+            <div class="app">
+              <div class="side"><div class="on">Dashboard</div><div>Students</div><div>Attendance</div><div>Fee Management</div><div>Reports</div></div>
+              <div class="main">
+                <h4>School overview, this term</h4>
+                <div class="tiles">
+                  <div class="tile"><small>Enrolled</small><b>1,248</b></div>
+                  <div class="tile"><small>Staff</small><b>86</b></div>
+                  <div class="tile"><small>Avg attendance</small><b>93.7%</b></div>
+                  <div class="tile"><small>Fees collected</small><b>82%</b></div>
+                </div>
+                <div class="chart">
+                  <small>Fee collection by month (% of term target)</small>
+                  <div class="bars"><i style="height:24%"></i><i style="height:41%"></i><i style="height:58%"></i><i style="height:66%"></i><i style="height:74%"></i><i style="height:82%"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="window" role="tabpanel" id="p-att" aria-labelledby="t-att" hidden>
+            <div class="window-bar"><i></i><i></i><i></i><span>Attendance · Grade 6A · Today</span></div>
+            <div class="app">
+              <div class="side"><div>Dashboard</div><div class="on">Attendance</div><div>Timetable</div><div>Homework</div></div>
+              <div class="main">
+                <h4>Grade 6A, period 1 (32 students)</h4>
+                <div class="rows">
+                  <div><span>Student</span><span>Status</span></div>
+                  <div><span>Aarav Nair</span><span class="pill ok">Present</span></div>
+                  <div><span>Diya Thomas</span><span class="pill ok">Present</span></div>
+                  <div><span>Fathima Rahman</span><span class="pill wait">Late</span></div>
+                  <div><span>Kiran Joseph</span><span class="pill due">Absent</span></div>
+                  <div><span>Meera Krishnan</span><span class="pill ok">Present</span></div>
+                </div>
+                <div class="tiles">
+                  <div class="tile"><small>Present</small><b>30</b></div>
+                  <div class="tile"><small>Late</small><b>1</b></div>
+                  <div class="tile"><small>Absent</small><b>1</b></div>
+                  <div class="tile"><small>Parents notified</small><b>1</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="window" role="tabpanel" id="p-fee" aria-labelledby="t-fee" hidden>
+            <div class="window-bar"><i></i><i></i><i></i><span>Fee Management · Term 2 invoices</span></div>
+            <div class="app">
+              <div class="side"><div>Dashboard</div><div class="on">Fee Management</div><div>Accounting</div><div>Payroll</div></div>
+              <div class="main">
+                <h4>Term 2 tuition fee</h4>
+                <div class="tiles">
+                  <div class="tile"><small>Invoiced</small><b>₹22.7L</b></div>
+                  <div class="tile"><small>Collected</small><b>₹18.6L</b></div>
+                  <div class="tile"><small>Pending</small><b>₹4.1L</b></div>
+                  <div class="tile"><small>Paid online</small><b>71%</b></div>
+                </div>
+                <div class="rows">
+                  <div><span>Invoice</span><span>Status</span></div>
+                  <div><span>INV-2026-0412 · Grade 4B · ₹18,500</span><span class="pill ok">Paid</span></div>
+                  <div><span>INV-2026-0413 · Grade 9A · ₹21,000</span><span class="pill due">Overdue</span></div>
+                  <div><span>INV-2026-0414 · Grade 1C · ₹15,000</span><span class="pill wait">Due 15 Oct</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="window" role="tabpanel" id="p-ai" aria-labelledby="t-ai" hidden>
+            <div class="window-bar"><i></i><i></i><i></i><span>Ask School AI · Parent</span></div>
+            <div class="app">
+              <div class="side"><div>Home</div><div>Homework</div><div>Fees</div><div class="on">Ask School AI</div></div>
+              <div class="main">
+                <h4>Ask School AI</h4>
+                <div class="chat">
+                  <div class="msg q">Is any fee pending for my daughter?</div>
+                  <div class="msg a">Yes. The Term 2 tuition fee of ₹18,500 is due on 15 October. The Term 1 fee is fully paid.<small>Based on: Fee Management, Term 2 invoice</small></div>
+                  <div class="msg q">How was her attendance this month?</div>
+                  <div class="msg a">She was present on 19 of 20 school days (95%). The one absence was on 9 October, with an approved leave request.<small>Based on: Attendance, October</small></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="shot-note">Illustrations with sample data. <a href="https://sms-schoolsphere.com/login" target="_blank" rel="noopener">Open the live demo</a> to try the actual product.</p>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step"><h3>Set up your school</h3><p>Configure branches, classes, users and roles. We help you import what you already have.</p></div>
+        <div class="step"><h3>Connect your community</h3><p>Invite administrators, teachers, students and parents. Each sees what their role needs.</p></div>
+        <div class="step"><h3>Run everything</h3><p>Admissions, classes, fees and communication, day to day, from one system.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section class="block" id="why">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Why SchoolSphere</div>
+        <h2>Why schools choose SchoolSphere</h2>
+      </div>
+      <div class="why">
+        <div><h3>Truly all in one</h3><p>35 modules on one login, so there is no juggling of separate fee, attendance and messaging tools.</p></div>
+        <div><h3>AI with safeguards</h3><p>Useful AI for teachers, parents and students, with staff review and role-based access built in.</p></div>
+        <div><h3>Web and mobile</h3><p>A full web app plus three Android and iOS apps, all in sync. Teachers can take attendance offline.</p></div>
+        <div><h3>Secure by design</h3><p>Role-based access, multi-factor sign-in, audit logs, isolated school data and regular cloud backups.</p></div>
+        <div><h3>Pay for what you use</h3><p>Choose the modules you need today and add more as you grow. Pricing is tailored to your school.</p></div>
+        <div><h3>A team that stays with you</h3><p>Guided onboarding, data migration and staff training from a team with 14+ years in software.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Plans -->
+  <section class="block band" id="plans">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Plans &amp; pricing</div>
+        <h2>A plan for every size of school</h2>
+        <p>Pricing depends on your school's size and the modules you choose, so we share it as a personal quote.</p>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <div class="plan-top"><h3>Starter</h3></div>
+          <p class="sub">Essential tools for getting started</p>
+          <ul><li>Student Management</li><li>Staff Management</li><li>Attendance</li><li>Basic Fees Management</li><li>Basic Reports</li><li>Core School Administration</li></ul>
+          <div class="price">Flexible pricing</div>
+        </div>
+        <div class="plan pop">
+          <div class="plan-top"><h3>Professional</h3><span class="tag">Most popular</span></div>
+          <p class="sub">Advanced tools for growing schools</p>
+          <ul><li>Everything in Starter</li><li>Online Exams</li><li>Advanced Reports</li><li>Parent Portal</li><li>Notifications</li><li>AI-powered features</li><li>Advanced School Management</li></ul>
+          <div class="price">Contact us for pricing</div>
+        </div>
+        <div class="plan">
+          <div class="plan-top"><h3>Enterprise</h3></div>
+          <p class="sub">Flexible solutions for larger institutions</p>
+          <ul><li>Everything in Professional</li><li>Custom Modules</li><li>Advanced Integrations</li><li>Custom Workflows</li><li>Dedicated Support</li><li>Flexible Deployment Options</li><li>Custom Requirements</li></ul>
+          <div class="price">Custom plan</div>
+        </div>
+      </div>
+      <div class="assure">
+        <div><b>Tailored to your needs</b><span>Pick the modules you need today and add more as your school grows.</span></div>
+        <div><b>Transparent, personal quotes</b><span>Pricing is shared directly with your school, based on size and scope.</span></div>
+        <div><b>Guided onboarding</b><span>We help with setup, data migration and staff training.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo request -->
+  <section class="block" id="demo">
+    <div class="container demo-grid">
+      <div class="demo-copy">
+        <div class="eyebrow">Demo request</div>
+        <h2 style="font-size: clamp(1.7rem, 3.6vw, 2.4rem);">Book a free demo for your school</h2>
+        <p style="color: var(--muted);">Tell us a little about your school and we will set up a session at a time that suits you.</p>
+        <ul>
+          <li>A 30-minute live walkthrough tailored to your school</li>
+          <li>See admissions, fees, attendance, exams and online classes working together</li>
+          <li>Get answers on data migration and pricing</li>
+        </ul>
+      </div>
+
+      <form id="demo-form" novalidate>
+        <div class="row">
+          <div class="field"><label for="d-name">Your name</label><input id="d-name" name="name" autocomplete="name" required maxlength="150"></div>
+          <div class="field"><label for="d-school">School name</label><input id="d-school" name="schoolName" autocomplete="organization" required maxlength="200"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="d-email">Email</label><input id="d-email" name="email" type="email" autocomplete="email" required></div>
+          <div class="field"><label for="d-phone">Phone / WhatsApp</label><input id="d-phone" name="phone" type="tel" autocomplete="tel" placeholder="+91" required></div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="d-students">Number of students</label>
+            <select id="d-students" name="studentCount" required>
+              <option value="">Select</option>
+              <option>Under 250</option><option>250 – 500</option><option>500 – 1,000</option><option>1,000 – 2,500</option><option>2,500+</option>
+            </select>
+          </div>
+          <div class="field"><label for="d-date">Preferred date <i>(optional)</i></label><input id="d-date" name="preferredDate" type="date"></div>
+        </div>
+        <div class="field"><label for="d-msg">Anything we should know? <i>(optional)</i></label><textarea id="d-msg" name="message" maxlength="2000" placeholder="For example, the modules you are most interested in"></textarea></div>
+        <div class="status" id="d-status" role="status" hidden></div>
+        <button class="btn primary" type="submit" id="d-submit">Request my demo</button>
+        <p class="form-note">We only use these details to arrange your demo.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="block band" id="contact">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">Contact</div>
+        <h2>Talk to us</h2>
+        <p>Questions about modules, pricing or migration? Our team will get back to you within one working day.</p>
+      </div>
+      <div class="contact">
+        <div><small>Email</small><div class="val"><span id="c-email">enquiry@sms-schoolsphere.com</span><button class="copy" type="button" data-copy="c-email">Copy</button></div></div>
+        <div><small>Phone / WhatsApp</small><div class="val"><span id="c-phone">+91 96560 40881</span><button class="copy" type="button" data-copy="c-phone">Copy</button></div><a href="https://wa.me/919656040881" target="_blank" rel="noopener">Chat on WhatsApp</a></div>
+        <div><small>Website</small><div class="val"><a href="https://www.sms-schoolsphere.com" target="_blank" rel="noopener">www.sms-schoolsphere.com</a></div></div>
+        <div><small>Live demo</small><div class="val"><a href="https://sms-schoolsphere.com/login" target="_blank" rel="noopener">sms-schoolsphere.com/login</a></div></div>
+        <div><small>Company LinkedIn</small><div class="val"><a href="https://www.linkedin.com/in/sms-schoolsphere-1a0024441" target="_blank" rel="noopener">SMS-SchoolSphere</a></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <span>© <span id="year">2026</span> SMS-SchoolSphere</span>
+    <span>School operations made simpler, smarter and more connected.</span>
+  </div>
+</footer>
+
+<!-- Runtime API addresses (same file the app uses), so the demo form reaches AuthService on any deployment. -->
+<script src="/config.js"></script>
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // Screen tabs
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function select(tab) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { select(t); });
+    t.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var next = tabs[(i + d + tabs.length) % tabs.length];
+      select(next); next.focus();
+    });
+  });
+
+  // Copy buttons
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var el = document.getElementById(btn.dataset.copy);
+      var reset = function (label) { btn.textContent = label; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
+      var fallback = function () {
+        var r = document.createRange(); r.selectNodeContents(el);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        reset("Selected");
+      };
+      try { navigator.clipboard.writeText(el.textContent.trim()).then(function () { reset("Copied"); }, fallback); }
+      catch (e) { fallback(); }
+    });
+  });
+
+  // Demo request -> AuthService POST /api/leads (the same endpoint as the landing page's Request a Demo dialog).
+  (function () {
+    var form = document.getElementById("demo-form");
+    var status = document.getElementById("d-status");
+    var submit = document.getElementById("d-submit");
+    var cfg = window.__EDUCORE_CONFIG__ || {};
+    var base = cfg.authApiUrl || "/services/identity/";
+    if (!/\/$/.test(base)) base += "/";
+
+    function show(kind, text) { status.className = "status " + kind; status.textContent = text; status.hidden = false; }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      status.hidden = true;
+      var data = new FormData(form);
+      var v = function (k) { return String(data.get(k) || "").trim(); };
+      var email = v("email");
+      if (!v("name") || !v("schoolName") || !email || !v("phone") || !v("studentCount")) {
+        show("err", "Please fill in your name, school, email, phone and number of students.");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        show("err", "Please enter a valid email address, for example name@school.edu.in.");
+        return;
+      }
+      submit.disabled = true; submit.textContent = "Sending…";
+      fetch(new URL("api/leads", new URL(base, location.href)).toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "Demo",
+          name: v("name"), email: email, phone: v("phone"),
+          schoolName: v("schoolName"), studentCount: v("studentCount"),
+          preferredDate: v("preferredDate") || null, message: v("message") || null
+        })
+      }).then(function (res) {
+        if (res.ok) {
+          form.reset();
+          show("ok", "Thank you. Your demo request has been sent, and we will contact you within one working day.");
+        } else if (res.status === 429) {
+          show("err", "You have sent a few requests already. Please wait a minute and try again.");
+        } else {
+          throw new Error("HTTP " + res.status);
+        }
+      }).catch(function () {
+        show("err", "Your request could not be sent. Please try again, or email enquiry@sms-schoolsphere.com or WhatsApp +91 96560 40881.");
+      }).finally(function () {
+        submit.disabled = false; submit.textContent = "Request my demo";
+      });
+    });
+  })();
+</script>
+</body>
+</html>

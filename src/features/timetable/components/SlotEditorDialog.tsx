@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Subject } from "@/features/academics/types";
 import type { StaffMember } from "@/features/staff/types";
 import type { TeacherSubjectAssignment } from "@/features/teachers/types";
-import { DAY_DEFINITIONS, PERIOD_DEFINITIONS } from "../constants";
+import { DAY_DEFINITIONS } from "../constants";
+import { useTimetableSetup } from "../useTimetableSetup";
 import type { DayOfWeek, Room, TimetableSlot } from "../types";
 
 const NONE = "none";
@@ -60,7 +61,8 @@ export default function SlotEditorDialog({
   const teacherOptions = eligibleTeacherIds.size > 0 ? teachers.filter((t) => eligibleTeacherIds.has(t.id)) : teachers;
 
   const day = context && DAY_DEFINITIONS.find((d) => d.value === context.dayOfWeek);
-  const period = context && PERIOD_DEFINITIONS.find((p) => p.periodNumber === context.periodNumber);
+  const { periods } = useTimetableSetup();
+  const period = context && periods.find((p) => p.periodNumber === context.periodNumber);
 
   return (
     <Dialog open={Boolean(context)} onOpenChange={onOpenChange}>

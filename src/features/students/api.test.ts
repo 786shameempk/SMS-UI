@@ -90,8 +90,17 @@ describe("students api", () => {
     expect(calls[0].body).toEqual({
       branchId: "tenant-educore-north", firstName: "Asha", lastName: "Nair", dateOfBirth: "2015-01-01", gender: "Female", sectionId: "s5na",
       rollNumber: "12", address: "Kochi", guardianName: "Ravi", guardianRelation: "Mother", guardianPhone: "999",
+      studentEmail: null, parentEmail: null,
     });
     expect(calls[1].body).toMatchObject({ sectionId: "s5na", firstName: "Asha" });
+  });
+
+  it("sends the optional student and parent emails so logins are created", async () => {
+    const calls = stubClient(academicHttpClient, { "POST /api/students": apiStudent() });
+
+    await students.createStudent({ ...(form as object), studentEmail: " a@school.test ", parentEmail: "p@home.test" } as never);
+
+    expect(calls[0].body).toMatchObject({ studentEmail: "a@school.test", parentEmail: "p@home.test" });
   });
 
   it("explains a class or section that doesn't exist", async () => {

@@ -45,11 +45,14 @@ describe("exam results export", () => {
     const doc = { write: vi.fn(), close: vi.fn() };
     vi.spyOn(window, "open").mockReturnValue({ document: doc } as never);
 
-    expect(printResults(results as never, "GVS")).toBe(true);
+    expect(printResults(results as never, { name: "GVS <Public>", logoUrl: "https://x.test/logo.png", email: "a@gvs.test", contactNumber: "+91 1", isTenant: true })).toBe(true);
 
     const html = doc.write.mock.calls[0][0] as string;
     expect(html).toContain("<title>Term 1: &quot;Maths&quot; &lt;A&gt; - results</title>");
-    expect(html).toContain("GVS · Maths · Class 5 · Total 20 · Pass 7.5");
+    expect(html).toContain("Maths · Class 5 · Total 20 · Pass 7.5");
+    expect(html).toContain("<b>GVS &lt;Public&gt;</b>");
+    expect(html).toContain("a@gvs.test · +91 1");
+    expect(html).toContain('<img src="https://x.test/logo.png"');
     expect(html).toContain("<div>Average<b>12.3</b></div>");
     expect(html).toContain("<td>Nair, Asha</td>");
     expect(html).not.toContain("<A>");

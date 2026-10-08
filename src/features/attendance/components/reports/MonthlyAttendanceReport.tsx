@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/utils/cn";
 import { getMonthlyStudentSummary, listRosterSections } from "../../api";
 import { statusToggleActiveClass } from "../../constants";
@@ -105,53 +106,49 @@ export default function MonthlyAttendanceReport() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-xl border border-border overflow-x-auto">
-          <table className="text-sm w-full">
-            <thead className="bg-secondary/60 border-b border-border">
-              <tr>
-                <th className="text-left px-3 py-2 text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap sticky left-0 bg-secondary/60">
-                  Student
-                </th>
-                {days.map((d) => (
-                  <th key={d} className="px-1.5 py-2 text-xs font-medium text-muted-foreground text-center w-7">
-                    {d}
-                  </th>
-                ))}
-                <th className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase text-right whitespace-nowrap">% Present</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!isLoading && !rows.length && (
-                <tr>
-                  <td colSpan={days.length + 2} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    No records for this section / month.
-                  </td>
-                </tr>
-              )}
-              {rows.map((row) => (
-                <tr key={row.studentId} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2 whitespace-nowrap sticky left-0 bg-card">
-                    <p className="text-sm font-medium text-foreground">{row.name}</p>
-                    <p className="text-xs text-muted-foreground">Roll {row.rollNumber}</p>
-                  </td>
-                  {days.map((d) => {
-                    const status = row.statusByDay[d];
-                    return (
-                      <td key={d} className="px-1 py-2 text-center">
-                        {status ? (
-                          <span title={status} className={cn("inline-block w-4 h-4 rounded-sm", statusToggleActiveClass(status))} />
-                        ) : (
-                          <span className="inline-block w-4 h-4 rounded-sm bg-secondary" />
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td className="px-3 py-2 text-right font-semibold text-foreground tabular-nums">{row.percentPresent}%</td>
-                </tr>
+        <Table stickyHeader containerClassName="rounded-xl border border-border">
+          <TableHeader>
+            <TableRow hover={false}>
+              <TableHead className="sticky left-0 bg-muted">Student</TableHead>
+              {days.map((d) => (
+                <TableHead key={d} className="px-1.5 text-center w-7">
+                  {d}
+                </TableHead>
               ))}
-            </tbody>
-          </table>
-        </div>
+              <TableHead className="text-right">% Present</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {!isLoading && !rows.length && (
+              <TableRow hover={false}>
+                <TableCell colSpan={days.length + 2} className="py-8 text-center text-muted-foreground">
+                  No records for this section / month.
+                </TableCell>
+              </TableRow>
+            )}
+            {rows.map((row) => (
+              <TableRow key={row.studentId}>
+                <TableCell className="whitespace-nowrap sticky left-0 bg-card">
+                  <p className="text-sm font-medium text-foreground">{row.name}</p>
+                  <p className="text-xs text-muted-foreground">Roll {row.rollNumber}</p>
+                </TableCell>
+                {days.map((d) => {
+                  const status = row.statusByDay[d];
+                  return (
+                    <TableCell key={d} className="px-1 text-center">
+                      {status ? (
+                        <span title={status} className={cn("inline-block w-4 h-4 rounded-sm", statusToggleActiveClass(status))} />
+                      ) : (
+                        <span className="inline-block w-4 h-4 rounded-sm bg-secondary" />
+                      )}
+                    </TableCell>
+                  );
+                })}
+                <TableCell className="text-right font-semibold tabular-nums">{row.percentPresent}%</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

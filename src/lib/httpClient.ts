@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
+import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
+import { getTenantSubdomain } from "@/lib/tenantHost";
 
 /**
  * Service base URLs, resolved in order:
@@ -8,12 +10,23 @@ import { useAuthStore } from "@/store/authStore";
  * 2. build-time VITE_* variables (.env locally, CI variables in a pipeline);
  * 3. the local development ports.
  * Empty strings count as "not set", so a blank config.js or an empty CI variable falls through.
+ * On a school's own subdomain (greenvalley.sms-schoolsphere.com) an absolute "/services/..." URL is called on that same
+ * host instead (the reverse proxy serves /services/* on every school host), so one config works for all schools with
+ * no cross-origin requests.
  */
 const runtimeConfig: Partial<Record<string, string>> =
   (typeof window !== "undefined" && (window as Window & { __EDUCORE_CONFIG__?: Record<string, string> }).__EDUCORE_CONFIG__) || {};
 
 function resolveUrl(runtimeKey: string, buildTime: string | undefined, fallback: string): string {
-  const value = runtimeConfig[runtimeKey]?.trim() || buildTime?.trim() || fallback;
+  let value = runtimeConfig[runtimeKey]?.trim() || buildTime?.trim() || fallback;
+  if (getTenantSubdomain() !== null) {
+    try {
+      const url = new URL(value);
+      if (url.pathname.startsWith("/services/")) value = `${window.location.origin}${url.pathname}`;
+    } catch {
+      /* not an absolute URL: leave as is */
+    }
+  }
   return value.endsWith("/") ? value : `${value}/`;
 }
 
@@ -93,6 +106,33 @@ function renewAccessToken(): Promise<string | null> {
 
 type RetriableRequest = InternalAxiosRequestConfig & { _retried?: boolean };
 
+declare module "axios" {
+  interface AxiosRequestConfig {
+    /** Set on a request whose 403/404 is expected and handled by the caller: no error toast for it. */
+    silentErrors?: boolean;
+  }
+}
+
+/**
+ * Forbidden (403) and not found (404) answers carry the server's own explanation (ProblemDetails title and code);
+ * show it instead of leaving the page silently empty. The toast id is the message, so a page that fires several
+ * failing calls at once shows it once.
+ */
+function reportForbiddenOrMissing(error: AxiosError) {
+  const status = error.response?.status;
+  if (status !== 403 && status !== 404) return;
+  if ((error.config as RetriableRequest | undefined)?.silentErrors) return;
+  const problem = error.response?.data as Partial<ApiProblemDetails> | undefined;
+  // A temporary password: ProtectedRoute sends the user to /change-password, so a toast would only add noise.
+  if (problem?.code === "password_change_required") return;
+  const message = extractApiErrorMessage(
+    error,
+    status === 403 ? "You don't have permission to do that." : "We couldn't find what you asked for.",
+  );
+  const text = problem?.code ? `${message} (${problem.code})` : message;
+  toast.error(text, { id: `api-${status}-${text}` });
+}
+
 function createServiceHttpClient(baseURL: string): AxiosInstance {
   const client = axios.create({ baseURL, headers: { "Content-Type": "application/json" } });
 
@@ -111,6 +151,7 @@ function createServiceHttpClient(baseURL: string): AxiosInstance {
   // An expired or revoked access token: renew once and replay the request. When renewal is not possible
   // the session ends, and the route guard (routes/ProtectedRoute.tsx) sends the user to the login page.
   client.interceptors.response.use(undefined, async (error: AxiosError) => {
+    reportForbiddenOrMissing(error);
     const request = error.config as RetriableRequest | undefined;
     const signedIn = Boolean(useAuthStore.getState().token);
     if (error.response?.status !== 401 || !request || !signedIn || NO_REFRESH.test(request.url ?? "")) throw error;

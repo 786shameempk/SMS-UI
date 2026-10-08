@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Save } from "lucide-react";
+import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,15 +11,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listAcademicYears, updateAcademicYear } from "@/features/academics/api";
-import { getSchoolProfile, updateSchoolProfile } from "../api";
-import type { SchoolProfileFormValues } from "../types";
+import BrandLogo from "@/components/common/BrandLogo";
+import { TENANT_BRANDING_QUERY_KEY } from "@/features/tenant/TenantProvider";
+import { getSchoolProfile, updateSchoolLogo, updateSchoolProfile } from "../api";
+
+const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+
+const readAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read that file"));
+    reader.readAsDataURL(file);
+  });
 
 const profileSchema = z.object({
   name: z.string().min(1, "School name is required"),
   tagline: z.string().optional(),
-  address: z.string().min(1, "Address is required"),
-  phone: z.string().min(6, "Phone number is required"),
-  email: z.string().email("Enter a valid email"),
+  address: z.string().optional(),
+  // Optional: a school that leaves these blank simply does not show them.
+  phone: z.string().refine((v) => v.trim() === "" || v.trim().length >= 6, "Enter a valid contact number"),
+  email: z.string().refine((v) => v.trim() === "" || z.string().email().safeParse(v.trim()).success, "Enter a valid email"),
   principalName: z.string().optional(),
   establishedYear: z.coerce.number().int().min(1800).max(new Date().getFullYear()).optional(),
 });
@@ -43,14 +56,40 @@ export default function SchoolProfileTab() {
   }, [profile, reset]);
 
   const saveMutation = useMutation({
-    mutationFn: (values: SchoolProfileFormValues) => updateSchoolProfile(values),
+    mutationFn: (values: FormValues) => updateSchoolProfile({ ...values, address: values.address ?? "" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", "profile"] });
       queryClient.invalidateQueries({ queryKey: ["settings", "audit-log"] });
+      // Header, sidebar and login show the new name/email/contact straight away, no reload.
+      queryClient.invalidateQueries({ queryKey: TENANT_BRANDING_QUERY_KEY });
       toast.success("School profile saved");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Could not save profile"),
   });
+
+  const fileInput = useRef<HTMLInputElement>(null);
+  const logoMutation = useMutation({
+    mutationFn: updateSchoolLogo,
+    onSuccess: (_updated, dataUrl) => {
+      queryClient.invalidateQueries({ queryKey: ["settings", "profile"] });
+      queryClient.invalidateQueries({ queryKey: ["settings", "audit-log"] });
+      queryClient.invalidateQueries({ queryKey: TENANT_BRANDING_QUERY_KEY });
+      toast.success(dataUrl ? "School logo updated" : "School logo removed - School Sphere's logo is shown instead");
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update the logo"),
+  });
+
+  const onLogoPicked = async (file: File | undefined) => {
+    if (fileInput.current) fileInput.current.value = "";
+    if (!file) return;
+    if (!LOGO_TYPES.includes(file.type)) return void toast.error("Logo must be a PNG, JPG, WebP or SVG image");
+    if (file.size > MAX_LOGO_BYTES) return void toast.error("Logo must be 2 MB or smaller");
+    try {
+      logoMutation.mutate(await readAsDataUrl(file));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not read that file");
+    }
+  };
 
   const currentYear = academicYears.find((y) => y.isCurrent);
   const yearMutation = useMutation({
@@ -71,6 +110,41 @@ export default function SchoolProfileTab() {
     <div className="space-y-5 max-w-2xl">
       <Card>
         <CardHeader>
+          <CardTitle>School logo</CardTitle>
+          <CardDescription>Shown on your login page, sidebar and documents. Until you add one, School Sphere's logo is used.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <BrandLogo className="h-16 w-16 rounded-2xl" iconClassName="h-7 w-7" />
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept={LOGO_TYPES.join(",")}
+                  className="sr-only"
+                  aria-label="Upload school logo"
+                  onChange={(e) => void onLogoPicked(e.target.files?.[0])}
+                />
+                <Button type="button" variant="outline" onClick={() => fileInput.current?.click()} disabled={logoMutation.isPending}>
+                  {logoMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
+                  {profile.logoUrl ? "Replace logo" : "Upload logo"}
+                </Button>
+                {profile.logoUrl && (
+                  <Button type="button" variant="ghost" onClick={() => logoMutation.mutate(null)} disabled={logoMutation.isPending}>
+                    <Trash2 className="w-4 h-4" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">PNG, JPG, WebP or SVG, up to 2 MB.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>School profile</CardTitle>
           <CardDescription>Shown across the portal — login screen, reports, and outgoing communications.</CardDescription>
         </CardHeader>
@@ -88,19 +162,19 @@ export default function SchoolProfileTab() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="sp-address" required>Address</Label>
+              <Label htmlFor="sp-address" optional>Address</Label>
               <Input id="sp-address" aria-invalid={errors.address ? true : undefined} {...register("address")} />
               {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.address.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="sp-phone" required>Phone</Label>
+                <Label htmlFor="sp-phone" optional>Contact number</Label>
                 <Input id="sp-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
                 {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sp-email" required>Email</Label>
+                <Label htmlFor="sp-email" optional>School email</Label>
                 <Input id="sp-email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
                 {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.email.message}</p>}
               </div>

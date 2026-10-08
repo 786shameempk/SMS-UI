@@ -2,29 +2,24 @@ import { useState } from "react";
 import { Check, Eye, LayoutGrid, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/utils/cn";
-import type { DashboardWidgetDef, DashboardWidgetId } from "../widgets";
+import { WIDGET_CATEGORY_LABEL, type DashboardWidgetConfig, type DashboardWidgetId, type WidgetCategory } from "../widgets";
 import WidgetPreview from "./WidgetPreview";
 
 type Filter = "all" | "shown" | "hidden";
 
-/** Gallery sections. Any widget not listed here lands in "More" so new widgets never go missing. */
-const GROUPS: Array<{ title: string; ids: DashboardWidgetId[] }> = [
-  { title: "Overview", ids: ["stats", "scopeOverview", "recentActivity", "notifications"] },
-  { title: "Academics", ids: ["performance", "attendance", "todayClasses", "upcomingExams", "pendingAssignments"] },
-  { title: "Finance", ids: ["revenue", "feesDue"] },
-  { title: "Campus", ids: ["libraryDue", "busStatus", "hostel"] },
-  { title: "Calendar & people", ids: ["calendar", "holidays", "birthdays"] },
-];
+/** Gallery sections, in this order (one per catalog category). */
+const CATEGORY_ORDER: WidgetCategory[] = ["overview", "academics", "finance", "campus", "calendar", "communication"];
 
-function WidgetTile({ widget, isShown, onToggle }: { widget: DashboardWidgetDef; isShown: boolean; onToggle: () => void }) {
+function WidgetTile({ widget, isShown, onToggle }: { widget: DashboardWidgetConfig; isShown: boolean; onToggle: () => void }) {
   return (
     <li>
       <button
         type="button"
         onClick={onToggle}
         aria-pressed={isShown}
-        aria-label={`${widget.label}: ${isShown ? "on your dashboard, click to remove" : "hidden, click to add"}`}
+        aria-label={`${widget.name}: ${isShown ? "on your dashboard, click to remove" : "hidden, click to add"}`}
         className={cn(
           "group relative flex h-full w-full flex-col overflow-hidden rounded-xl border bg-card text-left transition-[border-color,box-shadow,transform] duration-200 cursor-pointer",
           "hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
@@ -57,7 +52,7 @@ function WidgetTile({ widget, isShown, onToggle }: { widget: DashboardWidgetDef;
 
         <div className="flex flex-1 flex-col gap-0.5 px-3.5 py-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-sm font-semibold text-foreground">{widget.label}</p>
+            <p className="truncate text-sm font-semibold text-foreground">{widget.name}</p>
             <span
               className={cn(
                 "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
@@ -78,10 +73,19 @@ export default function ManageWidgetsDialog({
   available,
   hidden,
   onChange,
+  onReset,
+  isCustomized,
+  savedToAccount = false,
 }: {
-  available: DashboardWidgetDef[];
+  /** The widgets the user may show or hide (fixed widgets aren't listed). */
+  available: DashboardWidgetConfig[];
   hidden: DashboardWidgetId[];
   onChange: (hidden: DashboardWidgetId[]) => void;
+  /** Back to the role's default dashboard: default widgets, order and sizes. */
+  onReset: () => void;
+  isCustomized: boolean;
+  /** Saved on the server (follows the user to any device) rather than on this device only. */
+  savedToAccount?: boolean;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
   const hiddenSet = new Set(hidden);
@@ -90,13 +94,10 @@ export default function ManageWidgetsDialog({
 
   const toggle = (id: DashboardWidgetId) => onChange(hiddenSet.has(id) ? hidden.filter((h) => h !== id) : [...hidden, id]);
 
-  const matchesFilter = (w: DashboardWidgetDef) =>
+  const matchesFilter = (w: DashboardWidgetConfig) =>
     filter === "all" || (filter === "shown" ? !hiddenSet.has(w.id) : hiddenSet.has(w.id));
 
-  const grouped = [
-    ...GROUPS.map((g) => ({ title: g.title, widgets: available.filter((w) => g.ids.includes(w.id)) })),
-    { title: "More", widgets: available.filter((w) => !GROUPS.some((g) => g.ids.includes(w.id))) },
-  ]
+  const grouped = CATEGORY_ORDER.map((c) => ({ title: WIDGET_CATEGORY_LABEL[c], widgets: available.filter((w) => w.category === c) }))
     .map((g) => ({ ...g, widgets: g.widgets.filter(matchesFilter) }))
     .filter((g) => g.widgets.length > 0);
 
@@ -117,7 +118,7 @@ export default function ManageWidgetsDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Customize your dashboard</DialogTitle>
-          <DialogDescription>Tap a card to show or hide it. Changes apply instantly and are saved on this device.</DialogDescription>
+          <DialogDescription>Tap a card to show or hide it. Changes apply instantly and are saved {savedToAccount ? "to your account" : "on this device"}.</DialogDescription>
         </DialogHeader>
 
         {/* Summary + filters */}
@@ -136,24 +137,7 @@ export default function ManageWidgetsDialog({
             </div>
           </div>
 
-          <div role="radiogroup" aria-label="Filter widgets" className="inline-flex max-w-full gap-1 overflow-x-auto rounded-lg bg-secondary p-1">
-            {FILTERS.map((f) => (
-              <button
-                key={f.value}
-                type="button"
-                role="radio"
-                aria-checked={filter === f.value}
-                onClick={() => setFilter(f.value)}
-                className={cn(
-                  "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors cursor-pointer",
-                  filter === f.value ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {f.label}
-                <span className={cn("rounded px-1 tabular-nums", filter === f.value ? "bg-secondary text-foreground" : "text-muted-foreground")}>{f.count}</span>
-              </button>
-            ))}
-          </div>
+          <SegmentedControl aria-label="Filter widgets" size="sm" value={filter} onValueChange={setFilter} options={FILTERS} />
         </div>
 
         {grouped.length === 0 ? (
@@ -183,10 +167,15 @@ export default function ManageWidgetsDialog({
           <Button variant="ghost" size="sm" onClick={() => onChange(available.map((w) => w.id))} disabled={shownCount === 0}>
             Hide all
           </Button>
-          <Button variant="outline" size="sm" onClick={() => onChange([])} disabled={hiddenCount === 0}>
-            <RotateCcw className="h-3.5 w-3.5" />
-            Show all (default)
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => onChange([])} disabled={hiddenCount === 0}>
+              Show all
+            </Button>
+            <Button variant="outline" size="sm" onClick={onReset} disabled={!isCustomized}>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset to default
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

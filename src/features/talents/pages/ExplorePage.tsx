@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Globe2, School, Search, SlidersHorizontal, X } from "lucide-react";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/utils/cn";
 import { searchTalents } from "../api";
 import { CATEGORY_ORDER, SORT_OPTIONS } from "../constants";
@@ -99,17 +100,21 @@ export default function ExplorePage() {
           <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground mr-1">
             <SlidersHorizontal className="w-4 h-4" /> Filters{activeCount > 0 && ` (${activeCount})`}
           </span>
-          <Segmented
+          <SegmentedControl
+            aria-label="Scope"
+            size="sm"
             value={scope}
-            onChange={(v) => update({ scope: v === "all" ? null : v, page: null })}
+            onValueChange={(v) => update({ scope: v === "all" ? null : v, page: null })}
             options={[
               { value: "all", label: "All schools", icon: Globe2 },
               { value: "school", label: "My school", icon: School },
             ]}
           />
-          <Segmented
+          <SegmentedControl
+            aria-label="Creator"
+            size="sm"
             value={creatorType ?? "any"}
-            onChange={(v) => update({ creator: v === "any" ? null : v, page: null })}
+            onValueChange={(v) => update({ creator: v === "any" ? null : v, page: null })}
             options={[
               { value: "any", label: "Everyone" },
               { value: "student", label: "Students" },
@@ -117,9 +122,11 @@ export default function ExplorePage() {
               { value: "parent", label: "Parents" },
             ]}
           />
-          <Segmented
+          <SegmentedControl
+            aria-label="Visibility"
+            size="sm"
             value={visibility ?? "any"}
-            onChange={(v) => update({ visibility: v === "any" ? null : v, page: null })}
+            onValueChange={(v) => update({ visibility: v === "any" ? null : v, page: null })}
             options={[
               { value: "any", label: "Any visibility" },
               { value: "school_only", label: "School only" },
@@ -165,28 +172,6 @@ export default function ExplorePage() {
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: Array<{ value: T; label: string; icon?: typeof Globe2 }> }) {
-  return (
-    <div className="inline-flex rounded-full border border-border bg-card p-0.5">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          onClick={() => onChange(o.value)}
-          aria-pressed={value === o.value}
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors cursor-pointer",
-            value === o.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {o.icon && <o.icon className="w-3.5 h-3.5" />}
-          {o.label}
-        </button>
-      ))}
     </div>
   );
 }

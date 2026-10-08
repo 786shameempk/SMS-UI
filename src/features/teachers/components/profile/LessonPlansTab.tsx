@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -85,7 +85,7 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-medium text-foreground">{plan.title}</p>
-                  <Badge variant={plan.status === "published" ? "success" : "neutral"}>{plan.status}</Badge>
+                  <StatusBadge status={plan.status} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {subjectName(plan.subjectId)} &middot; {className(plan.classId)} &middot; Week of{" "}

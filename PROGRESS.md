@@ -78,6 +78,114 @@ Shared files extended along the way (additive only): `src/app/router.tsx`, `src/
 
 - **Session expiry → login** (2026-09-26) — the web app now keeps AuthService's refresh token: on a 401 every service client silently renews the ~15-minute access token once (single-flight, so parallel 401s share one refresh) and replays the request; if renewal fails, or the remembered session lifetime passes (timer + re-check on tab focus), the session is cleared and the route guard sends the user to /login with a "Your session has expired" notice, then back to the page they were on after signing in. Verified live against the running AcademicService container (401 → exactly one refresh attempt → login with notice and return path).
 
+- **Dashboards on real data, with a demo-data switch** (2026-10-04) — every web dashboard (super admin, admin, principal, teacher, accountant, librarian, receptionist, parent, student, custom staff roles) now loads each widget from a real API, or from built-in sample data when demo data is on. The 10 widgets that were always fake (key stats, attendance, today's classes, notifications, birthdays, holidays, calendar, recent activity, performance and revenue trends) now come from the timetable, daily attendance summaries, notifications, student/staff records, the academic calendar and exam schedules, the audit log, exam class results and invoices; key stats are role-specific. Personal widgets use AcademicService `GET /api/people/me`, so **student logins now get their own data** (before, only parents did). Structure: `src/features/dashboard/sources/{live,mock}.ts` implement the same loader per widget; each widget is its own query (hidden widgets aren't fetched; a failing service only shows that card's "Try again"); shared lists are fetched once per load. **Switch** (`dataSource.ts`): `allowDemoData` + `dashboardDataSource` from runtime config.js (Docker: `ALLOW_DEMO_DATA`, `DASHBOARD_DATA_SOURCE`) or `VITE_*`; demo allowed by default only in dev builds, and then the default; the local compose turns it on with mock as the default (current decision); `deploy/azure` sets it off, so production is always live and the switch is hidden. Each browser can flip Live/Demo from the dashboard toolbar; demo mode shows a "Demo data" banner. Every role also gets refresh + "updated … ago". Tests: `dashboard.test.ts` (42). Verified in the browser in demo mode for admin, parent, teacher, accountant and receptionist, and live mode's per-card errors with the services stopped. **Not yet verified against running services** (Docker Desktop wasn't running). Mobile apps unchanged (always live).
+
+- **Dashboard & widget management — phase 1 of 7: widget platform** (2026-10-04). Part of the "Dashboard & Widget Management" spec, done one phase at a time.
+  - **Widget catalog** (`dashboard/widgets.ts`): `WIDGET_CATALOG` holds one typed `DashboardWidgetConfig` per widget, with:
+    - id, name, description, type and icon
+    - category, allowedRoles, requiredPermission and permissionExemptRoles
+    - allBranchesOnly
+    - defaultVisible, defaultOrder, defaultWidth/Height
+    - configurable, refreshInterval and dataSource
+  - **Visibility:** `availableWidgets()` combines role, module permission and branch coverage. Parents and students are exempt from staff modules (fees, transport, hostel, exams, homework, attendance) because they see only their own records. This hides cards whose data a role's API refuses anyway, for example an accountant with no attendance or exams, or a teacher with no fees.
+  - **Architecture:** `DashboardPage` → `DashboardLayout` (responsive 12/6/1-column grid) → `WidgetRenderer` → `WIDGET_REGISTRY` (`registry.tsx`, lazy-loaded renderers) → card.
+  - **Widget states:** each widget has its own query, polling on its `refreshInterval`. `WidgetShell` shows its loading, error, no-access (401/403, no retry) and offline states.
+  - Quick actions and the branch roll-up became ordinary widgets.
+  - **Saved layouts:** stored per user in `useUiStore.dashboardLayouts` (order, size, shown or hidden). `resolveLayout()` merges a saved layout with what the user may see now:
+    - drops widgets they've lost access to
+    - slots newly added widgets in next to their default neighbours
+    - fixes invalid sizes
+  - The old browser-wide `hiddenDashboardWidgets` is dropped by a persist migration (v0 → v1).
+  - **Toolbar:** a visible "Updated … ago" refresh button, an offline banner, a "no widgets for your role" state, and "Reset to default" in Manage widgets.
+  - **Next phases:** server-side layouts and config (AuthService), the drag, resize and reorder UI, aggregation endpoints, new role widgets with reusable widget types, the admin Widget Management page, then the full test pass.
+
+- **Dashboard & widget management — phase 2 of 7: server-side config and layouts** (2026-10-04, AuthService + SMS UI). The server now decides which widgets a user may have and stores each user's layout.
+  - **Server catalog:** `DashboardWidgetCatalog` mirrors `widgets.ts`, with the same ids, roles, required module, exempt roles and defaults.
+  - **Visibility rules** (`DashboardWidgets.CanView`) are evaluated from the token: role (custom roles count as "staff"), `module.*` claims, all-branch scope, plus the school's settings.
+  - **New tables:**
+    - `UserDashboardLayouts`: one JSON layout per user.
+    - `TenantDashboardWidgetSettings`: a school's overrides per widget (enabled, narrowed roles, default visible/order/size, configurable, refresh interval).
+    - Migration: `AddDashboardLayoutsAndWidgetSettings`.
+  - **User endpoints** (`/api/dashboard`, any signed-in user):
+    - `GET /` returns the role, widgets and resolved layout.
+    - `GET /widgets` and `GET /layout`.
+    - `PUT /layout` refuses unknown widgets, bad sizes and duplicates (400), and any widget outside the caller's access (403).
+    - `POST /layout/reset`.
+  - **Admin endpoints** (Administration module, tenant required):
+    - `GET /admin/widgets`.
+    - `PUT /admin/widgets/{id}`: roles can only be narrowed. Giving fee revenue to parents returns 409.
+    - `DELETE /admin/widgets/{id}` returns the widget to catalog defaults.
+    - `POST /admin/layouts/reset {role}` clears that role's saved layouts in this school only.
+  - **Safeguards:** a stale saved layout never brings back a revoked widget, because it is resolved on every read. Settings and layouts are always filtered by the caller's tenant.
+  - **SMS UI (live data):**
+    - `layoutApi.ts` and `useDashboardLayout(clientAvailable, source)` load `GET /api/dashboard` and keep only the widgets the server lists, using the school's defaults (`applyServerWidgets`).
+    - Saves are optimistic, rolling back with a toast if the server refuses. Reset goes through the server too.
+    - The server layout is mirrored into the device cache. When AuthService is unreachable, the dashboard opens from that cache with a notice.
+  - **Demo data** keeps the layout on the device only, with no backend needed.
+  - **Tests:**
+    - AuthService: 19 new (572 total).
+    - SMS UI: 7 new hook tests (557 total).
+    - Live, through the gateway on docker: 23 checks across admin, teacher, parent and accountant, all passing.
+    - Browser, live mode as a teacher: load, hide a widget (PUT stored on the server), and reset.
+  - **Not done:** widget data endpoints (`GET /api/dashboard/widgets/{id}/data`) belong to phase 4, in the services that own the data.
+
+- **Dashboard & widget management — phases 3-7** (2026-10-04, SMS UI + AuthService + AcademicService + FinanceService).
+  - **Phase 3, customization:** a "Customize" button turns on edit mode (`DashboardLayout` `onEdit`, `WidgetEditFrame`).
+    - Drag a card onto another to swap places (native HTML5 drag, no new dependency), or use the arrow buttons for keyboard and touch.
+    - Each card has a resize menu (width and height) and a hide button. Hidden widgets sit in a tray to add back.
+    - Every change is announced through an `aria-live` region.
+    - Edits go into a draft that is saved once on "Save layout"; Cancel discards it, and "Reset to default" is there too.
+    - Widgets inside edit mode are `inert` previews, so their links and buttons don't fire while arranging.
+    - Helpers in `layout.ts`: `moveOnto`, `moveVisible`, `fillRows`, `packedWidthClasses`.
+  - **Row packing:** in view mode, a row that would end short spreads the spare columns across its cards, on desktop (12 columns) and tablet (6). Edit mode keeps exact sizes.
+  - **Phase 4, aggregation endpoints:**
+    - AcademicService `GET /api/dashboard/academic-summary?from&to&today`:
+      - Policy `ViewSchoolDashboard`: staff with students, attendance or reports.
+      - Returns headcounts, admissions, staff on leave, today's and the previous school day's attendance, per-section attendance, the monthly results trend, top performers, upcoming exams and pending homework.
+    - FinanceService `GET /api/dashboard/fee-summary?from&to&today`:
+      - Finance roles or `module.fees` only, never families.
+      - Returns collected in range and the previous range, pending, overdue, payments today, the monthly collected-vs-expected trend, the status split and top defaulters.
+    - **Shared rules for both:**
+      - Scoped to the caller's tenant and branch.
+      - Cached for 60s in the handler (`IMemoryCache`, keyed by tenant + branch + dates). The finance access check runs before the cache.
+      - The client sends `today` because the containers run in UTC.
+    - The live source (`sources/summaryApi.ts`) now builds admin/principal/accountant stats, the revenue trend and the school-wide performance trend from these. One request each replaces downloading every student, staff member, exam result and invoice.
+    - The branch overview, Birthdays, Fees due and the defaulters' names still read the student, staff and invoice lists.
+  - **Phase 5, role widgets:**
+    - Reusable widget types in `components/widget-types/`: `WidgetCard` shell, `RankingList`, `DoughnutChart` (lays itself out by its own width via a container query), `CompactTable`, `AlertList`, `SegmentedProgress`. Shared tones live in `tones.ts`.
+    - New widgets, in both the web app catalog and AuthService's `DashboardWidgetCatalog`, with live and demo loaders:
+      - Schools overview: super admin.
+      - Needs attention (overdue fees, low or unmarked attendance, staff on leave): leadership.
+      - Class-wise attendance: leadership, and teachers for their own sections.
+      - Top performers: leadership.
+      - Fee collection status and Fee defaulters: finance roles.
+      - Attendance (30 days): parents and students.
+    - Parents with several children get a child switcher; the learners in view are part of each widget's query key. The demo parent has two children.
+  - **Phase 6, Widget Management:** a new **Settings → Dashboard** tab (`dashboard/admin/WidgetManagementTab`).
+    - Filter by role and search.
+    - Per widget: an on/off switch, plus an Edit dialog for roles (only within the catalog's), default width, height, position, auto-refresh, shown by default and "users can customize". The dialog has a preview and "Reset to defaults".
+    - "Reset a role's dashboards" clears that role's saved layouts in the school.
+  - **Fixes from review:**
+    - The super admin header squeezed the greeting into a narrow column, because its wide toolbar was forced onto one line. `WelcomeHero` now wraps, keeping the title at least about 20rem wide.
+    - Short last rows (Bus status and Hostel) left half the row empty.
+    - The doughnut legend was clipped in a narrow card.
+    - Class-wise attendance is capped at 5 rows, so it no longer stretches its neighbours.
+    - The drop handler read a stale dragged id; it now uses a ref.
+    - A student with no section showed as "Class 5 undefined".
+  - **Phase 7, verification:**
+    - Tests: SMS UI 589 (edit mode, drag/drop, resize, row packing, role widgets per role, child switcher, Widget Management tab, summary-based loaders); AuthService 573; AcademicService 547; FinanceService 171.
+    - Live on docker (rebuilt Auth, Academic and Finance): 34 gateway checks pass, including the summaries' access rules and caching.
+    - Browser as super admin and admin: desktop, tablet and phone with no overflow and every row filled; edit mode; live mode with real services (each summary fetched once, no widget errors); and the Settings → Dashboard tab, including an on/off round trip to the server.
+  - **Known gaps:** the results trend and top performers came back empty against the docker seed data because its exam dates fell outside the default range (seed data, not code). Fixed below.
+- **Exam seed data for the performance widgets** (2026-10-04).
+  - `loadtest/seed-data.mjs` (the seeder behind the EduCore demo school) has a new `exams` step. It creates the terms and four core subjects if missing, then three completed exams per class: Unit Test 1 about 140 days ago, a Mid-term about 84 days ago, Unit Test 2 about 28 days ago.
+  - Marks are deterministic for every active student, per subject: a steady ability per student, a small subject shift, later exams a few points higher, about 3% absences and a few students below the pass mark.
+  - The month is part of each exam's name and existing exams are skipped, so re-running is safe and running it later adds newer exams. `--only exams` runs just this step (`--only` also accepts `fees`, `attendance`, `parents`).
+  - Against docker it created 30 exams and 3,600 marks. The academic summary then gave a rising trend (May 66% → Jul 69% → Sep 72% average, 94-97% pass rate) and five top performers, which showed in the live dashboard.
+  - `scripts/seed-demo` (the multi-school seeder) now adds Unit Tests 1 and 2 (July, August) before the September mid-term, so those schools' trends have three points too.
+  - On a fresh database `seed-data.mjs` now creates the current academic year (June - March) instead of stopping.
+  - The chart fix this exposed: months without exams were plotted as 0%, so the line dipped to zero between exams. `PerformanceTrendPoint` scores are now `null` for months without results. The chart joins the months that have data (`connectNulls`, with dots) and shows "No exam results in this period" when there are none. The spec's generic `GET /api/dashboard/widgets/{id}/data` is covered by the two per-service summaries instead.
+
 ## Pending backlog
 
 28. **PWA/mobile features** — deferred (user decision, 2026-09-20), then partly delivered on 2026-09-24 as part of the Online Classes spec, which asked for PWA + push reminders: a manifest (SVG icon only - no raster 192/512/maskable set yet), a push-only service worker, and the phone drawer for the app shell. Still open: raster icons, install prompt UX, offline behaviour (intentionally none), and a mobile pass over the other ~30 modules' own pages.
@@ -110,3 +218,20 @@ Shared files extended along the way (additive only): `src/app/router.tsx`, `src/
 - Caught during task 29's live-browser verification, unrelated to tenant isolation itself: Dashboard's four headline KPI cards (Total students/Total staff/Attendance today/Fees collected — `buildStats()` in `dashboard/mock.ts`) turned out to be hardcoded static strings (`"2,384"`, `"162"`, `"92%"`, etc.), not derived from any real module's data at all — a pre-existing gap from task 16, which wired up the *other* 6 dashboard widgets (pending homework, upcoming exams, fee due, library due, bus status, hostel occupancy) to real data but apparently never touched these 4 top cards. Confirmed live: switching the superAdmin tenant switcher to the empty Riverside tenant left these 4 numbers completely unchanged, while the Students page and every other real-data view correctly went empty. Not a regression from task 29 — these cards were never wired to real data even for the single EduCore tenant beforehand — but worth fixing in a future task by wiring `buildStats()`'s admin/superAdmin branch to real `listStudents()`/`listStaff()`/attendance/fee-collection aggregates (Reports' `getFeeCollectionReport()`/attendance's `getYearlyTrend()` already compute the same numbers live elsewhere in the app), otherwise a real multi-tenant demo will misleadingly show every tenant's dashboard with the same fake EduCore-sized numbers. Same gap re-confirmed during task 30's live verification: switching the branch switcher (not just the tenant switcher) also leaves these 4 cards frozen, for the identical reason — still worth fixing in the same future pass.
 - Task 30's live-browser verification hit repeated flakiness clicking Radix `<Select>` options via coordinate/ref clicks — a click that visually landed on the right option sometimes silently no-op'd (the trigger's displayed value didn't change), and once cost a wasted registration (a test student ended up stamped with the *ambient* active branch instead of the one explicitly picked in the form, traced back to the dialog having been closed and silently reopened fresh between filling fields, which reset the branch field to its default). Re-verified correctly afterward by keeping the dialog open continuously and confirming the picked value with a fresh `read_page` after every select before moving to the next field, then double-checking the actual persisted `branchId` via a direct `localStorage` read rather than trusting the UI alone. Consistent with the existing browser-automation note under task 19–21 about Radix Select unreliability — worth reading `read_page`'s output (not just a screenshot) after every dropdown selection in any future live-browser verification, and spot-checking the actual written record in `localStorage`, not just the form's post-submit visual state.
 - Pre-work research for task 28 (PWA/mobile), kept here since the task was deferred (user decision, 2026-09-20) before any code was written — the app is unchanged: `vite.config.ts` is minimal (just `@vitejs/plugin-react` + `@tailwindcss/vite`) with nothing that would conflict with adding `vite-plugin-pwa`, but Vite is on `^8.2.0` — confirm the plugin's peer-dep range covers Vite 8 before installing. `index.html` has a viewport meta tag but no `theme-color`, no `<link rel="manifest">`, no apple-touch-icon; `public/` only has two SVGs (`favicon.svg`, `icons.svg`) — a full raster icon set (192/512/maskable) would need to be generated from scratch for a manifest. Separately, and likely the bigger half of "mobile features": the app shell has essentially no mobile-responsive handling today. `AppLayout.tsx` is a fixed flex three-pane shell with zero breakpoint classes; `Sidebar.tsx` always renders in-flow at a minimum 72px collapsed width with no off-canvas/overlay mode and no screen-size-driven behavior (its collapse is a manual desktop toggle via `useUiStore().isSidebarCollapsed`, not responsive); `Header.tsx` has exactly one responsive class in the whole file (`hidden sm:block` hiding the username, not a mobile menu trigger). No hamburger menu exists anywhere — this would need building from scratch, not adjusting existing responsive code. Revisit this note before restarting the task rather than re-deriving it.
+- **Super admin dashboard fit fixes** (2026-10-04).
+  - **App frame:** the app frame (`AppLayout`) is now pinned to the window (`fixed inset-0`) and the sidebar fills it (`h-full`), instead of both using `h-dvh`.
+    - Cause: at some browser zoom levels (reported in Edge, zoomed out), `100dvh` didn't match the visible window. The whole document scrolled, pushing the header off-screen and leaving a blank band below the app.
+    - Now only `<main>` and the sidebar scroll. Verified at 1366×768, at 1920×960 zoomed to 67% (2865×1433 CSS px), and in the phone drawer.
+  - **Header on laptop widths:** the search button no longer shrinks; it's icon-only below 1280 px, so a super admin's school and branch pickers get the room (`lg:w-56` / `lg:w-48`).
+  - **Toolbar:** the dashboard toolbar wraps from the left.
+  - **Key stats:** the cards use a container query (four across when the widget is at least about 672 px), so they don't sit 2×2 when the window is wide but the content area isn't.
+  - **Tests:** the full Vitest run is stable on a busy machine.
+    - `testTimeout` raised to 15 s.
+    - Testing Library's async timeout raised to 5 s in `src/test/setup.ts`.
+    - The dashboard page tests no longer wait on the demo data's random delay.
+- **Public site split: marketing vs app** (2026-10-04, deployed to the Azure VM `educore-1`).
+  - **Domains:** `sms-schoolsphere.com` serves only the landing page (and `/product`, `/founder`). `/login` and every other app path redirect to `demo.sms-schoolsphere.com` (Caddy). The VM's `.env` gained `APP_DOMAIN=demo.sms-schoolsphere.com`. Config backups are in `~/sms/backup-20261004-164148/`, and the pre-deploy images are tagged `predeploy-20261004`.
+  - **Landing page:** no longer jumps to `/dashboard` when the app is on another origin (`isAppOnOtherOrigin`). A session stored on the marketing host from before the split would otherwise have opened the dashboard there.
+  - **"Back to website" on the login page:** a full link to the marketing site via a new runtime `siteUrl`, read like `appUrl` (`config.js`, then `VITE_SITE_URL`). The container sets it from `SITE_URL` (`deploy/azure`: `https://${DOMAIN}`). On a single origin it stays the in-app `/` route.
+  - **Demo data on the public demo:** `deploy/azure` now sets `ALLOW_DEMO_DATA: "true"` and `DASHBOARD_DATA_SOURCE: mock`. Dashboards open on bannered sample figures, with a Live/Demo switch. A school's own production install should set `"false"` / `live`.
+  - **Open item:** the VM's `ACME_EMAIL` is still an `@example.com` placeholder. Let's Encrypt refuses it, so certificates currently come from the ZeroSSL fallback.

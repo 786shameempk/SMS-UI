@@ -142,14 +142,90 @@ export interface ActivityItem {
 
 export interface PerformanceTrendPoint {
   month: string;
-  averageScore: number;
-  passRate: number;
+  /** Null when no results were entered that month: the chart leaves a gap rather than plotting 0%. */
+  averageScore: number | null;
+  passRate: number | null;
 }
 
 export interface RevenueTrendPoint {
   month: string;
   collected: number;
   expected: number;
+}
+
+// ── Generic shapes the reusable widget types draw ───────────────────────
+
+export type WidgetTone = "brand" | "success" | "info" | "warning" | "danger" | "muted";
+
+/** One slice of a doughnut / status summary. */
+export interface StatusSlice {
+  id: string;
+  label: string;
+  /** What the slice size represents (an amount or a count). */
+  value: number;
+  /** Shown next to the label, e.g. "₹1.2L · 14 invoices". */
+  detail: string;
+  tone: WidgetTone;
+}
+
+/** One row of a ranking: a label, a 0-100 bar and the value to print. */
+export interface RankedItem {
+  id: string;
+  label: string;
+  sublabel?: string;
+  /** 0-100 for the bar; null = nothing to measure yet (e.g. attendance not marked). */
+  value: number | null;
+  display: string;
+  tone?: WidgetTone;
+}
+
+export interface AlertItem {
+  id: string;
+  severity: "critical" | "warning" | "info";
+  title: string;
+  detail: string;
+  /** Where to go to deal with it. */
+  href?: string;
+}
+
+// ── Role widgets ────────────────────────────────────────────────────────
+
+export interface FeeDefaulter {
+  studentId: string;
+  studentName: string;
+  className: string;
+  outstanding: number;
+  invoices: number;
+  oldestDueDate: string;
+}
+
+/** One learner's attendance over the last 30 days (parents see each child). */
+export interface LearnerAttendance {
+  studentId: string;
+  name: string;
+  classLabel: string;
+  present: number;
+  late: number;
+  absent: number;
+  leave: number;
+  marked: number;
+  percent: number | null;
+}
+
+export interface SchoolRow {
+  id: string;
+  name: string;
+  status: "trial" | "active" | "suspended" | "cancelled";
+  plan: string;
+  students: number;
+  staff: number;
+  /** Students as a share of the plan's limit; null when the plan is unlimited. */
+  capacityPercent: number | null;
+}
+
+export interface SchoolsOverview {
+  totals: { schools: number; active: number; trial: number; suspended: number; students: number; staff: number };
+  rows: SchoolRow[];
 }
 
 export interface DashboardData {
@@ -169,6 +245,13 @@ export interface DashboardData {
   recentActivity: ActivityItem[];
   performanceTrend: PerformanceTrendPoint[];
   revenueTrend: RevenueTrendPoint[];
+  alerts: AlertItem[];
+  classAttendance: RankedItem[];
+  topPerformers: RankedItem[];
+  feeStatus: StatusSlice[];
+  feeDefaulters: FeeDefaulter[];
+  learnerAttendance: LearnerAttendance[];
+  schools: SchoolsOverview;
 }
 
 // ── Dashboard controls ──────────────────────────────────────────────────

@@ -28,6 +28,37 @@ describe("ProtectedRoute", () => {
     expect(screen.getByText("secret page")).toBeInTheDocument();
   });
 
+  describe("temporary password", () => {
+    // header.payload.signature with payload {"must_change_password":"true"}
+    const TEMP_PASSWORD_TOKEN = `e30.${btoa(JSON.stringify({ must_change_password: "true" }))}.sig`;
+
+    function renderWithChangeRoute(allowPasswordChange: boolean) {
+      return renderWithProviders(
+        <ProtectedRoute allowPasswordChange={allowPasswordChange}>
+          <p>secret page</p>
+        </ProtectedRoute>,
+        { route: "/students", routes: [{ path: "/change-password", element: <p>change password page</p> }] },
+      );
+    }
+
+    it("sends the user to the change-password page instead of any other signed-in page", () => {
+      signIn("teacher");
+      useAuthStore.setState({ token: TEMP_PASSWORD_TOKEN });
+      renderWithChangeRoute(false);
+
+      expect(screen.getByText("change password page")).toBeInTheDocument();
+      expect(screen.queryByText("secret page")).not.toBeInTheDocument();
+    });
+
+    it("lets the change-password page itself through", () => {
+      signIn("teacher");
+      useAuthStore.setState({ token: TEMP_PASSWORD_TOKEN });
+      renderWithChangeRoute(true);
+
+      expect(screen.getByText("secret page")).toBeInTheDocument();
+    });
+  });
+
   it("ends an expired session and redirects", () => {
     signIn("teacher");
     useAuthStore.setState({ expiresAt: Date.now() - 1000 });

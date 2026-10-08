@@ -10,6 +10,7 @@ import type {
   BookLoanStatus,
   BookReservation,
   IssueBookFormValues,
+  LibraryBulkResult,
   LibraryMember,
   LibraryMemberFormValues,
   LibraryMemberStatus,
@@ -327,6 +328,20 @@ export async function createMember(values: LibraryMemberFormValues): Promise<Lib
     }),
   );
   return mapMember(dto);
+}
+
+/** Enrols many people at once (a class, all staff); those who are already members are skipped by the server. */
+export async function bulkCreateMembers(
+  people: { personType: LibraryPersonType; personId: string }[],
+  status: LibraryMemberStatus = "active",
+): Promise<LibraryBulkResult> {
+  const dto = await unwrap(
+    campusHttpClient.post<{ created: number; alreadyMembers: number; members: ApiLibraryMember[] }>("/api/librarymembers/bulk", {
+      people: people.map((p) => ({ personType: PERSON_TYPE_TO_API[p.personType], personId: p.personId })),
+      status: MEMBER_STATUS_TO_API[status],
+    }),
+  );
+  return { created: dto.created, alreadyMembers: dto.alreadyMembers, members: dto.members.map(mapMember) };
 }
 
 export async function updateMember(id: string, values: LibraryMemberFormValues): Promise<LibraryMember> {

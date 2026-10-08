@@ -99,6 +99,34 @@ export const setRoleAiPermissions = (roleId: string, permissions: string[]) =>
 export const resetRoleAiPermissions = (roleId: string) =>
   unwrap(authHttpClient.delete<RoleAiPermissions>(`/api/school-roles/${roleId}/ai-permissions`));
 
+// ── Staff actions (Library.IssueBook, Visitors.CheckIn... enforced by Campus/Finance; applied at next sign-in) ──
+
+export interface StaffPermissionInfo {
+  key: string;
+  label: string;
+  description: string;
+  /** The module.* claim it belongs to - it's only ever granted alongside that module. */
+  module: string;
+}
+
+export interface RoleStaffPermissions {
+  roleId: string;
+  permissions: string[];
+  /** False while the role uses its defaults: every action of the modules it has "action" rights on in the matrix. */
+  configured: boolean;
+}
+
+export const STAFF_PERMISSIONS_QUERY_KEY = ["admin", "staff-permissions"] as const;
+
+export const getStaffPermissions = () =>
+  unwrap(authHttpClient.get<{ catalog: StaffPermissionInfo[]; roles: RoleStaffPermissions[] }>("/api/school-roles/staff-permissions"));
+
+export const setRoleStaffPermissions = (roleId: string, permissions: string[]) =>
+  unwrap(authHttpClient.put<RoleStaffPermissions>(`/api/school-roles/${roleId}/staff-permissions`, { permissions }));
+
+export const resetRoleStaffPermissions = (roleId: string) =>
+  unwrap(authHttpClient.delete<RoleStaffPermissions>(`/api/school-roles/${roleId}/staff-permissions`));
+
 // ── Permissions ──────────────────────────────────────────────────────────────
 
 /** The catalog is static app metadata (one row per nav destination), shared verbatim with AuthService. */

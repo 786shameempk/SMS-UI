@@ -5,6 +5,7 @@ import { Activity, Coins, Gauge, Timer } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard, StatGrid } from "@/components/ui/stat-card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { listUsers } from "@/features/administration/users/api";
 import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE } from "@/features/dashboard/chartTheme";
@@ -41,27 +42,27 @@ function fillDays(from: string, to: string, days: UsageBucket[]) {
 function BucketTable({ caption, rows, label }: { caption: string; rows: UsageBucket[]; label: (key: string) => string }) {
   if (rows.length === 0) return <p className="text-sm text-muted-foreground">No requests in this period.</p>;
   return (
-    <table className="w-full text-sm">
+    <Table density="compact">
       <caption className="sr-only">{caption}</caption>
-      <thead className="text-left text-xs text-muted-foreground">
-        <tr>
-          <th className="py-1 font-medium">{caption}</th>
-          <th className="py-1 text-right font-medium">Requests</th>
-          <th className="py-1 text-right font-medium">Tokens</th>
-          <th className="py-1 text-right font-medium">Est. cost</th>
-        </tr>
-      </thead>
-      <tbody>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{caption}</TableHead>
+          <TableHead className="text-right">Requests</TableHead>
+          <TableHead className="text-right">Tokens</TableHead>
+          <TableHead className="text-right">Est. cost</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {rows.map((r) => (
-          <tr key={r.key} className="border-t border-border/70">
-            <td className="max-w-[14rem] truncate py-1.5">{label(r.key)}</td>
-            <td className="py-1.5 text-right tabular-nums">{number(r.requests)}</td>
-            <td className="py-1.5 text-right tabular-nums">{number(r.tokens)}</td>
-            <td className="py-1.5 text-right tabular-nums">{money(r.cost)}</td>
-          </tr>
+          <TableRow key={r.key}>
+            <TableCell className="max-w-[14rem] truncate">{label(r.key)}</TableCell>
+            <TableCell className="text-right tabular-nums">{number(r.requests)}</TableCell>
+            <TableCell className="text-right tabular-nums">{number(r.tokens)}</TableCell>
+            <TableCell className="text-right tabular-nums">{money(r.cost)}</TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }
 

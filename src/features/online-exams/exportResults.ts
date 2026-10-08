@@ -1,4 +1,6 @@
 import { formatExamTime, formatMarks, formatPercent, RESULT_STATUS_LABEL } from "./constants";
+import { LETTERHEAD_CSS, letterheadHtml } from "@/features/tenant/printLetterhead";
+import type { TenantBranding } from "@/features/tenant/branding";
 import type { ExamResults } from "./types";
 
 const csvCell = (v: string | number | null | undefined) => {
@@ -39,7 +41,7 @@ export function downloadResultsCsv(r: ExamResults) {
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 /** Open a clean, printable results sheet in a new window (the app shell isn't printed). */
-export function printResults(r: ExamResults, schoolName?: string) {
+export function printResults(r: ExamResults, branding?: TenantBranding) {
   const w = window.open("", "_blank", "width=900,height=700");
   if (!w) return false;
   const s = r.summary;
@@ -64,10 +66,12 @@ export function printResults(r: ExamResults, schoolName?: string) {
   .sum div{border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px} .sum b{display:block;font-size:16px}
   table{width:100%;border-collapse:collapse} th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e2e8f0}
   th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#475569;background:#f8fafc}
+  ${LETTERHEAD_CSS}
   @media print{body{margin:12mm}}
 </style></head><body>
+${branding ? letterheadHtml(branding) : ""}
 <h1>${esc(r.exam.name)}</h1>
-<p class="muted">${esc([schoolName, r.exam.subjectName, r.exam.className, `Total ${formatMarks(r.exam.totalMarks)} · Pass ${formatMarks(r.exam.passingMarks)}`].filter(Boolean).join(" · "))}</p>
+<p class="muted">${esc([r.exam.subjectName, r.exam.className, `Total ${formatMarks(r.exam.totalMarks)} · Pass ${formatMarks(r.exam.passingMarks)}`].filter(Boolean).join(" · "))}</p>
 <div class="sum">${summary.map(([k, v]) => `<div>${esc(k)}<b>${esc(v)}</b></div>`).join("")}</div>
 <table><thead><tr>${HEADERS.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>
 <script>window.onload=function(){window.print()}</script>

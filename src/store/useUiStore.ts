@@ -3,7 +3,8 @@ import { persist } from "zustand/middleware";
 import { applyThemeMode, type ThemeMode } from "@/features/settings/theme";
 import { DEFAULT_DATE_RANGE } from "@/features/dashboard/dateRange";
 import type { DashboardDateRange, DashboardScopeView } from "@/features/dashboard/types";
-import type { DashboardWidgetId } from "@/features/dashboard/widgets";
+import type { SavedDashboardLayout } from "@/features/dashboard/layout";
+import type { DashboardDataSource } from "@/features/dashboard/dataSource";
 
 interface UiState {
   isSidebarCollapsed: boolean;
@@ -20,9 +21,16 @@ interface UiState {
   setDashboardScopeView: (view: DashboardScopeView) => void;
   dashboardDateRange: DashboardDateRange;
   setDashboardDateRange: (range: DashboardDateRange) => void;
-  /** Stored as the *hidden* set so widgets added in future releases show up by default. */
-  hiddenDashboardWidgets: DashboardWidgetId[];
-  setHiddenDashboardWidgets: (ids: DashboardWidgetId[]) => void;
+  /**
+   * Each user's saved widget layout (order, size, shown/hidden), keyed by user id. Resolved against the widgets
+   * the user may see on every load, so a stale layout never brings back a widget they've lost access to.
+   */
+  dashboardLayouts: Record<string, SavedDashboardLayout>;
+  /** null = forget the saved layout (back to the role's default dashboard). */
+  setDashboardLayout: (userId: string, layout: SavedDashboardLayout | null) => void;
+  /** This browser's live/demo choice; null = the deployment default. Ignored where demo data isn't allowed. */
+  dashboardDataSource: DashboardDataSource | null;
+  setDashboardDataSource: (source: DashboardDataSource | null) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -48,9 +56,25 @@ export const useUiStore = create<UiState>()(
       setDashboardScopeView: (view) => set({ dashboardScopeView: view }),
       dashboardDateRange: DEFAULT_DATE_RANGE,
       setDashboardDateRange: (range) => set({ dashboardDateRange: range }),
-      hiddenDashboardWidgets: [],
-      setHiddenDashboardWidgets: (ids) => set({ hiddenDashboardWidgets: ids }),
+      dashboardLayouts: {},
+      setDashboardLayout: (userId, layout) =>
+        set((s) => {
+          const next = { ...s.dashboardLayouts };
+          if (layout) next[userId] = layout;
+          else delete next[userId];
+          return { dashboardLayouts: next };
+        }),
+      dashboardDataSource: null,
+      setDashboardDataSource: (source) => set({ dashboardDataSource: source }),
     }),
-    { name: "sms-ui" },
+    {
+      name: "sms-ui",
+      version: 1,
+      // v0 kept one browser-wide list of hidden widgets; v1 saves a full layout per user.
+      migrate: (persisted) => {
+        const { hiddenDashboardWidgets: _legacy, ...rest } = (persisted ?? {}) as Record<string, unknown>;
+        return rest as unknown as UiState;
+      },
+    },
   ),
 );

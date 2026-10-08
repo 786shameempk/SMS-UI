@@ -13,6 +13,12 @@
  * Each URL must be reachable from the user's browser and end with a slash, e.g. "https://api.example.com/auth/".
  */
 window.__EDUCORE_CONFIG__ = {
+  // Public address of the application (login etc.) when it runs on a different host than this site, e.g.
+  // "https://demo.sms-schoolsphere.com". Empty = same origin.
+  appUrl: "",
+  // Public address of the marketing site (landing page) when the application runs on a different host, e.g.
+  // "https://sms-schoolsphere.com" - where the login page's "Back to website" goes. Empty = same origin.
+  siteUrl: "",
   authApiUrl: "",
   academicApiUrl: "",
   financeApiUrl: "",
@@ -20,4 +26,11 @@ window.__EDUCORE_CONFIG__ = {
   engagementApiUrl: "",
   meetingApiUrl: "",
   aiApiUrl: "",
+  // Dashboard sample figures. "true" allows them (never in production); dashboardDataSource picks the default.
+  allowDemoData: "",
+  dashboardDataSource: "",
+  // Schools are reached at {subdomain}.tenantBaseDomain (greenvalley.sms-schoolsphere.com). Empty = sms-schoolsphere.com.
+  tenantBaseDomain: "",
+  // Comma-separated subdomains of tenantBaseDomain that are the platform itself, not a school (e.g. "www,demo"). Empty = "www".
+  platformSubdomains: "",
 };

@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { mustChangePassword } from "@/lib/tokenClaims";
 
 /** setTimeout clamps at ~24.8 days; longer "remember me" sessions are re-armed on the next check. */
 const MAX_TIMER_MS = 2_147_483_647;
@@ -11,8 +12,10 @@ const MAX_TIMER_MS = 2_147_483_647;
  *  - the remembered session lifetime passes (timer below, re-checked when the tab regains focus),
  *  - an API call returns 401 and the token can't be renewed (lib/httpClient.ts),
  *  - the user signs out.
+ * An account with a temporary password can only reach /change-password (AuthService refuses everything else with
+ * 403 password_change_required), so every other signed-in page sends it there; that page passes `allowPasswordChange`.
  */
-export default function ProtectedRoute({ children }: { children: ReactNode }) {
+export default function ProtectedRoute({ children, allowPasswordChange = false }: { children: ReactNode; allowPasswordChange?: boolean }) {
   const location = useLocation();
   const token = useAuthStore((s) => s.token);
   const expiresAt = useAuthStore((s) => s.expiresAt);
@@ -44,6 +47,9 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!token || !sessionValid) {
     return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}${location.hash}` }} />;
+  }
+  if (!allowPasswordChange && mustChangePassword(token)) {
+    return <Navigate to="/change-password" replace />;
   }
   return <>{children}</>;
 }

@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#ECA427" />
+<meta name="description" content="Shameem P.K., founder of SMS-SchoolSphere: the story, the team and the 18-month roadmap." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<title>SMS-SchoolSphere Founder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: one centred founder card up top, then a reading column with an 18-month timeline drawn to scale. */
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --ink: #1D2028;
+    --muted: #5D6170;
+    --line: #E4E1D8;
+    --brand: #D68F14;
+    --brand-deep: #A06212;
+    --brand-soft: #FBEFD7;
+    --on-brand: #FFFFFF;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15161A; --surface: #1E2026; --ink: #EDEBE6; --muted: #A3A5AE; --line: #30323A;
+      --brand: #ECA427; --brand-deep: #F3BC5A; --brand-soft: #3A2E17; --on-brand: #1B1406;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15161A; --surface: #1E2026; --ink: #EDEBE6; --muted: #A3A5AE; --line: #30323A;
+    --brand: #ECA427; --brand-deep: #F3BC5A; --brand-soft: #3A2E17; --on-brand: #1B1406;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 400 1rem/1.65 var(--body);
+    padding-inline: 16px; padding-block: 40px 64px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 56px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 1.6rem; font-weight: 700; }
+  p { margin: 0; }
+  a { color: var(--brand-deep); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 6px; }
+  .eyebrow {
+    font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand-deep);
+  }
+  section { display: grid; gap: 16px; }
+  .prose { display: grid; gap: 14px; color: var(--muted); max-width: 65ch; }
+  .prose strong { color: var(--ink); font-weight: 600; }
+
+  /* Founder card */
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+    box-shadow: 0 20px 50px -30px rgb(60 40 10 / 0.35);
+    overflow: hidden;
+  }
+  .card-top {
+    background: linear-gradient(135deg, #ECA427, #A06212); color: #fff;
+    padding: 28px 28px 64px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .mark { width: 44px; height: 44px; flex: none; }
+  .brand-name { font: 800 1.35rem/1.1 var(--display); }
+  .brand-tag { font-size: 0.92rem; opacity: 0.92; }
+  .card-body { padding: 0 28px 28px; display: grid; gap: 20px; }
+  .who { display: flex; align-items: flex-end; gap: 18px; margin-top: -44px; flex-wrap: wrap; }
+  .avatar {
+    width: 92px; height: 92px; border-radius: 50%; flex: none;
+    display: grid; place-items: center;
+    background: var(--surface); border: 4px solid var(--surface);
+    box-shadow: 0 0 0 2px var(--brand);
+    font: 800 2rem/1 var(--display); color: var(--brand-deep);
+  }
+  .who-text { display: grid; gap: 2px; padding-bottom: 6px; min-width: 0; }
+  .who-text h1 { font-size: clamp(1.7rem, 5vw, 2.2rem); font-weight: 800; }
+  .role { color: var(--muted); font-weight: 500; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 0.85rem; font-weight: 500; padding: 5px 12px; border-radius: 999px;
+    background: var(--brand-soft); color: var(--ink);
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    font: 600 0.92rem/1 var(--body); padding: 11px 16px; border-radius: 10px;
+    border: 1px solid var(--line); color: var(--ink); background: var(--surface); cursor: pointer;
+  }
+  .btn:hover { border-color: var(--brand); }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+  .btn svg { width: 16px; height: 16px; flex: none; }
+
+  /* Strengths */
+  .strengths { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; padding: 0; margin: 0; list-style: none; }
+  .strengths li {
+    display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-weight: 500;
+  }
+  .strengths li::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand); margin-top: 0.55em; flex: none;
+  }
+
+  /* Roadmap: month scale 1-18 */
+  .scale-wrap { overflow-x: auto; }
+  .scale { min-width: 480px; display: grid; gap: 6px; }
+  .scale-row { display: grid; grid-template-columns: repeat(18, 1fr); gap: 3px; }
+  .scale-row .m { font: 500 0.68rem/1 var(--mono); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+  .bar {
+    height: 30px; border-radius: 6px; display: flex; align-items: center; padding-inline: 10px;
+    font: 600 0.82rem/1 var(--body); white-space: nowrap; overflow: hidden;
+  }
+  .bar.p1 { grid-column: 1 / span 3; background: var(--brand-soft); color: var(--ink); }
+  .bar.p2 { grid-column: 4 / span 6; background: color-mix(in srgb, var(--brand) 55%, var(--surface)); color: var(--ink); }
+  .bar.p3 { grid-column: 10 / span 9; background: var(--brand); color: var(--on-brand); }
+
+  .phases { display: grid; gap: 14px; }
+  .phase {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px;
+    display: grid; gap: 12px;
+  }
+  .phase-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; }
+  .phase-head h3 { font-size: 1.2rem; font-weight: 700; }
+  .months { font: 500 0.78rem/1 var(--mono); color: var(--brand-deep); }
+  .phase ul { margin: 0; padding-left: 1.1rem; color: var(--muted); display: grid; gap: 4px; }
+  .milestone {
+    border-top: 1px dashed var(--line); padding-top: 12px; font-weight: 500;
+    display: grid; gap: 4px;
+  }
+  .milestone .eyebrow { font-size: 0.66rem; }
+
+  /* Approach flow */
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0; margin: 0; list-style: none; }
+  .flow li { display: flex; align-items: center; gap: 8px; font: 700 1rem/1 var(--display); }
+  .flow li span { padding: 10px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+  .flow li:last-child span { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+  .flow li + li::before { content: "→"; color: var(--brand-deep); font-family: var(--body); }
+
+  /* Contact */
+  .contact { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 26px; display: grid; gap: 18px; }
+  .contact dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 12px 20px; align-items: center; }
+  .contact dt { font: 500 0.72rem/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .contact dd { margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; overflow-wrap: anywhere; font-weight: 500; }
+  .copy {
+    font: 600 0.75rem/1 var(--body); padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+  }
+  .copy:hover { color: var(--ink); border-color: var(--brand); }
+  footer { text-align: center; color: var(--muted); font-size: 0.9rem; }
+
+  @media (max-width: 520px) {
+    .card-top, .card-body { padding-inline: 20px; }
+    .contact { padding: 20px; }
+    .contact dl { grid-template-columns: 1fr; gap: 4px; }
+    .contact dd { margin-bottom: 10px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn, .copy { transition: border-color .15s, color .15s; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <article class="card" aria-label="Founder card">
+    <div class="card-top">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="rgb(255 255 255 / 0.18)"/>
+        <g transform="translate(5 5) scale(0.9167)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
+          <path d="M22 10v6"/>
+          <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>
+        </g>
+      </svg>
+      <div>
+        <div class="brand-name">SMS-SchoolSphere</div>
+        <div class="brand-tag">Building a smarter, scalable future for school management</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="who">
+        <div class="avatar" aria-hidden="true">SP</div>
+        <div class="who-text">
+          <h1>Shameem P.K.</h1>
+          <div class="role">Founder, SMS-SchoolSphere</div>
+        </div>
+      </div>
+      <div class="facts">
+        <span class="chip">14 years in software</span>
+        <span class="chip">International clients</span>
+        <span class="chip">Cloud school management</span>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="https://sms-schoolsphere.com/login" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          Try the live demo
+        </a>
+        <a class="btn" href="https://www.linkedin.com/in/shameem-p-k" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4v11H3zM9.75 9.75h3.8v1.5h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1v5.46h-4v-4.84c0-1.15-.02-2.64-1.6-2.64-1.62 0-1.86 1.26-1.86 2.56v4.92h-4z"/></svg>
+          LinkedIn
+        </a>
+        <a class="btn" href="https://wa.me/919656040881" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>
+          WhatsApp
+        </a>
+        <a class="btn" href="https://www.sms-schoolsphere.com" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+          Website
+        </a>
+      </div>
+    </div>
+  </article>
+
+  <section>
+    <div class="eyebrow">About the founder</div>
+    <h2>Fourteen years of building software for others. Now building our own.</h2>
+    <div class="prose">
+      <p>I am Shameem P.K., a software professional with <strong>14 years of experience</strong> in the software industry. I have worked with international clients and helped develop and deliver software across many domains.</p>
+      <p>SMS-SchoolSphere is my first step toward building my own software company and product business.</p>
+      <p>My vision is a technology company that makes <strong>practical, scalable and affordable</strong> software for real business problems. We are starting with education, where there is a clear opportunity to simplify and modernise how schools are run.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Why SMS-SchoolSphere</div>
+    <h2>One platform for the whole school</h2>
+    <div class="prose">
+      <p>SMS-SchoolSphere is a modern, cloud-based school management platform that brings administrators, teachers, students and parents together in one place.</p>
+      <p>Our focus is more than the software. We are building a <strong>sustainable SaaS business</strong> with real customers, recurring revenue and long-term growth.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Our team</div>
+    <h2>A founding team of four brothers</h2>
+    <div class="prose">
+      <p>Three more team members, my brothers, contribute part-time. They bring experience in software development and in education. Together we have:</p>
+    </div>
+    <ul class="strengths">
+      <li>14+ years of software industry experience</li>
+      <li>International client exposure</li>
+      <li>Software engineering and product development</li>
+      <li>Understanding of the education domain</li>
+      <li>Strong technical capabilities</li>
+      <li>A trusted team with a shared long-term vision</li>
+    </ul>
+    <div class="prose">
+      <p>We want to grow SMS-SchoolSphere from one product into a larger technology company with several products and business lines.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">18-month roadmap</div>
+    <h2>From stable product to scaling business</h2>
+    <div class="scale-wrap" role="img" aria-label="Timeline: Build and Stabilize in months 1 to 3, Validate and Acquire Customers in months 4 to 9, Scale SchoolSphere in months 10 to 18.">
+      <div class="scale">
+        <div class="scale-row">
+          <div class="bar p1">Build</div>
+          <div class="bar p2">Validate &amp; acquire</div>
+          <div class="bar p3">Scale</div>
+        </div>
+        <div class="scale-row" aria-hidden="true">
+          <span class="m">1</span><span class="m">2</span><span class="m">3</span><span class="m">4</span><span class="m">5</span><span class="m">6</span>
+          <span class="m">7</span><span class="m">8</span><span class="m">9</span><span class="m">10</span><span class="m">11</span><span class="m">12</span>
+          <span class="m">13</span><span class="m">14</span><span class="m">15</span><span class="m">16</span><span class="m">17</span><span class="m">18</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-head"><h3>Phase 1: Build &amp; Stabilize</h3><span class="months">MONTHS 1–3</span></div>
+        <ul>
+          <li>Register the company and set up its legal and business structure.</li>
+          <li>Finalise and stabilise the SMS-SchoolSphere platform.</li>
+          <li>Strengthen security, scalability, reliability and user experience.</li>
+          <li>Complete the production infrastructure.</li>
+          <li>Start pilots with selected schools.</li>
+          <li>Collect feedback from school management, teachers, students and parents.</li>
+        </ul>
+        <div class="milestone"><span class="eyebrow">Milestone</span>A stable, production-ready product ready for commercial adoption.</div>
+      </div>
+      <div class="phase">
+        <div class="phase-head"><h3>Phase 2: Validate &amp; Acquire Customers</h3><span class="months">MONTHS 4–9</span></div>
+        <ul>
+          <li>Begin focused sales and marketing to schools.</li>
+          <li>Onboard the first schools and paying customers.</li>
+          <li>Set up a structured onboarding and support process.</li>
+          <li>Build a repeatable sales and implementation model.</li>
+          <li>Develop customer references and case studies.</li>
+          <li>Keep improving the product from real-world use.</li>
+        </ul>
+        <div class="milestone"><span class="eyebrow">Milestone</span>Show product-market fit and a repeatable way to win customers.</div>
+      </div>
+      <div class="phase">
+        <div class="phase-head"><h3>Phase 3: Scale SchoolSphere</h3><span class="months">MONTHS 10–18</span></div>
+        <ul>
+          <li>Expand across schools in Kerala.</li>
+          <li>Gradually enter other Indian markets.</li>
+          <li>Grow recurring SaaS revenue.</li>
+          <li>Add high-demand modules and integrations.</li>
+          <li>Grow the sales, customer success, support and product teams.</li>
+          <li>Scale infrastructure for a much larger user base.</li>
+        </ul>
+        <div class="milestone"><span class="eyebrow">Milestone</span>SMS-SchoolSphere established as a scalable EdTech SaaS business with growing customers and recurring revenue.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Long-term vision</div>
+    <h2>Education first, then beyond</h2>
+    <div class="prose">
+      <p>Focusing on one sector first lets us build a strong product, understand customers deeply, earn recurring revenue and create an operating model that scales.</p>
+      <p>Once SMS-SchoolSphere reaches meaningful milestones in adoption, revenue, stability and operations, we will use the technology and experience we have built to explore sectors beyond education.</p>
+    </div>
+    <ol class="flow" aria-label="Our approach">
+      <li><span>Build</span></li>
+      <li><span>Validate</span></li>
+      <li><span>Acquire customers</span></li>
+      <li><span>Scale</span></li>
+      <li><span>Establish</span></li>
+      <li><span>Expand</span></li>
+    </ol>
+  </section>
+
+  <section class="contact" id="connect">
+    <div class="eyebrow">Let's connect</div>
+    <h2>Shameem P.K.</h2>
+    <dl>
+      <dt>Email</dt>
+      <dd><span id="email">shameem@sms-schoolsphere.com</span><button class="copy" type="button" data-copy="email">Copy</button></dd>
+      <dt>Phone / WhatsApp</dt>
+      <dd><span id="phone">+91 96560 40881</span><button class="copy" type="button" data-copy="phone">Copy</button></dd>
+      <dt>Founder</dt>
+      <dd><a href="https://www.linkedin.com/in/shameem-p-k" target="_blank" rel="noopener">linkedin.com/in/shameem-p-k</a></dd>
+      <dt>Company</dt>
+      <dd><a href="https://www.linkedin.com/in/sms-schoolsphere-1a0024441" target="_blank" rel="noopener">linkedin.com/in/sms-schoolsphere-1a0024441</a></dd>
+      <dt>Website</dt>
+      <dd><a href="https://www.sms-schoolsphere.com" target="_blank" rel="noopener">www.sms-schoolsphere.com</a></dd>
+      <dt>Live demo</dt>
+      <dd><a href="https://sms-schoolsphere.com/login" target="_blank" rel="noopener">sms-schoolsphere.com/login</a></dd>
+    </dl>
+  </section>
+
+  <footer>SMS-SchoolSphere: school operations made simpler, smarter and more connected.</footer>
+</div>
+
+<script>
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.textContent.trim();
+      var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
+      var fallback = function () {
+        var range = document.createRange(); range.selectNodeContents(el);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        btn.textContent = "Selected";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+      };
+      try {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } catch (e) { fallback(); }
+    });
+  });
+</script>
+</body>
+</html>

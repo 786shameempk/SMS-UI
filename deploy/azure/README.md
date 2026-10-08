@@ -1,25 +1,29 @@
 # Deploying SMS to an Azure Linux VM
 
-One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, SQL Server, Redis and
-Caddy, which is the only public entry point and handles HTTPS.
-
-LiveKit (in-app video classes + recording) is **not deployed yet**. MeetingService still runs and
-external-link meetings (Zoom/Meet/Teams URLs) work; in-app video classes won't connect until LiveKit is added.
+One VM runs everything with Docker Compose: the UI and 8 .NET services from GHCR, Redis,
+LiveKit + Egress (in-app video classes and recordings) and Caddy, which handles HTTPS. The databases are on
+Azure SQL (`AZURE_SQL_SERVER` in `.env`); create the seven service databases there first and allow the VM through the server firewall.
 
 ```
 Browser ──443──> Caddy ─┬─ /            -> ui
                         ├─ /services/*  -> apigateway -> auth / academic / finance / campus / engagement / meeting / ai
-                        └─ /api/*       -> apigateway (reports)
+                        ├─ /api/*       -> apigateway (reports)
+                        └─ /livekit/*   -> livekit (video signalling, WebSocket)
+
+Browser ── 7882/udp, 7881/tcp, 3478/udp (TURN) ──> livekit   (video and audio media, direct)
+livekit ── Redis ──> egress (records a class to MP4 in meeting-files) ──> meetingservice uploads it to blob storage
 ```
 
 ## 1. VM
 
 - Ubuntu 24.04 LTS, x86_64 (SQL Server has no ARM image).
 - Size: at least **4 vCPU / 8 GB** (e.g. `Standard_B4ms` or `D2s_v5` with 8 GB for a small start).
-  SQL Server wants 2 GB+ and each .NET service ~200-300 MB.
-- A static public IP.
-- Network security group, inbound: `22/tcp` (your IP only), `80/tcp`, `443/tcp`, `443/udp`.
-  Do **not** open 1433 or 6379.
+  SQL Server wants 2 GB+ and each .NET service ~200-300 MB. Recording classes adds about 2-4 vCPU per
+  recording in progress, so for regular recordings use **8 vCPU / 16 GB** (e.g. `D4s_v5`), or set
+  `LIVEKIT_EGRESS_ENABLED=false` to run live classes without recording.
+- A static public IP (LiveKit advertises it to browsers for media).
+- Network security group, inbound: `22/tcp` (your IP only), `80/tcp`, `443/tcp`, `443/udp`, and for video
+  `7881/tcp`, `7882/udp`, `3478/udp`. Do **not** open 1433, 6379 or 7880.
 
 ## 2. DNS
 
@@ -29,6 +33,28 @@ before the first start, or Caddy can't get a certificate.
 More domains on the same VM: add an A record for each to the same IP, list them in `.env` as
 `EXTRA_DOMAINS` (space-separated), then `docker compose up -d caddy`. Caddy gets a certificate for each and
 redirects them to `DOMAIN`.
+
+### School subdomains (multi-tenant)
+
+Each school opens the one shared app at `{subdomain}.sms-schoolsphere.com` (e.g. `greenvalley.sms-schoolsphere.com`);
+the school is identified from the hostname, so there is no school picker and no per-school build.
+
+1. Add one wildcard A record: `*.sms-schoolsphere.com` -> the VM's public IP (the explicit records for `DOMAIN`,
+   `www` and `APP_DOMAIN` keep working; more specific names win).
+2. `TENANT_BASE_DOMAIN` in `.env` (default `sms-schoolsphere.com`) is the suffix schools live under.
+3. HTTPS: Caddy issues a certificate for a school's host on its first visit (on-demand TLS, plain HTTP-01, no DNS plugin),
+   but only after AuthService confirms the subdomain belongs to a live tenant (`GET /api/tenant/domain-check`), so unknown
+   names get no certificate. Let's Encrypt rate limits apply (50 new certificates per week per registered domain); if you
+   expect to onboard more schools than that, switch to a wildcard certificate via a DNS-challenge Caddy build.
+4. `PLATFORM_SUBDOMAINS` (default `www,demo`) lists hosts that are the platform itself, not a school: no tenant lookup and
+   any account (including the Super Admin) can sign in there. `APP_DOMAIN`'s subdomain (`demo`) belongs in this list until
+   you create a tenant with that subdomain; then remove it so `demo.sms-schoolsphere.com` becomes that school.
+5. Create the school in Platform Console -> Tenants -> New tenant: enter only the subdomain, the full address is generated.
+   Subdomains are unique, lowercase letters/digits/hyphens, and `www`, `api`, `admin` and other platform names are reserved.
+6. On a school host, only that school's users can sign in (checked on the server; a mismatch looks like a wrong password),
+   and the API is called on the same host (`/services/*`), so no extra CORS setup is needed.
+7. Each school sets its logo, name, email and contact number in Settings -> School Profile. Anything it leaves empty falls
+   back to School Sphere's logo/name, and an empty email/contact number is simply not shown.
 
 ## 3. Build the images
 
@@ -123,20 +149,10 @@ Pin `IMAGE_TAG` / `UI_IMAGE_TAG` in `.env` to a `sha-xxxxxxx` tag to deploy or r
 ## Backups
 
 Uploaded files are in Azure Blob Storage (see section 5; turn on soft delete and versioning there). On the VM, the
-stateful volumes are `sqlserver-data`, `redis-data`, `meeting-files` (the meeting encryption key ring, and
+stateful volumes are `redis-data`, `meeting-files` (the meeting encryption key ring, and
 recordings until they're uploaded) and `caddy-data` (certificates).
-At minimum, back up the databases regularly, for example:
-
-```bash
-docker compose exec sqlserver mkdir -p /var/opt/mssql/backup
-docker compose exec sqlserver sh -c '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C \
-  -Q "BACKUP DATABASE AuthServiceDb TO DISK='"'"'/var/opt/mssql/backup/AuthServiceDb.bak'"'"' WITH INIT"'
-```
-
-(repeat per database, then copy the `.bak` files off the VM, e.g. to Azure Blob Storage), and enable
-Azure Backup / disk snapshots for the VM.
+Databases are on Azure SQL, which has automatic backups with point-in-time restore (check the retention setting on the
+server). Enable Azure Backup / disk snapshots for the VM as well.
 
 ## Notes
 
-- SQL Server runs as **Express** (free, 10 GB per database). The Developer edition is not licensed for
-  production; set `MSSQL_PID=Standard` only if you have a licence.
