@@ -4,8 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NAV_SECTIONS } from "@/constants/nav";
-import { useAuthStore } from "@/store/authStore";
-import { useAiCapabilities } from "../capabilities";
+import { useAskAi, useAskAiAvailable } from "../askAi";
 import AssistantChat from "./AssistantChat";
 
 /** The nav label of the screen being viewed (longest matching path), sent as a hint so answers start from there. */
@@ -51,10 +50,10 @@ function readStoredPos(): Pos {
  */
 export default function AskAiLauncher() {
   const { pathname } = useLocation();
-  const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
-  const { can } = useAiCapabilities();
+  const available = useAskAiAvailable();
   const page = usePageLabel(pathname);
-  const [open, setOpen] = useState(false);
+  const open = useAskAi((s) => s.open);
+  const setOpen = useAskAi((s) => s.setOpen);
   const [pos, setPos] = useState<Pos>(readStoredPos);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const drag = useRef<{ x: number; y: number; start: Pos; moved: boolean } | null>(null);
@@ -134,7 +133,7 @@ export default function AskAiLauncher() {
   }, [open]);
 
   // The AI page already is the assistant.
-  if (!aiModule || !can("chat") || pathname === "/ai") return null;
+  if (!available) return null;
 
   return (
     <>

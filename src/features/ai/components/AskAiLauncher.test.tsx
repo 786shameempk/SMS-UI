@@ -1,7 +1,8 @@
 import userEvent from "@testing-library/user-event";
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { allModules, renderWithProviders, signIn, signOut } from "@/test/utils";
 import AskAiLauncher from "./AskAiLauncher";
+import { useAskAi } from "../askAi";
 
 const caps = vi.hoisted(() => ({ chat: true }));
 vi.mock("../capabilities", () => ({
@@ -15,7 +16,19 @@ describe("AskAiLauncher", () => {
   beforeEach(() => {
     caps.chat = true;
   });
-  afterEach(signOut);
+  afterEach(() => {
+    useAskAi.setState({ open: false });
+    signOut();
+  });
+
+  it("opens from the header button too: both drive the same panel", async () => {
+    signIn("teacher");
+    renderWithProviders(<AskAiLauncher />, { route: "/attendance" });
+
+    act(() => useAskAi.getState().toggle());
+
+    expect(await screen.findByRole("dialog", { name: "Ask School AI" })).toBeInTheDocument();
+  });
 
   it("opens the assistant with the current page as context and closes on Escape", async () => {
     signIn("teacher");

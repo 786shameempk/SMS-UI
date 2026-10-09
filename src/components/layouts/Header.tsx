@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/utils/cn";
-import { ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, Search, ShieldCheck, Sun } from "lucide-react";
+import { ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, Search, ShieldCheck, Sparkles, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { hasAllBranchAccess } from "@/types/auth";
@@ -17,6 +17,7 @@ import type { ThemeMode } from "@/features/settings/theme";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import { useMobileNav } from "@/components/layouts/mobileNav";
 import { findNavEntry } from "@/constants/nav";
+import { useAskAi, useAskAiAvailable } from "@/features/ai/askAi";
 import { BranchSwitcher, TenantSwitcher } from "./ScopeSwitchers";
 import CommandMenu, { openCommandMenu } from "./CommandMenu";
 
@@ -156,6 +157,26 @@ const ROLE_LABEL: Record<string, string> = {
   student: "Student",
 };
 
+/** The assistant, always one click away: same panel as the floating launcher, but where people look for actions. */
+function AskAiButton() {
+  const available = useAskAiAvailable();
+  const open = useAskAi((s) => s.open);
+  const toggle = useAskAi((s) => s.toggle);
+  if (!available) return null;
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={open}
+      aria-label="Ask AI"
+      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-brand-gradient px-3 text-[13px] font-semibold text-primary-foreground shadow-brand ring-1 ring-inset ring-white/25 transition-transform hover:-translate-y-px cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Sparkles className="h-4 w-4" aria-hidden="true" />
+      <span className="hidden sm:inline">Ask AI</span>
+    </button>
+  );
+}
+
 export default function Header() {
   const { user, clearAuth } = useAuthStore();
   const navigate = useNavigate();
@@ -185,6 +206,7 @@ export default function Header() {
         <Breadcrumbs />
       </div>
 
+      <AskAiButton />
       <CommandMenu />
 
       {/* School/branch scope: header on tablet+, phone nav drawer below md. */}

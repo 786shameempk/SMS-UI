@@ -51,6 +51,9 @@ function NavItemLink({ item, isCollapsed, active }: { item: NavItem; isCollapsed
         aria-hidden="true"
       />
       {!isCollapsed && <span className="truncate">{item.label}</span>}
+      {!isCollapsed && item.badge && (
+        <span className="ml-auto shrink-0 rounded-full bg-sidebar-foreground/15 px-1.5 py-px text-[10px] font-bold leading-4 tracking-wide text-sidebar-foreground">{item.badge}</span>
+      )}
     </NavLink>
   );
 
