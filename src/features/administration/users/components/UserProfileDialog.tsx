@@ -14,6 +14,7 @@ import type { SystemUser, UserPreferences } from "../types";
 import UserStatusBadge from "./UserStatusBadge";
 import SecurityTab from "./SecurityTab";
 import SessionsTab from "./SessionsTab";
+import UserStudentsTab from "./UserStudentsTab";
 
 function initialsOf(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
@@ -52,7 +53,10 @@ export default function UserProfileDialog({
 
   if (!user) return null;
 
-  const roleName = roles.find((r) => r.id === user.roleId)?.name ?? "—";
+  const role = roles.find((r) => r.id === user.roleId);
+  const roleName = role?.name ?? "—";
+  const isParent = role?.key === "parent";
+  const showStudents = isParent || role?.key === "student";
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,6 +97,7 @@ export default function UserProfileDialog({
         <Tabs defaultValue="profile">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            {showStudents && <TabsTrigger value="students">Students</TabsTrigger>}
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
@@ -146,6 +151,12 @@ export default function UserProfileDialog({
               </div>
             </dl>
           </TabsContent>
+
+          {showStudents && (
+            <TabsContent value="students">
+              <UserStudentsTab userId={user.id} isParent={isParent} />
+            </TabsContent>
+          )}
 
           <TabsContent value="preferences" className="space-y-5">
             <div className="space-y-1.5">

@@ -65,6 +65,20 @@ describe("parent portal api", () => {
     expect((await portal.getMyChildren(" PARENT@mail.test")).map((s) => s.id)).toEqual(["st1", "st2"]);
   });
 
+  it("prefers the children an admin linked to this login, even when the guardian's email differs", async () => {
+    const getStudent = (await import("@/features/students/api")).getStudent as unknown as ReturnType<typeof vi.fn>;
+    getStudent.mockImplementation(async (id: string) => ({ id, className: "Class 5" }));
+    stubClient(academicHttpClient, { "GET api/people/me": { student: null, children: [{ studentId: "stA" }, { studentId: "stB" }, { studentId: "stA" }] } });
+
+    expect((await portal.getMyChildren("someone-else@mail.test")).map((s) => s.id)).toEqual(["stA", "stB"]);
+  });
+
+  it("falls back to the guardian email when nothing is linked yet", async () => {
+    stubClient(academicHttpClient, { "GET api/people/me": { student: null, children: [] } });
+
+    expect((await portal.getMyChildren("parent@mail.test")).map((s) => s.id)).toEqual(["st1", "st2"]);
+  });
+
   it("summarises the child's last 90 days of attendance", async () => {
     const summary = await portal.getAttendanceSummary("st1");
 

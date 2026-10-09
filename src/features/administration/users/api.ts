@@ -1,4 +1,4 @@
-import { AUTH_API_BASE_URL, authHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
+import { AUTH_API_BASE_URL, academicHttpClient, authHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
 import type { DeviceRecord, SessionRecord } from "@/features/authentication/types";
 import type { LoginHistoryEntry, SystemUser, UserFormValues, UserPreferences, UserStatus } from "./types";
 
@@ -164,4 +164,23 @@ export async function listUserDevices(id: string): Promise<DeviceRecord[]> {
 export async function revokeUserDevice(id: string, deviceId: string): Promise<{ message: string }> {
   await unwrap(authHttpClient.delete<void>(`${base}/${id}/devices/${deviceId}`));
   return { message: "Device signed out" };
+}
+
+export interface UserLinkedStudent {
+  studentId: string;
+  name: string;
+  classLabel: string;
+  status: string;
+  /** "Father", "Mother"... for a parent login, "Student" for a student's own login. */
+  relation: string;
+  guardianId: string | null;
+}
+
+/** The students a login is mapped to (AcademicService; admin and principal only). */
+export async function getUserLinkedStudents(userId: string): Promise<UserLinkedStudent[]> {
+  try {
+    return (await academicHttpClient.get<UserLinkedStudent[]>(`api/people/users/${userId}/students`)).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
+  }
 }
