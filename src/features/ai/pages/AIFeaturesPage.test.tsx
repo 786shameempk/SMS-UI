@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders, signIn, signOut } from "@/test/utils";
 import AIFeaturesPage from "./AIFeaturesPage";
@@ -30,6 +30,8 @@ const on = { allowed: true, available: true };
 const unsupportedHere = { allowed: true, available: false };
 
 describe("AIFeaturesPage", () => {
+  beforeEach(() => localStorage.clear());
+
   afterEach(() => {
     signOut();
     features = {};
@@ -88,5 +90,86 @@ describe("AIFeaturesPage", () => {
     features = { chat: on, "view-usage": on };
     renderWithProviders(<AIFeaturesPage />);
     expect(screen.getByRole("tab", { name: "AI Usage" })).toBeInTheDocument();
+  });
+  it("opens the tab named in the link, and remembers a chosen tab in the address", async () => {
+    signIn("admin");
+    features = { chat: on, "view-usage": on };
+    const user = userEvent.setup();
+    renderWithProviders(<AIFeaturesPage />, { route: "/ai?tab=usage" });
+
+    expect(screen.getByRole("tab", { name: "AI Usage" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("usage")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Insights" }));
+    expect(screen.getByText("insights")).toBeInTheDocument();
+  });
+
+  it("opens on the landing view when the link names a feature the user cannot use", () => {
+    signIn("parent");
+    features = { chat: on };
+    renderWithProviders(<AIFeaturesPage />, { route: "/ai?tab=usage" });
+
+    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("heading", { level: 2, name: "What would you like to do?" })).toBeInTheDocument();
+  });
+
+  it("lands on feature cards for only what this user may use, grouped by purpose", () => {
+    signIn("teacher");
+    features = { chat: on, "generate-questions": on };
+    renderWithProviders(<AIFeaturesPage />);
+
+    expect(screen.getByRole("tablist", { name: "AI features" })).toBeInTheDocument();
+    for (const group of ["Ask & learn", "Teach & create"]) expect(screen.getAllByText(group).length).toBeGreaterThan(0);
+    // Cards are buttons in the panel; the same features are tabs in the list.
+    expect(screen.getAllByRole("button", { name: /Ask School AI/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /Teacher Tools/ }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /Analytics Assistant/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /AI Usage/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("assistant")).not.toBeInTheDocument();
+  });
+
+  it("a card opens its feature, and Overview brings the cards back", async () => {
+    signIn("teacher");
+    features = { chat: on };
+    const user = userEvent.setup();
+    renderWithProviders(<AIFeaturesPage />);
+
+    await user.click(screen.getAllByRole("button", { name: /Ask School AI/ })[0]);
+    expect(screen.getByRole("tab", { name: "Ask School AI" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("assistant")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Ask School AI" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Overview" }));
+    expect(screen.getByRole("heading", { level: 2, name: "What would you like to do?" })).toBeInTheDocument();
+    expect(screen.queryByText("assistant")).not.toBeInTheDocument();
+  });
+
+  it("recommends a short row for the role above the full list, only from features the user can use", () => {
+    signIn("teacher");
+    features = { chat: on, "generate-questions": on };
+    renderWithProviders(<AIFeaturesPage />);
+
+    const row = screen.getByRole("region", { name: "Recommended for you" });
+    expect(within(row).getAllByRole("button").map((b) => b.textContent)).toEqual([
+      expect.stringContaining("Teacher Tools"),
+      expect.stringContaining("Content Assistant"),
+      expect.stringContaining("Ask School AI"),
+    ]);
+    // The full catalogue is still below the row.
+    expect(screen.getAllByRole("button", { name: /Ask School AI/ })).toHaveLength(2);
+  });
+
+  it("brings the feature you used last to the front next time", async () => {
+    signIn("teacher");
+    features = { chat: on, "generate-questions": on };
+    const user = userEvent.setup();
+    renderWithProviders(<AIFeaturesPage />);
+
+    await user.click(within(screen.getByRole("region", { name: "Recommended for you" })).getByRole("button", { name: /Ask School AI/ }));
+    await user.click(screen.getByRole("tab", { name: "Overview" }));
+
+    const row = screen.getByRole("region", { name: "Recommended for you" });
+    expect(within(row).getAllByRole("button")[0]).toHaveTextContent("Ask School AI");
+    expect(within(row).getByText("You used this last")).toBeInTheDocument();
   });
 });
