@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, BookOpenCheck, CalendarCheck, CalendarOff, FileCheck2, GraduationCap, LayoutGrid, Sparkles, MessageSquareText, Star, Video, Wallet, type LucideIcon } from "lucide-react";
+import { Bell, Bus, BookOpenCheck, CalendarCheck, CalendarOff, FileCheck2, GraduationCap, LayoutGrid, Sparkles, MessageSquareText, Star, Video, Wallet, type LucideIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/authStore";
@@ -15,13 +15,14 @@ import FeesTab from "../components/FeesTab";
 import MessagesTab from "../components/MessagesTab";
 import LeaveRequestsTab from "../components/LeaveRequestsTab";
 import NotificationsTab from "../components/NotificationsTab";
+import TrackBusTab from "@/features/transport/components/TrackBusTab";
 import { PageSkeleton } from "@/components/ui/states";
 import { PageContainer } from "@/components/ui/page";
 import { useAiCapabilities } from "@/features/ai/capabilities";
 import AssistantChat from "@/features/ai/components/AssistantChat";
 import LearningProfilePanel from "@/features/ai/components/learning/LearningProfilePanel";
 
-const CHILD_SCOPED_TABS = new Set(["attendance", "homework", "exams", "fees", "messages", "leave", "ask-ai", "learning"]);
+const CHILD_SCOPED_TABS = new Set(["attendance", "homework", "exams", "fees", "messages", "leave", "track-bus", "ask-ai", "learning"]);
 
 const TABS: { value: string; label: string; icon: LucideIcon }[] = [
   { value: "overview", label: "Overview", icon: LayoutGrid },
@@ -31,6 +32,7 @@ const TABS: { value: string; label: string; icon: LucideIcon }[] = [
   { value: "fees", label: "Fees", icon: Wallet },
   { value: "messages", label: "Messages", icon: MessageSquareText },
   { value: "leave", label: "Leave", icon: CalendarOff },
+  { value: "track-bus", label: "Track bus", icon: Bus },
   { value: "notifications", label: "Notifications", icon: Bell },
   { value: "ask-ai", label: "Ask School AI", icon: Sparkles },
   { value: "learning", label: "Learning profile", icon: GraduationCap },
@@ -79,6 +81,7 @@ export default function ParentPortalPage() {
     ...(can("talents")
       ? [{ label: "Talent Showcase", hint: "Share & cheer on talents", icon: Star, to: "/talents" }]
       : []),
+    { label: "Track bus", hint: "See where the school bus is", icon: Bus, onClick: () => setActiveTab("track-bus") },
     { label: "Pay fees", hint: "Invoices & online payment", icon: Wallet, onClick: () => setActiveTab("fees") },
     { label: "Apply for leave", hint: "Request a day off", icon: CalendarOff, onClick: () => setActiveTab("leave") },
     { label: "Message teacher", hint: "Talk to the class teacher", icon: MessageSquareText, onClick: () => setActiveTab("messages") },
@@ -169,6 +172,9 @@ export default function ParentPortalPage() {
             </TabsContent>
             <TabsContent value="leave">
               <LeaveRequestsTab studentId={selectedChild.id} />
+            </TabsContent>
+            <TabsContent value="track-bus">
+              <TrackBusTab key={selectedChild.id} studentId={selectedChild.id} />
             </TabsContent>
             {learning && (
               <TabsContent value="learning" className="mt-4">

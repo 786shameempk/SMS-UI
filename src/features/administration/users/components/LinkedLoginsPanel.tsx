@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { KeyRound, Link2, Loader2, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { academicHttpClient, authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 
 /**
@@ -61,24 +61,30 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
 
 const NONE = "__none__";
 
-function LinkRow({ row, users, taken, onLinked }: { row: Row; users: LoginUser[]; taken: Map<string, Set<LinkKind>>; onLinked: () => void }) {
-  // Only logins not already linked elsewhere - except a parent login already linked to a sibling's
-  // guardian record whose email matches this guardian, so one parent can cover several children.
+function LinkRow({
+  row,
+  users,
+  taken,
+  guardianLinks,
+  onLinked,
+}: {
+  row: Row;
+  users: LoginUser[];
+  taken: Map<string, Set<LinkKind>>;
+  /** How many guardian records each login is already linked to. */
+  guardianLinks: Map<string, number>;
+  onLinked: () => void;
+}) {
+  // Every parent login is offered for a guardian, including ones already linked to other students: one parent covers
+  // all their children. Student and staff records still take only logins that are not linked to anything yet.
   const candidates = useMemo(
     () =>
       users.filter((u) => {
         if (!u.roleKey || !row.roles.includes(u.roleKey)) return false;
-        const kinds = taken.get(u.id);
-        if (!kinds) return true;
-        return (
-          row.kind === "Guardian" &&
-          kinds.size === 1 &&
-          kinds.has("Guardian") &&
-          !!row.email &&
-          u.email.toLowerCase() === row.email.toLowerCase()
-        );
+        if (row.kind === "Guardian") return true;
+        return !taken.has(u.id);
       }),
-    [users, row.roles, row.kind, row.email, taken],
+    [users, row.roles, row.kind, taken],
   );
   const linked = users.find((u) => u.id === row.userId);
   // Preselect the login whose email matches the record - the usual case, one click to confirm.
@@ -113,14 +119,19 @@ function LinkRow({ row, users, taken, onLinked }: { row: Row; users: LoginUser[]
         </Button>
       ) : (
         <div className="flex items-center gap-2">
-          <Select value={choice} onValueChange={setChoice}>
-            <SelectTrigger className="h-9 w-56" aria-label={`Login for ${row.label}`}><SelectValue placeholder="Choose a login" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>Choose a login…</SelectItem>
-              {candidates.map((u) => <SelectItem key={u.id} value={u.id}>{u.name} · {u.email}</SelectItem>)}
-              {candidates.length === 0 && <SelectItem value="__empty__" disabled>No unlinked logins available</SelectItem>}
-            </SelectContent>
-          </Select>
+          <Combobox
+            value={choice === NONE ? null : choice}
+            onValueChange={setChoice}
+            aria-label={`Login for ${row.label}`}
+            placeholder="Choose a login"
+            searchPlaceholder="Search by name or email"
+            emptyText={candidates.length === 0 ? "No logins with the right role" : "No matching login"}
+            className="w-64"
+            options={candidates.map((u) => {
+              const n = guardianLinks.get(u.id) ?? 0;
+              return { value: u.id, label: u.name, hint: n > 0 ? `${u.email} · linked to ${n} student${n === 1 ? "" : "s"}` : u.email };
+            })}
+          />
           <Button size="sm" onClick={() => save.mutate(choice)} disabled={choice === NONE || save.isPending}>
             {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />} Link
           </Button>
@@ -154,6 +165,13 @@ export default function LinkedLoginsPanel({ kind, personId }: { kind: "student" 
       map.set(l.userId, kinds);
     }
     return map;
+  }, [linkedUsers.data]);
+  const guardianLinks = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const l of linkedUsers.data ?? []) {
+      if (l.personType === "Guardian") counts.set(l.userId, (counts.get(l.userId) ?? 0) + 1);
+    }
+    return counts;
   }, [linkedUsers.data]);
   const loading = person.isLoading || users.isLoading || linkedUsers.isLoading;
 
@@ -193,6 +211,7 @@ export default function LinkedLoginsPanel({ kind, personId }: { kind: "student" 
             row={row}
             users={users.data ?? []}
             taken={taken}
+            guardianLinks={guardianLinks}
             onLinked={() => {
               void queryClient.invalidateQueries({ queryKey: key });
               void queryClient.invalidateQueries({ queryKey: ["linked-logins", "linked-users"] });

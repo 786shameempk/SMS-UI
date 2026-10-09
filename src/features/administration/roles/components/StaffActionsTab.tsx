@@ -17,6 +17,7 @@ const MODULE_TITLES: Record<string, string> = {
   "module.visitors": "Visitor management",
   "module.helpdesk": "Help desk",
   "module.fees": "Fees",
+  "module.transport": "Transport",
 };
 
 /**

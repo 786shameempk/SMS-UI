@@ -1,4 +1,4 @@
-import { engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import { academicHttpClient, engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listClasses, listSubjects } from "@/features/academics/api";
 import { listAttendanceRecords } from "@/features/attendance/api";
 import { getExamResults, listExamSchedules, listExams } from "@/features/examinations/api";
@@ -88,8 +88,30 @@ function toParentFeeInvoice(invoice: FeesInvoice): FeeInvoice {
   };
 }
 
-/** A parent's children are the students listing them (by email) as a guardian. */
+interface MyPerson {
+  student: { studentId: string } | null;
+  children: { studentId: string }[];
+}
+
+/** The students AcademicService has linked to this login (Student profile -> Linked logins), tenant-wide. */
+async function getLinkedChildIds(): Promise<string[]> {
+  try {
+    const me = (await academicHttpClient.get<MyPerson>("api/people/me")).data;
+    return [...new Set([...(me.student ? [me.student.studentId] : []), ...me.children.map((c) => c.studentId)])];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * A parent's children: the students whose guardian record is linked to this login by an admin (the same rule the
+ * mobile apps use). Records that were never linked are still found by the guardian's email matching the login's, so
+ * schools that relied on that keep working.
+ */
 export async function getMyChildren(parentEmail: string): Promise<Student[]> {
+  const linked = await getLinkedChildIds();
+  if (linked.length > 0) return Promise.all(linked.map((id) => getStudent(id)));
+
   const email = parentEmail.trim().toLowerCase();
   const all = await listStudents();
   return all.filter((s) => s.guardians.some((g) => g.email?.trim().toLowerCase() === email));

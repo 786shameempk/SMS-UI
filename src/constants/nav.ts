@@ -56,6 +56,8 @@ export interface NavItem {
   audience?: NavAudience;
   /** Only the platform super admin, by role - for platform-owner tools that are not a school module. */
   superAdminOnly?: boolean;
+  /** A small pill after the label in the sidebar, to draw attention to the entry ("AI"). */
+  badge?: string;
 }
 
 /** "staff": admins, principals, teachers. "student": student logins. */
@@ -72,6 +74,8 @@ export interface NavSection {
 /** Core, ungrouped nav items shown above the sectioned nav. Extended as each module ships. */
 export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
+  // Promoted out of Insights: the AI tools are used by every role, so they sit at the top, flagged with a badge.
+  { label: "AI Features", to: "/ai", icon: Sparkles, permissionKey: "aiFeatures", badge: "AI" },
   { label: "Notifications", to: "/notifications", icon: Bell },
   { label: "Calendar", to: "/calendar", icon: CalendarDays },
   { label: "Online Classes", to: "/online-classes", icon: Video, permissionKey: "meetings" },
@@ -164,7 +168,6 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: ChartColumn,
     items: [
       { label: "Reports & Analytics", to: "/reports", icon: ChartColumn, permissionKey: "reports" },
-      { label: "AI Features", to: "/ai", icon: Sparkles, permissionKey: "aiFeatures" },
     ],
   },
   {
