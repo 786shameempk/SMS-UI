@@ -59,6 +59,9 @@ function mapRole(roles: string[]): UserRole {
 
 const MODULE_PERMISSION_PREFIX = "module.";
 
+/** "<Module>.<Action>" as AuthService issues staff actions, e.g. "Library.IssueBook". Lower-case claims (students.view) are not staff actions. */
+const STAFF_ACTION_CLAIM = /^[A-Z][A-Za-z]+\.[A-Z][A-Za-z]+$/;
+
 /** AuthService issues one "module.<key>" permission per ModulePermissions key (see Domain/Constants
  *  Permissions.Modules), so the key is recovered by stripping the prefix - no translation table. */
 function mapModulePermissions(permissions: string[]): ModulePermissions {
@@ -97,6 +100,10 @@ function mapModulePermissions(permissions: string[]): ModulePermissions {
   for (const permission of permissions) {
     if (permission.startsWith(MODULE_PERMISSION_PREFIX)) {
       result[permission.slice(MODULE_PERMISSION_PREFIX.length)] = true;
+    } else if (STAFF_ACTION_CLAIM.test(permission)) {
+      // Staff actions ("Transport.Manage") and the "Staff.Managed" marker are kept under their own names, next to the
+      // module flags. Module keys are camelCase single words, so these never collide with one.
+      result[permission] = true;
     }
   }
   return result;
