@@ -76,6 +76,22 @@
         "CI": "1",
         "EXPO_PUBLIC_API_URL": "http://localhost:5138"
       }
+    },
+    {
+      "name": "tmp-help",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199,
+      "url": "http://127.0.0.1:5199"
     }
   ]
 }

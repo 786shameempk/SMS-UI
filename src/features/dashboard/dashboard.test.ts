@@ -129,6 +129,8 @@ vi.mock("@/features/examinations/api", () => ({
     { id: "sc2", examId: "e2", subjectId: "math", date: day(3), startTime: "09:00", endTime: "10:00" },
     { id: "sc3", examId: "e1", subjectId: "math", date: day(-1), startTime: "09:00", endTime: "10:00" },
   ]),
+  // The family-safe marks endpoint: one row per subject for the signed-in family's own children.
+  getExamResults: vi.fn(async (examId: string) => (examId === "e1" ? [{ studentId: "st1", marksObtained: 40, maxMarks: 50, isAbsent: false }] : [])),
   getExamClassResults: vi.fn(async (examId: string) =>
     examId === "e1"
       ? [{ studentId: "st1", percentage: 80 }, { studentId: "x", percentage: 20 }]
@@ -169,6 +171,12 @@ vi.mock("@/features/transport/api", () => ({
     { routeId: "r2", status: "idle", currentStopIndex: -1, route: { name: "Route 2" }, bus: { regNumber: "KL-2" }, stops: [] },
     { routeId: "r3", status: "idle", currentStopIndex: -1, route: { name: "Route 3" }, bus: { regNumber: "KL-3" }, stops: [] },
   ]),
+}));
+vi.mock("@/features/transport/trackingApi", () => ({
+  // The family endpoint: only the signed-in family's own children, never the school's fleet.
+  getChildBusTracking: vi.fn(async (studentId: string) =>
+    studentId === "st1" ? { routeName: "Route 1", bus: { regNumber: "KL-1" }, live: { status: "at-stop", currentStopIndex: 1 }, stops: [{ name: "Gate" }, { name: "Temple" }] } : null,
+  ),
 }));
 vi.mock("@/features/hostel/api", () => ({
   listHostels: vi.fn(async () => [
@@ -318,7 +326,8 @@ describe("live source: personal widgets", () => {
     expect(await W.feesDue(parent)).toMatchObject({ totalPending: 1100, totalOverdue: 300 });
     expect((await W.libraryDue(parent)).map((l) => [l.id, l.borrowerName])).toEqual([["l1", "Asha N"]]);
     expect((await W.busStatus(parent)).mine).toEqual({ routeName: "Route 1", busRegNumber: "KL-1", status: "at-stop", currentStopName: "Temple" });
-    expect((await W.hostelOccupancy(parent)).mine).toEqual({ hostelName: "Boys", roomNumber: "101", bedNumber: 2 });
+    // Hostel occupancy is a staff widget: a family login never gets it, and no staff hostel list is called for them.
+    expect(await W.hostelOccupancy(parent)).toEqual({ hostels: [], mine: null });
     expect(await W.attendance(parent)).toEqual({ present: 1, absent: 0, late: 0, onLeave: 0, totalMarked: 1 });
     // Performance counts only the child's own results (80%).
     expect((await W.performanceTrend(parent)).find((p) => (p.averageScore ?? 0) > 0)).toMatchObject({ averageScore: 80, passRate: 100 });

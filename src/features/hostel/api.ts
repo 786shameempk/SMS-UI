@@ -271,6 +271,9 @@ async function fetchHostels(): Promise<Hostel[]> {
   return hostels.map(mapHostel);
 }
 
+/** The hostel master list on its own (no wardens, counts or allocations), for pickers such as a student hostel. */
+export const listHostelMasters = fetchHostels;
+
 async function fetchAllocations(): Promise<HostelAllocation[]> {
   const allocations = await unwrap(campusHttpClient.get<ApiHostelAllocation[]>("/api/hostelallocations"));
   return allocations.map(mapAllocation);

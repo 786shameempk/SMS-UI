@@ -1,0 +1,151 @@
+[
+  {
+    "match": "api/authors",
+    "body": [
+      {
+        "id": "a0",
+        "tenantId": "demo",
+        "name": "Sample Author One",
+        "bio": null
+      },
+      {
+        "id": "a1",
+        "tenantId": "demo",
+        "name": "Sample Author Two",
+        "bio": null
+      },
+      {
+        "id": "a2",
+        "tenantId": "demo",
+        "name": "Sample Author Three",
+        "bio": null
+      }
+    ]
+  },
+  {
+    "match": "api/publishers",
+    "body": [
+      {
+        "id": "p0",
+        "tenantId": "demo",
+        "name": "Example Press",
+        "address": null
+      },
+      {
+        "id": "p1",
+        "tenantId": "demo",
+        "name": "Sample Publishing",
+        "address": null
+      }
+    ]
+  },
+  {
+    "match": "api/bookcategories",
+    "body": [
+      {
+        "id": "c0",
+        "tenantId": "demo",
+        "name": "Science"
+      },
+      {
+        "id": "c1",
+        "tenantId": "demo",
+        "name": "Fiction"
+      },
+      {
+        "id": "c2",
+        "tenantId": "demo",
+        "name": "History"
+      }
+    ]
+  },
+  {
+    "match": "api/books",
+    "body": [
+      {
+        "id": "b0",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "title": "Introduction to Sample Science",
+        "isbn": "978000000100",
+        "authorId": "a0",
+        "publisherId": "p0",
+        "categoryId": "c0",
+        "totalCopies": 5,
+        "availableCopies": 3,
+        "shelfLocation": "Shelf A",
+        "coverNote": null
+      },
+      {
+        "id": "b1",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "title": "The Example Garden",
+        "isbn": "978000000101",
+        "authorId": "a1",
+        "publisherId": "p1",
+        "categoryId": "c1",
+        "totalCopies": 5,
+        "availableCopies": 3,
+        "shelfLocation": "Shelf B",
+        "coverNote": null
+      },
+      {
+        "id": "b2",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "title": "A Short History of Samples",
+        "isbn": "978000000102",
+        "authorId": "a2",
+        "publisherId": "p0",
+        "categoryId": "c2",
+        "totalCopies": 5,
+        "availableCopies": 0,
+        "shelfLocation": "Shelf C",
+        "coverNote": null
+      },
+      {
+        "id": "b3",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "title": "Practice Mathematics Grade 8",
+        "isbn": "978000000103",
+        "authorId": "a0",
+        "publisherId": "p1",
+        "categoryId": "c0",
+        "totalCopies": 5,
+        "availableCopies": 3,
+        "shelfLocation": "Shelf D",
+        "coverNote": null
+      },
+      {
+        "id": "b4",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "title": "Stories for Young Readers",
+        "isbn": "978000000104",
+        "authorId": "a1",
+        "publisherId": "p0",
+        "categoryId": "c1",
+        "totalCopies": 5,
+        "availableCopies": 3,
+        "shelfLocation": "Shelf E",
+        "coverNote": null
+      },
+      {
+        "id": "b5",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "title": "Atlas of Example Lands",
+        "isbn": "978000000105",
+        "authorId": "a2",
+        "publisherId": "p1",
+        "categoryId": "c2",
+        "totalCopies": 5,
+        "availableCopies": 3,
+        "shelfLocation": "Shelf F",
+        "coverNote": null
+      }
+    ]
+  }
+]

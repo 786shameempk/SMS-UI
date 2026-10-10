@@ -89,7 +89,7 @@ describe("AssistantChat streaming", () => {
     const user = userEvent.setup();
     renderWithProviders(<AssistantChat />);
 
-    await user.type(screen.getByLabelText("Message"), "question{enter}");
+    await user.type(screen.getByLabelText("Message"), "why is the sky blue{enter}");
     expect(await screen.findByText(/connection was interrupted/i)).toBeInTheDocument();
     expect(screen.getByText("Half")).toBeInTheDocument();
 
@@ -98,6 +98,6 @@ describe("AssistantChat streaming", () => {
     expect(await screen.findByText("Full answer.")).toBeInTheDocument();
     await waitFor(() => expect(stream.streamAssistantMessage).toHaveBeenCalledTimes(2));
     // The retry continues the same conversation.
-    expect(vi.mocked(stream.streamAssistantMessage).mock.calls[1][0]).toMatchObject({ message: "question", conversationId: "c1" });
+    expect(vi.mocked(stream.streamAssistantMessage).mock.calls[1][0]).toMatchObject({ message: "why is the sky blue", conversationId: "c1" });
   });
 });

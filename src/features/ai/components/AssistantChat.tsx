@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { History, Loader2, Plus, RotateCw, Send, Sparkles, Square } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,6 +18,12 @@ import ConversationHistory from "./ConversationHistory";
 import ActionCard from "./ActionCard";
 import { ReadAloudButton, VoiceInputButton } from "./voice/VoiceButtons";
 import { canRecord } from "../voice/support";
+import { parseNavigation } from "@/features/help/navigation";
+import { useViewer } from "@/features/help/useViewer";
+
+// The guide (and the search over it) is only downloaded when someone first asks a question.
+const HelpReplyCard = lazy(() => import("@/features/help/components/HelpReplyCard"));
+const NavigationOffer = lazy(() => import("@/features/help/components/NavigationOffer"));
 
 let nextId = 0;
 const newId = () => `m${++nextId}`;
@@ -42,6 +48,7 @@ interface Props {
 export default function AssistantChat({ studentId, page, compact, mode = "chat" }: Props) {
   const user = useAuthStore((s) => s.user);
   const role = user?.role;
+  const viewer = useViewer();
   const isParent = role === "parent" && mode === "chat";
   const { capabilities, can } = useAiCapabilities();
   const voiceIn = can("voice") && capabilities.speechToText && canRecord();
@@ -127,7 +134,7 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
           )
         : await sendAssistantMessage(req, mode);
       setConversationId(res.conversationId);
-      patch(replyId, { content: res.reply, sources: res.sources, demo: res.demo, pending: false, actions: res.actions });
+      patch(replyId, { content: res.reply, sources: res.sources, demo: res.demo, pending: false, actions: res.actions, navigation: parseNavigation(res.navigation) });
       queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY });
     } catch (err) {
       if (controller.signal.aborted) {
@@ -144,13 +151,32 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
     }
   };
 
+  // The guide is fetched when the assistant opens, so a question never waits for it: if it has not arrived yet (or fails to
+  // load) the question simply goes to the AI service as it always did.
+  const guide = useRef<typeof import("@/features/help/answer") | null>(null);
+  useEffect(() => {
+    if (mode !== "chat") return;
+    let alive = true;
+    import("@/features/help/answer")
+      .then((m) => {
+        if (alive) guide.current = m;
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [mode]);
+
   const send = (text: string) => {
     const message = text.trim();
     if (!message || status !== "idle") return;
     const replyId = newId();
     setMessages((m) => [...m, { id: newId(), role: "user", content: message }, { id: replyId, role: "assistant", content: "", pending: true }]);
     setDraft("");
-    void ask(message, replyId);
+    // Look the question up in the School Sphere guide first: free, instant, and it never invents a menu or a screen.
+    const help = mode === "chat" ? guide.current?.askHelp(message, viewer) : null;
+    if (help) patch(replyId, { pending: false, help });
+    else void ask(message, replyId);
   };
 
   const retry = (m: AssistantMessage) => {
@@ -162,7 +188,7 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
   const busy = status !== "idle";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-unsaved-ignore>
       {!AI_MOCK_ENABLED && (
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setHistoryOpen((o) => !o)} aria-expanded={historyOpen}>
@@ -240,6 +266,16 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
                       </Button>
                     )}
                   </div>
+                )}
+                {m.help && (
+                  <Suspense fallback={<Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}>
+                    <HelpReplyCard reply={m.help} onAsk={send} />
+                  </Suspense>
+                )}
+                {m.navigation && m.navigation.length > 0 && (
+                  <Suspense fallback={null}>
+                    <NavigationOffer actions={m.navigation} />
+                  </Suspense>
                 )}
                 {m.actions?.map((a) => <ActionCard key={a.id} action={a} />)}
                 {m.sources && m.sources.length > 0 && (

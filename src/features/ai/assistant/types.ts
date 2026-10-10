@@ -1,4 +1,7 @@
-export type AssistantSource = "timetable" | "attendance" | "fees" | "exams" | "notices" | "homework" | "materials" | "admissions" | "at-risk students" | "leave" | "messages";
+import type { HelpReply } from "@/features/help/assistant";
+import type { NavigationAction } from "@/features/help/navigation";
+
+export type AssistantSource = "timetable" | "attendance" | "fees" | "exams" | "notices" | "homework" | "materials" | "admissions" | "at-risk students" | "leave" | "messages" | "guide";
 
 /** Which assistant: Ask School AI, or the admin analytics assistant (school-wide figures, admins only). */
 export type AssistantMode = "chat" | "analytics";
@@ -32,6 +35,10 @@ export interface AssistantMessage {
   retry?: string;
   /** Actions prepared in this answer, each awaiting confirmation. */
   actions?: ProposedAction[];
+  /** An answer taken from the School Sphere guide (steps, menu path, screen to open) instead of the AI service. */
+  help?: HelpReply;
+  /** Screens the service offered to open. Shown as a button only after the app checks them against its own routes and the reader's access. */
+  navigation?: NavigationAction[];
 }
 
 export interface AssistantChatRequest {
@@ -49,6 +56,7 @@ export interface AssistantChatResponse {
   sources: AssistantSource[];
   demo?: boolean;
   actions?: ProposedAction[];
+  navigation?: NavigationAction[];
 }
 
 export interface ConversationSummary {

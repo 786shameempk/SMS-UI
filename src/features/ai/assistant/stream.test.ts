@@ -21,6 +21,18 @@ describe("streamAssistantMessage", () => {
     vi.unstubAllGlobals();
   });
 
+  it("keeps a screen the service offered, as a typed action with no address", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+      sseResponse([
+        'event: done\ndata: {"conversationId":"c1","reply":"Use Students.","sources":["guide"],"navigation":[{"type":"navigate","routeId":"students.list","taskId":null,"reason":"Add a student"}]}\n\n',
+      ]),
+    ));
+
+    const result = await streamAssistantMessage({ message: "how do I add a student" }, () => {});
+
+    expect(result.navigation).toEqual([{ type: "navigate", routeId: "students.list", taskId: undefined, reason: "Add a student" }]);
+  });
+
   it("parses events split across chunks, sends auth headers, and resolves with the final answer", async () => {
     const fetchMock = vi.fn(async () =>
       sseResponse([
@@ -35,7 +47,7 @@ describe("streamAssistantMessage", () => {
 
     const result = await streamAssistantMessage({ message: "fees?" }, (e) => events.push(e));
 
-    expect(result).toEqual({ conversationId: "c1", reply: "600 is due.", sources: ["fees"], actions: [] });
+    expect(result).toEqual({ conversationId: "c1", reply: "600 is due.", sources: ["fees"], actions: [], navigation: [] });
     expect(events.map((e) => e.type)).toEqual(["start", "delta", "reset", "lookup", "delta", "done"]);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toMatch(/api\/ai\/chat\/stream$/);

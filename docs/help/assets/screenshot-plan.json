@@ -1,0 +1,121 @@
+[
+  {
+    "id": "account-sign-in-desktop",
+    "route": "account.login",
+    "role": "admin",
+    "viewport": "desktop",
+    "alt": "The School Sphere sign-in page with the Email address and Password fields and the Sign In button."
+  },
+  {
+    "id": "account-forgot-password-desktop",
+    "route": "account.forgot-password",
+    "role": "admin",
+    "viewport": "desktop",
+    "alt": "The Forgot password page asking for an email address."
+  },
+  {
+    "id": "students-register-form-desktop",
+    "route": "students.list",
+    "role": "admin",
+    "viewport": "desktop",
+    "click": [
+      "Register student"
+    ],
+    "waitFor": "text=Student details",
+    "alt": "The Register student form with School, Student details, Class placement and Address & guardian sections."
+  },
+  {
+    "id": "users-add-form-desktop",
+    "route": "users.list",
+    "role": "admin",
+    "viewport": "desktop",
+    "click": [
+      "Add user"
+    ],
+    "waitFor": "text=Full name",
+    "alt": "The Add user form with Full name, Email, Phone, Department, Role and Branch fields."
+  },
+  {
+    "id": "attendance-mark-desktop",
+    "route": "attendance.home",
+    "role": "admin",
+    "viewport": "desktop",
+    "waitFor": "text=Mark Attendance",
+    "alt": "Attendance management on the Mark Attendance tab with Academic year, Class, Section, Date and Capture mode."
+  },
+  {
+    "id": "fees-home-desktop",
+    "route": "fees.home",
+    "role": "admin",
+    "viewport": "desktop",
+    "waitFor": "text=Fee Structures",
+    "alt": "Fee management with the Fee Structures, Discounts & Scholarships, Student Invoices, Receipts and Refunds tabs."
+  },
+  {
+    "id": "ai-features-desktop",
+    "route": "ai-features.home",
+    "role": "admin",
+    "viewport": "desktop",
+    "waitFor": "text=Ask School AI",
+    "alt": "The AI Features page with an Overview, a Recommended for you row and tools grouped under Ask & learn, Teach & create and Insights."
+  },
+  {
+    "id": "students-list-desktop",
+    "route": "students.list",
+    "role": "admin",
+    "viewport": "desktop",
+    "fixtures": [
+      "students"
+    ],
+    "waitFor": "text=Aarav Sample",
+    "alt": "Student management on the Students tab: a table of students with their class, roll number, status and guardian, the search box, the class and status filters and the Register student button."
+  },
+  {
+    "id": "students-row-actions-desktop",
+    "route": "students.list",
+    "role": "admin",
+    "viewport": "desktop",
+    "fixtures": [
+      "students"
+    ],
+    "click": [
+      "Actions for Aarav Sample"
+    ],
+    "waitFor": "text=Transfer student",
+    "alt": "The actions menu on a student row with Quick view, View profile, Edit details and Transfer student."
+  },
+  {
+    "id": "students-transfer-dialog-desktop",
+    "route": "students.list",
+    "role": "admin",
+    "viewport": "desktop",
+    "fixtures": [
+      "students"
+    ],
+    "click": [
+      "Actions for Aarav Sample",
+      "Transfer student"
+    ],
+    "waitFor": "text=Confirm transfer",
+    "alt": "The Transfer student dialog with Destination school, Transfer certificate number and Reason fields and the Confirm transfer button."
+  },
+  {
+    "id": "library-books-desktop",
+    "route": "library.home",
+    "role": "admin",
+    "viewport": "desktop",
+    "fixtures": [
+      "library"
+    ],
+    "waitFor": "text=Introduction to Sample Science",
+    "alt": "Library management on the Books tab: the catalog with title, author, publisher, category, availability and shelf, and the New book button."
+  },
+  {
+    "id": "library-home-desktop",
+    "route": "library.home",
+    "role": "admin",
+    "viewport": "desktop",
+    "waitFor": "text=Issue / Return",
+    "alt": "Library management with the Books, Authors & Publishers & Categories, Members, Issue / Return, Fines and Reservations tabs."
+  }
+]

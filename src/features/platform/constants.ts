@@ -28,6 +28,22 @@ export const PLAN_TIER_OPTIONS: Array<{ value: PlanTier; label: string }> = (Obj
  */
 export const AVAILABLE_MODULE_LABELS: string[] = PERMISSION_MODULES.filter((m) => m !== "Platform Console");
 
+/**
+ * The plan's modules laid out the way the school's menu groups them, so choosing a plan reads like building the menu: every module
+ * appears in exactly one group (a test keeps this in step with the catalog above), and a group can be switched on or off as a whole.
+ */
+export const PLAN_MODULE_GROUPS: ReadonlyArray<{ title: string; modules: string[] }> = [
+  { title: "Everyday", modules: ["Dashboard", "AI Features", "Notifications", "Calendar", "Online Classes", "Talent Showcase", "Parent Portal", "Study Materials"] },
+  { title: "Academics", modules: ["Homework", "Students", "Academic Setup", "Attendance", "Teachers", "Timetable", "Examinations"] },
+  { title: "Online Exams", modules: ["Online Exams"] },
+  { title: "Human Resources", modules: ["Staff Management", "Payroll"] },
+  { title: "Finance", modules: ["Fee Management", "Accounting"] },
+  { title: "Campus Operations", modules: ["Library Management", "Transport Management", "Hostel Management", "Inventory Management", "Visitor Management", "Health & Medical"] },
+  { title: "Engagement", modules: ["Communication Center", "Surveys & Feedback", "Complaint / Help Desk", "Certificate Generator"] },
+  { title: "Insights", modules: ["Reports & Analytics"] },
+  { title: "Administration", modules: ["User Management", "Roles & Permissions", "Branch Management", "Settings"] },
+];
+
 /** Part of every plan, so a school admin can never be locked out of administering their school. */
 export const ALWAYS_INCLUDED_PLAN_MODULES = ["Dashboard", "User Management", "Roles & Permissions", "Settings"];
 

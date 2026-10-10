@@ -13,6 +13,7 @@ export const SOURCE_LABELS: Record<AssistantSource, string> = {
   "at-risk students": "At-risk students",
   leave: "Leave",
   messages: "Messages",
+  guide: "User guide",
 };
 
 const ANALYTICS_PROMPTS = [

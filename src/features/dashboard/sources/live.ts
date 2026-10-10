@@ -7,7 +7,7 @@ import * as examsApi from "@/features/examinations/api";
 import * as feesApi from "@/features/fees/api";
 import { listTickets } from "@/features/helpdesk/api";
 import * as homeworkApi from "@/features/homework/api";
-import { listAllocations, listHostels } from "@/features/hostel/api";
+import { listHostels } from "@/features/hostel/api";
 import * as libraryApi from "@/features/library/api";
 import { listMyNotifications } from "@/features/notifications/api";
 import type { NotificationCategory } from "@/features/notifications/types";
@@ -17,7 +17,8 @@ import * as studentsApi from "@/features/students/api";
 import { listSlots } from "@/features/timetable/api";
 import { getTimetableSetup } from "@/features/timetable/api";
 import { PERIOD_DEFINITIONS, dateToDayOfWeek } from "@/features/timetable/constants";
-import { listAssignments, listLiveStatuses } from "@/features/transport/api";
+import { listLiveStatuses } from "@/features/transport/api";
+import { getChildBusTracking } from "@/features/transport/trackingApi";
 import type { BusTrackingStatus } from "@/features/transport/types";
 import { listPreApprovedVisits, listVisitorEntries } from "@/features/visitors/api";
 import { listTenants } from "@/features/platform/api";
@@ -86,6 +87,7 @@ const listCalendarEvents = shared("calendar", () => academicsApi.listCalendarEve
 const listExams = shared("exams", () => examsApi.listExams());
 const listExamSchedules = shared("examSchedules", () => examsApi.listExamSchedules());
 const getExamClassResults = examsApi.getExamClassResults;
+const getExamResults = examsApi.getExamResults;
 const listInvoices = shared("invoices", () => feesApi.listInvoices());
 const listInvoicesForStudent = feesApi.listInvoicesForStudent;
 const listHomework = shared("homework", () => homeworkApi.listHomework());
@@ -404,17 +406,23 @@ async function libraryDue(ctx: DashboardContext): Promise<LibraryDueItem[]> {
 async function busStatus(ctx: DashboardContext): Promise<BusStatusSummary> {
   return personalOr<BusStatusSummary>(
     ctx,
+    // A parent or student may only call the family endpoint (GET /api/transport/mine): the staff fleet lists refuse them.
     async (learners) => {
-      const [assignments, liveStatuses] = await Promise.all([listAssignments(), listLiveStatuses()]);
-      const ids = new Set(learners.map((l) => l.studentId));
-      const mine = assignments.find((a) => a.status === "active" && ids.has(a.studentId));
-      const live = mine ? liveStatuses.find((row) => row.routeId === mine.routeId) : undefined;
-      return live
-        ? {
+      for (const learner of learners) {
+        const trip = await getChildBusTracking(learner.studentId);
+        if (trip) {
+          return {
             fleet: [],
-            mine: { routeName: live.route.name, busRegNumber: live.bus.regNumber, status: live.status, currentStopName: live.stops[live.currentStopIndex]?.name },
-          }
-        : { fleet: [], mine: null };
+            mine: {
+              routeName: trip.routeName,
+              busRegNumber: trip.bus?.regNumber ?? "—",
+              status: trip.live?.status ?? "idle",
+              currentStopName: trip.live ? trip.stops[trip.live.currentStopIndex]?.name : undefined,
+            },
+          };
+        }
+      }
+      return { fleet: [], mine: null };
     },
     async () => {
       const counts = new Map<BusTrackingStatus, number>();
@@ -430,13 +438,8 @@ async function busStatus(ctx: DashboardContext): Promise<BusStatusSummary> {
 async function hostelOccupancy(ctx: DashboardContext): Promise<HostelOccupancySummary> {
   return personalOr<HostelOccupancySummary>(
     ctx,
-    async (learners) => {
-      const ids = new Set(learners.map((l) => l.studentId));
-      const mine = (await listAllocations()).find((a) => a.status === "active" && ids.has(a.student.id));
-      return mine
-        ? { hostels: [], mine: { hostelName: mine.hostel.name, roomNumber: mine.room.roomNumber, bedNumber: mine.bedNumber } }
-        : { hostels: [], mine: null };
-    },
+    // No family-safe hostel endpoint exists, and the staff lists refuse parents and students; the widget is staff-only (widgets.ts).
+    async () => ({ hostels: [], mine: null }),
     async () => ({
       hostels: (await listHostels())
         .filter((h) => h.status === "active")
@@ -679,7 +682,14 @@ async function performanceTrend(ctx: DashboardContext): Promise<PerformanceTrend
 
   // Newest first and capped, so a long range doesn't fan out into dozens of requests.
   exams = exams.sort((a, b) => b.startDate.localeCompare(a.startDate)).slice(0, 24);
-  const results = await Promise.all(exams.map((e) => settle(getExamClassResults(e.id))));
+  // A parent or student may not read the class ranking (it lists classmates); the marks endpoint returns only their own.
+  const results: (Array<{ studentId: string; percentage: number }> | null | undefined)[] = await Promise.all(
+    exams.map((e) =>
+      isPersonal(ctx.role)
+        ? settle(getExamResults(e.id)).then((rows) => rows?.filter((r) => !r.isAbsent && r.maxMarks > 0).map((r) => ({ studentId: r.studentId, percentage: (r.marksObtained / r.maxMarks) * 100 })) ?? null)
+        : settle(getExamClassResults(e.id)),
+    ),
+  );
 
   const byMonth = new Map<string, { total: number; passed: number; count: number }>();
   exams.forEach((exam, i) => {

@@ -2,6 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import helpCatalog from "./scripts/help/vite-plugin.mjs";
 
 /** Standalone static pages in public/, served at a clean URL. Keep in step with the matching rules in nginx.conf. */
 const STATIC_PAGES: Record<string, string> = {
@@ -24,7 +25,7 @@ function staticPages(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), staticPages()],
+  plugins: [react(), tailwindcss(), staticPages(), helpCatalog()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),
