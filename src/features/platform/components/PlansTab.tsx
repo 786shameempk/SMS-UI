@@ -31,9 +31,11 @@ export default function PlansTab() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof updatePlan>[1] }) => updatePlan(id, values),
-    onSuccess: () => {
+    onSuccess: (saved) => {
       invalidate();
-      toast.success("Plan updated");
+      const changes = [saved.addedModules?.length ? `added ${saved.addedModules.join(", ")}` : "", saved.removedModules?.length ? `removed ${saved.removedModules.join(", ")}` : ""].filter(Boolean).join("; ");
+      const schools = saved.schoolCount ? ` ${saved.schoolCount} school${saved.schoolCount === 1 ? "" : "s"} will follow at their next refresh.` : "";
+      toast.success(`Plan updated${changes ? `: ${changes}.` : "."}${schools}`, { duration: 7000 });
       setFormOpen(false);
       setEditing(null);
     },
@@ -81,7 +83,9 @@ export default function PlansTab() {
                 <p>Up to {plan.maxStudents.toLocaleString()} students</p>
                 <p>Up to {plan.maxStaff.toLocaleString()} staff</p>
                 <p>{plan.storageGb} GB storage</p>
-                <p>{plan.includedModules.length} modules included</p>
+                <p>
+                  {plan.includedModules.length} modules included{plan.schoolCount ? ` · ${plan.schoolCount} school${plan.schoolCount === 1 ? "" : "s"}` : ""}
+                </p>
               </div>
               <div className="flex items-center gap-2 pt-2 border-t border-border">
                 <Button

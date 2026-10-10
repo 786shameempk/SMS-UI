@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/authStore";
 import AskAiLauncher from "@/features/ai/components/AskAiLauncher";
 import { clearUnsavedEdits, trackFormEdits } from "@/features/help/navigation";
 import { useTour } from "@/features/help/tourStore";
+import RouteGate from "@/routes/RouteGate";
 
 // Only downloaded when a Help Center walkthrough is started.
 const WalkthroughHost = lazy(() => import("@/features/help/components/WalkthroughHost"));
@@ -97,7 +98,9 @@ export default function AppLayout() {
         <main id="main-content" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto bg-app-glow focus:outline-none">
           {/* Pages are lazy chunks: the shell stays put while the next page loads. */}
           <Suspense key={scopeKey} fallback={<PageSkeleton />}>
-            <Outlet />
+            <RouteGate>
+              <Outlet />
+            </RouteGate>
           </Suspense>
         </main>
       </div>

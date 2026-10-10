@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/utils/cn";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ALWAYS_INCLUDED_PLAN_MODULES, AVAILABLE_MODULE_LABELS, PLAN_TIER_OPTIONS } from "../constants";
+import { ALWAYS_INCLUDED_PLAN_MODULES, AVAILABLE_MODULE_LABELS, PLAN_MODULE_GROUPS, PLAN_TIER_OPTIONS } from "../constants";
 import type { Plan, PlanFormValues, PlanTier } from "../types";
 
 const planSchema = z.object({
@@ -75,6 +75,7 @@ export default function PlanFormDialog({
   }, [open, plan, reset]);
 
   const includedModules = watch("includedModules");
+  const removedNow = plan ? normalizeModules(plan.includedModules).filter((m) => !includedModules.includes(m)) : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -152,30 +153,60 @@ export default function PlanFormDialog({
                 </button>
               </div>
             </div>
-            <div className="max-h-72 overflow-y-auto rounded-lg border border-border grid grid-cols-1 sm:grid-cols-2">
-              {AVAILABLE_MODULE_LABELS.map((label) => {
-                const locked = ALWAYS_INCLUDED_PLAN_MODULES.includes(label);
+            <div className="max-h-80 overflow-y-auto rounded-lg border border-border">
+              {PLAN_MODULE_GROUPS.map((group) => {
+                const choosable = group.modules.filter((m) => !ALWAYS_INCLUDED_PLAN_MODULES.includes(m));
+                const picked = choosable.filter((m) => includedModules.includes(m)).length;
                 return (
-                  <label
-                    key={label}
-                    className={cn(
-                      "flex items-center gap-2.5 px-3 py-2 border-b border-border",
-                      locked ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-secondary/40",
-                    )}
-                  >
-                    <Checkbox
-                      checked={locked || includedModules.includes(label)}
-                      disabled={locked}
-                      onCheckedChange={(v) =>
-                        setValue("includedModules", v ? normalizeModules([...includedModules, label]) : includedModules.filter((m) => m !== label))
-                      }
-                    />
-                    <span className="text-sm text-foreground">{label}</span>
-                    {locked && <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Always</span>}
-                  </label>
+                  <fieldset key={group.title} className="border-b border-border last:border-b-0">
+                    <legend className="sr-only">{group.title}</legend>
+                    <div className="flex items-center justify-between gap-2 bg-secondary/40 px-3 py-1.5">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.title}</span>
+                      {choosable.length > 0 && (
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-primary-text hover:underline cursor-pointer"
+                          onClick={() =>
+                            setValue(
+                              "includedModules",
+                              picked === choosable.length
+                                ? includedModules.filter((m) => !choosable.includes(m))
+                                : normalizeModules([...includedModules, ...choosable]),
+                            )
+                          }
+                        >
+                          {picked === choosable.length ? "Clear group" : "Select group"}
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2">
+                      {group.modules.map((label) => {
+                        const locked = ALWAYS_INCLUDED_PLAN_MODULES.includes(label);
+                        return (
+                          <label key={label} className={cn("flex items-center gap-2.5 px-3 py-2", locked ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-secondary/40")}>
+                            <Checkbox
+                              checked={locked || includedModules.includes(label)}
+                              disabled={locked}
+                              onCheckedChange={(v) => setValue("includedModules", v ? normalizeModules([...includedModules, label]) : includedModules.filter((m) => m !== label))}
+                            />
+                            <span className="text-sm text-foreground">{label}</span>
+                            {locked && <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Always</span>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
                 );
               })}
             </div>
+            {isEdit && (plan?.schoolCount ?? 0) > 0 && (
+              <p role="status" className="rounded-md bg-info-soft px-3 py-2 text-xs text-info-strong">
+                {plan!.schoolCount} school{plan!.schoolCount === 1 ? " uses" : "s use"} this plan. A change reaches them at their next sign-in or refresh (a few minutes).
+                {removedNow.length > 0
+                  ? ` Removing ${removedNow.join(", ")} hides ${removedNow.length === 1 ? "it" : "them"} for those schools; their saved Roles & Permissions are kept, so adding ${removedNow.length === 1 ? "it" : "them"} back restores the same access.`
+                  : " Adding a module makes it available to them; each school still chooses which roles get it."}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">School admins can only grant these modules to roles in Roles &amp; Permissions.</p>
             {errors.includedModules && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.includedModules.message}</p>}
           </div>

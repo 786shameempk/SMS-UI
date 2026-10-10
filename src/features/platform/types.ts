@@ -10,6 +10,11 @@ export interface Plan {
   maxStaff: number;
   storageGb: number;
   includedModules: string[];
+  /** Schools on this plan. Changing the plan changes every one of them at their next token refresh. */
+  schoolCount?: number;
+  /** What a save just added and removed (only on the reply to a save). */
+  addedModules?: string[];
+  removedModules?: string[];
 }
 
 export interface PlanFormValues {

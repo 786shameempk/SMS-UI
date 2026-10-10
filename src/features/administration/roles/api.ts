@@ -151,8 +151,13 @@ export async function getRolePermissions(): Promise<RolePermissionMap> {
   return unwrap(authHttpClient.get<RolePermissionMap>("/api/school-roles/matrix"));
 }
 
-export async function setRolePermission(roleId: string, permissionId: string, granted: boolean): Promise<RolePermissionMap> {
+/** One cell, without reloading the whole matrix (a bulk change reloads it once at the end). */
+export async function putRolePermission(roleId: string, permissionId: string, granted: boolean): Promise<void> {
   await unwrap(authHttpClient.put<void>(`/api/school-roles/${roleId}/matrix/${encodeURIComponent(permissionId)}`, { granted }));
+}
+
+export async function setRolePermission(roleId: string, permissionId: string, granted: boolean): Promise<RolePermissionMap> {
+  await putRolePermission(roleId, permissionId, granted);
   return getRolePermissions();
 }
 
