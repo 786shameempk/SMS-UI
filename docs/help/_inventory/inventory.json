@@ -5,508 +5,598 @@
       "path": "/",
       "page": "LandingPage",
       "requires": null,
-      "line": 95
+      "line": 112
     },
     {
       "path": "/login",
       "page": "LoginPage",
       "requires": null,
-      "line": 96
+      "line": 113
     },
     {
       "path": "/forgot-password",
       "page": "ForgotPasswordPage",
       "requires": null,
-      "line": 97
+      "line": 114
     },
     {
       "path": "/reset-password",
       "page": "ResetPasswordPage",
       "requires": null,
-      "line": 98
+      "line": 115
     },
     {
       "path": "/change-password",
       "requires": null,
-      "line": 101
+      "line": 118
+    },
+    {
+      "path": "/help",
+      "page": "HelpLayout",
+      "requires": null,
+      "line": 128
+    },
+    {
+      "path": "/help/m/:moduleId",
+      "page": "HelpModulePage",
+      "requires": null,
+      "line": 133
+    },
+    {
+      "path": "/help/r/:role",
+      "page": "HelpRolePage",
+      "requires": null,
+      "line": 134
+    },
+    {
+      "path": "/help/a/:articleId",
+      "page": "HelpArticlePage",
+      "requires": null,
+      "line": 135
+    },
+    {
+      "path": "/guide/*",
+      "page": "GuideRedirect",
+      "requires": null,
+      "line": 138
     },
     {
       "path": "/online-classes/:id/room",
       "requires": null,
-      "line": 111
+      "line": 141
     },
     {
       "path": "/online-exams/take/:id",
       "requires": null,
-      "line": 120
+      "line": 150
     },
     {
       "path": "/dashboard",
       "page": "DashboardPage",
       "requires": null,
-      "line": 138
+      "line": 168
     },
     {
       "path": "/account/security",
       "page": "SecuritySettingsPage",
       "requires": null,
-      "line": 139
+      "line": 169
     },
     {
       "path": "/admin/users",
       "page": "UserManagementPage",
       "requires": null,
-      "line": 140
+      "line": 170
     },
     {
       "path": "/admin/roles",
       "page": "RolePermissionManagementPage",
       "requires": null,
-      "line": 141
+      "line": 171
     },
     {
       "path": "/admin/branches",
       "page": "BranchManagementPage",
       "requires": null,
-      "line": 142
+      "line": 172
     },
     {
       "path": "/admin/settings",
       "page": "SettingsPage",
       "requires": null,
-      "line": 143
+      "line": 173
     },
     {
       "path": "/students",
       "page": "StudentManagementPage",
       "requires": null,
-      "line": 144
+      "line": 174
     },
     {
       "path": "/students/:studentId",
       "page": "StudentProfilePage",
       "requires": null,
-      "line": 145
+      "line": 175
     },
     {
       "path": "/academics",
       "page": "AcademicManagementPage",
       "requires": null,
-      "line": 146
+      "line": 176
     },
     {
       "path": "/attendance",
       "page": "AttendanceManagementPage",
       "requires": null,
-      "line": 147
+      "line": 177
     },
     {
       "path": "/parent-portal",
       "page": "ParentPortalPage",
       "requires": null,
-      "line": 148
+      "line": 178
     },
     {
       "path": "/staff",
       "page": "StaffManagementPage",
       "requires": null,
-      "line": 149
+      "line": 179
     },
     {
       "path": "/staff/:staffId",
       "page": "StaffProfilePage",
       "requires": null,
-      "line": 150
+      "line": 180
     },
     {
       "path": "/teachers",
       "page": "TeachersManagementPage",
       "requires": null,
-      "line": 151
+      "line": 181
     },
     {
       "path": "/teachers/:staffId",
       "page": "TeacherProfilePage",
       "requires": null,
-      "line": 152
+      "line": 182
     },
     {
       "path": "/timetable",
       "page": "TimetableManagementPage",
       "requires": null,
-      "line": 153
+      "line": 183
     },
     {
       "path": "/examinations",
       "page": "ExaminationManagementPage",
       "requires": null,
-      "line": 154
+      "line": 184
     },
     {
       "path": "/homework",
       "page": "HomeworkManagementPage",
       "requires": null,
-      "line": 155
+      "line": 185
     },
     {
       "path": "/my-homework",
       "page": "MyHomeworkPage",
       "requires": null,
-      "line": 156
+      "line": 186
     },
     {
       "path": "/fees",
       "page": "FeeManagementPage",
       "requires": null,
-      "line": 157
+      "line": 187
     },
     {
       "path": "/accounting",
       "page": "AccountingPage",
       "requires": null,
-      "line": 158
+      "line": 188
     },
     {
       "path": "/payroll",
       "page": "PayrollPage",
       "requires": null,
-      "line": 159
+      "line": 189
     },
     {
       "path": "/inventory",
       "page": "InventoryManagementPage",
       "requires": null,
-      "line": 160
+      "line": 190
     },
     {
       "path": "/certificates",
       "page": "CertificatesPage",
       "requires": null,
-      "line": 161
+      "line": 191
     },
     {
       "path": "/health",
       "page": "HealthMedicalPage",
       "requires": null,
-      "line": 162
+      "line": 192
     },
     {
       "path": "/visitors",
       "page": "VisitorManagementPage",
       "requires": null,
-      "line": 163
+      "line": 193
     },
     {
       "path": "/helpdesk",
       "page": "HelpDeskPage",
       "requires": null,
-      "line": 164
+      "line": 194
     },
     {
       "path": "/surveys",
       "page": "SurveysFeedbackPage",
       "requires": null,
-      "line": 165
+      "line": 195
     },
     {
       "path": "/platform",
       "page": "PlatformConsolePage",
       "requires": null,
-      "line": 166
+      "line": 196
     },
     {
       "path": "/admin/azure",
       "page": "AzureLayout",
       "requires": "superAdmin",
-      "line": 169
+      "line": 199
     },
     {
       "path": "/admin/azure/cost",
       "page": "AzureCostPage",
       "requires": null,
-      "line": 173
+      "line": 203
     },
     {
       "path": "/admin/azure/resources",
       "page": "AzureResourcesPage",
       "requires": null,
-      "line": 174
+      "line": 204
     },
     {
       "path": "/admin/azure/resources/detail",
       "page": "AzureResourceDetailPage",
       "requires": null,
-      "line": 175
+      "line": 205
     },
     {
       "path": "/admin/azure/compute",
       "page": "AzureComputePage",
       "requires": null,
-      "line": 176
+      "line": 206
     },
     {
       "path": "/admin/azure/databases",
       "page": "AzureDatabasesPage",
       "requires": null,
-      "line": 177
+      "line": 207
     },
     {
       "path": "/admin/azure/storage",
       "page": "AzureStoragePage",
       "requires": null,
-      "line": 178
+      "line": 208
     },
     {
       "path": "/admin/azure/containers",
       "page": "AzureContainersPage",
       "requires": null,
-      "line": 179
+      "line": 209
     },
     {
       "path": "/admin/azure/monitoring",
       "page": "AzureMonitoringPage",
       "requires": null,
-      "line": 180
+      "line": 210
     },
     {
       "path": "/admin/azure/alerts",
       "page": "AzureAlertsPage",
       "requires": null,
-      "line": 181
+      "line": 211
     },
     {
       "path": "/admin/azure/settings",
       "page": "AzureSettingsPage",
       "requires": null,
-      "line": 182
+      "line": 212
     },
     {
       "path": "/ai",
       "page": "AIFeaturesPage",
       "requires": "module:aiFeatures",
-      "line": 185
+      "line": 215
+    },
+    {
+      "path": "/extracurricular",
+      "page": "ExtracurricularLayout",
+      "requires": null,
+      "line": 217
+    },
+    {
+      "path": "/extracurricular/activities",
+      "page": "ExtracurricularActivitiesPage",
+      "requires": null,
+      "line": 221
+    },
+    {
+      "path": "/extracurricular/enrollments",
+      "page": "ExtracurricularEnrollmentsPage",
+      "requires": null,
+      "line": 222
+    },
+    {
+      "path": "/extracurricular/schedule",
+      "page": "ExtracurricularSchedulePage",
+      "requires": null,
+      "line": 223
+    },
+    {
+      "path": "/extracurricular/teams",
+      "page": "ExtracurricularTeamsPage",
+      "requires": null,
+      "line": 224
+    },
+    {
+      "path": "/extracurricular/groups",
+      "page": "ExtracurricularGroupsPage",
+      "requires": null,
+      "line": 225
+    },
+    {
+      "path": "/extracurricular/events",
+      "page": "ExtracurricularEventsPage",
+      "requires": null,
+      "line": 226
+    },
+    {
+      "path": "/extracurricular/achievements",
+      "page": "ExtracurricularAchievementsPage",
+      "requires": null,
+      "line": 227
+    },
+    {
+      "path": "/extracurricular/sustainability",
+      "page": "ExtracurricularSustainabilityPage",
+      "requires": null,
+      "line": 228
+    },
+    {
+      "path": "/extracurricular/settings",
+      "page": "ExtracurricularSettingsPage",
+      "requires": null,
+      "line": 229
     },
     {
       "path": "/library",
       "page": "LibraryManagementPage",
       "requires": null,
-      "line": 186
+      "line": 232
     },
     {
       "path": "/transport",
       "page": "TransportManagementPage",
       "requires": null,
-      "line": 187
+      "line": 233
     },
     {
       "path": "/hostel",
       "page": "HostelManagementPage",
       "requires": null,
-      "line": 188
+      "line": 234
     },
     {
       "path": "/communication",
       "page": "CommunicationCenterPage",
       "requires": null,
-      "line": 189
+      "line": 235
     },
     {
       "path": "/notifications",
       "page": "NotificationCenterPage",
       "requires": null,
-      "line": 190
+      "line": 236
     },
     {
       "path": "/calendar",
       "page": "CalendarPage",
       "requires": null,
-      "line": 191
+      "line": 237
     },
     {
       "path": "/online-classes",
       "page": "MeetingsHomePage",
       "requires": null,
-      "line": 192
+      "line": 238
     },
     {
       "path": "/online-classes/calendar",
       "page": "MeetingCalendarPage",
       "requires": null,
-      "line": 193
+      "line": 239
     },
     {
       "path": "/online-classes/reports",
       "page": "MeetingReportsPage",
       "requires": null,
-      "line": 194
+      "line": 240
     },
     {
       "path": "/online-classes/:id",
       "page": "MeetingDetailsPage",
       "requires": null,
-      "line": 195
+      "line": 241
     },
     {
       "path": "/reports",
       "page": "ReportsPage",
       "requires": null,
-      "line": 196
+      "line": 242
     },
     {
       "path": "/study-materials",
       "page": "StudyMaterialsPage",
       "requires": null,
-      "line": 197
+      "line": 243
     },
     {
       "path": "/online-exams",
       "page": "ExamDashboardPage",
       "requires": null,
-      "line": 198
+      "line": 244
     },
     {
       "path": "/online-exams/exams",
       "page": "ExamListPage",
       "requires": null,
-      "line": 199
+      "line": 245
     },
     {
       "path": "/online-exams/exams/new",
       "page": "ExamWizardPage",
       "requires": null,
-      "line": 200
+      "line": 246
     },
     {
       "path": "/online-exams/exams/:id",
       "page": "ExamDetailPage",
       "requires": null,
-      "line": 201
+      "line": 247
     },
     {
       "path": "/online-exams/exams/:id/edit",
       "page": "ExamWizardPage",
       "requires": null,
-      "line": 202
+      "line": 248
     },
     {
       "path": "/online-exams/exams/:id/results",
       "page": "ExamResultsPage",
       "requires": null,
-      "line": 203
+      "line": 249
     },
     {
       "path": "/online-exams/exams/:id/attempts/:attemptId",
       "page": "AttemptReviewPage",
       "requires": null,
-      "line": 204
+      "line": 250
     },
     {
       "path": "/online-exams/question-bank",
       "page": "QuestionBankPage",
       "requires": null,
-      "line": 205
+      "line": 251
     },
     {
       "path": "/online-exams/evaluations",
       "page": "EvaluationsPage",
       "requires": null,
-      "line": 206
+      "line": 252
     },
     {
       "path": "/online-exams/results",
       "page": "ResultsHubPage",
       "requires": null,
-      "line": 207
+      "line": 253
     },
     {
       "path": "/online-exams/reports",
       "page": "ExamReportsPage",
       "requires": null,
-      "line": 208
+      "line": 254
     },
     {
       "path": "/online-exams/my",
       "page": "MyExamsPage",
       "requires": null,
-      "line": 209
+      "line": 255
     },
     {
       "path": "/online-exams/my/upcoming",
       "page": "MyExamsPage",
       "requires": null,
-      "line": 210
+      "line": 256
     },
     {
       "path": "/online-exams/my/completed",
       "page": "MyExamsPage",
       "requires": null,
-      "line": 211
+      "line": 257
     },
     {
       "path": "/online-exams/my/results",
       "page": "MyResultsPage",
       "requires": null,
-      "line": 212
+      "line": 258
     },
     {
       "path": "/online-exams/my/:id/result",
       "page": "MyResultPage",
       "requires": null,
-      "line": 213
+      "line": 259
     },
     {
       "path": "/talents",
       "page": "CreativeCampusLayout",
       "requires": null,
-      "line": 216
+      "line": 262
     },
     {
       "path": "/talents/explore",
       "page": "ExplorePage",
       "requires": null,
-      "line": 220
+      "line": 266
     },
     {
       "path": "/talents/new",
       "page": "TalentComposerPage",
       "requires": null,
-      "line": 221
+      "line": 267
     },
     {
       "path": "/talents/mine",
       "page": "MyTalentsPage",
       "requires": null,
-      "line": 222
+      "line": 268
     },
     {
       "path": "/talents/review",
       "page": "ReviewCenterPage",
       "requires": null,
-      "line": 223
+      "line": 269
     },
     {
       "path": "/talents/creators/:userId",
       "page": "CreatorProfilePage",
       "requires": null,
-      "line": 224
+      "line": 270
     },
     {
       "path": "/talents/schools/:tenantId",
       "page": "SchoolShowcasePage",
       "requires": null,
-      "line": 225
+      "line": 271
     },
     {
       "path": "/talents/:id",
       "page": "TalentDetailPage",
       "requires": null,
-      "line": 226
+      "line": 272
     },
     {
       "path": "/talents/:id/edit",
       "page": "TalentComposerPage",
       "requires": null,
-      "line": 227
+      "line": 273
     }
   ],
   "nav": {
@@ -555,6 +645,14 @@
         "label": "Talent Showcase",
         "to": "/talents",
         "permissionKey": "talents",
+        "audience": null,
+        "badge": null,
+        "superAdminOnly": false
+      },
+      {
+        "label": "Extra-Curricular",
+        "to": "/extracurricular",
+        "permissionKey": "extracurricular",
         "audience": null,
         "badge": null,
         "superAdminOnly": false
@@ -1011,6 +1109,16 @@
       "superAdminOnly": false,
       "section": null,
       "moduleKey": "talents"
+    },
+    {
+      "label": "Extra-Curricular",
+      "to": "/extracurricular",
+      "permissionKey": "extracurricular",
+      "audience": null,
+      "badge": null,
+      "superAdminOnly": false,
+      "section": null,
+      "moduleKey": "extracurricular"
     },
     {
       "label": "Parent Portal",
@@ -2597,6 +2705,7 @@
           "Branch updated",
           "${deleteTarget?.name} deleted",
           "${updated.label} ${updated.enabled ? \"enabled\" : \"disabled\"}",
+          "${done} permission${done === 1 ? \"\" : \"s\"} updated",
           "Policy created",
           "Policy updated",
           "Role created",
@@ -2786,7 +2895,9 @@
           "placeholders": [],
           "columns": [],
           "menuActions": [],
-          "toastsSuccess": [],
+          "toastsSuccess": [
+            "${done} permission${done === 1 ? \"\" : \"s\"} updated"
+          ],
           "toastsError": [],
           "validation": [],
           "searchPlaceholders": [],
@@ -5809,6 +5920,7 @@
         "emptyStates": [
           "No widgets match",
           "No birthdays this week",
+          "No bus assigned",
           "No routes running",
           "No fees due",
           "No upcoming holidays",
@@ -5949,6 +6061,7 @@
           "validation": [],
           "searchPlaceholders": [],
           "emptyStates": [
+            "No bus assigned",
             "No routes running"
           ],
           "exports": true,
@@ -7038,6 +7151,885 @@
         }
       }
     },
+    "extracurricular": {
+      "files": 20,
+      "pages": [
+        "src/features/extracurricular/pages/AchievementsPage.tsx",
+        "src/features/extracurricular/pages/ActivitiesPage.tsx",
+        "src/features/extracurricular/pages/EnrollmentsPage.tsx",
+        "src/features/extracurricular/pages/EventsPage.tsx",
+        "src/features/extracurricular/pages/GroupsPage.tsx",
+        "src/features/extracurricular/pages/OverviewPage.tsx",
+        "src/features/extracurricular/pages/SchedulePage.tsx",
+        "src/features/extracurricular/pages/SettingsPage.tsx",
+        "src/features/extracurricular/pages/SustainabilityPage.tsx",
+        "src/features/extracurricular/pages/TeamsPage.tsx"
+      ],
+      "facts": {
+        "pageTitles": [
+          "Extra-Curricular"
+        ],
+        "tabs": [],
+        "buttons": [
+          "Cancel",
+          "Create groups",
+          "Remove",
+          "Add students",
+          "Back",
+          "Add",
+          "Close",
+          "Recalculate (same seed )",
+          "Confirm and save moves` : \"\"}",
+          "Newer",
+          "Older",
+          "Keep session",
+          "Cancel session",
+          "Mark everyone present",
+          "Save attendance",
+          "Record an achievement",
+          "Publish",
+          "Reject",
+          "Unpublish",
+          "Edit",
+          "Open for enrollment",
+          "New activity",
+          "Approve",
+          "Mark completed",
+          "Withdraw",
+          "New event",
+          "Results",
+          "Register",
+          "Add registered participants",
+          "Add a row",
+          "Save results",
+          "History",
+          "Shuffle students",
+          "Members",
+          "/$ )` : \"Take register\"}",
+          "Reschedule",
+          "Complete",
+          "Reinstate",
+          "Delete",
+          "Today",
+          "My sessions",
+          "New session",
+          "Save rules",
+          "Save",
+          "New campaign",
+          "Figures ( )",
+          "Cancel edit",
+          "New team",
+          "Squad",
+          "Add to team"
+        ],
+        "dialogs": [
+          "Create groups",
+          "/>}",
+          "Shuffle s",
+          "Assignment history",
+          "Cancel session",
+          "Attendance",
+          "Results —"
+        ],
+        "confirms": [
+          "Delete achievement",
+          "Delete activity",
+          "Withdraw from activity",
+          "Reject requests",
+          "Delete event",
+          "Delete group",
+          "Delete category",
+          "Delete campaign",
+          "Delete team"
+        ],
+        "labels": [
+          "Name",
+          "Code",
+          "Category",
+          "Academic year",
+          "Participation",
+          "Where",
+          "Status",
+          "Coordinator",
+          "Description",
+          "Capacity",
+          "Minimum to run",
+          "Lowest grade",
+          "Highest grade",
+          "Eligibility note",
+          "Venue",
+          "Enrollment opens",
+          "Enrollment closes",
+          "When it meets",
+          "Equipment needed",
+          "Safety instructions",
+          "Student",
+          "Note",
+          "Kind",
+          "How many",
+          "Name prefix",
+          "Or name them yourself",
+          "How to spread students",
+          "Who to include",
+          "Note for the history",
+          "Activity",
+          "Title",
+          "Team",
+          "Date",
+          "Starts",
+          "Ends",
+          "Instructor",
+          "Repeats",
+          "Until",
+          "Or number of sessions",
+          "Reason",
+          "Award",
+          "Level",
+          "Supporting document link",
+          "Kind of event",
+          "Register by",
+          "Organiser",
+          "Most activities per student",
+          "Colour",
+          "Kind of programme",
+          "What is measured",
+          "Unit",
+          "Target",
+          "Starting value",
+          "Location",
+          "This figure is",
+          "How it was calculated",
+          "Evidence",
+          "Participants",
+          "Volunteer hours",
+          "Level or category",
+          "Coach",
+          "Squad size limit",
+          "Role",
+          "Position",
+          "Jersey number"
+        ],
+        "requiredLabels": [
+          "Name",
+          "Code",
+          "Category",
+          "Academic year",
+          "Student",
+          "How many",
+          "Name prefix",
+          "Activity",
+          "Title",
+          "Date",
+          "Starts",
+          "Ends",
+          "Reason",
+          "Kind of event",
+          "What is measured",
+          "Unit",
+          "Target",
+          "How it was calculated"
+        ],
+        "placeholders": [
+          "Choose a category",
+          "Search students without a group",
+          "e.g. Start of 2026-27",
+          "Choose an activity",
+          "Search activities",
+          "Search by student",
+          "Choose…",
+          "e.g. 50 trees x 22 kg CO2 absorbed per tree per year (source: …)",
+          "Transfer…"
+        ],
+        "columns": [],
+        "menuActions": [],
+        "toastsSuccess": [],
+        "toastsError": [],
+        "validation": [
+          "Name is required",
+          "Code is required",
+          "Choose a category",
+          "Academic year is required",
+          "space-y-4",
+          "Delete activity",
+          "Withdraw from activity",
+          "space-y-6"
+        ],
+        "searchPlaceholders": [
+          "Search students without a group",
+          "Search activities"
+        ],
+        "emptyStates": [
+          "No students yet",
+          "Everyone has a group",
+          "No changes yet",
+          "Nobody to mark",
+          "No achievements yet",
+          "No activities match",
+          "No enrollments here",
+          "No events",
+          "Nobody registered yet",
+          "No results yet",
+          "Delete group",
+          "No activities yet",
+          "Nothing scheduled",
+          "No enrollments yet",
+          "No active campaigns",
+          "Nothing in the next 60 days",
+          "No attendance recorded yet",
+          "No campaigns yet",
+          "No figures yet",
+          "No teams yet",
+          "No players yet"
+        ],
+        "exports": true,
+        "imports": true
+      },
+      "perFile": {
+        "src/features/extracurricular/components/ActivityFormDialog.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Cancel"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [
+            "Name",
+            "Code",
+            "Category",
+            "Academic year",
+            "Participation",
+            "Where",
+            "Status",
+            "Coordinator",
+            "Description",
+            "Capacity",
+            "Minimum to run",
+            "Lowest grade",
+            "Highest grade",
+            "Eligibility note",
+            "Venue",
+            "Enrollment opens",
+            "Enrollment closes",
+            "When it meets",
+            "Equipment needed",
+            "Safety instructions"
+          ],
+          "requiredLabels": [
+            "Name",
+            "Code",
+            "Category",
+            "Academic year"
+          ],
+          "placeholders": [
+            "Choose a category"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [
+            "Name is required",
+            "Code is required",
+            "Choose a category",
+            "Academic year is required"
+          ],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/components/EnrollDialog.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Cancel"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [
+            "Student",
+            "Note"
+          ],
+          "requiredLabels": [
+            "Student"
+          ],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/components/ExtracurricularLayout.tsx": {
+          "pageTitles": [
+            "Extra-Curricular"
+          ],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/components/GroupDialogs.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Cancel",
+            "Create groups",
+            "Remove",
+            "Add students",
+            "Back",
+            "Add",
+            "Close",
+            "Recalculate (same seed )",
+            "Confirm and save moves` : \"\"}",
+            "Newer",
+            "Older"
+          ],
+          "dialogs": [
+            "Create groups",
+            "/>}",
+            "Shuffle s",
+            "Assignment history"
+          ],
+          "confirms": [],
+          "labels": [
+            "Kind",
+            "How many",
+            "Name prefix",
+            "Or name them yourself",
+            "How to spread students",
+            "Who to include",
+            "Note for the history"
+          ],
+          "requiredLabels": [
+            "How many",
+            "Name prefix"
+          ],
+          "placeholders": [
+            "Search students without a group",
+            "e.g. Start of 2026-27"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [
+            "Search students without a group"
+          ],
+          "emptyStates": [
+            "No students yet",
+            "Everyone has a group",
+            "No changes yet"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/components/GroupDialogsBundle.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/components/SessionDialogs.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Cancel",
+            "Keep session",
+            "Cancel session",
+            "Mark everyone present",
+            "Save attendance"
+          ],
+          "dialogs": [
+            "Cancel session",
+            "Attendance"
+          ],
+          "confirms": [],
+          "labels": [
+            "Activity",
+            "Title",
+            "Team",
+            "Date",
+            "Starts",
+            "Ends",
+            "Venue",
+            "Instructor",
+            "Repeats",
+            "Until",
+            "Or number of sessions",
+            "Reason"
+          ],
+          "requiredLabels": [
+            "Activity",
+            "Title",
+            "Date",
+            "Starts",
+            "Ends",
+            "Reason"
+          ],
+          "placeholders": [
+            "Choose an activity"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "Nobody to mark"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/AchievementsPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Record an achievement",
+            "Publish",
+            "Reject",
+            "Unpublish",
+            "Edit",
+            "Cancel"
+          ],
+          "dialogs": [],
+          "confirms": [
+            "Delete achievement"
+          ],
+          "labels": [
+            "Student",
+            "Title",
+            "Award",
+            "Level",
+            "Date",
+            "Academic year",
+            "Description",
+            "Supporting document link"
+          ],
+          "requiredLabels": [
+            "Student",
+            "Title"
+          ],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "No achievements yet"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/ActivitiesPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Open for enrollment",
+            "New activity"
+          ],
+          "dialogs": [],
+          "confirms": [
+            "Delete activity"
+          ],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [
+            "Search activities"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [
+            "space-y-4",
+            "Delete activity"
+          ],
+          "searchPlaceholders": [
+            "Search activities"
+          ],
+          "emptyStates": [
+            "No activities match"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/EnrollmentsPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Approve",
+            "Reject",
+            "Mark completed",
+            "Withdraw"
+          ],
+          "dialogs": [],
+          "confirms": [
+            "Withdraw from activity",
+            "Reject requests"
+          ],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [
+            "Search by student"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [
+            "Withdraw from activity"
+          ],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "No enrollments here"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/EventsPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "New event",
+            "Results",
+            "Edit",
+            "Cancel",
+            "Withdraw",
+            "Register",
+            "Close",
+            "Add registered participants",
+            "Add a row",
+            "Save results"
+          ],
+          "dialogs": [
+            "Results —"
+          ],
+          "confirms": [
+            "Delete event"
+          ],
+          "labels": [
+            "Name",
+            "Kind of event",
+            "Starts",
+            "Ends",
+            "Register by",
+            "Level",
+            "Venue",
+            "Organiser",
+            "Status",
+            "Description"
+          ],
+          "requiredLabels": [
+            "Name",
+            "Kind of event",
+            "Starts",
+            "Ends"
+          ],
+          "placeholders": [
+            "Choose…"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "No events",
+            "Nobody registered yet",
+            "No results yet"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/GroupsPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "History",
+            "Shuffle students",
+            "Create groups",
+            "Members"
+          ],
+          "dialogs": [],
+          "confirms": [
+            "Delete group"
+          ],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [
+            "space-y-4"
+          ],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "Delete group"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/OverviewPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [
+            "space-y-6"
+          ],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "No activities yet",
+            "Nothing scheduled",
+            "No enrollments yet",
+            "No active campaigns"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/SchedulePage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "/$ )` : \"Take register\"}",
+            "Reschedule",
+            "Cancel",
+            "Complete",
+            "Reinstate",
+            "Delete",
+            "Today",
+            "My sessions",
+            "New session"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "Nothing in the next 60 days",
+            "No attendance recorded yet"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/SettingsPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Save rules",
+            "Add",
+            "Cancel",
+            "Save"
+          ],
+          "dialogs": [],
+          "confirms": [
+            "Delete category"
+          ],
+          "labels": [
+            "Most activities per student",
+            "Name",
+            "Colour"
+          ],
+          "requiredLabels": [
+            "Name"
+          ],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/SustainabilityPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "New campaign",
+            "Figures ( )",
+            "Edit",
+            "Cancel",
+            "Remove",
+            "Cancel edit",
+            "Close"
+          ],
+          "dialogs": [],
+          "confirms": [
+            "Delete campaign"
+          ],
+          "labels": [
+            "Name",
+            "Kind of programme",
+            "What is measured",
+            "Unit",
+            "Target",
+            "Starting value",
+            "Starts",
+            "Ends",
+            "Coordinator",
+            "Location",
+            "Status",
+            "Description",
+            "Date",
+            "This figure is",
+            "How it was calculated",
+            "Evidence",
+            "Participants",
+            "Volunteer hours"
+          ],
+          "requiredLabels": [
+            "Name",
+            "What is measured",
+            "Unit",
+            "Target",
+            "How it was calculated"
+          ],
+          "placeholders": [
+            "e.g. 50 trees x 22 kg CO2 absorbed per tree per year (source: …)"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "No campaigns yet",
+            "No figures yet"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/pages/TeamsPage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "New team",
+            "Squad",
+            "Edit",
+            "Cancel",
+            "Remove",
+            "Add to team",
+            "Close"
+          ],
+          "dialogs": [
+            "/>}"
+          ],
+          "confirms": [
+            "Delete team"
+          ],
+          "labels": [
+            "Activity",
+            "Name",
+            "Code",
+            "Level or category",
+            "Colour",
+            "Coach",
+            "Squad size limit",
+            "Student",
+            "Role",
+            "Position",
+            "Jersey number"
+          ],
+          "requiredLabels": [
+            "Activity",
+            "Name",
+            "Code"
+          ],
+          "placeholders": [
+            "Choose an activity",
+            "Transfer…"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "No teams yet",
+            "No players yet"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/extracurricular/shared.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        }
+      }
+    },
     "fees": {
       "files": 16,
       "pages": [
@@ -8049,6 +9041,341 @@
           "validation": [],
           "searchPlaceholders": [],
           "emptyStates": [],
+          "exports": true,
+          "imports": true
+        }
+      }
+    },
+    "help": {
+      "files": 26,
+      "pages": [
+        "src/features/help/pages/GuideRedirect.tsx",
+        "src/features/help/pages/HelpArticlePage.tsx",
+        "src/features/help/pages/HelpHomePage.tsx",
+        "src/features/help/pages/HelpLayout.tsx",
+        "src/features/help/pages/HelpModulePage.tsx",
+        "src/features/help/pages/HelpRolePage.tsx"
+      ],
+      "facts": {
+        "pageTitles": [
+          "Help Center"
+        ],
+        "tabs": [],
+        "buttons": [
+          "Publish",
+          "Cancel",
+          "Publish guide to Ask School AI",
+          "Ask School AI",
+          "Download the PDF manual",
+          "Yes",
+          "No",
+          "Leave and open",
+          "Stay here",
+          "`}",
+          "Read the guide",
+          "Read the full guide",
+          "Back",
+          "Done",
+          "Next",
+          "Back to the Help Center",
+          "Open this screen",
+          "Walk me through it",
+          "Print this article",
+          "Sign in",
+          "Open"
+        ],
+        "dialogs": [],
+        "confirms": [],
+        "labels": [],
+        "requiredLabels": [],
+        "placeholders": [
+          "Search for a task, for example “add a student”"
+        ],
+        "columns": [],
+        "menuActions": [],
+        "toastsSuccess": [
+          "Guide published to Ask School AI (${s.chunks} sections)"
+        ],
+        "toastsError": [],
+        "validation": [],
+        "searchPlaceholders": [],
+        "emptyStates": [
+          "This article is not available",
+          "This part of the guide is not available",
+          "That role is not in the guide"
+        ],
+        "exports": true,
+        "imports": true
+      },
+      "perFile": {
+        "src/features/help/components/HelpAdminPanel.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Publish",
+            "Cancel",
+            "Publish guide to Ask School AI"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [
+            "Guide published to Ask School AI (${s.chunks} sections)"
+          ],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/components/HelpBits.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Ask School AI",
+            "Download the PDF manual",
+            "Yes",
+            "No"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/components/HelpReplyCard.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Leave and open",
+            "Stay here",
+            "`}",
+            "Read the guide",
+            "Read the full guide"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/components/NavigationOffer.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/components/RichText.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/components/WalkthroughHost.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Back",
+            "Done",
+            "Next"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/pages/GuideRedirect.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/pages/HelpArticlePage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Back to the Help Center",
+            "Open this screen",
+            "Walk me through it",
+            "Print this article"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "This article is not available"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/pages/HelpHomePage.tsx": {
+          "pageTitles": [
+            "Help Center"
+          ],
+          "tabs": [],
+          "buttons": [],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [
+            "Search for a task, for example “add a student”"
+          ],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/pages/HelpLayout.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Sign in"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/pages/HelpModulePage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Back to the Help Center",
+            "Open"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "This part of the guide is not available"
+          ],
+          "exports": true,
+          "imports": true
+        },
+        "src/features/help/pages/HelpRolePage.tsx": {
+          "pageTitles": [],
+          "tabs": [],
+          "buttons": [
+            "Back to the Help Center"
+          ],
+          "dialogs": [],
+          "confirms": [],
+          "labels": [],
+          "requiredLabels": [],
+          "placeholders": [],
+          "columns": [],
+          "menuActions": [],
+          "toastsSuccess": [],
+          "toastsError": [],
+          "validation": [],
+          "searchPlaceholders": [],
+          "emptyStates": [
+            "That role is not in the guide"
+          ],
           "exports": true,
           "imports": true
         }
@@ -13380,9 +14707,10 @@
           "Announcement posted",
           "Announcement deleted",
           "Plan created",
-          "Plan updated",
+          "Plan updated${changes ?",
           "Plan deleted",
           "${tenant.schoolName} onboarded as a trial tenant",
+          "Plan updated",
           "Tenant activated",
           "Tenant suspended",
           "Tenant cancelled",
@@ -13549,7 +14877,7 @@
           "menuActions": [],
           "toastsSuccess": [
             "Plan created",
-            "Plan updated",
+            "Plan updated${changes ?",
             "Plan deleted"
           ],
           "toastsError": [],
@@ -18856,6 +20184,11 @@
     "ForgotPasswordPage",
     "ResetPasswordPage",
     null,
+    "HelpLayout",
+    "HelpModulePage",
+    "HelpRolePage",
+    "HelpArticlePage",
+    "GuideRedirect",
     "DashboardPage",
     "SecuritySettingsPage",
     "UserManagementPage",
@@ -18897,6 +20230,16 @@
     "AzureAlertsPage",
     "AzureSettingsPage",
     "AIFeaturesPage",
+    "ExtracurricularLayout",
+    "ExtracurricularActivitiesPage",
+    "ExtracurricularEnrollmentsPage",
+    "ExtracurricularSchedulePage",
+    "ExtracurricularTeamsPage",
+    "ExtracurricularGroupsPage",
+    "ExtracurricularEventsPage",
+    "ExtracurricularAchievementsPage",
+    "ExtracurricularSustainabilityPage",
+    "ExtracurricularSettingsPage",
     "LibraryManagementPage",
     "TransportManagementPage",
     "HostelManagementPage",
@@ -18937,6 +20280,8 @@
     "/forgot-password",
     "/reset-password",
     "/change-password",
+    "/help",
+    "/guide/*",
     "/account/security",
     "/admin/azure/cost",
     "/admin/azure/resources",
@@ -18948,6 +20293,15 @@
     "/admin/azure/monitoring",
     "/admin/azure/alerts",
     "/admin/azure/settings",
+    "/extracurricular/activities",
+    "/extracurricular/enrollments",
+    "/extracurricular/schedule",
+    "/extracurricular/teams",
+    "/extracurricular/groups",
+    "/extracurricular/events",
+    "/extracurricular/achievements",
+    "/extracurricular/sustainability",
+    "/extracurricular/settings",
     "/online-classes/calendar",
     "/online-classes/reports",
     "/online-exams/exams/new",

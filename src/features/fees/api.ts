@@ -428,13 +428,25 @@ export async function generateInstallments(invoiceId: string, count: number): Pr
   return mapFeeInvoice(dto);
 }
 
+/**
+ * One retry key per payment that has not succeeded yet. Pressing Pay again after a timeout, a dropped connection or a double click
+ * sends the same Idempotency-Key, so the server hands back the first receipt instead of taking the money twice. The key is
+ * forgotten once the payment succeeds, so the next payment on the invoice gets its own.
+ */
+const pendingPaymentKeys = new Map<string, string>();
+
 export async function recordPayment(invoiceId: string, params: RecordPaymentParams): Promise<{ invoice: FeeInvoice; receipt: Receipt }> {
+  const slot = `${invoiceId}|${params.amount}|${params.mode}`;
+  const key = pendingPaymentKeys.get(slot) ?? globalThis.crypto.randomUUID();
+  pendingPaymentKeys.set(slot, key);
   const dto = await unwrap(
-    financeHttpClient.post<{ invoice: ApiFeeInvoice; receipt: ApiReceipt }>(`/api/feeinvoices/${invoiceId}/payments`, {
-      amount: params.amount,
-      mode: PAYMENT_MODE_TO_API[params.mode],
-    }),
+    financeHttpClient.post<{ invoice: ApiFeeInvoice; receipt: ApiReceipt }>(
+      `/api/feeinvoices/${invoiceId}/payments`,
+      { amount: params.amount, mode: PAYMENT_MODE_TO_API[params.mode] },
+      { headers: { "Idempotency-Key": key } },
+    ),
   );
+  pendingPaymentKeys.delete(slot);
   return { invoice: mapFeeInvoice(dto.invoice), receipt: mapReceipt(dto.receipt) };
 }
 

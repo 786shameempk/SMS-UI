@@ -219,6 +219,8 @@ export interface ApiProblemDetails {
 export function extractApiErrorMessage(error: unknown, fallback = "Something went wrong. Please try again."): string {
   if (axios.isAxiosError(error)) {
     const problem = error.response?.data as ApiProblemDetails | undefined;
+    // Too many attempts (sign-in, password reset...): say so, rather than a generic or misleading message such as "Invalid email or password".
+    if (error.response?.status === 429) return "Too many attempts. Please wait a minute and try again.";
     const firstFieldError = problem?.errors && Object.values(problem.errors)[0]?.[0];
     if (firstFieldError) return firstFieldError;
     if (problem?.title) return problem.title;

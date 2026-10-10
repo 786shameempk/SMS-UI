@@ -33,7 +33,7 @@ export const AVAILABLE_MODULE_LABELS: string[] = PERMISSION_MODULES.filter((m) =
  * appears in exactly one group (a test keeps this in step with the catalog above), and a group can be switched on or off as a whole.
  */
 export const PLAN_MODULE_GROUPS: ReadonlyArray<{ title: string; modules: string[] }> = [
-  { title: "Everyday", modules: ["Dashboard", "AI Features", "Notifications", "Calendar", "Online Classes", "Talent Showcase", "Parent Portal", "Study Materials"] },
+  { title: "Everyday", modules: ["Dashboard", "AI Features", "Notifications", "Calendar", "Online Classes", "Talent Showcase", "Extra-Curricular", "Parent Portal", "Study Materials"] },
   { title: "Academics", modules: ["Homework", "Students", "Academic Setup", "Attendance", "Teachers", "Timetable", "Examinations"] },
   { title: "Online Exams", modules: ["Online Exams"] },
   { title: "Human Resources", modules: ["Staff Management", "Payroll"] },

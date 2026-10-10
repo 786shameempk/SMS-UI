@@ -62,6 +62,17 @@ const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage")
 const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
 const StudyMaterialsPage = lazy(() => import("@/features/study-materials/pages/StudyMaterialsPage"));
 const SettingsPage = lazy(() => import("@/features/settings/pages/SettingsPage"));
+const ExtracurricularLayout = lazy(() => import("@/features/extracurricular/components/ExtracurricularLayout"));
+const ExtracurricularOverviewPage = lazy(() => import("@/features/extracurricular/pages/OverviewPage"));
+const ExtracurricularActivitiesPage = lazy(() => import("@/features/extracurricular/pages/ActivitiesPage"));
+const ExtracurricularEnrollmentsPage = lazy(() => import("@/features/extracurricular/pages/EnrollmentsPage"));
+const ExtracurricularSchedulePage = lazy(() => import("@/features/extracurricular/pages/SchedulePage"));
+const ExtracurricularTeamsPage = lazy(() => import("@/features/extracurricular/pages/TeamsPage"));
+const ExtracurricularGroupsPage = lazy(() => import("@/features/extracurricular/pages/GroupsPage"));
+const ExtracurricularEventsPage = lazy(() => import("@/features/extracurricular/pages/EventsPage"));
+const ExtracurricularAchievementsPage = lazy(() => import("@/features/extracurricular/pages/AchievementsPage"));
+const ExtracurricularSustainabilityPage = lazy(() => import("@/features/extracurricular/pages/SustainabilityPage"));
+const ExtracurricularSettingsPage = lazy(() => import("@/features/extracurricular/pages/SettingsPage"));
 const CreativeCampusLayout = lazy(() => import("@/features/talents/components/CreativeCampusLayout"));
 const DiscoverPage = lazy(() => import("@/features/talents/pages/DiscoverPage"));
 const ExplorePage = lazy(() => import("@/features/talents/pages/ExplorePage"));
@@ -202,6 +213,22 @@ export const router = createBrowserRouter([
         ],
       },
       { path: "ai", element: <RequireModule module="aiFeatures"><AIFeaturesPage /></RequireModule> },
+      {
+        path: "extracurricular",
+        element: <ExtracurricularLayout />,
+        children: [
+          { index: true, element: <ExtracurricularOverviewPage /> },
+          { path: "activities", element: <ExtracurricularActivitiesPage /> },
+          { path: "enrollments", element: <ExtracurricularEnrollmentsPage /> },
+          { path: "schedule", element: <ExtracurricularSchedulePage /> },
+          { path: "teams", element: <ExtracurricularTeamsPage /> },
+          { path: "groups", element: <ExtracurricularGroupsPage /> },
+          { path: "events", element: <ExtracurricularEventsPage /> },
+          { path: "achievements", element: <ExtracurricularAchievementsPage /> },
+          { path: "sustainability", element: <ExtracurricularSustainabilityPage /> },
+          { path: "settings", element: <ExtracurricularSettingsPage /> },
+        ],
+      },
       { path: "library", element: <LibraryManagementPage /> },
       { path: "transport", element: <TransportManagementPage /> },
       { path: "hostel", element: <HostelManagementPage /> },

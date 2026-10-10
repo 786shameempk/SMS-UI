@@ -36,6 +36,7 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
+  Trophy,
   UserCheck,
   UsersRound,
   Users,
@@ -80,6 +81,7 @@ export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Calendar", to: "/calendar", icon: CalendarDays },
   { label: "Online Classes", to: "/online-classes", icon: Video, permissionKey: "meetings" },
   { label: "Talent Showcase", to: "/talents", icon: Star, permissionKey: "talents" },
+  { label: "Extra-Curricular", to: "/extracurricular", icon: Trophy, permissionKey: "extracurricular" },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
   { label: "My Homework", to: "/my-homework", icon: BookOpenCheck, permissionKey: "homework" },
   // Top-level (not under Academics) because students and parents use it and can't see that section.

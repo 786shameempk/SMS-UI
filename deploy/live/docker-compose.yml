@@ -31,7 +31,13 @@ x-dotnet-service: &dotnet-service
 
 x-dotnet-env: &dotnet-env
   ASPNETCORE_ENVIRONMENT: Production
-  Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
+  # Token signing. RS256 (preferred): AuthService alone holds JWT_PRIVATE_KEY_PEM; every service verifies with JWT_PUBLIC_KEY_PEM and
+  # can never mint a token. Until a key pair is set, tokens stay HS256 with JWT_SECRET (the old shared secret, which every holder can sign
+  # with). While services are being moved over both are accepted; then set JWT_ACCEPT_LEGACY_HS256=false and remove JWT_SECRET.
+  # Make a pair with: node ../AuthService/scripts/new-jwt-keypair.mjs. See AuthService/docs/JWT_KEY_ROLLOUT.md.
+  Jwt__Secret: ${JWT_SECRET:-}
+  Jwt__PublicKeyPem: ${JWT_PUBLIC_KEY_PEM:-}
+  Jwt__AcceptLegacyHs256: ${JWT_ACCEPT_LEGACY_HS256:-true}
   Cors__AllowedOrigins__0: https://${DOMAIN:?DOMAIN is required - set it in .env next to docker-compose.yml (see .env.example)}
   # A second site allowed to call the APIs from another origin (e.g. the Azure Static Web Apps frontend).
   # Unset = just the main domain again (harmless duplicate).
@@ -123,6 +129,8 @@ services:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=AuthServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       ConnectionStrings__Redis: "redis:6379"
+      # Only AuthService gets the private key.
+      Jwt__PrivateKeyPem: ${JWT_PRIVATE_KEY_PEM:-}
       Tenancy__BaseDomain: ${TENANT_BASE_DOMAIN:-sms-schoolsphere.com}
       ClientApp__BaseUrl: https://${DOMAIN}
       LeadNotifications__NotifyEmail: ${LEAD_NOTIFY_EMAIL:-info@schoolsphrere.com}

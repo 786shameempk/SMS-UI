@@ -169,6 +169,10 @@ describe("error helpers", () => {
     expect(extractApiErrorMessage(apiError(500, {}))).toBe("Something went wrong. Please try again.");
   });
 
+  it("explain a rate-limit refusal instead of a generic or misleading message", () => {
+    expect(extractApiErrorMessage(apiError(429, { message: "Too many attempts." }), "Invalid email or password")).toBe("Too many attempts. Please wait a minute and try again.");
+  });
+
   it("read the status code", () => {
     expect(getApiErrorStatus(apiError(404))).toBe(404);
     expect(getApiErrorStatus(new Error("x"))).toBeUndefined();
