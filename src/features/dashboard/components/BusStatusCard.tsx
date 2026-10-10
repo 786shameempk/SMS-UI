@@ -3,14 +3,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { TRACKING_STATUS_CONFIG } from "@/features/transport/constants";
+import { useAuthStore } from "@/store/authStore";
 import type { BusStatusSummary } from "../types";
 
 export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSummary }) {
+  const role = useAuthStore((s) => s.user?.role);
+  // A parent or student sees only their own bus, never the school's fleet.
+  const family = role === "parent" || role === "student";
+  const own = role === "student" ? "Your transport." : "Your child's transport.";
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
         <CardTitle>Bus status</CardTitle>
-        <CardDescription>{busStatus.mine ? "Your child's transport." : "Live fleet status."}</CardDescription>
+        <CardDescription>{family ? own : "Live fleet status."}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-2">
         {busStatus.mine ? (
@@ -34,6 +39,8 @@ export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSumma
               {TRACKING_STATUS_CONFIG[busStatus.mine.status].label}
             </Badge>
           </div>
+        ) : family ? (
+          <EmptyState bare size="sm" icon={Bus} title="No bus assigned" description={role === "student" ? "You are not on a school bus route." : "Your child is not on a school bus route."} className="h-full py-6" />
         ) : busStatus.fleet.length === 0 ? (
           <EmptyState bare size="sm" icon={Bus} title="No routes running" description="Live buses appear here during trips." className="h-full py-6" />
         ) : (

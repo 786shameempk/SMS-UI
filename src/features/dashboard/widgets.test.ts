@@ -56,10 +56,12 @@ describe("widget visibility", () => {
     expect(ids("teacher", false, null)).toContain("libraryDue");
   });
 
-  it("lets parents and students see their own fees, bus and hostel without the staff module", () => {
+  it("lets parents and students see their own fees and bus without the staff module, but never hostel occupancy", () => {
     const none = perms([]);
     for (const role of ["parent", "student"] as const) {
-      expect(ids(role, false, none)).toEqual(expect.arrayContaining(["feesDue", "busStatus", "hostel", "attendance", "upcomingExams"]));
+      expect(ids(role, false, none)).toEqual(expect.arrayContaining(["feesDue", "busStatus", "attendance", "upcomingExams"]));
+      expect(ids(role, false, none)).not.toContain("hostel");
+      expect(ids(role, false, perms(["hostel"]))).not.toContain("hostel");
     }
     // ...but a teacher without the fees module doesn't get the school's fee list.
     expect(ids("teacher", false, none)).not.toContain("feesDue");

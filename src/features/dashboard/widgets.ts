@@ -292,7 +292,7 @@ export const WIDGET_CATALOG: readonly DashboardWidgetConfig[] = [
   },
   {
     id: "hostel", name: "Hostel occupancy", description: "Beds occupied per hostel.",
-    type: "progress", icon: BedDouble, category: "campus", requiredPermission: "hostel", permissionExemptRoles: SELF_SERVICE,
+    type: "progress", icon: BedDouble, category: "campus", requiredPermission: "hostel", allowedRoles: STAFF_ROLES,
     defaultVisible: true, defaultOrder: 180, defaultWidth: 3, defaultHeight: 1, configurable: true, refreshInterval: 0,
     dataSource: loader("hostelOccupancy"),
   },
