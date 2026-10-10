@@ -90,6 +90,12 @@ const MyExamsPage = lazy(() => import("@/features/online-exams/pages/MyExamsPage
 const MyResultsPage = lazy(() => import("@/features/online-exams/pages/MyResultsPage"));
 const MyResultPage = lazy(() => import("@/features/online-exams/pages/MyResultPage"));
 const TakeExamPage = lazy(() => import("@/features/online-exams/pages/TakeExamPage"));
+const HelpLayout = lazy(() => import("@/features/help/pages/HelpLayout"));
+const HelpHomePage = lazy(() => import("@/features/help/pages/HelpHomePage"));
+const HelpModulePage = lazy(() => import("@/features/help/pages/HelpModulePage"));
+const HelpRolePage = lazy(() => import("@/features/help/pages/HelpRolePage"));
+const HelpArticlePage = lazy(() => import("@/features/help/pages/HelpArticlePage"));
+const GuideRedirect = lazy(() => import("@/features/help/pages/GuideRedirect"));
 
 export const router = createBrowserRouter([
   { path: "/", element: <LandingPage />, errorElement: <RouteError /> },
@@ -106,6 +112,19 @@ export const router = createBrowserRouter([
     ),
     errorElement: <RouteError />,
   },
+  {
+    // The Help Center is for everyone: inside the app when signed in, in a plain shell when not. /guide is the same thing.
+    path: "/help",
+    element: <HelpLayout />,
+    errorElement: <RouteError />,
+    children: [
+      { index: true, element: <HelpHomePage /> },
+      { path: "m/:moduleId", element: <HelpModulePage /> },
+      { path: "r/:role", element: <HelpRolePage /> },
+      { path: "a/:articleId", element: <HelpArticlePage /> },
+    ],
+  },
+  { path: "/guide/*", element: <GuideRedirect /> },
   {
     // The live classroom is full screen, outside the app shell (no sidebar/header), but still signed-in only.
     path: "/online-classes/:id/room",

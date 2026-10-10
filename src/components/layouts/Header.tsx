@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/utils/cn";
-import { ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, Search, ShieldCheck, Sparkles, Sun } from "lucide-react";
+import { BookOpenText, ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, Search, ShieldCheck, Sparkles, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { hasAllBranchAccess } from "@/types/auth";
@@ -84,6 +84,10 @@ function HelpMenu() {
           <kbd className="ml-auto rounded border border-border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground">
             {isMac ? "⌘" : "Ctrl"} K
           </kbd>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/help")}>
+          <BookOpenText />
+          Help Center
         </DropdownMenuItem>
         {canUseHelpdesk && (
           <DropdownMenuItem onClick={() => navigate("/helpdesk")}>

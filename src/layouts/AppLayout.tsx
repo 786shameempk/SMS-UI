@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "@/components/layouts/Sidebar";
@@ -8,11 +8,17 @@ import { useMobileNav } from "@/components/layouts/mobileNav";
 import { PageSkeleton } from "@/components/ui/states";
 import { useAuthStore } from "@/store/authStore";
 import AskAiLauncher from "@/features/ai/components/AskAiLauncher";
+import { clearUnsavedEdits, trackFormEdits } from "@/features/help/navigation";
+import { useTour } from "@/features/help/tourStore";
+
+// Only downloaded when a Help Center walkthrough is started.
+const WalkthroughHost = lazy(() => import("@/features/help/components/WalkthroughHost"));
 
 export default function AppLayout() {
   const { pathname } = useLocation();
   const { open, setOpen } = useMobileNav();
   const mainRef = useRef<HTMLElement>(null);
+  const touring = useTour((s) => s.tourId !== null);
   // Switching school (tenant) or branch remounts the page, so every screen - not only those whose
   // queries happen to include the scope in their keys - reloads its data, filters and forms for the new scope.
   const scopeKey = useAuthStore((s) => `${s.activeTenantId}:${s.activeBranchId}`);
@@ -22,11 +28,15 @@ export default function AppLayout() {
     mainRef.current?.scrollTo({ top: 0 });
   }, [scopeKey]);
 
-  // Following a link in the phone drawer closes it; a new page starts at the top.
+  // Following a link in the phone drawer closes it; a new page starts at the top, with no edits to lose yet.
   useEffect(() => {
     setOpen(false);
+    clearUnsavedEdits();
     mainRef.current?.scrollTo({ top: 0 });
   }, [pathname, setOpen]);
+
+  // Notes edits made in forms, so Ask School AI can ask before taking someone away from a page with unsaved changes.
+  useEffect(() => trackFormEdits(), []);
 
   // Escape closes the phone drawer, and the page behind it doesn't scroll while it's open.
   useEffect(() => {
@@ -92,6 +102,11 @@ export default function AppLayout() {
         </main>
       </div>
       <AskAiLauncher />
+      {touring && (
+        <Suspense fallback={null}>
+          <WalkthroughHost />
+        </Suspense>
+      )}
     </div>
   );
 }

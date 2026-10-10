@@ -44,6 +44,9 @@ loadtest/results/
 scripts/seed-demo/seed-users.json
 loadtest/users.seeded.json
 
+# Help Center: generated HTML, page previews and the non-public PDF editions
+dist-docs
+
 # Test coverage output (npm run test:coverage)
 coverage
 

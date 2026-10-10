@@ -2,6 +2,7 @@ import { AI_API_BASE_URL, authorizedFetch } from "@/lib/httpClient";
 import { readServerSentEvents } from "@/lib/sse";
 import { AI_MOCK_ENABLED, CHAT_PATHS } from "./api";
 import type { AssistantChatRequest, AssistantChatResponse, AssistantMode, AssistantSource, ProposedAction } from "./types";
+import { parseNavigation, type NavigationAction } from "@/features/help/navigation";
 
 /** Events of POST api/ai/chat/stream, in the order the server sends them. `done.reply` is the authoritative final text. */
 export type AssistantStreamEvent =
@@ -9,7 +10,7 @@ export type AssistantStreamEvent =
   | { type: "delta"; text: string }
   | { type: "reset" }
   | { type: "lookup"; source: string }
-  | { type: "done"; conversationId: string; reply: string; sources: AssistantSource[]; actions?: ProposedAction[] };
+  | { type: "done"; conversationId: string; reply: string; sources: AssistantSource[]; actions?: ProposedAction[]; navigation?: NavigationAction[] };
 
 /** Raised when the answer fails; `partial` is what had already arrived (shown so the user does not lose it). */
 export class AssistantStreamError extends Error {
@@ -108,8 +109,9 @@ export async function streamAssistantMessage(
             reply: String(data.reply),
             sources: (data.sources ?? []) as AssistantSource[],
             actions: (data.actions ?? []) as ProposedAction[],
+            navigation: parseNavigation(data.navigation),
           };
-          result = { conversationId: done.conversationId, reply: done.reply, sources: done.sources, actions: done.actions };
+          result = { conversationId: done.conversationId, reply: done.reply, sources: done.sources, actions: done.actions, navigation: done.navigation };
           onEvent(done);
           break;
         }

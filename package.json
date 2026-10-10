@@ -12,7 +12,14 @@
     "test:run": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
-    "typecheck:test": "tsc -p tsconfig.test.json"
+    "typecheck:test": "tsc -p tsconfig.test.json",
+    "help:inventory": "node scripts/help/inventory.mjs",
+    "help:check": "node scripts/help/check.mjs",
+    "help:pdf": "node scripts/help/pdf.mjs",
+    "help:index": "node scripts/help/ai-index.mjs",
+    "help:screenshots": "node scripts/help/screenshots.mjs",
+    "help:audit": "node scripts/help/audit-labels.mjs",
+    "help:pdf:check": "node scripts/help/pdf.mjs --check"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.21",
@@ -76,6 +83,8 @@
     "@vitest/coverage-v8": "^5.0.3",
     "jsdom": "^30.1.1",
     "oxlint": "^1.75.0",
+    "pagedjs": "^0.4.3",
+    "playwright-core": "^1.64.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "vitest": "^5.0.3"

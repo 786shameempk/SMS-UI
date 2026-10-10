@@ -1,0 +1,579 @@
+[
+  {
+    "match": "api/classes",
+    "body": [
+      {
+        "id": "cls-8",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "name": "Grade 8",
+        "departmentId": null,
+        "academicYearId": "ay1"
+      },
+      {
+        "id": "cls-9",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "name": "Grade 9",
+        "departmentId": null,
+        "academicYearId": "ay1"
+      }
+    ]
+  },
+  {
+    "match": "api/sections",
+    "body": [
+      {
+        "id": "sec-8a",
+        "name": "A",
+        "classId": "cls-8",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "classTeacherName": null,
+        "classTeacherStaffId": null,
+        "capacity": 40,
+        "currentStrength": 30
+      },
+      {
+        "id": "sec-8b",
+        "name": "B",
+        "classId": "cls-8",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "classTeacherName": null,
+        "classTeacherStaffId": null,
+        "capacity": 40,
+        "currentStrength": 30
+      },
+      {
+        "id": "sec-9a",
+        "name": "A",
+        "classId": "cls-9",
+        "tenantId": "demo",
+        "branchId": "demo-branch",
+        "classTeacherName": null,
+        "classTeacherStaffId": null,
+        "capacity": 40,
+        "currentStrength": 30
+      }
+    ]
+  },
+  {
+    "match": "api/students",
+    "body": {
+      "items": [
+        {
+          "id": "stu-1",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1001",
+          "firstName": "Aarav",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-01-15",
+          "gender": "Male",
+          "sectionId": "sec-8a",
+          "rollNumber": "1",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g0",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-2",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1002",
+          "firstName": "Diya",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-02-15",
+          "gender": "Female",
+          "sectionId": "sec-8b",
+          "rollNumber": "2",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g1",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-3",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1003",
+          "firstName": "Kabir",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-03-15",
+          "gender": "Male",
+          "sectionId": "sec-9a",
+          "rollNumber": "3",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g2",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-4",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1004",
+          "firstName": "Meera",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-04-15",
+          "gender": "Female",
+          "sectionId": "sec-8a",
+          "rollNumber": "4",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g3",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-5",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1005",
+          "firstName": "Rohan",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-05-15",
+          "gender": "Male",
+          "sectionId": "sec-8b",
+          "rollNumber": "5",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g4",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-6",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1006",
+          "firstName": "Sana",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-06-15",
+          "gender": "Female",
+          "sectionId": "sec-9a",
+          "rollNumber": "6",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g5",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-7",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1007",
+          "firstName": "Vihaan",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-07-15",
+          "gender": "Male",
+          "sectionId": "sec-8a",
+          "rollNumber": "7",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g6",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-8",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1008",
+          "firstName": "Zoya",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-08-15",
+          "gender": "Female",
+          "sectionId": "sec-8b",
+          "rollNumber": "8",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g7",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-9",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1009",
+          "firstName": "Ishaan",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-09-15",
+          "gender": "Male",
+          "sectionId": "sec-9a",
+          "rollNumber": "9",
+          "status": "Active",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g8",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        },
+        {
+          "id": "stu-10",
+          "tenantId": "demo",
+          "branchId": "demo-branch",
+          "admissionNumber": "ADM1010",
+          "firstName": "Anaya",
+          "lastName": "Sample",
+          "photoUrl": null,
+          "dateOfBirth": "2012-01-15",
+          "gender": "Female",
+          "sectionId": "sec-8a",
+          "rollNumber": "10",
+          "status": "Inactive",
+          "admissionDate": "2024-06-03",
+          "address": "1 Example Street, Sample Town",
+          "emergencyContact": {
+            "name": "Sample Guardian",
+            "relation": "Parent",
+            "phone": "+00 000 000 0000"
+          },
+          "medical": {
+            "bloodGroup": "O+",
+            "allergies": null,
+            "conditions": null,
+            "medications": null,
+            "doctorName": null,
+            "doctorPhone": null
+          },
+          "transport": {
+            "required": false,
+            "routeName": null,
+            "pickupPoint": null
+          },
+          "hostel": {
+            "required": false,
+            "hostelName": null,
+            "roomNumber": null
+          },
+          "guardians": [
+            {
+              "id": "g9",
+              "name": "Sample Guardian",
+              "relation": "Father",
+              "phone": "+00 000 000 0000",
+              "email": null,
+              "occupation": null
+            }
+          ],
+          "documents": [],
+          "transferRecord": null
+        }
+      ],
+      "totalCount": 10
+    }
+  }
+]

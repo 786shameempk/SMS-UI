@@ -1,0 +1,88 @@
+{
+  "summary": {
+    "appVersion": "0.0.0",
+    "revision": "8d2758747a",
+    "modules": {
+      "total": 39,
+      "withArticles": 39,
+      "withOverview": 6
+    },
+    "routes": {
+      "total": 89,
+      "countedScreens": 87,
+      "documented": 50,
+      "excluded": 2
+    },
+    "actions": {
+      "identified": 395,
+      "documented": 249,
+      "heuristic": true
+    },
+    "articles": {
+      "total": 70,
+      "draft": 0,
+      "reviewed": 70,
+      "verified": 0,
+      "tasks": 123
+    },
+    "assets": {
+      "screenshotsCaptured": 12,
+      "screenshotsReferencedButMissing": 0,
+      "videosRecorded": 0,
+      "taskArticlesWithoutScreenshot": 53,
+      "taskArticlesWithoutVideo": 62
+    },
+    "problems": {
+      "errors": 0,
+      "warnings": 0,
+      "drift": 0,
+      "metadata": 0,
+      "stale": 0
+    }
+  },
+  "modulesWithoutArticles": [],
+  "routesUndocumented": [
+    "online-classes.calendar",
+    "online-classes.reports",
+    "online-classes.details",
+    "online-classes.room",
+    "talent-showcase.explore",
+    "talent-showcase.mine",
+    "talent-showcase.creator",
+    "talent-showcase.school",
+    "talent-showcase.detail",
+    "talent-showcase.edit",
+    "students.profile",
+    "teachers.profile",
+    "online-exams.dashboard",
+    "online-exams.list",
+    "online-exams.detail",
+    "online-exams.edit",
+    "online-exams.exam-results",
+    "online-exams.attempt",
+    "online-exams.reports",
+    "online-exams.my-upcoming",
+    "online-exams.my-completed",
+    "online-exams.my-result",
+    "online-exams.take",
+    "staff.profile",
+    "azure.cost",
+    "azure.resources",
+    "azure.resource-detail",
+    "azure.compute",
+    "azure.databases",
+    "azure.storage",
+    "azure.containers",
+    "azure.monitoring",
+    "azure.alerts",
+    "azure.settings",
+    "help-center.module",
+    "help-center.role",
+    "help-center.article"
+  ],
+  "actionsOpen": 146,
+  "drift": [],
+  "metadataIssues": [],
+  "errors": [],
+  "warnings": []
+}

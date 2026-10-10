@@ -1,0 +1,12 @@
+[
+  {
+    "kind": "route",
+    "id": "marketing.landing",
+    "reason": "Public marketing home page, not part of the signed-in application."
+  },
+  {
+    "kind": "route",
+    "id": "account.reset-password",
+    "reason": "Opened from the link in a reset email; covered by the 'Reset a forgotten password' article."
+  }
+]
