@@ -42,7 +42,9 @@ Edit a role to change its name and description (**Save changes**, "Role updated"
 2. Choose a category from the list. Each category is named "… permissions".
 3. Tick or untick a permission in the column of the role. Each box is labelled with the permission and the role name.
 
-If a change cannot be saved you see "Could not update permission".
+Rows are grouped under the menu groups (for example Campus Operations holds Library, Transport, Hostel, Inventory, Visitors and Health & Medical), and only the modules in your school's plan are listed. Under each role's name, **All** grants every permission shown in the chosen category and **None** clears them. If a change cannot be saved you see "Could not update permission"; a bulk change reports how many could not be changed.
+
+You cannot change the permissions of a role you hold yourself unless you are a school administrator, and the administrator role always keeps access to User Management, Roles & Permissions and Settings.
 
 > **Note:** People already signed in may need to sign in again before a change in their role shows in their menu.
 

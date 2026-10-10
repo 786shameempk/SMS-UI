@@ -38,7 +38,7 @@ On the school's row, the actions are **Change plan**, **Activate**, **Suspend**,
 
 ## Plans and announcements
 
-- The **Plans** tab creates and edits plans: **Plan name**, **Tier**, **Monthly price (₹)**, **Max students**, **Max staff**, **Storage (GB)** and **Included modules** (at least one).
+- The **Plans** tab creates and edits plans: **Plan name**, **Tier**, **Monthly price (₹)**, **Max students**, **Max staff**, **Storage (GB)** and **Included modules**. Modules are listed under the same groups as the school menu (Everyday, Academics, Online Exams, Human Resources, Finance, Campus Operations, Engagement, Insights, Administration); use **Select group** or **Clear group** to switch a whole group, or tick single modules. Dashboard, User Management, Roles & Permissions and Settings are always included. When you edit a plan used by schools, a note says how many schools it reaches and what removing a module does: they follow at their next sign-in or refresh, their saved Roles & Permissions are kept, and adding the module back restores the same access. After saving, a message lists what was added and removed.
 - The **Announcements** tab posts a message (**New announcement**) broadcast to every tenant admin, with an optional expiry.
 
 
