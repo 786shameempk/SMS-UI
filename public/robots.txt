@@ -20,6 +20,7 @@ Disallow: /certificates
 Disallow: /communication
 Disallow: /dashboard
 Disallow: /examinations
+Disallow: /extracurricular
 Disallow: /fees
 Disallow: /guide
 Disallow: /health

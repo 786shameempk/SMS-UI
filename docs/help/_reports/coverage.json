@@ -1,36 +1,36 @@
 {
   "summary": {
     "appVersion": "0.0.0",
-    "revision": "bb0c755b2a",
+    "revision": "c11419d900",
     "modules": {
-      "total": 39,
-      "withArticles": 39,
-      "withOverview": 6
+      "total": 40,
+      "withArticles": 40,
+      "withOverview": 7
     },
     "routes": {
-      "total": 89,
-      "countedScreens": 87,
-      "documented": 50,
+      "total": 99,
+      "countedScreens": 97,
+      "documented": 59,
       "excluded": 2
     },
     "actions": {
-      "identified": 395,
+      "identified": 396,
       "documented": 249,
       "heuristic": true
     },
     "articles": {
-      "total": 70,
+      "total": 80,
       "draft": 0,
-      "reviewed": 70,
+      "reviewed": 80,
       "verified": 0,
-      "tasks": 123
+      "tasks": 138
     },
     "assets": {
       "screenshotsCaptured": 12,
       "screenshotsReferencedButMissing": 0,
       "videosRecorded": 0,
-      "taskArticlesWithoutScreenshot": 53,
-      "taskArticlesWithoutVideo": 62
+      "taskArticlesWithoutScreenshot": 61,
+      "taskArticlesWithoutVideo": 70
     },
     "problems": {
       "errors": 0,
@@ -46,6 +46,7 @@
     "online-classes.reports",
     "online-classes.details",
     "online-classes.room",
+    "extracurricular.teams",
     "talent-showcase.explore",
     "talent-showcase.mine",
     "talent-showcase.creator",
@@ -80,7 +81,7 @@
     "help-center.role",
     "help-center.article"
   ],
-  "actionsOpen": 146,
+  "actionsOpen": 147,
   "drift": [],
   "metadataIssues": [],
   "errors": [],

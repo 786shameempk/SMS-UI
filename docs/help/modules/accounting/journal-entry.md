@@ -40,6 +40,6 @@ keywords: [accounting, ledger, journal, debit, credit, balanced, draft, post, tr
 
 On the entry's row, choose **Post to ledger**. A message such as "… posted to the ledger" confirms it. Posted entries count in the **Trial Balance**, **Profit & Loss** and **GST** tabs.
 
-> **Warning:** Deleting an entry that has already been posted affects the trial balance and reports, and cannot be undone.
+> **Warning:** A posted entry can no longer be edited or deleted, because it is part of the books. To correct a mistake, post a new correcting entry. Only draft entries can be deleted.
 
 [Open Accounting](route:accounting.home)

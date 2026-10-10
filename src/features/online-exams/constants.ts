@@ -100,9 +100,12 @@ export const DEFAULT_SETTINGS: ExamSettings = {
   negativeMarkPerWrong: 0,
 };
 
-/** Roles AcademicService lets author/evaluate online exams (see OnlineExamAccess). */
-const STAFF_ROLES: UserRole[] = ["superAdmin", "admin", "principal", "teacher"];
-export const isExamStaff = (role?: UserRole | null) => !!role && STAFF_ROLES.includes(role);
+/**
+ * Anyone who isn't a learner is exam staff, built-in or custom role alike: the plan and role's Online Exams
+ * module decides who reaches these pages (route gate + AcademicService OnlineExamAccess).
+ */
+const LEARNER_ROLES: string[] = ["student", "parent"];
+export const isExamStaff = (role?: UserRole | null) => !!role && !LEARNER_ROLES.includes(role);
 export const isExamStudent = (role?: UserRole | null) => role === "student";
 
 export const DEFAULT_TIME_ZONE = "Asia/Kolkata";

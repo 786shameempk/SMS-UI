@@ -127,10 +127,13 @@ export default function JournalTab() {
                 Post to ledger
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={() => setDeleteTarget(entry)} variant="destructive">
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </DropdownMenuItem>
+            {/* A posted entry is part of the books and is never deleted; a mistake is corrected with a new entry. */}
+            {entry.status === "draft" && (
+              <DropdownMenuItem onClick={() => setDeleteTarget(entry)} variant="destructive">
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </DropdownMenuItem>
+            )}
           </RowActions>
         );
       },
@@ -174,11 +177,7 @@ export default function JournalTab() {
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
         title="Delete journal entry"
-        description={
-          deleteTarget?.status === "posted"
-            ? `"${deleteTarget?.entryNumber}" has already been posted to the ledger — deleting it will affect the trial balance and reports. This cannot be undone.`
-            : `Delete draft entry "${deleteTarget?.entryNumber}"? This cannot be undone.`
-        }
+        description={`Delete draft entry "${deleteTarget?.entryNumber}"? This cannot be undone.`}
         confirmLabel="Delete"
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}

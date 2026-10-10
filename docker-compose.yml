@@ -16,7 +16,13 @@ x-dotnet-service: &dotnet-service
 
 x-dotnet-env: &dotnet-env
   ASPNETCORE_ENVIRONMENT: Development
-  Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required}
+  # Token signing. RS256 (preferred): AuthService alone holds JWT_PRIVATE_KEY_PEM; every service verifies with JWT_PUBLIC_KEY_PEM and
+  # can never mint a token. Until a key pair is set, tokens stay HS256 with JWT_SECRET (the old shared secret, which every holder can sign
+  # with). While services are being moved over both are accepted; then set JWT_ACCEPT_LEGACY_HS256=false and remove JWT_SECRET.
+  # Make a pair with: node ../AuthService/scripts/new-jwt-keypair.mjs. See AuthService/docs/JWT_KEY_ROLLOUT.md.
+  Jwt__Secret: ${JWT_SECRET:-}
+  Jwt__PublicKeyPem: ${JWT_PUBLIC_KEY_PEM:-}
+  Jwt__AcceptLegacyHs256: ${JWT_ACCEPT_LEGACY_HS256:-true}
   Cors__AllowedOrigins__0: http://localhost:8080
   # Files (study materials, talent media, meeting files, photos/documents, avatars) go to Azure Blob Storage.
   # Locally that's Azurite (the official emulator, well-known dev key); set BLOB_CONNECTION_STRING to use a real account.
@@ -61,6 +67,8 @@ services:
       <<: *dotnet-env
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=AuthServiceDb;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True;"
       ConnectionStrings__Redis: "redis:6379"
+      # Only AuthService gets the private key.
+      Jwt__PrivateKeyPem: ${JWT_PRIVATE_KEY_PEM:-}
       ClientApp__BaseUrl: http://localhost:8080
       # Emails (landing-page leads, password resets...) go out via SMTP (Brevo) - empty password = logged only.
       Smtp__Host: ${SMTP_HOST:-smtp-relay.brevo.com}

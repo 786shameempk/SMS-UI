@@ -112,6 +112,26 @@ describe("fees api", () => {
     expect(calls.at(-1)?.body).toEqual({ amount: 7000, mode: "Online" });
   });
 
+  it("sends one retry key per unfinished payment, and a fresh one once it has succeeded", async () => {
+    let fail = true;
+    const calls = stubClient(financeHttpClient, {
+      "POST /api/feeinvoices/i9/payments": () => {
+        if (fail) throw new Error("network down");
+        return { invoice: invoice({ status: "Paid" }), receipt };
+      },
+    });
+
+    await expect(fees.recordPayment("i9", { amount: 250, mode: "cash" })).rejects.toThrow();
+    fail = false;
+    await fees.recordPayment("i9", { amount: 250, mode: "cash" }); // the retry of the same payment
+    await fees.recordPayment("i9", { amount: 250, mode: "cash" }); // a new payment of the same size
+
+    const keys = calls.map((c) => (c.config as { headers: Record<string, string> }).headers["Idempotency-Key"]);
+    expect(keys[0]).toBeTruthy();
+    expect(keys[1]).toBe(keys[0]);
+    expect(keys[2]).not.toBe(keys[0]);
+  });
+
   it("receipts and refunds", async () => {
     const refund = { id: "rf1", tenantId: "t", branchId: "b", feeInvoiceId: "i1", amount: 500, reason: "Duplicate", refundedOn: "2026-09-02", status: "Processed" };
     const calls = stubClient(financeHttpClient, {
