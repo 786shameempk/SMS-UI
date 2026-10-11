@@ -137,6 +137,17 @@ docker compose logs -f caddy     # watch the certificates being issued
 
 The services create and migrate their databases on first start.
 
+### The office portal
+
+`https://<APP_DOMAIN>/adminLogin` is where the School Sphere team onboards schools and manages plans, quotations, billing and subscriptions (details: `AuthService/docs/OFFICE_PORTAL.md`).
+
+1. Set `OFFICE_SIGNING_KEY` (required) and, for the first start only, `OFFICE_BOOTSTRAP_EMAIL` and `OFFICE_BOOTSTRAP_PASSWORD` in `.env`.
+2. Start, open `/adminLogin`, sign in with the bootstrap account and choose a new password.
+3. Delete `OFFICE_BOOTSTRAP_PASSWORD` from `.env` and run `docker compose up -d` again.
+4. Create and publish a plan, add the team under Office Users, then add schools.
+
+The office refresh cookie is sent only to `/services/identity/api/office/auth` (the gateway prefix) over https; do not change the gateway prefix without changing `Office__Cookie__Path` in the compose file. New schools are created in the office, not in the old platform console. A school that already exists is brought in with **Adopt existing school** on the office Schools page; until then the office raises an alert for it. Take a database backup before the first start of this version: it adds the office tables to `AuthServiceDb`.
+
 ## Updating
 
 ```bash

@@ -147,6 +147,24 @@ services:
       # (it needs Reader + Cost Management Reader on the subscription). Empty subscription id = the page shows "not configured".
       AzureDashboard__SubscriptionId: ${AZURE_SUBSCRIPTION_ID:-}
       AzureDashboard__MonthlyBudget: ${AZURE_MONTHLY_BUDGET:-}
+      # School Sphere office portal (https://${APP_DOMAIN}/adminLogin). The signing key is required: in Production the API refuses to start
+      # without a real one (32+ characters, different from every other secret). See AuthService/docs/OFFICE_PORTAL.md.
+      Office__Jwt__SigningKey: ${OFFICE_SIGNING_KEY:?OFFICE_SIGNING_KEY is required - set it in .env (openssl rand -base64 48)}
+      Office__PortalBaseUrl: https://${APP_DOMAIN}
+      # The gateway serves AuthService under /services/identity, so the browser must send the office refresh cookie to that path, over https.
+      Office__Cookie__Path: /services/identity/api/office/auth
+      Office__Cookie__Secure: "true"
+      # The first Super Admin: set both on the first start of an empty office, sign in, change the password, then remove the password here.
+      Office__Bootstrap__Email: ${OFFICE_BOOTSTRAP_EMAIL:-}
+      Office__Bootstrap__Password: ${OFFICE_BOOTSTRAP_PASSWORD:-}
+      # Signed payment-gateway callback (POST /services/identity/api/office/payments/gateway-callback). Empty = the endpoint is off.
+      Office__Payments__WebhookSecret: ${OFFICE_PAYMENT_WEBHOOK_SECRET:-}
+      # Scheduled work (overdue rules, renewals, reminders, alerts). Set false to run it from an external scheduler instead.
+      Office__Jobs__Enabled: ${OFFICE_JOBS_ENABLED:-true}
+      Office__Lifecycle__RetentionDays: ${OFFICE_RETENTION_DAYS:-90}
+      # Company details printed on quotations and invoices (editable later on the office Settings screen).
+      Office__Company__Name: ${OFFICE_COMPANY_NAME:-School Sphere}
+      Office__Company__TaxId: ${OFFICE_COMPANY_TAX_ID:-}
     depends_on:
       redis:
         condition: service_started
