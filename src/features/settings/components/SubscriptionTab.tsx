@@ -11,6 +11,7 @@ import { PLAN_SOLUTIONS } from "@/features/marketing/data";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
 import { formatDate } from "@/utils/format";
+import type { SubscriptionNoticeLevel } from "../types";
 import { getPlanUsage, getSubscription } from "../api";
 import type { Subscription, SubscriptionStatus } from "../types";
 
@@ -19,6 +20,12 @@ const STATUS: Record<SubscriptionStatus, { label: string; tone: BadgeVariant; no
   Trial: { label: "Trial", tone: "info", note: "You're on a trial. Contact us before it ends to continue without interruption." },
   Suspended: { label: "Suspended", tone: "warning", note: "Your subscription is suspended. Contact us to restore full access." },
   Cancelled: { label: "Cancelled", tone: "neutral", note: "This subscription has been cancelled. Contact us to reactivate it." },
+};
+
+const NOTICE_TONE: Record<Exclude<SubscriptionNoticeLevel, "ok">, string> = {
+  notice: "border-info/30 bg-info-soft text-info-strong",
+  warning: "border-warning/40 bg-warning-soft text-warning-strong",
+  critical: "border-destructive/30 bg-destructive-soft text-destructive-strong",
 };
 
 /** Catalog tier → the plan name used on the website (the "Growth" tier is marketed as Professional). */
@@ -120,6 +127,11 @@ export default function SubscriptionTab() {
             </Badge>
           </div>
           <p className="mt-4 text-sm text-secondary-foreground">{status.note}</p>
+          {s.managedByOffice && s.notice && s.noticeLevel && s.noticeLevel !== "ok" && (
+            <p role="status" className={cn("mt-3 rounded-lg border px-3 py-2 text-sm", NOTICE_TONE[s.noticeLevel])}>
+              {s.notice}
+            </p>
+          )}
           <dl className="mt-5 grid gap-4 border-t border-border/70 pt-5 sm:grid-cols-3">
             <Detail label="Subscribed since">
               <span className="flex items-center gap-1.5">
@@ -127,7 +139,16 @@ export default function SubscriptionTab() {
                 {formatDate(s.subscribedSince)}
               </span>
             </Detail>
-            <Detail label="Renewal">Arranged with your School Sphere account team</Detail>
+            {s.managedByOffice && s.endDate ? (
+              <Detail label={s.subscriptionState === "Trial" ? "Trial ends" : "Current term ends"}>
+                {formatDate(s.endDate)}
+                {s.daysLeft != null && (
+                  <span className="block text-xs font-normal text-muted-foreground">{s.daysLeft < 0 ? `${-s.daysLeft} days ago` : s.daysLeft === 0 ? "today" : `in ${s.daysLeft} day${s.daysLeft === 1 ? "" : "s"}`}</span>
+                )}
+              </Detail>
+            ) : (
+              <Detail label="Renewal">Arranged with your School Sphere account team</Detail>
+            )}
             <Detail label="Billing contact">
               <span className="flex items-center gap-1.5">
                 <CircleUserRound className="h-3.5 w-3.5 text-muted-foreground" />

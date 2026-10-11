@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/authStore";
 import AppearanceTab from "../components/AppearanceTab";
@@ -10,8 +11,13 @@ import TemplatesTab from "../components/TemplatesTab";
 import WidgetManagementTab from "@/features/dashboard/admin/WidgetManagementTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
+const TABS = ["profile", "subscription", "branding", "dashboard", "localization", "templates", "backup", "audit"];
+
 export default function SettingsPage() {
   const activeTenantId = useAuthStore((s) => s.activeTenantId);
+  // Links such as the subscription banner open a tab directly (?tab=subscription).
+  const requested = useSearchParams()[0].get("tab");
+  const first = requested && TABS.includes(requested) ? requested : "profile";
 
   return (
     <PageContainer>
@@ -20,7 +26,7 @@ export default function SettingsPage() {
         description="School profile, subscription plan, appearance, dashboard widgets, localization, system templates, backups, and the audit log."
       />
 
-      <Tabs defaultValue="profile">
+      <Tabs defaultValue={first}>
         <TabsList variant="line">
           <TabsTrigger value="profile">School Profile</TabsTrigger>
           <TabsTrigger value="subscription">Plan &amp; Subscription</TabsTrigger>

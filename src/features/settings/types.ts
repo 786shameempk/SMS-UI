@@ -85,7 +85,20 @@ export interface Subscription {
   subscribedSince: string;
   billingContactName: string;
   billingContactEmail: string;
+  /** Set when the School Sphere office manages this school; the rest are then filled in. Never a price. */
+  managedByOffice?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  daysLeft?: number | null;
+  graceDays?: number | null;
+  subscriptionState?: string | null;
+  noticeLevel?: SubscriptionNoticeLevel;
+  notice?: string | null;
+  overdueInvoices?: number;
+  oldestOverdueDue?: string | null;
 }
+
+export type SubscriptionNoticeLevel = "ok" | "notice" | "warning" | "critical";
 
 export interface PlanUsage {
   studentCount: number;

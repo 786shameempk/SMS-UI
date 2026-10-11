@@ -13,6 +13,7 @@ Disallow: /academics
 Disallow: /account
 Disallow: /accounting
 Disallow: /admin
+Disallow: /adminLogin
 Disallow: /ai
 Disallow: /attendance
 Disallow: /calendar
@@ -32,6 +33,7 @@ Disallow: /inventory
 Disallow: /library
 Disallow: /my-homework
 Disallow: /notifications
+Disallow: /office
 Disallow: /online-classes
 Disallow: /online-exams
 Disallow: /parent-portal

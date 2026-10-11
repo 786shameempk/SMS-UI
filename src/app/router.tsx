@@ -7,6 +7,7 @@ import ProtectedRoute from "@/routes/ProtectedRoute";
 import RequireModule from "@/routes/RequireModule";
 import RequireSuperAdmin from "@/routes/RequireSuperAdmin";
 import AppLayout from "@/layouts/AppLayout";
+import { officeRoutes } from "./officeRoutes";
 const LandingPage = lazy(() => import("@/features/marketing/pages/LandingPage"));
 const LoginPage = lazy(() => import("@/features/authentication/pages/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("@/features/authentication/pages/ForgotPasswordPage"));
@@ -109,6 +110,8 @@ const HelpArticlePage = lazy(() => import("@/features/help/pages/HelpArticlePage
 const GuideRedirect = lazy(() => import("@/features/help/pages/GuideRedirect"));
 
 export const router = createBrowserRouter([
+  // The office team portal (/adminLogin, /office): a separate world from the school app below.
+  ...officeRoutes,
   { path: "/", element: <LandingPage />, errorElement: <RouteError /> },
   { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
