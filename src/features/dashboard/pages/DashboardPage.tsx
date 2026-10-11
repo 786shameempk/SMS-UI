@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { Check, Users, FlaskConical, Layers, LayoutGrid, Move, Pencil, Plus, RotateCcw, RotateCw, SplitSquareHorizontal, Wifi, WifiOff } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
@@ -9,6 +10,7 @@ import { cn } from "@/utils/cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ToggleChip } from "@/components/ui/toggle-chip";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageContainer } from "@/components/ui/page";
 import { EmptyState, ErrorState } from "@/components/ui/states";
@@ -26,6 +28,8 @@ import DashboardSkeleton from "../components/DashboardSkeleton";
 import DashboardLayout from "../components/DashboardLayout";
 import DateRangePicker from "../components/DateRangePicker";
 import ManageWidgetsDialog from "../components/ManageWidgetsDialog";
+import { availableTabs, DASHBOARD_TABS_BY_ID, resolveTab, type DashboardTabId } from "../tabs/catalog";
+import DashboardTabPanel from "../tabs/DashboardTabPanel";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrator",
@@ -110,6 +114,23 @@ export default function DashboardPage() {
   const online = useOnlineStatus();
 
   const allBranches = canSwitchScopeView(user);
+  // The tab bar: Overview is the widget grid below; every other tab is a purpose-built view (tabs/). The address bar
+  // (?tab=finance) is the source of truth, so a tab can be linked to and survives a refresh.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabViewer = useMemo(() => ({ role, modules: modulePermissions }), [role, modulePermissions]);
+  const tabs = useMemo(() => availableTabs(tabViewer), [tabViewer]);
+  const activeTab: DashboardTabId = resolveTab(searchParams.get("tab"), tabViewer);
+  const onOverview = activeTab === "overview";
+  const selectTab = (id: string) =>
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (id === "overview") next.delete("tab");
+        else next.set("tab", id);
+        return next;
+      },
+      { replace: false },
+    );
   const quickActions = useMemo(() => quickActionsFor(role, modulePermissions), [role, modulePermissions]);
   const clientAvailable = useMemo(
     // Quick actions only make sense when the role has at least one shortcut.
@@ -198,7 +219,7 @@ export default function DashboardPage() {
         aside={
           <div className="flex flex-wrap items-center gap-2">
             {canSwitch && <Segmented label="Data source" value={source} onChange={setSource} options={SOURCE_OPTIONS} />}
-            {children.length > 1 && (
+            {onOverview && children.length > 1 && (
               <Select value={focusedChild ? childId : "all"} onValueChange={setChildId}>
                 <SelectTrigger className="h-9 w-48" aria-label="Show the dashboard for">
                   <Users className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
@@ -214,7 +235,7 @@ export default function DashboardPage() {
                 </SelectContent>
               </Select>
             )}
-            {allBranches && scopeShown && <Segmented label="Dashboard view" value={scopeView} onChange={setScopeView} options={SCOPE_VIEW_OPTIONS} />}
+            {onOverview && allBranches && scopeShown && <Segmented label="Dashboard view" value={scopeView} onChange={setScopeView} options={SCOPE_VIEW_OPTIONS} />}
             <DateRangePicker value={dateRange} onChange={setDateRange} />
             <Button variant="outline" size="sm" className="h-9 gap-2" onClick={refresh} disabled={fetching || !online} aria-label="Refresh dashboard">
               <RotateCw className={cn("h-3.5 w-3.5", fetching && "animate-spin")} aria-hidden="true" />
@@ -222,13 +243,13 @@ export default function DashboardPage() {
                 {fetching ? "Refreshing…" : updatedAt ? `Updated ${timeAgo(updatedAt, now)}` : "Refresh"}
               </span>
             </Button>
-            {canCustomize && !editing && (
+            {onOverview && canCustomize && !editing && (
               <Button variant="outline" size="sm" className="h-9 gap-2" onClick={startEditing}>
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                 Customize
               </Button>
             )}
-            {canCustomize && !editing && (
+            {onOverview && canCustomize && !editing && (
               <ManageWidgetsDialog
                 available={available.filter((w) => w.configurable)}
                 hidden={hidden}
@@ -242,11 +263,27 @@ export default function DashboardPage() {
         }
       />
 
+      {tabs.length > 1 && (
+        <nav aria-label="Dashboard sections" className="space-y-2">
+          <Tabs value={activeTab} onValueChange={selectTab}>
+            <TabsList variant="line" aria-label="Dashboard sections">
+              {tabs.map((t) => (
+                <TabsTrigger key={t.id} value={t.id}>
+                  <t.icon aria-hidden="true" />
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          {!onOverview && <p className="text-sm text-muted-foreground">{DASHBOARD_TABS_BY_ID.get(activeTab)?.description}</p>}
+        </nav>
+      )}
+
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>
 
-      {editing && (
+      {onOverview && editing && (
         <div
           role="region"
           aria-label="Customize dashboard"
@@ -303,7 +340,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {layout.isOffline && online && (
+      {onOverview && layout.isOffline && online && (
         <div role="status" className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-muted-foreground">
           <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden="true" />
           We couldn&apos;t load your saved layout, so this is the copy on this device. Changes will save here until the server is back.
@@ -324,7 +361,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {available.length === 0 ? (
+      {!onOverview ? (
+        <DashboardTabPanel tab={activeTab} source={source} dateRange={dateRange} rangeLabel={rangeLabel} />
+      ) : available.length === 0 ? (
         <EmptyState
           icon={LayoutGrid}
           title="No dashboard widgets for your role"
