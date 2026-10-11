@@ -2,40 +2,28 @@ import { useState } from "react";
 import { tenantDomainFor } from "@/lib/tenantHost";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CreditCard, PauseCircle, PlayCircle, Plus, ShieldCheck, Trash2, XCircle } from "lucide-react";
+import { CreditCard, ExternalLink, PauseCircle, PlayCircle, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { formatRelativeDay } from "@/utils/format";
 import { TENANT_STATUS_CONFIG } from "../constants";
-import { activateTenant, cancelTenant, createTenant, deleteTenant, listTenants, suspendTenant, updateTenantPlan } from "../api";
+import { activateTenant, cancelTenant, deleteTenant, listTenants, suspendTenant, updateTenantPlan } from "../api";
 import type { TenantRow } from "../types";
-import TenantFormDialog from "./TenantFormDialog";
 import ChangePlanDialog from "./ChangePlanDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function TenantsTab() {
   const queryClient = useQueryClient();
   const { data: tenants = [], isLoading, isError, refetch } = useQuery({ queryKey: ["platform", "tenants"], queryFn: listTenants });
-  const [formOpen, setFormOpen] = useState(false);
   const [planTarget, setPlanTarget] = useState<TenantRow | null>(null);
   const [cancelTarget, setCancelTarget] = useState<TenantRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TenantRow | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["platform"] });
-
-  const createMutation = useMutation({
-    mutationFn: createTenant,
-    onSuccess: (tenant) => {
-      invalidate();
-      toast.success(`${tenant.schoolName} onboarded as a trial tenant`);
-      setFormOpen(false);
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create tenant"),
-  });
 
   const planMutation = useMutation({
     mutationFn: ({ id, planId }: { id: string; planId: string }) => updateTenantPlan(id, planId),
@@ -181,24 +169,16 @@ export default function TenantsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground max-w-md">
-          Only <strong>EduCore School</strong> reflects this environment's real data — the other tenants are illustrative, with their own seeded stats.
+          New schools are created in the School Sphere office portal, where the sale, payment and subscription are recorded. Schools it manages
+          are changed there, not here. The schools listed below were created before it: bring each under the office with <strong>Adopt existing school</strong>.
         </p>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="w-4 h-4" />
-          New tenant
-        </Button>
+        <Link to="/adminLogin" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-text hover:underline">
+          <ExternalLink className="w-4 h-4" aria-hidden="true" />
+          Open the office portal
+        </Link>
       </DataTableToolbar>
 
       <DataTable searchable columns={columns} data={tenants} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No tenants yet." pageSize={10} />
-
-      <TenantFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        submitting={createMutation.isPending}
-        onSubmit={async (values) => {
-          await createMutation.mutateAsync(values);
-        }}
-      />
 
       <ChangePlanDialog
         tenant={planTarget}

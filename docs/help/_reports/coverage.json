@@ -1,7 +1,7 @@
 {
   "summary": {
     "appVersion": "0.0.0",
-    "revision": "c11419d900",
+    "revision": "0c5610ea3b",
     "modules": {
       "total": 40,
       "withArticles": 40,
@@ -19,18 +19,18 @@
       "heuristic": true
     },
     "articles": {
-      "total": 80,
+      "total": 81,
       "draft": 0,
-      "reviewed": 80,
+      "reviewed": 81,
       "verified": 0,
-      "tasks": 138
+      "tasks": 140
     },
     "assets": {
       "screenshotsCaptured": 12,
       "screenshotsReferencedButMissing": 0,
       "videosRecorded": 0,
-      "taskArticlesWithoutScreenshot": 61,
-      "taskArticlesWithoutVideo": 70
+      "taskArticlesWithoutScreenshot": 62,
+      "taskArticlesWithoutVideo": 71
     },
     "problems": {
       "errors": 0,

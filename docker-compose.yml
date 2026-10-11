@@ -78,6 +78,15 @@ services:
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-info@schoolsphrere.com}
       Smtp__FromName: ${SMTP_FROM_NAME:-School Sphere}
+      # School Sphere office portal (/adminLogin). The signing key must be 32+ characters and different from every other secret;
+      # outside Development the API refuses to start without it. The first Super Admin is created from the bootstrap pair on an empty
+      # office, so remove OFFICE_BOOTSTRAP_PASSWORD after first sign-in. See AuthService/docs/OFFICE_PORTAL.md.
+      Office__Jwt__SigningKey: ${OFFICE_SIGNING_KEY:-}
+      Office__Bootstrap__Email: ${OFFICE_BOOTSTRAP_EMAIL:-}
+      Office__Bootstrap__Password: ${OFFICE_BOOTSTRAP_PASSWORD:-}
+      Office__PortalBaseUrl: ${OFFICE_PORTAL_URL:-http://localhost:8080}
+      Office__Payments__WebhookSecret: ${OFFICE_PAYMENT_WEBHOOK_SECRET:-}
+      Office__Jobs__Enabled: ${OFFICE_JOBS_ENABLED:-true}
     depends_on:
       sqlserver:
         condition: service_healthy
