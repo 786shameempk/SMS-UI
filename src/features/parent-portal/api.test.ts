@@ -145,7 +145,7 @@ describe("platform api", () => {
 
   beforeEach(() => useAuthStore.setState({ activeTenantId: "tenant-b" }));
 
-  it("tenant rows put the current school first, then oldest, and skip unknown plans", async () => {
+  it("tenant rows put the current school first, then oldest, and keep a school whose plan is not in the catalogue", async () => {
     stubClient(authHttpClient, {
       "GET /api/platform/tenants": [tenant("tenant-a", "Active", "p1", "2025-01-01"), tenant("tenant-b", "Trial", "p2", "2026-05-01"), tenant("tenant-c", "Suspended"), tenant("tenant-x", "Active", "gone")],
       "GET /api/platform/plans": [plan("p1", 5000), plan("p2", 9000)],
@@ -156,11 +156,27 @@ describe("platform api", () => {
     const summary = await platform.getPlatformReportsSummary();
 
     expect(rows.map((r) => [r.id, r.status, r.isCurrentEnvironment, r.studentCount])).toEqual([
-      ["tenant-b", "trial", true, 0], ["tenant-a", "active", false, 300], ["tenant-c", "suspended", false, 0],
+      ["tenant-b", "trial", true, 0], ["tenant-a", "active", false, 300], ["tenant-c", "suspended", false, 0], ["tenant-x", "active", false, 0],
     ]);
+    expect(rows[3].plan.name).toBe("Custom plan");
     expect(rows[1].plan.tier).toBe("growth");
-    expect(summary).toMatchObject({ totalTenants: 3, activeTenants: 1, trialTenants: 1, suspendedTenants: 1, cancelledTenants: 0, mrrInr: 14000, totalStudentsAcrossTenants: 300, totalStaffAcrossTenants: 20 });
+    expect(summary).toMatchObject({ totalTenants: 4, activeTenants: 2, trialTenants: 1, suspendedTenants: 1, cancelledTenants: 0, mrrInr: 14000, totalStudentsAcrossTenants: 300, totalStaffAcrossTenants: 20 });
     expect(summary.tenantsByPlan).toEqual(expect.arrayContaining([{ planId: "p1", planName: "Plan p1", count: 2 }, { planId: "p2", planName: "Plan p2", count: 1 }]));
+  });
+
+  it("lists the schools onboarded in the office portal with their office plan", async () => {
+    stubClient(authHttpClient, {
+      "GET /api/platform/tenants": [{ ...tenant("tenant-old", "Active", "p1"), managedByOffice: false }, { ...tenant("tenant-office", "Active", "hidden-row"), managedByOffice: true, officePlanId: "office-1" }],
+      "GET /api/platform/plans": [plan("p1", 5000), { ...plan("office-1", 8333), name: "Standard", managedByOffice: true, officeVersion: 2 }],
+    });
+    stubClient(academicHttpClient, { "GET /api/stats/tenant-counts": [{ tenantId: "tenant-office", studentCount: 120, staffCount: 9 }] });
+
+    const rows = await platform.listTenants();
+
+    const office = rows.find((r) => r.id === "tenant-office")!;
+    expect(office).toMatchObject({ managedByOffice: true, studentCount: 120, staffCount: 9 });
+    expect(office.plan.name).toBe("Standard");
+    expect(rows.find((r) => r.id === "tenant-old")!.managedByOffice).toBe(false);
   });
 
   it("refuses to suspend, cancel or delete the school being viewed", async () => {

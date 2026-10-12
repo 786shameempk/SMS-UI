@@ -44,7 +44,7 @@ export default function ChangePlanDialog({
                 <SelectValue placeholder="Select a plan" />
               </SelectTrigger>
               <SelectContent>
-                {plans.map((p) => (
+                {plans.filter((p) => !p.managedByOffice).map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.name} · {formatCurrency(p.monthlyPriceInr)}/mo
                   </SelectItem>

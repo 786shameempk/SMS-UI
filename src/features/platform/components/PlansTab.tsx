@@ -87,6 +87,12 @@ export default function PlansTab() {
                   {plan.includedModules.length} modules included{plan.schoolCount ? ` · ${plan.schoolCount} school${plan.schoolCount === 1 ? "" : "s"}` : ""}
                 </p>
               </div>
+              {plan.managedByOffice ? (
+                <div className="flex items-center gap-2 pt-2 border-t border-border text-xs text-muted-foreground">
+                  <Badge variant="info">Office plan v{plan.officeVersion}</Badge>
+                  <span>Created and edited in the office portal</span>
+                </div>
+              ) : (
               <div className="flex items-center gap-2 pt-2 border-t border-border">
                 <Button
                   variant="outline"
@@ -104,6 +110,7 @@ export default function PlansTab() {
                   Delete
                 </Button>
               </div>
+              )}
             </CardContent>
           </Card>
         ))}

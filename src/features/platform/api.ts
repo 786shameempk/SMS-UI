@@ -25,6 +25,8 @@ interface ApiTenant {
   billingContactName: string;
   billingContactEmail: string;
   createdAt: string;
+  managedByOffice?: boolean;
+  officePlanId?: string | null;
 }
 
 interface ApiPlan extends Omit<Plan, "tier"> {
@@ -82,6 +84,8 @@ const mapTenant = (dto: ApiTenant): Tenant => ({
   billingContactEmail: dto.billingContactEmail,
   createdAt: dto.createdAt,
   isCurrentEnvironment: dto.id === activeTenantId(),
+  managedByOffice: dto.managedByOffice ?? false,
+  officePlanId: dto.officePlanId ?? null,
 });
 
 const mapPlan = (dto: ApiPlan): Plan => ({ ...dto, tier: TIER_FROM_API[dto.tier] });
@@ -101,6 +105,8 @@ const setStatus = async (id: string, status: TenantStatus): Promise<Tenant> =>
 
 // ── Tenants ──────────────────────────────────────────────────────────────
 
+const UNKNOWN_PLAN: Plan = { id: "unknown", tier: "growth", name: "Custom plan", monthlyPriceInr: 0, maxStudents: 0, maxStaff: 0, storageGb: 0, includedModules: [] };
+
 export async function listTenants(): Promise<TenantRow[]> {
   const [tenants, plans, counts] = await Promise.all([
     unwrap(authHttpClient.get<ApiTenant[]>("/api/platform/tenants")),
@@ -112,8 +118,8 @@ export async function listTenants(): Promise<TenantRow[]> {
 
   const rows: TenantRow[] = [];
   for (const dto of tenants) {
-    const plan = planById.get(dto.planId);
-    if (!plan) continue;
+    // A school sold through the office is on its office plan; never drop a school just because its plan is not in the catalogue.
+    const plan = planById.get(dto.officePlanId ?? dto.planId) ?? planById.get(dto.planId) ?? UNKNOWN_PLAN;
     const tenant = mapTenant(dto);
     const c = countsByTenant.get(tenant.id);
     // No per-tenant storage metering exists yet, so usage isn't reported (the UI shows the plan quota).

@@ -861,7 +861,7 @@ async function stats(ctx: DashboardContext): Promise<StatCardData[]> {
       return tiles(
         async () => {
           const today = todayIso();
-          const visits = (await listVisitorEntries()).filter((v) => v.checkInAt.slice(0, 10) === today);
+          const visits = (await listVisitorEntries()).filter((v) => toIsoDate(new Date(v.checkInAt)) === today);
           return { id: "st-visitors", label: "Visitors today", value: String(visits.length), icon: "IdCard" };
         },
         async () => ({ id: "st-onsite", label: "On site now", value: String((await listVisitorEntries("checked-in")).length), icon: "Users" }),
