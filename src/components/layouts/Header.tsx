@@ -206,7 +206,7 @@ export default function Header() {
       </button>
 
       {/* The page title keeps room for itself; the search and scope controls give way first. */}
-      <div className="min-w-[6rem] flex-1">
+      <div className="min-w-0 flex-1">
         <Breadcrumbs />
       </div>
 
@@ -217,8 +217,11 @@ export default function Header() {
       {isSuperAdmin && <TenantSwitcher className="hidden md:flex md:w-44 lg:w-56" />}
       {canSwitchBranch && <BranchSwitcher className="hidden md:flex md:w-40 lg:w-48" />}
 
-      <div className="flex items-center gap-0.5">
-        <ThemeModeToggle />
+      <div className="flex shrink-0 items-center gap-0.5">
+        {/* Phones are tight: the theme toggle moves to Settings there so the account button is never pushed off screen. */}
+        <div className="hidden sm:block">
+          <ThemeModeToggle />
+        </div>
         <HelpMenu />
         <NotificationBell />
       </div>
@@ -230,7 +233,7 @@ export default function Header() {
           <button
             type="button"
             aria-label="Account menu"
-            className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 2xl:pr-2.5"
+            className="flex shrink-0 items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 2xl:pr-2.5"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary bg-brand-gradient text-[11px] font-semibold text-primary-foreground ring-2 ring-card shadow-xs">
               {initialsOf(user?.name)}

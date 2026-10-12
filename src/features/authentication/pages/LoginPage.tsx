@@ -26,7 +26,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 /** Seeded demo accounts (see AuthService seed data) — one click fills the form. */
 const DEMO_ACCOUNTS = [
-  { role: "Super Admin", email: "superadmin@educore.dev", password: "SuperAdmin@123" },
   { role: "Administrator", email: "admin@educore.dev", password: "Admin@12345" },
   { role: "Teacher", email: "teacher@educore.dev", password: "Teacher@123" },
   { role: "Parent", email: "parent@educore.dev", password: "Parent@123" },
