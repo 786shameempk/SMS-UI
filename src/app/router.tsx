@@ -63,6 +63,21 @@ const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage")
 const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
 const StudyMaterialsPage = lazy(() => import("@/features/study-materials/pages/StudyMaterialsPage"));
 const SettingsPage = lazy(() => import("@/features/settings/pages/SettingsPage"));
+const PortionsLayout = lazy(() => import("@/features/lesson-portions/components/PortionsLayout"));
+const PortionsDashboardPage = lazy(() => import("@/features/lesson-portions/pages/DashboardPage"));
+const PortionsSyllabusPage = lazy(() => import("@/features/lesson-portions/pages/SyllabusSetupPage"));
+const PortionsSyllabusDetailPage = lazy(() => import("@/features/lesson-portions/pages/SyllabusDetailPage"));
+const PortionsCalendarPage = lazy(() => import("@/features/lesson-portions/pages/PlanCalendarPage"));
+const PortionsMyPlanPage = lazy(() => import("@/features/lesson-portions/pages/MyPlanPage"));
+const PortionsProgressPage = lazy(() => import("@/features/lesson-portions/pages/ProgressPage"));
+const PortionsTrackingPage = lazy(() => import("@/features/lesson-portions/pages/TrackingPage"));
+const PortionsSubjectReportPage = lazy(() => import("@/features/lesson-portions/pages/SubjectReportPage"));
+const PortionsTeacherReportPage = lazy(() => import("@/features/lesson-portions/pages/TeacherReportPage"));
+const PortionsApprovalsPage = lazy(() => import("@/features/lesson-portions/pages/ApprovalsPage"));
+const PortionsExamPortionsPage = lazy(() => import("@/features/lesson-portions/pages/ExamPortionsPage"));
+const PortionsResourcesPage = lazy(() => import("@/features/lesson-portions/pages/ResourcesPage"));
+const PortionsSettingsPage = lazy(() => import("@/features/lesson-portions/pages/SettingsPage"));
+const PortionsFamilyPage = lazy(() => import("@/features/lesson-portions/pages/FamilyPage"));
 const ExtracurricularLayout = lazy(() => import("@/features/extracurricular/components/ExtracurricularLayout"));
 const ExtracurricularOverviewPage = lazy(() => import("@/features/extracurricular/pages/OverviewPage"));
 const ExtracurricularActivitiesPage = lazy(() => import("@/features/extracurricular/pages/ActivitiesPage"));
@@ -216,6 +231,26 @@ export const router = createBrowserRouter([
         ],
       },
       { path: "ai", element: <RequireModule module="aiFeatures"><AIFeaturesPage /></RequireModule> },
+      {
+        path: "lesson-portions",
+        element: <RequireModule module="portions"><PortionsLayout /></RequireModule>,
+        children: [
+          { index: true, element: <PortionsDashboardPage /> },
+          { path: "syllabus", element: <PortionsSyllabusPage /> },
+          { path: "syllabus/:id", element: <PortionsSyllabusDetailPage /> },
+          { path: "calendar", element: <PortionsCalendarPage /> },
+          { path: "my-plan", element: <PortionsMyPlanPage /> },
+          { path: "progress", element: <PortionsProgressPage /> },
+          { path: "tracking", element: <PortionsTrackingPage /> },
+          { path: "reports/subjects", element: <PortionsSubjectReportPage /> },
+          { path: "reports/teachers", element: <PortionsTeacherReportPage /> },
+          { path: "approvals", element: <PortionsApprovalsPage /> },
+          { path: "exams", element: <PortionsExamPortionsPage /> },
+          { path: "resources", element: <PortionsResourcesPage /> },
+          { path: "settings", element: <PortionsSettingsPage /> },
+          { path: "family", element: <PortionsFamilyPage /> },
+        ],
+      },
       {
         path: "extracurricular",
         element: <ExtracurricularLayout />,

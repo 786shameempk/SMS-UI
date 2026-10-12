@@ -53,6 +53,22 @@ function ThemeModeToggle() {
   );
 }
 
+function ThemeModeMenuItem() {
+  const themeMode = useUiStore((s) => s.themeMode);
+  const setThemeMode = useUiStore((s) => s.setThemeMode);
+  const Icon = THEME_MODE_ICON[themeMode];
+  const next = THEME_MODE_SEQUENCE[(THEME_MODE_SEQUENCE.indexOf(themeMode) + 1) % THEME_MODE_SEQUENCE.length];
+
+  return (
+    // Keep the menu open so the new theme is visible straight away.
+    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setThemeMode(next); }}>
+      <Icon />
+      Theme
+      <span className="ml-auto text-xs text-muted-foreground">{THEME_MODE_LABEL[themeMode]}</span>
+    </DropdownMenuItem>
+  );
+}
+
 function HelpMenu() {
   const navigate = useNavigate();
   const canUseHelpdesk = useAuthStore((s) => s.modulePermissions?.helpdesk ?? false);
@@ -233,6 +249,11 @@ export default function Header() {
             </div>
           </div>
           <DropdownMenuSeparator />
+          {/* Phones: the header toggle is hidden for space, so the theme lives here. */}
+          <div className="sm:hidden">
+            <ThemeModeMenuItem />
+            <DropdownMenuSeparator />
+          </div>
           <DropdownMenuItem onClick={() => navigate("/account/security")}>
             <ShieldCheck />
             Security settings
