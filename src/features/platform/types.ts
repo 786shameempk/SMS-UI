@@ -15,6 +15,10 @@ export interface Plan {
   /** What a save just added and removed (only on the reply to a save). */
   addedModules?: string[];
   removedModules?: string[];
+  /** Created and edited in the School Sphere office portal; shown here read-only. */
+  managedByOffice?: boolean;
+  /** The live version of an office plan. */
+  officeVersion?: number | null;
 }
 
 export interface PlanFormValues {
@@ -38,6 +42,10 @@ export interface Tenant {
   createdAt: string;
   /** True for the tenant currently selected in the header switcher (protected from suspend/cancel/delete). */
   isCurrentEnvironment: boolean;
+  /** Created and managed through the School Sphere office portal: its plan, status and administrators are changed there. */
+  managedByOffice?: boolean;
+  /** The office plan it is subscribed to. */
+  officePlanId?: string | null;
 }
 
 export interface TenantFormValues {

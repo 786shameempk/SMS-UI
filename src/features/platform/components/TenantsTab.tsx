@@ -129,6 +129,8 @@ export default function TenantsTab() {
       header: "",
       cell: ({ row }) => {
         const t = row.original;
+        // A school the office manages is changed there; the old console only lists it.
+        if (t.managedByOffice) return <span className="text-xs text-muted-foreground">Managed in the office portal</span>;
         return (
           <RowActions>
             <DropdownMenuItem onClick={() => setPlanTarget(t)}>
