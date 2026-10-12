@@ -49,6 +49,8 @@ export function canOpenRoute(route: AppRoute, viewer: Viewer): boolean {
   if (!canUseModule(module, viewer)) return false;
   if (route.audience === "student") return viewer.role === "student";
   if (route.audience === "staff") return STAFF_AUDIENCE.includes(viewer.role);
+  if (route.audience === "school") return viewer.role !== "parent" && viewer.role !== "student";
+  if (route.audience === "family") return viewer.role === "parent" || viewer.role === "student";
   return true;
 }
 
@@ -95,6 +97,7 @@ export function explainNoAccess(route: AppRoute, viewer: Viewer): string {
   if (!viewer.role) return "Sign in to open this screen.";
   if (module?.access === "platform" || route.moduleId === "azure") return `${module?.title ?? "This screen"} is only for the platform administrator.`;
   if (route.audience === "student") return `${route.label} is for students.`;
-  if (route.audience === "staff") return `${route.label} is for school staff.`;
+  if (route.audience === "staff" || route.audience === "school") return `${route.label} is for school staff.`;
+  if (route.audience === "family") return `${route.label} is for parents and students.`;
   return `${module?.title ?? "This module"} is not available to your account. Your school's plan or your role does not include it; ask your school administrator if you need it.`;
 }

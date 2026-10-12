@@ -6,6 +6,8 @@ const STAFF_ROLES: UserRole[] = ["superAdmin", "admin", "principal", "teacher"];
 
 function matchesAudience(audience: NavAudience | undefined, role: UserRole | undefined) {
   if (!audience) return true;
+  if (audience === "family") return role === "parent" || role === "student";
+  if (audience === "school") return !!role && role !== "parent" && role !== "student";
   return audience === "student" ? role === "student" : !!role && STAFF_ROLES.includes(role);
 }
 

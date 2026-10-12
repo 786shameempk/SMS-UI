@@ -60,7 +60,7 @@ export interface AppRoute {
   /** The menu it sits under when that differs from its module's (My Homework is top level, Homework is under Academics). */
   menu?: string[];
   /** Only some audiences see this menu entry (Online Exams has staff and student menus). */
-  audience?: "staff" | "student";
+  audience?: "staff" | "student" | "school" | "family";
   /** Opened from inside another screen, not from the menu. */
   fromScreen?: string;
   /** Reachable without signing in. */
@@ -78,6 +78,7 @@ export const MODULES: readonly HelpModule[] = [
   { id: "calendar", title: "Calendar", purpose: "School events and dates in a calendar view.", menu: [], moduleKey: null, defaultRoles: ["admin", "principal", "teacher", "receptionist", "parent", "student"], access: "public" },
   { id: "online-classes", title: "Online Classes", purpose: "Schedule, join and review live classes and meetings.", menu: [], moduleKey: "meetings", defaultRoles: ALL_SCHOOL, access: "public", mobile: ["parent-student", "teacher"] },
   { id: "extracurricular", title: "Extra-Curricular", purpose: "Activities, houses and teams, sessions and attendance, events and results, achievements and green campus campaigns.", menu: [], moduleKey: "extracurricular", defaultRoles: ["admin", "principal", "teacher", "parent", "student"], access: "public" },
+  { id: "lesson-portions", title: "Lesson & Portions", purpose: "Syllabus by class and subject, lesson plans and their approval, daily teaching progress, completion tracking, examination portions, and the syllabus view for parents and students.", menu: ["Academics"], moduleKey: "portions", defaultRoles: ["admin", "principal", "teacher", "parent", "student"], access: "public", mobile: ["teacher"] },
   { id: "talent-showcase", title: "Talent Showcase", purpose: "Share, discover and review students' creative work.", menu: [], moduleKey: "talents", defaultRoles: ALL_SCHOOL, access: "public" },
   { id: "parent-portal", title: "Parent Portal", purpose: "A parent's view of each child: attendance, homework, results, fees, messages, leave and the school bus.", menu: [], moduleKey: "parentPortal", defaultRoles: ["admin", "parent"], access: "public", mobile: ["parent-student"] },
   { id: "study-materials", title: "Study Materials", purpose: "Browse and use study materials shared by the school.", menu: [], moduleKey: "studyMaterials", defaultRoles: ACADEMIC_FAMILY, access: "public", mobile: ["parent-student", "teacher"] },
@@ -158,6 +159,20 @@ export const ROUTES: readonly AppRoute[] = [
   r("talent-showcase.detail", "/talents/:id", "talent-showcase", "Talent details", { fromScreen: "Talent Showcase" }),
   r("talent-showcase.edit", "/talents/:id/edit", "talent-showcase", "Edit a talent", { fromScreen: "Talent details" }),
   r("parent-portal.home", "/parent-portal", "parent-portal", "Parent Portal", { menuItem: "Parent Portal" }),
+  r("lesson-portions.dashboard", "/lesson-portions", "lesson-portions", "Lesson & Portions", { menuItem: "Lesson & Portions", audience: "school" }),
+  r("lesson-portions.syllabus", "/lesson-portions/syllabus", "lesson-portions", "Curriculum and syllabus setup", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.syllabus-detail", "/lesson-portions/syllabus/:id", "lesson-portions", "Chapters and topics", { fromScreen: "Curriculum and syllabus setup" }),
+  r("lesson-portions.calendar", "/lesson-portions/calendar", "lesson-portions", "Lesson plan calendar", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.my-plan", "/lesson-portions/my-plan", "lesson-portions", "My teaching plan", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.progress", "/lesson-portions/progress", "lesson-portions", "Daily teaching progress", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.tracking", "/lesson-portions/tracking", "lesson-portions", "Class-wise portion tracking", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.subject-report", "/lesson-portions/reports/subjects", "lesson-portions", "Subject-wise completion report", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.teacher-report", "/lesson-portions/reports/teachers", "lesson-portions", "Teacher progress report", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.approvals", "/lesson-portions/approvals", "lesson-portions", "Lesson plan approval", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.exam-portions", "/lesson-portions/exams", "lesson-portions", "Examination portion setup", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.resources", "/lesson-portions/resources", "lesson-portions", "Lesson resources", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.settings", "/lesson-portions/settings", "lesson-portions", "Module settings and permissions", { fromScreen: "Lesson & Portions" }),
+  r("lesson-portions.family", "/lesson-portions/family", "lesson-portions", "Syllabus progress", { menuItem: "Syllabus Progress", menu: [], audience: "family" }),
   r("homework.mine", "/my-homework", "homework", "My Homework", { menuItem: "My Homework", menu: [] }),
   r("homework.manage", "/homework", "homework", "Homework", { menuItem: "Homework" }),
   r("study-materials.home", "/study-materials", "study-materials", "Study Materials", { menuItem: "Study Materials" }),

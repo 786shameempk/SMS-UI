@@ -62,6 +62,7 @@ export interface ModulePermissions {
   homework: boolean;
   talents: boolean;
   extracurricular: boolean;
+  portions: boolean;
   meetings: boolean;
   studyMaterials: boolean;
   onlineExams: boolean;

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, QrCode, Trash2 } from "lucide-react";
+import { Pencil, Plus, QrCode, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createBook, deleteBook, listAuthors, listBooks, listCategories, listPublishers, updateBook } from "../api";
 import type { Book, BookFormValues } from "../types";
+import BulkBooksImportDialog from "./BulkBooksImportDialog";
 import BookFormDialog from "./BookFormDialog";
 import BookCodesDialog from "./BookCodesDialog";
 import { RowActions } from "@/components/ui/row-actions";
@@ -18,6 +19,7 @@ export default function BooksTab() {
   const queryClient = useQueryClient();
 
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<Book | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Book | null>(null);
   const [codesTarget, setCodesTarget] = useState<Book | null>(null);
@@ -141,18 +143,26 @@ export default function BooksTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">Manage the book catalog, copies, and shelf locations.</p>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          New book
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4" />
+            Import
+          </Button>
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setFormOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            New book
+          </Button>
+        </div>
       </DataTableToolbar>
 
       <DataTable searchable columns={columns} data={books} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No books in the catalog yet." pageSize={8} />
+
+      <BulkBooksImportDialog open={importOpen} onOpenChange={setImportOpen} onFinished={() => queryClient.invalidateQueries({ queryKey: ["library"] })} />
 
       <BookFormDialog
         open={formOpen}

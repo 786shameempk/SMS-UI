@@ -1,36 +1,36 @@
 {
   "summary": {
     "appVersion": "0.0.0",
-    "revision": "0c5610ea3b",
+    "revision": "283bd343eb",
     "modules": {
-      "total": 40,
-      "withArticles": 40,
-      "withOverview": 7
+      "total": 41,
+      "withArticles": 41,
+      "withOverview": 8
     },
     "routes": {
-      "total": 99,
-      "countedScreens": 97,
-      "documented": 59,
+      "total": 113,
+      "countedScreens": 111,
+      "documented": 68,
       "excluded": 2
     },
     "actions": {
-      "identified": 396,
-      "documented": 249,
+      "identified": 399,
+      "documented": 248,
       "heuristic": true
     },
     "articles": {
-      "total": 81,
+      "total": 90,
       "draft": 0,
-      "reviewed": 81,
+      "reviewed": 90,
       "verified": 0,
-      "tasks": 140
+      "tasks": 149
     },
     "assets": {
       "screenshotsCaptured": 12,
       "screenshotsReferencedButMissing": 0,
       "videosRecorded": 0,
-      "taskArticlesWithoutScreenshot": 62,
-      "taskArticlesWithoutVideo": 71
+      "taskArticlesWithoutScreenshot": 67,
+      "taskArticlesWithoutVideo": 76
     },
     "problems": {
       "errors": 0,
@@ -53,6 +53,11 @@
     "talent-showcase.school",
     "talent-showcase.detail",
     "talent-showcase.edit",
+    "lesson-portions.syllabus-detail",
+    "lesson-portions.calendar",
+    "lesson-portions.subject-report",
+    "lesson-portions.teacher-report",
+    "lesson-portions.resources",
     "students.profile",
     "teachers.profile",
     "online-exams.dashboard",
@@ -81,7 +86,7 @@
     "help-center.role",
     "help-center.article"
   ],
-  "actionsOpen": 147,
+  "actionsOpen": 151,
   "drift": [],
   "metadataIssues": [],
   "errors": [],

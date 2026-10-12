@@ -56,7 +56,7 @@ export default function UserProfileDialog({
   const role = roles.find((r) => r.id === user.roleId);
   const roleName = role?.name ?? "—";
   const isParent = role?.key === "parent";
-  const showStudents = isParent || role?.key === "student";
+  const showStudents = isParent;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -30,6 +30,7 @@ Disallow: /helpdesk
 Disallow: /homework
 Disallow: /hostel
 Disallow: /inventory
+Disallow: /lesson-portions
 Disallow: /library
 Disallow: /my-homework
 Disallow: /notifications

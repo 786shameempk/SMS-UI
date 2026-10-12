@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, RotateCcw, TrendingUp, UserCog, UserMinus, Users } from "lucide-react";
+import { Pencil, Plus, Upload, RotateCcw, TrendingUp, UserCog, UserMinus, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import PayslipsTab from "@/features/payroll/components/PayslipsTab";
 import StaffOverviewTab from "../components/profile/StaffOverviewTab";
 import QualificationsExperienceTab from "../components/profile/QualificationsExperienceTab";
 import StaffStatusBadge from "../components/StaffStatusBadge";
+import BulkStaffImportDialog from "../components/BulkStaffImportDialog";
 import StaffFormDialog from "../components/StaffFormDialog";
 import PromoteStaffDialog from "../components/PromoteStaffDialog";
 import ResignStaffDialog from "../components/ResignStaffDialog";
@@ -48,6 +49,7 @@ function StaffDirectoryTab() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<StaffMember | null>(null);
   const [resignTarget, setResignTarget] = useState<StaffMember | null>(null);
@@ -270,21 +272,29 @@ function StaffDirectoryTab() {
         activeFilters={activeFilters}
         onClearFilters={clearFilters}
         actions={
-          <Button
-            onClick={() => {
-              setEditingStaff(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            New joining
-          </Button>
-        }
+          <>
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="w-4 h-4" />
+              Import
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingStaff(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              New joining
+            </Button>
+          </>
+      }
         columnToggle
         exportFileName="staff"
         selectable
         pageSize={25}
       />
+
+      <BulkStaffImportDialog open={importOpen} onOpenChange={setImportOpen} onFinished={invalidate} />
 
       <StaffFormDialog
         open={formOpen}

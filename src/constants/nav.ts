@@ -42,6 +42,7 @@ import {
   Users,
   Video,
   Vote,
+  BookMarked,
   Wallet,
   WalletCards,
 } from "lucide-react";
@@ -61,8 +62,8 @@ export interface NavItem {
   badge?: string;
 }
 
-/** "staff": admins, principals, teachers. "student": student logins. */
-export type NavAudience = "staff" | "student";
+/** "staff": admins, principals, teachers. "student": student logins. "school": any login that is not a parent or student (custom roles included). "family": parents and students. */
+export type NavAudience = "staff" | "student" | "school" | "family";
 
 export interface NavSection {
   title: string;
@@ -83,6 +84,8 @@ export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Talent Showcase", to: "/talents", icon: Star, permissionKey: "talents" },
   { label: "Extra-Curricular", to: "/extracurricular", icon: Trophy, permissionKey: "extracurricular" },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
+  // Parents and students read the syllabus the school publishes; staff reach the module from Academics.
+  { label: "Syllabus Progress", to: "/lesson-portions/family", icon: BookMarked, permissionKey: "portions", audience: "family" },
   { label: "My Homework", to: "/my-homework", icon: BookOpenCheck, permissionKey: "homework" },
   // Top-level (not under Academics) because students and parents use it and can't see that section.
   { label: "Study Materials", to: "/study-materials", icon: LibraryBig, permissionKey: "studyMaterials" },
@@ -102,6 +105,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Timetable", to: "/timetable", icon: CalendarClock, permissionKey: "timetable" },
       { label: "Examinations", to: "/examinations", icon: FileCheck2, permissionKey: "examinations" },
       { label: "Homework", to: "/homework", icon: ClipboardList, permissionKey: "homework" },
+      { label: "Lesson & Portions", to: "/lesson-portions", icon: BookMarked, permissionKey: "portions", audience: "school" },
     ],
   },
   {

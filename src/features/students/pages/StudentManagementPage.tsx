@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil, Plus, SendToBack, UserCog, Users } from "lucide-react";
+import { Eye, Pencil, Plus, Upload, SendToBack, UserCog, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import type { Student, StudentFormValues, StudentStatus, TransferFormValues } fr
 import StudentStatusBadge from "../components/StudentStatusBadge";
 import StudentQuickView from "../components/StudentQuickView";
 import { classLabel } from "../classLabel";
+import BulkStudentImportDialog from "../components/BulkStudentImportDialog";
 import StudentFormDialog from "../components/StudentFormDialog";
 import TransferStudentDialog from "../components/TransferStudentDialog";
 import AdmissionsTab from "../components/AdmissionsTab";
@@ -74,6 +75,7 @@ function StudentsTab() {
   const totalCount = page?.totalCount ?? 0;
 
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [transferTarget, setTransferTarget] = useState<Student | null>(null);
   const [quickView, setQuickView] = useState<Student | null>(null);
@@ -278,16 +280,22 @@ function StudentsTab() {
         activeFilters={activeFilters}
         onClearFilters={clearFilters}
         actions={
-          <Button
-            onClick={() => {
-              setEditingStudent(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Register student
-          </Button>
-        }
+          <>
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="w-4 h-4" />
+              Import
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingStudent(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Register student
+            </Button>
+          </>
+      }
         columnToggle
         exportFileName="students"
         onRefresh={() => refetch()}
@@ -302,6 +310,8 @@ function StudentsTab() {
         onOpenProfile={(s) => navigate(`/students/${s.id}`)}
         onEdit={openEdit}
       />
+
+      <BulkStudentImportDialog open={importOpen} onOpenChange={setImportOpen} onFinished={invalidate} />
 
       <StudentFormDialog
         open={formOpen}

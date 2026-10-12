@@ -4,6 +4,7 @@ import FeeStructuresTab from "../components/FeeStructuresTab";
 import InvoicesTab from "../components/InvoicesTab";
 import ReceiptsTab from "../components/ReceiptsTab";
 import RefundsTab from "../components/RefundsTab";
+import OverdueTab from "../components/OverdueTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function FeeManagementPage() {
@@ -19,6 +20,7 @@ export default function FeeManagementPage() {
           <TabsTrigger value="structures">Fee Structures</TabsTrigger>
           <TabsTrigger value="discounts">Discounts & Scholarships</TabsTrigger>
           <TabsTrigger value="invoices">Student Invoices</TabsTrigger>
+          <TabsTrigger value="overdue">Overdue</TabsTrigger>
           <TabsTrigger value="receipts">Receipts</TabsTrigger>
           <TabsTrigger value="refunds">Refunds</TabsTrigger>
         </TabsList>
@@ -30,6 +32,9 @@ export default function FeeManagementPage() {
         </TabsContent>
         <TabsContent value="invoices">
           <InvoicesTab />
+        </TabsContent>
+        <TabsContent value="overdue">
+          <OverdueTab />
         </TabsContent>
         <TabsContent value="receipts">
           <ReceiptsTab />
