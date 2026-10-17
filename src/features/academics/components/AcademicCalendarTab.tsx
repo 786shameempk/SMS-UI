@@ -14,6 +14,7 @@ import { createCalendarEvent, deleteCalendarEvent, listAcademicYears, listCalend
 import type { CalendarEvent, CalendarEventFormValues, CalendarEventType } from "../types";
 import CalendarEventFormDialog from "./CalendarEventFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 const TYPE_VARIANT: Record<CalendarEventType, "info" | "warning" | "danger" | "neutral"> = {
   term_start: "info",
@@ -28,6 +29,7 @@ function typeLabel(type: CalendarEventType): string {
 }
 
 export default function AcademicCalendarTab() {
+  const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: events = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "calendar-events"], queryFn: listCalendarEvents });
   const { data: academicYears = [] } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
@@ -152,7 +154,8 @@ export default function AcademicCalendarTab() {
             ))}
           </SelectContent>
         </Select>
-        <Button
+        {!readOnly && (
+          <Button
           onClick={() => {
             setEditing(null);
             setFormOpen(true);
@@ -161,9 +164,10 @@ export default function AcademicCalendarTab() {
           <Plus className="w-4 h-4" />
           Add event
         </Button>
+        )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No calendar events yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No calendar events yet." />
 
       <CalendarEventFormDialog
         open={formOpen}

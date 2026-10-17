@@ -34,6 +34,8 @@ export interface ExamSchedule {
   startTime: string;
   endTime: string;
   maxMarks: number;
+  /** Optional internal / continuous-evaluation (CE) part of maxMarks; the rest is the actual (external) mark. */
+  internalMaxMarks?: number;
   passMarks: number;
   room?: string;
 }
@@ -44,6 +46,8 @@ export interface ExamScheduleFormValues {
   startTime: string;
   endTime: string;
   maxMarks: number;
+  /** Optional: how many of maxMarks are internal (CE) marks. Null/undefined = no internal component. */
+  internalMaxMarks?: number | null;
   passMarks: number;
   room?: string;
 }
@@ -55,8 +59,11 @@ export interface ExamResult {
   examId: string;
   subjectId: string;
   studentId: string;
+  /** Total: internal + actual. */
   marksObtained: number;
   maxMarks: number;
+  internalMarks?: number;
+  internalMaxMarks?: number;
   grade: string;
   isAbsent?: boolean;
 }
@@ -64,7 +71,11 @@ export interface ExamResult {
 /** One row of a bulk marks-entry save for a single exam + subject schedule. */
 export interface ExamResultEntryRow {
   studentId: string;
+  /** Total marks - used when the subject has no internal component. */
   marksObtained: number;
+  /** With an internal component: the CE mark and the actual mark; the server adds them up. */
+  internalMarks?: number;
+  externalMarks?: number;
   isAbsent: boolean;
 }
 
@@ -78,8 +89,15 @@ export interface SubjectResultRow {
   subjectId: string;
   subjectName: string;
   subjectCode: string;
+  /** Total: internal + actual. */
   marksObtained: number;
   maxMarks: number;
+  /** Present only when the subject has an internal (CE) component. */
+  internalMarks?: number;
+  internalMaxMarks?: number;
+  /** The actual (external) part: the total minus the internal marks. */
+  externalMarks: number;
+  externalMaxMarks: number;
   grade: string;
   isAbsent: boolean;
 }

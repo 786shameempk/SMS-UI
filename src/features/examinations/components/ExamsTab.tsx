@@ -188,7 +188,8 @@ export default function ExamsTab() {
       header: "Max / pass marks",
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground tabular-nums">
-          {row.original.maxMarks} / {row.original.passMarks}
+          {row.original.maxMarks}
+          {row.original.internalMaxMarks ? ` (internal ${row.original.internalMaxMarks} + actual ${row.original.maxMarks - row.original.internalMaxMarks})` : ""} / {row.original.passMarks}
         </span>
       ),
     },

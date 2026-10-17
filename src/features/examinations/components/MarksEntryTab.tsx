@@ -19,9 +19,15 @@ const NO_ROSTER: Awaited<ReturnType<typeof getExamRoster>> = [];
 const NO_RESULTS: Awaited<ReturnType<typeof getExamResults>> = [];
 
 interface DraftRow {
+  /** Total marks (subjects without an internal component). */
   marksObtained: string;
+  /** Subjects with an internal (CE) component: the two parts are entered separately. */
+  internalMarks: string;
+  externalMarks: string;
   isAbsent: boolean;
 }
+
+const EMPTY_DRAFT: DraftRow = { marksObtained: "", internalMarks: "", externalMarks: "", isAbsent: false };
 
 export default function MarksEntryTab() {
   const queryClient = useQueryClient();
@@ -57,8 +63,11 @@ export default function MarksEntryTab() {
     const next: Record<string, DraftRow> = {};
     for (const student of roster) {
       const existing = existingResults.find((r) => r.studentId === student.id);
+      const entered = existing && !existing.isAbsent;
       next[student.id] = {
-        marksObtained: existing && !existing.isAbsent ? String(existing.marksObtained) : "",
+        marksObtained: entered ? String(existing.marksObtained) : "",
+        internalMarks: entered && existing.internalMarks != null ? String(existing.internalMarks) : "",
+        externalMarks: entered && existing.internalMarks != null ? String(existing.marksObtained - existing.internalMarks) : "",
         isAbsent: existing?.isAbsent ?? false,
       };
     }
@@ -67,7 +76,7 @@ export default function MarksEntryTab() {
   }, [roster, existingResults, schedule?.id]);
 
   const saveMutation = useMutation({
-    mutationFn: (rows: ExamResultEntryRow[]) => saveExamResults(examId as string, subjectId as string, schedule?.maxMarks ?? 0, rows),
+    mutationFn: (rows: ExamResultEntryRow[]) => saveExamResults(examId as string, subjectId as string, schedule?.maxMarks ?? 0, rows, schedule?.internalMaxMarks),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["examinations", "exam-results", examId, subjectId] });
       queryClient.invalidateQueries({ queryKey: ["examinations", "class-results", examId] });
@@ -78,10 +87,20 @@ export default function MarksEntryTab() {
 
   const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "Unknown subject";
 
+  const internalMax = schedule?.internalMaxMarks ?? 0;
+  const externalMax = (schedule?.maxMarks ?? 0) - internalMax;
+  const hasInternal = internalMax > 0;
+  const clamp = (value: string, max: number) => Math.min(max, Math.max(0, Number(value) || 0));
+
   const handleSave = () => {
     if (!schedule) return;
     const rows: ExamResultEntryRow[] = roster.map((student) => {
-      const draft = drafts[student.id] ?? { marksObtained: "", isAbsent: false };
+      const draft = drafts[student.id] ?? EMPTY_DRAFT;
+      if (hasInternal) {
+        const internalMarks = draft.isAbsent ? 0 : clamp(draft.internalMarks, internalMax);
+        const externalMarks = draft.isAbsent ? 0 : clamp(draft.externalMarks, externalMax);
+        return { studentId: student.id, marksObtained: internalMarks + externalMarks, internalMarks, externalMarks, isAbsent: draft.isAbsent };
+      }
       return {
         studentId: student.id,
         marksObtained: draft.isAbsent ? 0 : Number(draft.marksObtained) || 0,
@@ -140,9 +159,12 @@ export default function MarksEntryTab() {
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
               <CardTitle>
-                {subjectName(schedule.subjectId)} &middot; Max marks {schedule.maxMarks} &middot; Pass marks {schedule.passMarks}
+                {subjectName(schedule.subjectId)} &middot; Max marks {schedule.maxMarks}
+                {hasInternal && ` (internal ${internalMax} + actual ${externalMax})`} &middot; Pass marks {schedule.passMarks}
               </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Enter marks for each student, or mark them absent. Marks are clamped to the max.</p>
+              <p className="text-sm text-muted-foreground mt-1">{hasInternal
+                  ? "Enter the internal (CE) mark and the actual mark separately; the total is worked out for you. Each is clamped to its own max."
+                  : "Enter marks for each student, or mark them absent. Marks are clamped to the max."}</p>
             </div>
             <Button onClick={handleSave} disabled={saveMutation.isPending || rosterLoading || resultsLoading || roster.length === 0}>
               {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -157,20 +179,28 @@ export default function MarksEntryTab() {
                     <TableHead>Admission No.</TableHead>
                     <TableHead>Student</TableHead>
                     <TableHead>Section</TableHead>
-                    <TableHead>Marks obtained</TableHead>
+                    {hasInternal ? (
+                      <>
+                        <TableHead>Internal (CE) /{internalMax}</TableHead>
+                        <TableHead>Actual /{externalMax}</TableHead>
+                        <TableHead>Total /{schedule.maxMarks}</TableHead>
+                      </>
+                    ) : (
+                      <TableHead>Marks obtained</TableHead>
+                    )}
                     <TableHead>Absent</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {roster.length === 0 && (
                     <TableRow hover={false}>
-                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={hasInternal ? 7 : 5} className="py-10 text-center text-muted-foreground">
                         No students found in this exam's class.
                       </TableCell>
                     </TableRow>
                   )}
                   {roster.map((student) => {
-                    const draft = drafts[student.id] ?? { marksObtained: "", isAbsent: false };
+                    const draft = drafts[student.id] ?? EMPTY_DRAFT;
                     return (
                       <TableRow key={student.id}>
                         <TableCell className="text-secondary-foreground">{student.admissionNumber}</TableCell>
@@ -178,19 +208,51 @@ export default function MarksEntryTab() {
                           {student.firstName} {student.lastName}
                         </TableCell>
                         <TableCell className="text-secondary-foreground">{student.section}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min={0}
-                            max={schedule.maxMarks}
-                            className="w-28"
-                            disabled={draft.isAbsent}
-                            value={draft.marksObtained}
-                            onChange={(e) =>
-                              setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, marksObtained: e.target.value } }))
-                            }
-                          />
-                        </TableCell>
+                        {hasInternal ? (
+                          <>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={internalMax}
+                                className="w-24"
+                                aria-label={`Internal marks for ${student.firstName} ${student.lastName}`}
+                                disabled={draft.isAbsent}
+                                value={draft.internalMarks}
+                                onChange={(e) => setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, internalMarks: e.target.value } }))}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={externalMax}
+                                className="w-24"
+                                aria-label={`Actual marks for ${student.firstName} ${student.lastName}`}
+                                disabled={draft.isAbsent}
+                                value={draft.externalMarks}
+                                onChange={(e) => setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, externalMarks: e.target.value } }))}
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium tabular-nums">
+                              {draft.isAbsent ? "AB" : clamp(draft.internalMarks, internalMax) + clamp(draft.externalMarks, externalMax)}
+                            </TableCell>
+                          </>
+                        ) : (
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={schedule.maxMarks}
+                              className="w-28"
+                              disabled={draft.isAbsent}
+                              value={draft.marksObtained}
+                              onChange={(e) =>
+                                setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, marksObtained: e.target.value } }))
+                              }
+                            />
+                          </TableCell>
+                        )}
                         <TableCell>
                           <Checkbox
                             checked={draft.isAbsent}

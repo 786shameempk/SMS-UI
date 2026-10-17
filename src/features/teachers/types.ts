@@ -29,6 +29,8 @@ export interface LessonPlan {
   description: string;
   weekOf: string;
   attachmentNote?: string;
+  attachmentId?: string;
+  attachmentFileName?: string;
   status: LessonPlanStatus;
   createdAt: string;
   updatedAt: string;
@@ -42,6 +44,9 @@ export interface LessonPlanFormValues {
   description: string;
   weekOf: string;
   attachmentNote?: string;
+  /** Set when a new file was uploaded; removeAttachment clears the stored one. Neither = unchanged. */
+  attachmentId?: string;
+  removeAttachment?: boolean;
   status: LessonPlanStatus;
 }
 

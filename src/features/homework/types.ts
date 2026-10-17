@@ -13,6 +13,9 @@ export interface Homework {
   assignedDate: string;
   dueDate: string;
   attachmentNote?: string;
+  /** An uploaded file (replaces the free-text note for new homework). */
+  attachmentId?: string;
+  attachmentFileName?: string;
   status: HomeworkStatus;
 }
 
@@ -26,6 +29,9 @@ export interface HomeworkFormValues {
   assignedDate: string;
   dueDate: string;
   attachmentNote?: string;
+  /** Set when a new file was uploaded; removeAttachment clears the stored one. Neither = unchanged. */
+  attachmentId?: string;
+  removeAttachment?: boolean;
   status: HomeworkStatus;
 }
 
@@ -63,6 +69,8 @@ export interface LearningResource {
   url?: string;
   description?: string;
   createdByStaffId: string;
+  attachmentId?: string;
+  attachmentFileName?: string;
   /** Set only when type === "quiz", linking to the underlying Quiz record. */
   quizId?: string;
   createdAt: string;
@@ -76,6 +84,8 @@ export interface LearningResourceFormValues {
   url?: string;
   description?: string;
   createdByStaffId: string;
+  attachmentId?: string;
+  removeAttachment?: boolean;
 }
 
 export interface QuizQuestion {

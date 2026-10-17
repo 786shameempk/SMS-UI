@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { formatDateTime } from "@/utils/format";
 import { submitHomework } from "../api";
 import { SUBMISSION_STATUS_CONFIG } from "../constants";
+import AttachmentLink from "@/features/attachments/AttachmentLink";
 import type { AssignedHomeworkRow } from "../types";
 
 export default function SubmitHomeworkDialog({
@@ -58,6 +59,11 @@ export default function SubmitHomeworkDialog({
           <Badge variant={config.variant}>{config.label}</Badge>
           <span>Due {new Date(homework.dueDate).toLocaleDateString()}</span>
           {homework.attachmentNote && <span>· Attachment: {homework.attachmentNote}</span>}
+          {homework.attachmentId && homework.attachmentFileName && (
+            <span className="inline-flex max-w-full items-center gap-1">
+              · <AttachmentLink id={homework.attachmentId} fileName={homework.attachmentFileName} />
+            </span>
+          )}
         </div>
 
         {submission.status === "resubmit_requested" && submission.feedback && (

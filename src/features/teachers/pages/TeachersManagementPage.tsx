@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { BookOpen, Pencil, Plus, UserCog, Users2 } from "lucide-react";
@@ -11,7 +11,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable } from "@/components/tables/DataTable";
 import { listClasses, listSubjects } from "@/features/academics/api";
-import { createStaff, updateStaff } from "@/features/staff/api";
+import { createStaff, getMyStaffId, updateStaff } from "@/features/staff/api";
 import StaffFormDialog from "@/features/staff/components/StaffFormDialog";
 import StaffStatusBadge from "@/features/staff/components/StaffStatusBadge";
 import type { StaffFormValues, StaffMember } from "@/features/staff/types";
@@ -20,12 +20,14 @@ import AssignSubjectDialog from "../components/AssignSubjectDialog";
 import { assignSubject, listSubjectAssignments, listTeachers } from "../api";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { RowActions } from "@/components/ui/row-actions";
+import { EmptyState, PageSkeleton } from "@/components/ui/states";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
 }
 
-export default function TeachersManagementPage() {
+function TeachersDirectory() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -240,4 +242,22 @@ export default function TeachersManagementPage() {
       <AssignClassTeacherDialog open={classTeacherDialogOpen} onOpenChange={setClassTeacherDialogOpen} teachers={teachers} />
     </PageContainer>
   );
+}
+
+/** A teacher has no directory: this screen is their own profile (no list, Add teacher or Assign class teacher). */
+function MyTeacherProfileRedirect() {
+  const { data: myStaffId, isLoading } = useQuery({ queryKey: ["staff", "me"], queryFn: getMyStaffId });
+  if (isLoading) return <PageSkeleton />;
+  if (!myStaffId) {
+    return (
+      <PageContainer>
+        <EmptyState icon={Users2} title="No teacher profile" description="Your login isn't linked to a staff record yet. Ask the school administrator to link it." />
+      </PageContainer>
+    );
+  }
+  return <Navigate to={`/teachers/${myStaffId}`} replace />;
+}
+
+export default function TeachersManagementPage() {
+  return useIsTeacher() ? <MyTeacherProfileRedirect /> : <TeachersDirectory />;
 }

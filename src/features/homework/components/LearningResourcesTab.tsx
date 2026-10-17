@@ -19,6 +19,7 @@ import {
   listQuizzes,
 } from "../api";
 import { RESOURCE_TYPE_ICONS, RESOURCE_TYPES } from "../constants";
+import AttachmentLink from "@/features/attachments/AttachmentLink";
 import type { LearningResource, LearningResourceFormValues, QuizFormValues } from "../types";
 import DiscussionThread from "./DiscussionThread";
 import LearningResourceFormDialog from "./LearningResourceFormDialog";
@@ -128,6 +129,9 @@ export default function LearningResourcesTab() {
                   </Button>
                 )}
                 {resource.type === "quiz" && quiz && <p className="text-xs text-muted-foreground">{quiz.questions.length} question(s)</p>}
+                {resource.attachmentId && resource.attachmentFileName && (
+                  <AttachmentLink id={resource.attachmentId} fileName={resource.attachmentFileName} className="text-xs" />
+                )}
                 {resource.url && (
                   <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary-text hover:underline">
                     <ExternalLink className="w-3 h-3" />

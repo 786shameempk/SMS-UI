@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { SchoolClass, Subject } from "@/features/academics/types";
 import type { StaffMember } from "@/features/staff/types";
 import { RESOURCE_TYPES } from "../constants";
+import AttachmentField from "@/features/attachments/AttachmentField";
+import { attachmentChange, toAttachmentRef, type AttachmentRef } from "@/features/attachments/api";
 import type { LearningResource, LearningResourceFormValues, ResourceType } from "../types";
 
 const FORM_RESOURCE_TYPES = RESOURCE_TYPES.filter((t) => t.value !== "quiz");
@@ -58,6 +60,9 @@ export default function LearningResourceFormDialog({
   onSubmit: (values: LearningResourceFormValues) => Promise<void>;
 }) {
   const isEdit = Boolean(resource);
+  // A file can be uploaded instead of (or as well as) a link: text, Word or PDF.
+  const [attachment, setAttachment] = useState<AttachmentRef | null>(null);
+  const originalAttachment = toAttachmentRef(resource?.attachmentId, resource?.attachmentFileName);
   const {
     register,
     handleSubmit,
@@ -82,6 +87,7 @@ export default function LearningResourceFormDialog({
           }
         : emptyValues,
     );
+    setAttachment(toAttachmentRef(resource?.attachmentId, resource?.attachmentFileName));
   }, [open, resource, reset]);
 
   const classId = watch("classId");
@@ -97,7 +103,12 @@ export default function LearningResourceFormDialog({
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
-            onSubmit({ ...values, url: values.url?.trim() || undefined, description: values.description?.trim() || undefined }),
+            onSubmit({
+              ...values,
+              url: values.url?.trim() || undefined,
+              description: values.description?.trim() || undefined,
+              ...attachmentChange(originalAttachment, attachment),
+            }),
           )}
           className="space-y-4"
         >
@@ -206,6 +217,8 @@ export default function LearningResourceFormDialog({
               <Input id="res-url" placeholder="https://…" {...register("url")} />
             </div>
           )}
+
+          {type !== "discussion" && <AttachmentField label="Or upload a file" kind="document" value={attachment} onChange={setAttachment} />}
 
           <div className="space-y-1.5">
             <Label htmlFor="res-description" optional>Description</Label>

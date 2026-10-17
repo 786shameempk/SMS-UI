@@ -385,6 +385,11 @@ export async function listInvoicesForStudent(studentId: string): Promise<FeeInvo
   return invoices.map(mapFeeInvoice);
 }
 
+/** Admins only: removes a counter payment recorded by mistake; the invoice is recomputed server-side. */
+export async function deleteReceipt(id: string, reason: string): Promise<void> {
+  await unwrap(financeHttpClient.delete(`/api/receipts/${id}`, { params: { reason } }));
+}
+
 /** No GET-by-id endpoint on FinanceService - resolved by listing and filtering, same as the small
  *  lookup-by-id precedent elsewhere in this codebase. */
 export async function getInvoice(id: string): Promise<FeeInvoice> {

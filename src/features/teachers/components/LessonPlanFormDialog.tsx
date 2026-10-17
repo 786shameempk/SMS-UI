@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { SchoolClass, Subject } from "@/features/academics/types";
 import { LESSON_PLAN_STATUSES } from "../constants";
+import AttachmentField from "@/features/attachments/AttachmentField";
+import { attachmentChange, toAttachmentRef, type AttachmentRef } from "@/features/attachments/api";
 import type { LessonPlan, LessonPlanFormValues, LessonPlanStatus } from "../types";
 
 const lessonPlanSchema = z.object({
@@ -53,6 +55,9 @@ export default function LessonPlanFormDialog({
   submitting: boolean;
 }) {
   const isEdit = Boolean(plan);
+  // The uploaded file is held beside the form fields: it is uploaded when chosen, and only its id is saved with the plan.
+  const [attachment, setAttachment] = useState<AttachmentRef | null>(null);
+  const originalAttachment = toAttachmentRef(plan?.attachmentId, plan?.attachmentFileName);
   const {
     register,
     handleSubmit,
@@ -77,6 +82,7 @@ export default function LessonPlanFormDialog({
           : emptyValues,
       );
     }
+    setAttachment(toAttachmentRef(plan?.attachmentId, plan?.attachmentFileName));
   }, [open, plan, reset]);
 
   return (
@@ -88,7 +94,7 @@ export default function LessonPlanFormDialog({
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
-            onSubmit({ ...values, attachmentNote: values.attachmentNote?.trim() || undefined }),
+            onSubmit({ ...values, attachmentNote: values.attachmentNote?.trim() || undefined, ...attachmentChange(originalAttachment, attachment) }),
           )}
           className="space-y-4"
         >
@@ -180,10 +186,7 @@ export default function LessonPlanFormDialog({
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="lp-attachmentNote" optional>Attachment note</Label>
-            <Input id="lp-attachmentNote" placeholder="e.g. Worksheet: chapter-3.pdf" {...register("attachmentNote")} />
-          </div>
+          <AttachmentField label="Attachment" value={attachment} onChange={setAttachment} />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

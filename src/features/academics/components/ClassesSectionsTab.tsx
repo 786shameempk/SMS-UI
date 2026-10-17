@@ -27,8 +27,10 @@ import ClassFormDialog from "./ClassFormDialog";
 import SectionFormDialog from "./SectionFormDialog";
 import MergeSectionsDialog from "./MergeSectionsDialog";
 import { RowActions } from "@/components/ui/row-actions";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 export default function ClassesSectionsTab() {
+  const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: classes = [], isLoading: classesLoading } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
   const { data: sections = [], isLoading: sectionsLoading } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
@@ -229,7 +231,8 @@ export default function ClassesSectionsTab() {
       <div className="space-y-4">
         <DataTableToolbar>
           <p className="text-sm text-muted-foreground">Classes belong to an academic year and, optionally, a department or stream.</p>
-          <Button
+          {!readOnly && (
+            <Button
             onClick={() => {
               setEditingClass(null);
               setClassFormOpen(true);
@@ -238,8 +241,9 @@ export default function ClassesSectionsTab() {
             <Plus className="w-4 h-4" />
             New class
           </Button>
+          )}
         </DataTableToolbar>
-        <DataTable searchable columns={classColumns} data={classes} isLoading={classesLoading} emptyMessage="No classes yet." />
+        <DataTable searchable columns={readOnly ? classColumns.filter((col) => col.id !== "actions") : classColumns} data={classes} isLoading={classesLoading} emptyMessage="No classes yet." />
       </div>
 
       <Card>
@@ -262,11 +266,14 @@ export default function ClassesSectionsTab() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => setMergeOpen(true)} disabled={classes.length === 0}>
-              <Merge className="w-4 h-4" />
-              Merge sections
-            </Button>
-            <Button
+            {!readOnly && (
+              <Button variant="outline" onClick={() => setMergeOpen(true)} disabled={classes.length === 0}>
+                <Merge className="w-4 h-4" />
+                Merge sections
+              </Button>
+            )}
+            {!readOnly && (
+              <Button
               onClick={() => {
                 setEditingSection(null);
                 setSectionDefaultClassId(undefined);
@@ -276,10 +283,11 @@ export default function ClassesSectionsTab() {
               <Plus className="w-4 h-4" />
               New section
             </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable searchable columns={sectionColumns} data={filteredSections} isLoading={sectionsLoading} emptyMessage="No sections match this filter." />
+          <DataTable searchable columns={readOnly ? sectionColumns.filter((col) => col.id !== "actions") : sectionColumns} data={filteredSections} isLoading={sectionsLoading} emptyMessage="No sections match this filter." />
         </CardContent>
       </Card>
 

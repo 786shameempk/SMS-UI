@@ -62,6 +62,8 @@ interface ApiHomework {
   assignedDate: string;
   dueDate: string;
   attachmentNote: string | null;
+  attachmentId: string | null;
+  attachmentFileName: string | null;
   status: string;
 }
 
@@ -94,6 +96,8 @@ interface ApiLearningResource {
   url: string | null;
   description: string | null;
   createdByStaffId: string;
+  attachmentId: string | null;
+  attachmentFileName: string | null;
   quizId: string | null;
   createdAt: string;
 }
@@ -164,6 +168,8 @@ const mapHomework = (dto: ApiHomework): Homework => ({
   assignedDate: dto.assignedDate,
   dueDate: dto.dueDate,
   attachmentNote: dto.attachmentNote ?? undefined,
+  attachmentId: dto.attachmentId ?? undefined,
+  attachmentFileName: dto.attachmentFileName ?? undefined,
   status: HOMEWORK_STATUS_FROM_API[dto.status] ?? "draft",
 });
 
@@ -191,6 +197,8 @@ const mapResource = (dto: ApiLearningResource): LearningResource => ({
   url: dto.url ?? undefined,
   description: dto.description ?? undefined,
   createdByStaffId: dto.createdByStaffId,
+  attachmentId: dto.attachmentId ?? undefined,
+  attachmentFileName: dto.attachmentFileName ?? undefined,
   quizId: dto.quizId ?? undefined,
   createdAt: dto.createdAt,
 });

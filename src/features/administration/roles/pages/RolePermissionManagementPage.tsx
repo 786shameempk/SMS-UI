@@ -5,6 +5,7 @@ import PoliciesTab from "../components/PoliciesTab";
 import FeatureTogglesTab from "../components/FeatureTogglesTab";
 import AiPermissionsTab from "../components/AiPermissionsTab";
 import StaffActionsTab from "../components/StaffActionsTab";
+import SubMenusTab from "../components/SubMenusTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function RolePermissionManagementPage() {
@@ -21,6 +22,7 @@ export default function RolePermissionManagementPage() {
           <TabsTrigger value="matrix">Permission matrix</TabsTrigger>
           <TabsTrigger value="policies">Policies</TabsTrigger>
           <TabsTrigger value="staff">Staff actions</TabsTrigger>
+          <TabsTrigger value="submenus">Sub-menus</TabsTrigger>
           <TabsTrigger value="ai">AI permissions</TabsTrigger>
           <TabsTrigger value="features">Feature toggles</TabsTrigger>
         </TabsList>
@@ -35,6 +37,9 @@ export default function RolePermissionManagementPage() {
         </TabsContent>
         <TabsContent value="staff">
           <StaffActionsTab />
+        </TabsContent>
+        <TabsContent value="submenus">
+          <SubMenusTab />
         </TabsContent>
         <TabsContent value="ai">
           <AiPermissionsTab />

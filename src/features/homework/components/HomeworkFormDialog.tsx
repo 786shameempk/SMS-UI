@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { SchoolClass, Section, Subject } from "@/features/academics/types";
 import type { StaffMember } from "@/features/staff/types";
 import { HOMEWORK_STATUSES } from "../constants";
+import AttachmentField from "@/features/attachments/AttachmentField";
+import { attachmentChange, toAttachmentRef, type AttachmentRef } from "@/features/attachments/api";
 import type { Homework, HomeworkFormValues, HomeworkStatus } from "../types";
 
 const NONE_SECTION = "__none__";
@@ -69,6 +71,9 @@ export default function HomeworkFormDialog({
   onSubmit: (values: HomeworkFormValues) => Promise<void>;
 }) {
   const isEdit = Boolean(homework);
+  // The uploaded file is held beside the form fields: it is uploaded when chosen, and only its id is saved with the homework.
+  const [attachment, setAttachment] = useState<AttachmentRef | null>(null);
+  const originalAttachment = toAttachmentRef(homework?.attachmentId, homework?.attachmentFileName);
   const {
     register,
     handleSubmit,
@@ -96,6 +101,7 @@ export default function HomeworkFormDialog({
           }
         : { ...emptyValues, ...initialValues, sectionId: initialValues?.sectionId ?? NONE_SECTION },
     );
+    setAttachment(toAttachmentRef(homework?.attachmentId, homework?.attachmentFileName));
   }, [open, homework, initialValues, reset]);
 
   const classId = watch("classId");
@@ -115,6 +121,7 @@ export default function HomeworkFormDialog({
               ...values,
               sectionId: values.sectionId && values.sectionId !== NONE_SECTION ? values.sectionId : undefined,
               attachmentNote: values.attachmentNote?.trim() || undefined,
+              ...attachmentChange(originalAttachment, attachment),
             }),
           )}
           className="space-y-4"
@@ -239,10 +246,7 @@ export default function HomeworkFormDialog({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="hw-attachmentNote" optional>Attachment note</Label>
-              <Input id="hw-attachmentNote" placeholder="e.g. Worksheet: chapter-3.pdf" {...register("attachmentNote")} />
-            </div>
+            <AttachmentField label="Attachment" value={attachment} onChange={setAttachment} />
             <div className="space-y-1.5">
               <Label htmlFor="hw-status" required>Status</Label>
               <Controller

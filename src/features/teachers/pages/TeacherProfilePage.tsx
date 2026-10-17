@@ -1,9 +1,9 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getStaffMember } from "@/features/staff/api";
+import { getMyStaffId, getStaffMember } from "@/features/staff/api";
 import StaffStatusBadge from "@/features/staff/components/StaffStatusBadge";
 import StaffOverviewTab from "@/features/staff/components/profile/StaffOverviewTab";
 import QualificationsExperienceTab from "@/features/staff/components/profile/QualificationsExperienceTab";
@@ -16,10 +16,14 @@ import LessonPlansTab from "../components/profile/LessonPlansTab";
 import StudentPerformanceTab from "../components/profile/StudentPerformanceTab";
 import { PageContainer } from "@/components/ui/page";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 export default function TeacherProfilePage() {
   const { staffId } = useParams<{ staffId: string }>();
   const navigate = useNavigate();
+  // A teacher only ever opens their own profile: any other id sends them to it, and there is no list to go back to.
+  const isTeacher = useIsTeacher();
+  const { data: myStaffId, isLoading: myIdLoading } = useQuery({ queryKey: ["staff", "me"], queryFn: getMyStaffId, enabled: isTeacher });
 
   const {
     data: staff,
@@ -28,10 +32,14 @@ export default function TeacherProfilePage() {
   } = useQuery({
     queryKey: ["staff", staffId],
     queryFn: () => getStaffMember(staffId!),
-    enabled: Boolean(staffId),
+    enabled: Boolean(staffId) && (!isTeacher || (!myIdLoading && myStaffId === staffId)),
   });
 
-  if (isLoading) {
+  if (isTeacher && !myIdLoading && myStaffId && myStaffId !== staffId) {
+    return <Navigate to={`/teachers/${myStaffId}`} replace />;
+  }
+
+  if (isLoading || (isTeacher && myIdLoading)) {
     return (
       <PageSkeleton />
     );
@@ -58,10 +66,12 @@ export default function TeacherProfilePage() {
   return (
     <PageContainer>
       <div>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/teachers")} className="-ml-2 mb-2">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to teachers
-        </Button>
+        {!isTeacher && (
+          <Button variant="ghost" size="sm" onClick={() => navigate("/teachers")} className="-ml-2 mb-2">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to teachers
+          </Button>
+        )}
         <div className="flex items-center gap-2.5 flex-wrap">
           <h1 className="text-page-title">
             {staff.firstName} {staff.lastName}
