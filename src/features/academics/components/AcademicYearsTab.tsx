@@ -13,8 +13,10 @@ import { statusBadgeVariant } from "../constants";
 import type { AcademicYear, AcademicYearFormValues } from "../types";
 import AcademicYearFormDialog from "./AcademicYearFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 export default function AcademicYearsTab() {
+  const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: academicYears = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
 
@@ -107,7 +109,8 @@ export default function AcademicYearsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">Define academic years to anchor terms, classes, and the calendar.</p>
-        <Button
+        {!readOnly && (
+          <Button
           onClick={() => {
             setEditing(null);
             setFormOpen(true);
@@ -116,9 +119,10 @@ export default function AcademicYearsTab() {
           <Plus className="w-4 h-4" />
           New academic year
         </Button>
+        )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={academicYears} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No academic years yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={academicYears} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No academic years yet." />
 
       <AcademicYearFormDialog
         open={formOpen}

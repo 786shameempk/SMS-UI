@@ -11,8 +11,10 @@ import { createDepartment, deleteDepartment, listDepartments, updateDepartment }
 import type { Department, DepartmentFormValues } from "../types";
 import DepartmentFormDialog from "./DepartmentFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 export default function DepartmentsTab() {
+  const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: departments = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
 
@@ -87,7 +89,8 @@ export default function DepartmentsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.</p>
-        <Button
+        {!readOnly && (
+          <Button
           onClick={() => {
             setEditing(null);
             setFormOpen(true);
@@ -96,9 +99,10 @@ export default function DepartmentsTab() {
           <Plus className="w-4 h-4" />
           New department
         </Button>
+        )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={departments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No departments yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={departments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No departments yet." />
 
       <DepartmentFormDialog
         open={formOpen}

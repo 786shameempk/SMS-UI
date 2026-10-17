@@ -33,6 +33,8 @@ export default function ReportCardTab() {
     queryFn: () => getReportCard(examId as string, studentId as string),
     enabled: Boolean(examId && studentId),
   });
+  // Internal (CE) and actual marks get their own columns once any subject of the exam has an internal component.
+  const showSplit = Boolean(report?.subjects.some((s) => s.internalMaxMarks != null));
 
   const { data: remark = "" } = useQuery({
     queryKey: ["examinations", "remark", examId, studentId],
@@ -100,7 +102,7 @@ export default function ReportCardTab() {
       )}
 
       {report && exam && (
-        <Card className="max-w-3xl">
+        <Card className={showSplit ? "max-w-4xl" : "max-w-3xl"}>
           <CardContent className="p-8 space-y-6">
             <div className="text-center space-y-1 border-b border-border pb-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Report Card</p>
@@ -135,7 +137,9 @@ export default function ReportCardTab() {
               <TableHeader>
                 <TableRow hover={false}>
                   <TableHead>Subject</TableHead>
-                  <TableHead className="text-right">Marks obtained</TableHead>
+                  {showSplit && <TableHead className="text-right">Internal (CE)</TableHead>}
+                  {showSplit && <TableHead className="text-right">Actual</TableHead>}
+                  <TableHead className="text-right">{showSplit ? "Total" : "Marks obtained"}</TableHead>
                   <TableHead className="text-right">Max marks</TableHead>
                   <TableHead className="text-right">Grade</TableHead>
                 </TableRow>
@@ -146,6 +150,14 @@ export default function ReportCardTab() {
                     <TableCell className="font-medium">
                       {s.subjectName} <span className="text-xs text-muted-foreground">({s.subjectCode})</span>
                     </TableCell>
+                    {showSplit && (
+                      <TableCell className="text-right tabular-nums">
+                        {s.isAbsent ? "Absent" : s.internalMaxMarks != null ? `${s.internalMarks ?? 0} / ${s.internalMaxMarks}` : "—"}
+                      </TableCell>
+                    )}
+                    {showSplit && (
+                      <TableCell className="text-right tabular-nums">{s.isAbsent ? "Absent" : `${s.externalMarks} / ${s.externalMaxMarks}`}</TableCell>
+                    )}
                     <TableCell className="text-right tabular-nums">{s.isAbsent ? "Absent" : s.marksObtained}</TableCell>
                     <TableCell className="text-right tabular-nums text-secondary-foreground">{s.maxMarks}</TableCell>
                     <TableCell className="text-right">
@@ -157,6 +169,16 @@ export default function ReportCardTab() {
               <TableFooter>
                 <TableRow hover={false}>
                   <TableCell className="font-semibold">Total</TableCell>
+                  {showSplit && (
+                    <TableCell className="text-right font-semibold tabular-nums">
+                      {report.subjects.reduce((sum, s) => sum + (s.internalMarks ?? 0), 0)} / {report.subjects.reduce((sum, s) => sum + (s.internalMaxMarks ?? 0), 0)}
+                    </TableCell>
+                  )}
+                  {showSplit && (
+                    <TableCell className="text-right font-semibold tabular-nums">
+                      {report.subjects.reduce((sum, s) => sum + s.externalMarks, 0)} / {report.subjects.reduce((sum, s) => sum + s.externalMaxMarks, 0)}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right font-semibold tabular-nums">{report.totalObtained}</TableCell>
                   <TableCell className="text-right font-semibold tabular-nums">{report.totalMax}</TableCell>
                   <TableCell />

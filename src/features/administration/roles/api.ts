@@ -114,6 +114,8 @@ export interface RoleStaffPermissions {
   permissions: string[];
   /** False while the role uses its defaults: every action of the modules it has "action" rights on in the matrix. */
   configured: boolean;
+  /** The module.* claims the role can see in the matrix. Actions are only offered for these modules. */
+  modules?: string[];
 }
 
 export const STAFF_PERMISSIONS_QUERY_KEY = ["admin", "staff-permissions"] as const;
@@ -126,6 +128,24 @@ export const setRoleStaffPermissions = (roleId: string, permissions: string[]) =
 
 export const resetRoleStaffPermissions = (roleId: string) =>
   unwrap(authHttpClient.delete<RoleStaffPermissions>(`/api/school-roles/${roleId}/staff-permissions`));
+
+// ── Sub-menus (tabs inside module pages shown or hidden per role; a display setting for the web app) ──
+
+export interface RoleSubMenus {
+  roleId: string;
+  /** Tab keys ("{route id}:{tab}") hidden from the role; empty = every tab visible. */
+  hidden: string[];
+  configured: boolean;
+}
+
+export const SUB_MENUS_QUERY_KEY = ["admin", "sub-menus"] as const;
+
+export const getRoleSubMenus = () => unwrap(authHttpClient.get<RoleSubMenus[]>("/api/school-roles/sub-menus"));
+
+export const setRoleSubMenus = (roleId: string, hidden: string[]) =>
+  unwrap(authHttpClient.put<RoleSubMenus>(`/api/school-roles/${roleId}/sub-menus`, { hidden }));
+
+export const resetRoleSubMenus = (roleId: string) => unwrap(authHttpClient.delete<RoleSubMenus>(`/api/school-roles/${roleId}/sub-menus`));
 
 // ── Permissions ──────────────────────────────────────────────────────────────
 

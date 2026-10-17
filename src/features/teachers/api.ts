@@ -116,6 +116,8 @@ interface ApiLessonPlan {
   description: string;
   weekOf: string;
   attachmentNote: string | null;
+  attachmentId: string | null;
+  attachmentFileName: string | null;
   status: "Draft" | "Published";
   createdAt: string;
   updatedAt: string | null;
@@ -135,6 +137,8 @@ const mapLessonPlan = (dto: ApiLessonPlan): LessonPlan => ({
   description: dto.description,
   weekOf: dto.weekOf,
   attachmentNote: dto.attachmentNote ?? undefined,
+  attachmentId: dto.attachmentId ?? undefined,
+  attachmentFileName: dto.attachmentFileName ?? undefined,
   status: LESSON_PLAN_STATUS_FROM_API[dto.status],
   createdAt: dto.createdAt,
   updatedAt: dto.updatedAt ?? dto.createdAt,
@@ -148,6 +152,9 @@ const toLessonPlanRequest = (values: LessonPlanFormValues) => ({
   description: values.description,
   weekOf: values.weekOf,
   attachmentNote: values.attachmentNote || null,
+  // Only sent when the file changed; absent means "leave the stored attachment alone".
+  ...(values.attachmentId ? { attachmentId: values.attachmentId } : {}),
+  ...(values.removeAttachment ? { removeAttachment: true } : {}),
   status: LESSON_PLAN_STATUS_TO_API[values.status],
 });
 

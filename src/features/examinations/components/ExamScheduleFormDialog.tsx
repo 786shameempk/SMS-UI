@@ -18,13 +18,26 @@ const scheduleFormSchema = z
     startTime: z.string().min(1, "Start time is required"),
     endTime: z.string().min(1, "End time is required"),
     maxMarks: z.coerce.number().int().min(1, "Must be at least 1"),
+    internalMaxMarks: z.string().optional(),
     passMarks: z.coerce.number().int().min(0, "Cannot be negative"),
     room: z.string().optional(),
   })
+  .refine(
+    (v) => {
+      const internal = v.internalMaxMarks?.trim();
+      if (!internal) return true;
+      const n = Number(internal);
+      return Number.isInteger(n) && n >= 1 && n < v.maxMarks;
+    },
+    { message: "Must be a whole number from 1 up to one less than the max marks", path: ["internalMaxMarks"] },
+  )
   .refine((v) => v.endTime > v.startTime, { message: "End time must be after start time", path: ["endTime"] })
   .refine((v) => v.passMarks <= v.maxMarks, { message: "Pass marks cannot exceed max marks", path: ["passMarks"] });
 
-const emptyValues: ExamScheduleFormValues = { subjectId: "", date: "", startTime: "", endTime: "", maxMarks: 100, passMarks: 35, room: "" };
+// The optional internal (CE) max is typed as text so "empty" means "no internal component".
+type ScheduleForm = Omit<ExamScheduleFormValues, "internalMaxMarks"> & { internalMaxMarks?: string };
+
+const emptyValues: ScheduleForm = { subjectId: "", date: "", startTime: "", endTime: "", maxMarks: 100, internalMaxMarks: "", passMarks: 35, room: "" };
 
 export default function ExamScheduleFormDialog({
   open,
@@ -47,8 +60,9 @@ export default function ExamScheduleFormDialog({
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors },
-  } = useForm<ExamScheduleFormValues>({ resolver: zodResolver(scheduleFormSchema), defaultValues: emptyValues });
+  } = useForm<ScheduleForm>({ resolver: zodResolver(scheduleFormSchema), defaultValues: emptyValues });
 
   useEffect(() => {
     if (open) {
@@ -60,6 +74,7 @@ export default function ExamScheduleFormDialog({
               startTime: schedule.startTime,
               endTime: schedule.endTime,
               maxMarks: schedule.maxMarks,
+              internalMaxMarks: schedule.internalMaxMarks ? String(schedule.internalMaxMarks) : "",
               passMarks: schedule.passMarks,
               room: schedule.room ?? "",
             }
@@ -68,6 +83,10 @@ export default function ExamScheduleFormDialog({
     }
   }, [open, schedule, reset]);
 
+  const maxMarks = Number(watch("maxMarks")) || 0;
+  const internalMax = Number(watch("internalMaxMarks")) || 0;
+  const hasInternal = internalMax > 0 && internalMax < maxMarks;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -75,7 +94,10 @@ export default function ExamScheduleFormDialog({
           <DialogTitle>{isEdit ? "Edit subject schedule" : "New subject schedule"}</DialogTitle>
           <DialogDescription>Schedule one subject paper within this exam, with its date, time, and marks.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit((v) => onSubmit({ ...v, internalMaxMarks: v.internalMaxMarks?.trim() ? Number(v.internalMaxMarks) : null }))}
+          className="space-y-4"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="subjectId">Subject</Label>
             <Controller
@@ -117,12 +139,35 @@ export default function ExamScheduleFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="maxMarks">Max marks</Label>
+              <Label htmlFor="maxMarks">Max marks (total)</Label>
               <Input id="maxMarks" type="number" min={1} aria-invalid={errors.maxMarks ? true : undefined} {...register("maxMarks")} />
               {errors.maxMarks && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.maxMarks.message}</p>}
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="internalMaxMarks" optional>Internal (CE) max marks</Label>
+              <Input
+                id="internalMaxMarks"
+                type="number"
+                min={1}
+                placeholder="None"
+                aria-invalid={errors.internalMaxMarks ? true : undefined}
+                {...register("internalMaxMarks")}
+              />
+              {errors.internalMaxMarks ? (
+                <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.internalMaxMarks.message}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {hasInternal
+                    ? `Internal ${internalMax} + actual ${maxMarks - internalMax} = ${maxMarks}. Marks are entered separately.`
+                    : "Leave empty if there is no internal / CE component."}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="passMarks">Pass marks</Label>
               <Input id="passMarks" type="number" min={0} aria-invalid={errors.passMarks ? true : undefined} {...register("passMarks")} />

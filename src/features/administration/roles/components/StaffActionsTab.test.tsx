@@ -52,6 +52,28 @@ describe("StaffActionsTab", () => {
     await waitFor(() => expect(rolesApi.setRoleStaffPermissions).toHaveBeenCalledWith("l", ["Library.IssueBook"]));
   });
 
+  it("only offers actions for the modules the role can see", async () => {
+    signIn("admin");
+    vi.mocked(rolesApi.getStaffPermissions).mockResolvedValue({
+      catalog,
+      roles: [
+        { roleId: "l", permissions: ["Library.IssueBook"], configured: false, modules: ["module.library"] },
+        { roleId: "s", permissions: [], configured: false, modules: [] },
+        { roleId: "g", permissions: [], configured: false, modules: [] },
+      ],
+    });
+    const user = userEvent.setup();
+    renderWithProviders(<StaffActionsTab />);
+
+    expect(await screen.findByText("Library")).toBeInTheDocument();
+    expect(screen.queryByText("Visitor management")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox", { name: "Role" }));
+    await user.click(await screen.findByRole("option", { name: "Security" }));
+    expect(await screen.findByText(/can't see any module that has staff actions/)).toBeInTheDocument();
+    expect(screen.queryByText("Library")).not.toBeInTheDocument();
+  });
+
   it("never offers staff actions to family roles, and resets a customised role", async () => {
     signIn("admin");
     vi.mocked(rolesApi.resetRoleStaffPermissions).mockResolvedValue({ roleId: "g", permissions: [], configured: false });

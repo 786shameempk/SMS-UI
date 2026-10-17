@@ -12,8 +12,10 @@ import { createSubject, deleteSubject, listClasses, listSubjects, updateSubject 
 import type { Subject, SubjectFormValues } from "../types";
 import SubjectFormDialog from "./SubjectFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 export default function SubjectsTab() {
+  const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: subjects = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
@@ -113,7 +115,8 @@ export default function SubjectsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">Subjects are core or elective and can be linked to one or more classes.</p>
-        <Button
+        {!readOnly && (
+          <Button
           onClick={() => {
             setEditing(null);
             setFormOpen(true);
@@ -122,9 +125,10 @@ export default function SubjectsTab() {
           <Plus className="w-4 h-4" />
           New subject
         </Button>
+        )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={subjects} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No subjects yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={subjects} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No subjects yet." />
 
       <SubjectFormDialog
         open={formOpen}

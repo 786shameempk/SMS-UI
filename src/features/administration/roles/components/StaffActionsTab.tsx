@@ -71,7 +71,10 @@ export default function StaffActionsTab() {
     setDraft({ roleId: selectedId, keys: next });
   };
 
-  const modules = [...new Set(staff.data!.catalog.map((p) => p.module))];
+  // Actions are only offered inside the modules this role can see (its Menu cell in the Permission matrix, within the school's plan).
+  // An older server that doesn't say which modules the role sees shows every module, as before.
+  const visibleModules = current?.modules;
+  const modules = [...new Set(staff.data!.catalog.map((p) => p.module))].filter((m) => !visibleModules || visibleModules.includes(m));
 
   return (
     <div className="space-y-4">
@@ -103,6 +106,11 @@ export default function StaffActionsTab() {
       </div>
 
       {family && <p className="text-sm text-muted-foreground">Staff actions are only for school staff, so parents and students can&apos;t be given any.</p>}
+      {!family && modules.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          This role can&apos;t see any module that has staff actions yet. Turn on a module&apos;s Menu cell for it in the Permission matrix and its actions will appear here.
+        </p>
+      )}
 
       {modules.map((module) => (
         <div key={module} className="space-y-2">

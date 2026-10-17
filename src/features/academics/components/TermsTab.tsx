@@ -13,8 +13,10 @@ import { statusBadgeVariant } from "../constants";
 import type { Term, TermFormValues } from "../types";
 import TermFormDialog from "./TermFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 export default function TermsTab() {
+  const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: terms = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "terms"], queryFn: listTerms });
   const { data: academicYears = [] } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
@@ -106,7 +108,8 @@ export default function TermsTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">Terms and semesters break an academic year into grading periods.</p>
-        <Button
+        {!readOnly && (
+          <Button
           onClick={() => {
             setEditing(null);
             setFormOpen(true);
@@ -115,9 +118,10 @@ export default function TermsTab() {
           <Plus className="w-4 h-4" />
           New term
         </Button>
+        )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={terms} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No terms yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={terms} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No terms yet." />
 
       <TermFormDialog
         open={formOpen}

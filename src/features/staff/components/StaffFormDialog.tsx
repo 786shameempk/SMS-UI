@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
+import { listDepartments } from "@/features/academics/api";
 import { DESIGNATIONS } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
 import { FormSection } from "@/components/ui/form-field";
@@ -62,6 +63,12 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
   });
 
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
+  const { data: departments = [] } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
+  // Chosen from the school's departments (Academic Management); a value saved earlier that is no longer listed stays selectable.
+  const departmentNames = (current: string) => {
+    const names = departments.map((d) => d.name);
+    return current && !names.includes(current) ? [current, ...names] : names;
+  };
 
   useEffect(() => {
     if (open) {
@@ -197,7 +204,29 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="department" required>Department</Label>
-                <Input id="department" aria-invalid={errors.department ? true : undefined} {...register("department")} />
+                {departments.length === 0 ? (
+                  // A school with no departments set up yet (or non-teaching staff): keep typing it, rather than blocking the form.
+                  <Input id="department" aria-invalid={errors.department ? true : undefined} {...register("department")} />
+                ) : (
+                <Controller
+                  control={control}
+                  name="department"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="department" aria-invalid={errors.department ? true : undefined}>
+                        <SelectValue placeholder="Select a department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departmentNames(field.value).map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                )}
                 {errors.department && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.department.message}</p>}
               </div>
             </div>

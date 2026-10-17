@@ -7,6 +7,7 @@ import SectionSubNav from "@/components/layouts/SectionSubNav";
 import { useMobileNav } from "@/components/layouts/mobileNav";
 import { PageSkeleton } from "@/components/ui/states";
 import { useAuthStore } from "@/store/authStore";
+import { useMySubMenus } from "@/lib/useMySubMenus";
 import AskAiLauncher from "@/features/ai/components/AskAiLauncher";
 import { clearUnsavedEdits, trackFormEdits } from "@/features/help/navigation";
 import { useTour } from "@/features/help/tourStore";
@@ -21,6 +22,8 @@ export default function AppLayout() {
   const { open, setOpen } = useMobileNav();
   const mainRef = useRef<HTMLElement>(null);
   const touring = useTour((s) => s.tourId !== null);
+  // Tabs the school hides from this user's roles (Roles & permissions → Sub-menus).
+  useMySubMenus();
   // Switching school (tenant) or branch remounts the page, so every screen - not only those whose
   // queries happen to include the scope in their keys - reloads its data, filters and forms for the new scope.
   const scopeKey = useAuthStore((s) => `${s.activeTenantId}:${s.activeBranchId}`);

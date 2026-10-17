@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { listClasses, listSubjects } from "@/features/academics/api";
 import type { StaffMember } from "@/features/staff/types";
+import AttachmentLink from "@/features/attachments/AttachmentLink";
 import LessonPlanFormDialog from "../LessonPlanFormDialog";
 import { createLessonPlan, deleteLessonPlan, listLessonPlans, updateLessonPlan } from "../../api";
 import type { LessonPlan, LessonPlanFormValues } from "../../types";
@@ -92,6 +93,11 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
                   {new Date(plan.weekOf).toLocaleDateString()}
                 </p>
                 <p className="text-sm text-secondary-foreground mt-1.5">{plan.description}</p>
+                {plan.attachmentId && plan.attachmentFileName && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <AttachmentLink id={plan.attachmentId} fileName={plan.attachmentFileName} />
+                  </p>
+                )}
                 {plan.attachmentNote && (
                   <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                     <Paperclip className="w-3 h-3" />

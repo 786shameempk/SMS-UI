@@ -10,6 +10,7 @@ import { listStudents } from "@/features/students/api";
 import { getViewedResourceIds, listLearningResources, listQuizzes, markResourceViewed } from "../api";
 import { RESOURCE_TYPE_ICONS, RESOURCE_TYPES } from "../constants";
 import type { LearningResource } from "../types";
+import AttachmentLink from "@/features/attachments/AttachmentLink";
 import DiscussionThread from "./DiscussionThread";
 import TakeQuizDialog from "./TakeQuizDialog";
 
@@ -102,6 +103,11 @@ export default function MyResourcesTab({ studentId }: { studentId: string }) {
                   </Button>
                 )}
 
+                {resource.attachmentId && resource.attachmentFileName && resource.type !== "quiz" && resource.type !== "discussion" && (
+                  <span onClick={() => markViewed(resource.id)}>
+                    <AttachmentLink id={resource.attachmentId} fileName={resource.attachmentFileName} className="text-xs" />
+                  </span>
+                )}
                 {resource.url && resource.type !== "quiz" && resource.type !== "discussion" && (
                   <a
                     href={resource.url}

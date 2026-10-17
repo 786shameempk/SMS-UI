@@ -1,19 +1,37 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { listStudents } from "@/features/students/api";
 import { formatCurrency } from "@/utils/format";
-import { listInvoices, listReceipts } from "../api";
+import { useAuthStore } from "@/store/authStore";
+import { deleteReceipt, listInvoices, listReceipts } from "../api";
 import { PAYMENT_MODE_OPTIONS } from "../constants";
 import type { Receipt } from "../types";
 import ReceiptView from "./ReceiptView";
+import DeleteReceiptDialog from "./DeleteReceiptDialog";
 
 export default function ReceiptsTab() {
+  const queryClient = useQueryClient();
   const [viewing, setViewing] = useState<Receipt | null>(null);
+  const [deleting, setDeleting] = useState<Receipt | null>(null);
+  // Deleting a payment is for administrators only (the server enforces it too).
+  const role = useAuthStore((s) => s.user?.role);
+  const canDelete = role === "admin" || role === "principal" || role === "superAdmin";
+
+  const deleteMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => deleteReceipt(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fees"] });
+      toast.success("Payment deleted");
+      setDeleting(null);
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete the payment"),
+  });
 
   const { data: receipts = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "receipts"], queryFn: listReceipts });
   const { data: invoices = [] } = useQuery({ queryKey: ["fees", "invoices"], queryFn: listInvoices });
@@ -52,10 +70,18 @@ export default function ReceiptsTab() {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <Button variant="ghost" size="sm" onClick={() => setViewing(row.original)}>
-          <Eye className="w-3.5 h-3.5" />
-          View
-        </Button>
+        <div className="flex items-center justify-end gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setViewing(row.original)}>
+            <Eye className="w-3.5 h-3.5" />
+            View
+          </Button>
+          {canDelete && !row.original.providerPaymentId && (
+            <Button variant="ghost" size="sm" className="text-destructive-strong" onClick={() => setDeleting(row.original)}>
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </Button>
+          )}
+        </div>
       ),
     },
   ];
@@ -71,6 +97,15 @@ export default function ReceiptsTab() {
       </DataTableToolbar>
 
       <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No receipts generated yet." />
+
+      <DeleteReceiptDialog
+        receipt={deleting}
+        onOpenChange={(v) => !v && setDeleting(null)}
+        submitting={deleteMutation.isPending}
+        onConfirm={(reason) => {
+          if (deleting) deleteMutation.mutate({ id: deleting.id, reason });
+        }}
+      />
 
       <ReceiptView open={Boolean(viewing)} onOpenChange={(v) => !v && setViewing(null)} receipt={viewing} invoice={viewingInvoice} student={viewingStudent} />
     </div>

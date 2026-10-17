@@ -35,7 +35,8 @@ export default function StudentQuickView({
   student: Student | null;
   onOpenChange: (open: boolean) => void;
   onOpenProfile: (s: Student) => void;
-  onEdit: (s: Student) => void;
+  /** Omit for read-only viewers (teachers): the Edit button is hidden. */
+  onEdit?: (s: Student) => void;
 }) {
   const s = student;
   const guardians = s?.guardians ?? [];
@@ -143,10 +144,12 @@ export default function StudentQuickView({
             </Tabs>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => onEdit(s)}>
-                <Pencil className="h-4 w-4" />
-                Edit
-              </Button>
+              {onEdit && (
+                <Button variant="outline" onClick={() => onEdit(s)}>
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
+              )}
               <Button onClick={() => onOpenProfile(s)}>
                 Open full profile
                 <ArrowUpRight className="h-4 w-4" />

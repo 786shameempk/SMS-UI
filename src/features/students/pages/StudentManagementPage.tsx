@@ -27,6 +27,7 @@ import PromotionPanel from "../components/PromotionPanel";
 import GraduationPanel from "../components/GraduationPanel";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { RowActions } from "@/components/ui/row-actions";
+import { useIsTeacher } from "@/lib/roleAccess";
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
@@ -40,6 +41,7 @@ const STATUS_OPTIONS: { value: StudentStatus; label: string }[] = [
 ];
 
 function StudentsTab() {
+  const isTeacher = useIsTeacher();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { classNames } = useClassSectionOptions();
@@ -210,11 +212,13 @@ function StudentsTab() {
               <UserCog className="w-3.5 h-3.5" />
               View profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => openEdit(s)}>
-              <Pencil className="w-3.5 h-3.5" />
-              Edit details
-            </DropdownMenuItem>
-            {s.status === "active" && (
+            {!isTeacher && (
+              <DropdownMenuItem onClick={() => openEdit(s)}>
+                <Pencil className="w-3.5 h-3.5" />
+                Edit details
+              </DropdownMenuItem>
+            )}
+            {!isTeacher && s.status === "active" && (
               <DropdownMenuItem onClick={() => setTransferTarget(s)} className="text-warning-strong focus:bg-warning-soft focus:text-warning-strong">
                 <SendToBack className="w-3.5 h-3.5" />
                 Transfer student
@@ -280,6 +284,7 @@ function StudentsTab() {
         activeFilters={activeFilters}
         onClearFilters={clearFilters}
         actions={
+          isTeacher ? undefined : (
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="w-4 h-4" />
@@ -295,6 +300,7 @@ function StudentsTab() {
               Register student
             </Button>
           </>
+          )
       }
         columnToggle
         exportFileName="students"
@@ -308,7 +314,7 @@ function StudentsTab() {
         student={quickView}
         onOpenChange={(v) => !v && setQuickView(null)}
         onOpenProfile={(s) => navigate(`/students/${s.id}`)}
-        onEdit={openEdit}
+        onEdit={isTeacher ? undefined : openEdit}
       />
 
       <BulkStudentImportDialog open={importOpen} onOpenChange={setImportOpen} onFinished={invalidate} />
@@ -341,18 +347,19 @@ function StudentsTab() {
 }
 
 export default function StudentManagementPage() {
+  const isTeacher = useIsTeacher();
   return (
     <PageContainer>
       <PageHeader
         title="Student management"
-        description="Registration, admissions, and the student directory."
+        description={isTeacher ? "The students of the classes you teach." : "Registration, admissions, and the student directory."}
       />
 
       <Tabs defaultValue="students">
         <TabsList variant="line">
           <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="admissions">Admissions</TabsTrigger>
-          <TabsTrigger value="promotion">Promotion &amp; Graduation</TabsTrigger>
+          {!isTeacher && <TabsTrigger value="admissions">Admissions</TabsTrigger>}
+          {!isTeacher && <TabsTrigger value="promotion">Promotion &amp; Graduation</TabsTrigger>}
         </TabsList>
         <TabsContent value="students">
           <StudentsTab />

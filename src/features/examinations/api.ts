@@ -69,6 +69,7 @@ interface ApiExamSchedule {
   startTime: string;
   endTime: string;
   maxMarks: number;
+  internalMaxMarks: number | null;
   passMarks: number;
   room: string | null;
 }
@@ -82,6 +83,8 @@ interface ApiExamResult {
   studentId: string;
   marksObtained: number;
   maxMarks: number;
+  internalMarks: number | null;
+  internalMaxMarks: number | null;
   grade: string;
   isAbsent: boolean;
 }
@@ -92,6 +95,10 @@ interface ApiSubjectResultRow {
   subjectCode: string;
   marksObtained: number;
   maxMarks: number;
+  internalMarks: number | null;
+  internalMaxMarks: number | null;
+  externalMarks: number;
+  externalMaxMarks: number;
   grade: string;
   isAbsent: boolean;
 }
@@ -161,6 +168,7 @@ const mapSchedule = (dto: ApiExamSchedule): ExamSchedule => ({
   startTime: dto.startTime,
   endTime: dto.endTime,
   maxMarks: dto.maxMarks,
+  internalMaxMarks: dto.internalMaxMarks ?? undefined,
   passMarks: dto.passMarks,
   room: dto.room ?? undefined,
 });
@@ -174,6 +182,8 @@ const mapResult = (dto: ApiExamResult): ExamResult => ({
   studentId: dto.studentId,
   marksObtained: dto.marksObtained,
   maxMarks: dto.maxMarks,
+  internalMarks: dto.internalMarks ?? undefined,
+  internalMaxMarks: dto.internalMaxMarks ?? undefined,
   grade: dto.grade,
   isAbsent: dto.isAbsent,
 });
@@ -184,6 +194,11 @@ const mapSubjectRow = (dto: ApiSubjectResultRow): SubjectResultRow => ({
   subjectCode: dto.subjectCode,
   marksObtained: dto.marksObtained,
   maxMarks: dto.maxMarks,
+  internalMarks: dto.internalMarks ?? undefined,
+  internalMaxMarks: dto.internalMaxMarks ?? undefined,
+  // Older responses (before the internal/actual split) have no external fields: the whole mark is the actual mark.
+  externalMarks: dto.externalMarks ?? dto.marksObtained,
+  externalMaxMarks: dto.externalMaxMarks ?? dto.maxMarks,
   grade: dto.grade,
   isAbsent: dto.isAbsent,
 });
@@ -311,12 +326,20 @@ export async function saveExamResults(
   subjectId: string,
   maxMarks: number,
   rows: ExamResultEntryRow[],
+  internalMaxMarks?: number,
 ): Promise<ExamResult[]> {
   const results = await unwrap(
     academicHttpClient.post<ApiExamResult[]>(`/api/exams/${examId}/results`, {
       subjectId,
       maxMarks,
-      entries: rows.map((r) => ({ studentId: r.studentId, marksObtained: r.marksObtained, isAbsent: r.isAbsent })),
+      // Only subjects with an internal (CE) component carry the split; plain subjects send exactly what they always did.
+      ...(internalMaxMarks ? { internalMaxMarks } : {}),
+      entries: rows.map((r) => ({
+        studentId: r.studentId,
+        marksObtained: r.marksObtained,
+        ...(internalMaxMarks ? { internalMarks: r.internalMarks ?? 0, externalMarks: r.externalMarks ?? 0 } : {}),
+        isAbsent: r.isAbsent,
+      })),
     }),
   );
   return results.map(mapResult);

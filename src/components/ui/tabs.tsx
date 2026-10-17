@@ -1,12 +1,58 @@
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "@/utils/cn";
+import { routeForPath } from "@/app/routeRegistry";
+import { tabKey, useSubMenuStore } from "@/store/subMenuStore";
 import { ScrollArrow, useScrollStrip } from "./scroll-strip";
 
 type TabsVariant = "pill" | "line";
 const TabsVariantContext = React.createContext<TabsVariant>("pill");
 
-const Tabs = TabsPrimitive.Root;
+/**
+ * Which of this strip's tabs the school hides from the signed-in user (Roles & permissions → Sub-menus). Provided by Tabs; only a page's
+ * primary strip (<TabsList variant="line">) is ever filtered, so small in-card switches that happen to share a tab name are left alone.
+ */
+interface TabsScope {
+  isHidden: (value: string) => boolean;
+  register: (value: string) => () => void;
+}
+const TabsScopeContext = React.createContext<TabsScope | null>(null);
+
+const Tabs = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Root>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>>(
+  ({ defaultValue, value, onValueChange, ...props }, ref) => {
+    const hidden = useSubMenuStore((s) => s.hidden);
+    // The route a page was rendered for; a page remounts when the route changes, so this is current for its whole life.
+    const routeId = typeof window === "undefined" ? undefined : routeForPath(window.location.pathname)?.id;
+    const isHidden = React.useCallback((tab: string) => routeId !== undefined && hidden.has(tabKey(routeId, tab)), [routeId, hidden]);
+
+    const [inner, setInner] = React.useState(defaultValue);
+    const [visible, setVisible] = React.useState<string[]>([]);
+    const register = React.useCallback((tab: string) => {
+      setVisible((cur) => (cur.includes(tab) ? cur : [...cur, tab]));
+      return () => setVisible((cur) => cur.filter((v) => v !== tab));
+    }, []);
+
+    const selected = value !== undefined ? value : inner;
+    // A tab that is hidden can't stay selected (it may be the page's default): fall back to the first one still shown.
+    const effective = selected !== undefined && isHidden(selected) && visible.length > 0 ? visible[0] : selected;
+    const scope = React.useMemo<TabsScope>(() => ({ isHidden, register }), [isHidden, register]);
+
+    return (
+      <TabsScopeContext.Provider value={scope}>
+        <TabsPrimitive.Root
+          ref={ref}
+          value={effective}
+          onValueChange={(next) => {
+            setInner(next);
+            onValueChange?.(next);
+          }}
+          {...props}
+        />
+      </TabsScopeContext.Provider>
+    );
+  },
+);
+Tabs.displayName = TabsPrimitive.Root.displayName;
 
 /** Scrolls `el` sideways just enough to be fully visible inside `container` (never scrolls the page vertically). */
 function revealInline(container: HTMLElement, el: HTMLElement) {
@@ -61,6 +107,14 @@ interface TabsTriggerProps extends React.ComponentPropsWithoutRef<typeof TabsPri
 const TabsTrigger = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.Trigger>, TabsTriggerProps>(
   ({ className, count, children, onFocus, ...props }, ref) => {
     const variant = React.useContext(TabsVariantContext);
+    const scope = React.useContext(TabsScopeContext);
+    const hiddenForRole = variant === "line" && scope?.isHidden(props.value) === true;
+    const tabValue = props.value;
+    React.useEffect(() => {
+      if (variant !== "line" || hiddenForRole || !scope) return;
+      return scope.register(tabValue);
+    }, [variant, hiddenForRole, scope, tabValue]);
+    if (hiddenForRole) return null;
     return (
       <TabsPrimitive.Trigger
         ref={ref}
