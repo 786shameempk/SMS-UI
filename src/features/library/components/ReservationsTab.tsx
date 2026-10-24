@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { PackageCheck, Plus, X } from "lucide-react";
@@ -21,6 +22,7 @@ function defaultDueDate(): string {
 }
 
 export default function ReservationsTab() {
+  const { t } = useTranslation("library");
   const queryClient = useQueryClient();
   const [reserveOpen, setReserveOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<BookReservation | null>(null);
@@ -39,7 +41,7 @@ export default function ReservationsTab() {
 
   const memberLabel = (member: LibraryMember): string => {
     const person = member.personType === "student" ? studentById.get(member.personId) : staffById.get(member.personId);
-    const name = person ? `${person.firstName} ${person.lastName}` : "Unknown";
+    const name = person ? `${person.firstName} ${person.lastName}` : t("Unknown");
     return `${name} (${member.membershipId})`;
   };
 
@@ -49,51 +51,51 @@ export default function ReservationsTab() {
     mutationFn: reserveBook,
     onSuccess: () => {
       invalidate();
-      toast.success("Reservation placed");
+      toast.success(t("Reservation placed"));
       setReserveOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not place reservation"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not place reservation")),
   });
 
   const cancelMutation = useMutation({
     mutationFn: cancelReservation,
     onSuccess: () => {
       invalidate();
-      toast.success("Reservation cancelled");
+      toast.success(t("Reservation cancelled"));
       setCancelTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not cancel reservation"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not cancel reservation")),
   });
 
   const fulfillMutation = useMutation({
     mutationFn: (id: string) => fulfillReservation(id, defaultDueDate()),
     onSuccess: () => {
       invalidate();
-      toast.success("Reservation fulfilled — book issued to member");
+      toast.success(t("Reservation fulfilled — book issued to member"));
       setFulfillTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not fulfill reservation"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not fulfill reservation")),
   });
 
   const sorted = [...reservations].sort((a, b) => new Date(b.reservedOn).getTime() - new Date(a.reservedOn).getTime());
 
   const columns: ColumnDef<BookReservation, unknown>[] = [
-    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
+    { id: "book", header: t("Book"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
     {
       id: "member",
-      header: "Member",
+      header: t("Member"),
       cell: ({ row }) => {
         const member = memberById.get(row.original.memberId);
         return <span className="text-sm text-foreground">{member ? memberLabel(member) : "—"}</span>;
       },
     },
-    { id: "reservedOn", header: "Reserved on", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.reservedOn).toLocaleDateString()}</span> },
+    { id: "reservedOn", header: t("Reserved on"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.reservedOn).toLocaleDateString()}</span> },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = RESERVATION_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -112,11 +114,11 @@ export default function ReservationsTab() {
               onClick={() => setFulfillTarget(reservation)}
             >
               <PackageCheck className="w-3.5 h-3.5" />
-              Fulfill
+              {t("Fulfill")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setCancelTarget(reservation)}>
               <X className="w-3.5 h-3.5" />
-              Cancel
+              {t("Cancel")}
             </Button>
           </div>
         );
@@ -127,14 +129,14 @@ export default function ReservationsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Members can reserve a title once every copy is checked out.</p>
+        <p className="text-sm text-muted-foreground">{t("Members can reserve a title once every copy is checked out.")}</p>
         <Button onClick={() => setReserveOpen(true)}>
           <Plus className="w-4 h-4" />
-          Reserve book
+          {t("Reserve book")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No reservations yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No reservations yet.")} />
 
       <ReserveBookDialog
         open={reserveOpen}
@@ -151,9 +153,9 @@ export default function ReservationsTab() {
       <ConfirmDialog
         open={Boolean(fulfillTarget)}
         onOpenChange={(v) => !v && setFulfillTarget(null)}
-        title="Fulfill reservation"
-        description={`Hand over "${fulfillTarget ? bookById.get(fulfillTarget.bookId)?.title : ""}" to this member? This issues the book and sets a due date ${DEFAULT_LOAN_PERIOD_DAYS} days from today.`}
-        confirmLabel="Fulfill & issue"
+        title={t("Fulfill reservation")}
+        description={t('Hand over "{{title}}" to this member? This issues the book and sets a due date {{days}} days from today.', { title: fulfillTarget ? bookById.get(fulfillTarget.bookId)?.title : "", days: DEFAULT_LOAN_PERIOD_DAYS })}
+        confirmLabel={t("Fulfill & issue")}
         submitting={fulfillMutation.isPending}
         onConfirm={() => {
           if (fulfillTarget) fulfillMutation.mutate(fulfillTarget.id);
@@ -163,9 +165,9 @@ export default function ReservationsTab() {
       <ConfirmDialog
         open={Boolean(cancelTarget)}
         onOpenChange={(v) => !v && setCancelTarget(null)}
-        title="Cancel reservation"
-        description="Cancel this reservation? The member will need to place a new one if they still want the title."
-        confirmLabel="Cancel reservation"
+        title={t("Cancel reservation")}
+        description={t("Cancel this reservation? The member will need to place a new one if they still want the title.")}
+        confirmLabel={t("Cancel reservation")}
         confirmVariant="destructive"
         submitting={cancelMutation.isPending}
         onConfirm={() => {

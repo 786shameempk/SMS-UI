@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, ShieldCheck, ShieldOff, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
@@ -14,6 +15,7 @@ const OUTCOME_CONFIG: Record<LoginOutcome, { label: string; variant: "success" |
 };
 
 export default function SecurityTab({ user }: { user: SystemUser }) {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const { data: history = [], isLoading } = useQuery({
     queryKey: ["admin", "users", user.id, "login-history"],
@@ -24,7 +26,7 @@ export default function SecurityTab({ user }: { user: SystemUser }) {
     mutationFn: (mfaEnabled: boolean) => setUserMfaEnabled(user.id, mfaEnabled),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-      toast.success(`Two-factor authentication ${updated.mfaEnabled ? "enabled" : "disabled"} for ${updated.name}`);
+      toast.success(updated.mfaEnabled ? t("Two-factor authentication enabled for {{name}}", { name: updated.name }) : t("Two-factor authentication disabled for {{name}}", { name: updated.name }));
     },
   });
 
@@ -36,18 +38,18 @@ export default function SecurityTab({ user }: { user: SystemUser }) {
             {user.mfaEnabled ? <ShieldCheck className="w-4 h-4 text-success-strong" /> : <ShieldOff className="w-4 h-4 text-muted-foreground" />}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground">Two-factor authentication</p>
-            <p className="text-xs text-muted-foreground">This user must verify with a 6-digit code at every sign-in.</p>
+            <p className="text-sm font-medium text-foreground">{t("Two-factor authentication")}</p>
+            <p className="text-xs text-muted-foreground">{t("This user must verify with a 6-digit code at every sign-in.")}</p>
           </div>
         </div>
         <Switch checked={user.mfaEnabled} onCheckedChange={(v) => mfaMutation.mutate(v)} disabled={mfaMutation.isPending} />
       </div>
 
       <div>
-        <p className="text-sm font-medium text-foreground mb-2">Login history</p>
+        <p className="text-sm font-medium text-foreground mb-2">{t("Login history")}</p>
         <div className="space-y-2">
-          {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-          {!isLoading && history.length === 0 && <p className="text-sm text-muted-foreground">No login activity recorded.</p>}
+          {isLoading && <p className="text-sm text-muted-foreground">{t("Loading…")}</p>}
+          {!isLoading && history.length === 0 && <p className="text-sm text-muted-foreground">{t("No login activity recorded.")}</p>}
           {history.map((entry) => {
             const config = OUTCOME_CONFIG[entry.outcome];
             return (
@@ -66,7 +68,7 @@ export default function SecurityTab({ user }: { user: SystemUser }) {
                   </div>
                 </div>
                 <Badge variant={config.variant} className="shrink-0">
-                  {config.label}
+                  {t(config.label)}
                 </Badge>
               </div>
             );

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Award, CalendarCheck2, CheckCircle2, ClipboardPenLine, Pencil, Send, Users } from "lucide-react";
+import { ArrowLeft, Award, CalendarCheck2, CheckCircle2, ClipboardPenLine, Pencil, Send, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,17 +15,19 @@ import { getOnlineExam } from "../api";
 import { EXAM_TYPE_LABEL, formatDuration, formatExamTime, formatMarks, isChoiceType, isExamStaff, QUESTION_TYPE_LABEL } from "../constants";
 import type { ExamQuestion } from "../types";
 import { allowedActions, ExamStatusBadge, useExamActions } from "../components/useExamActions";
+import { useTranslation } from "react-i18next";
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-2 text-sm">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium text-foreground">{children}</dd>
+      <dd className="text-end font-medium text-foreground">{children}</dd>
     </div>
   );
 }
 
 function QuestionCard({ q, index }: { q: ExamQuestion; index: number }) {
+  const { t } = useTranslation("online-exams");
   return (
     <li className="rounded-xl border border-border/80 bg-card p-4">
       <div className="flex items-start gap-3">
@@ -33,8 +35,8 @@ function QuestionCard({ q, index }: { q: ExamQuestion; index: number }) {
         <div className="min-w-0 flex-1 space-y-2">
           <p className="whitespace-pre-wrap text-sm text-foreground">{q.text}</p>
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="neutral">{QUESTION_TYPE_LABEL[q.type]}</Badge>
-            <span className="text-xs text-muted-foreground">{formatMarks(q.marks)} mark{q.marks === 1 ? "" : "s"}</span>
+            <Badge variant="neutral">{t(QUESTION_TYPE_LABEL[q.type])}</Badge>
+            <span className="text-xs text-muted-foreground">{q.marks === 1 ? t("{{marks}} mark", { marks: formatMarks(q.marks) }) : t("{{marks}} marks", { marks: formatMarks(q.marks) })}</span>
           </div>
           {isChoiceType(q.type) ? (
             <ul className="grid gap-1.5 sm:grid-cols-2">
@@ -48,26 +50,26 @@ function QuestionCard({ q, index }: { q: ExamQuestion; index: number }) {
                       o.isCorrect ? "border-success/40 bg-success-soft text-success-strong" : "border-border/80 text-secondary-foreground",
                     )}
                   >
-                    {o.isCorrect && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-label="Correct answer" />}
+                    {o.isCorrect && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-label={t("Correct answer")} />}
                     {o.text}
                   </li>
                 ))}
             </ul>
           ) : q.type === "FillInBlank" ? (
             <p className="text-sm text-secondary-foreground">
-              <span className="text-muted-foreground">Accepted answers: </span>
+              <span className="text-muted-foreground">{t("Accepted answers:")} </span>
               {q.acceptedAnswers.join(", ") || "—"}
-              {q.caseSensitive && <span className="text-xs text-muted-foreground"> (case-sensitive)</span>}
+              {q.caseSensitive && <span className="text-xs text-muted-foreground"> {t("(case-sensitive)")}</span>}
             </p>
           ) : (
             q.modelAnswer && (
               <p className="whitespace-pre-wrap rounded-lg bg-secondary/60 px-3 py-2 text-sm text-secondary-foreground">
-                <span className="block text-xs font-medium text-muted-foreground">Model answer</span>
+                <span className="block text-xs font-medium text-muted-foreground">{t("Model answer")}</span>
                 {q.modelAnswer}
               </p>
             )
           )}
-          {q.explanation && <p className="text-xs text-muted-foreground">Explanation: {q.explanation}</p>}
+          {q.explanation && <p className="text-xs text-muted-foreground">{t("Explanation: {{text}}", { text: q.explanation })}</p>}
         </div>
       </div>
     </li>
@@ -75,6 +77,7 @@ function QuestionCard({ q, index }: { q: ExamQuestion; index: number }) {
 }
 
 export default function ExamDetailPage() {
+  const { t } = useTranslation("online-exams");
   const { id } = useParams();
   const navigate = useNavigate();
   const role = useAuthStore((s) => s.user?.role);
@@ -86,7 +89,7 @@ export default function ExamDetailPage() {
   if (exam.isError || !exam.data) {
     return (
       <PageContainer>
-        <ErrorState title="This exam couldn't load" description={exam.error instanceof Error ? exam.error.message : undefined} onRetry={() => exam.refetch()} retrying={exam.isRefetching} />
+        <ErrorState title={t("This exam couldn't load")} description={exam.error instanceof Error ? exam.error.message : undefined} onRetry={() => exam.refetch()} retrying={exam.isRefetching} />
       </PageContainer>
     );
   }
@@ -99,78 +102,84 @@ export default function ExamDetailPage() {
     <PageContainer>
       <Link to="/online-exams/exams" className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
-        All exams
+        {t("All exams")}
       </Link>
       <PageHeader
         title={e.name}
-        description={`${EXAM_TYPE_LABEL[e.examType]} · ${e.subjectName ?? "—"} · ${e.className ?? "—"}${e.sectionName ? ` · Section ${e.sectionName}` : ""}`}
+        description={`${t(EXAM_TYPE_LABEL[e.examType])} · ${e.subjectName ?? "—"} · ${e.className ?? "—"}${e.sectionName ? ` · ${t("Section {{name}}", { name: e.sectionName })}` : ""}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <ExamStatusBadge status={e.status} />
+            {e.status !== "Draft" && (
+              <Button variant="outline" onClick={() => navigate(`/online-exams/exams/${e.id}/monitor`)}>
+                <ShieldCheck className="h-4 w-4" />
+                {t("Monitor")}
+              </Button>
+            )}
             {can.edit && !e.hasAttempts && (
               <Button variant="outline" onClick={() => navigate(`/online-exams/exams/${e.id}/edit`)}>
                 <Pencil className="h-4 w-4" />
-                Edit
+                {t("Edit")}
               </Button>
             )}
             {can.schedule && (
               <Button onClick={() => actions.openSchedule(e)}>
                 <CalendarCheck2 className="h-4 w-4" />
-                Schedule
+                {t("Schedule")}
               </Button>
             )}
             {can.publish && (
               <Button onClick={() => actions.openPublish(e)}>
                 <Send className="h-4 w-4" />
-                Publish results
+                {t("Publish results")}
               </Button>
             )}
             {can.results && (
               <Button variant={can.publish ? "outline" : "default"} onClick={() => navigate(`/online-exams/exams/${e.id}/results`)}>
                 <Award className="h-4 w-4" />
-                Results
+                {t("Results")}
               </Button>
             )}
-            <RowActions label="More exam actions">{actions.menuItems(e, { includeView: false })}</RowActions>
+            <RowActions label={t("More exam actions")}>{actions.menuItems(e, { includeView: false })}</RowActions>
           </div>
         }
       />
 
       {e.status === "Cancelled" && (
         <div role="status" className="rounded-xl border border-border bg-secondary/60 px-4 py-3 text-sm text-secondary-foreground">
-          This exam was cancelled{e.cancelReason ? `: ${e.cancelReason}` : "."}
+          {e.cancelReason ? t("This exam was cancelled: {{reason}}", { reason: e.cancelReason }) : t("This exam was cancelled.")}
         </div>
       )}
 
       <StatGrid columns={4}>
-        <StatCard label="Students assigned" value={e.assignedCount} icon={Users} tone="brand" />
-        <StatCard label="Submitted" value={e.submittedCount} icon={CheckCircle2} tone="success" hint={e.assignedCount ? `${Math.round((e.submittedCount / e.assignedCount) * 100)}% of assigned` : undefined} />
+        <StatCard label={t("Students assigned")} value={e.assignedCount} icon={Users} tone="brand" />
+        <StatCard label={t("Submitted")} value={e.submittedCount} icon={CheckCircle2} tone="success" hint={e.assignedCount ? t("{{percent}}% of assigned", { percent: Math.round((e.submittedCount / e.assignedCount) * 100) }) : undefined} />
         <StatCard
-          label="Awaiting evaluation"
+          label={t("Awaiting evaluation")}
           value={e.pendingEvaluationCount}
           icon={ClipboardPenLine}
           tone={e.pendingEvaluationCount ? "warning" : "neutral"}
-          hint={e.pendingEvaluationCount ? "Short/long answers to mark" : "Nothing to mark"}
+          hint={e.pendingEvaluationCount ? t("Short/long answers to mark") : t("Nothing to mark")}
         />
-        <StatCard label="Total marks" value={formatMarks(e.totalMarks)} icon={Award} tone="info" hint={`Pass at ${formatMarks(e.passingMarks)}`} />
+        <StatCard label={t("Total marks")} value={formatMarks(e.totalMarks)} icon={Award} tone="info" hint={t("Pass at {{marks}}", { marks: formatMarks(e.passingMarks) })} />
       </StatGrid>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Questions</CardTitle>
+              <CardTitle>{t("Questions")}</CardTitle>
               <CardDescription>
-                {e.questions.length} question{e.questions.length === 1 ? "" : "s"}, {formatMarks(e.totalMarks)} marks. Correct answers are shown to staff only.
+                {e.questions.length === 1 ? t("{{n}} question, {{marks}} marks. Correct answers are shown to staff only.", { n: e.questions.length, marks: formatMarks(e.totalMarks) }) : t("{{n}} questions, {{marks}} marks. Correct answers are shown to staff only.", { n: e.questions.length, marks: formatMarks(e.totalMarks) })}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {e.questions.length === 0 ? (
                 <EmptyState
                   size="sm"
-                  title="No questions yet"
-                  description="Add questions before scheduling this exam."
-                  action={can.edit ? <Button size="sm" onClick={() => navigate(`/online-exams/exams/${e.id}/edit`)}>Add questions</Button> : undefined}
+                  title={t("No questions yet")}
+                  description={t("Add questions before scheduling this exam.")}
+                  action={can.edit ? <Button size="sm" onClick={() => navigate(`/online-exams/exams/${e.id}/edit`)}>{t("Add questions")}</Button> : undefined}
                 />
               ) : (
                 <ol className="space-y-2.5">
@@ -188,37 +197,39 @@ export default function ExamDetailPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Schedule</CardTitle>
+              <CardTitle>{t("Schedule")}</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="divide-y divide-border">
-                <Row label="Opens">{formatExamTime(e.startUtc, e.timeZoneId)}</Row>
-                <Row label="Closes">{formatExamTime(e.endUtc, e.timeZoneId)}</Row>
-                <Row label="Duration">{formatDuration(e.durationMinutes)}</Row>
-                <Row label="Time zone">{e.timeZoneId}</Row>
-                {e.resultsPublishedAt && <Row label="Results published">{formatExamTime(e.resultsPublishedAt, e.timeZoneId)}</Row>}
+                <Row label={t("Opens")}>{formatExamTime(e.startUtc, e.timeZoneId)}</Row>
+                <Row label={t("Closes")}>{formatExamTime(e.endUtc, e.timeZoneId)}</Row>
+                <Row label={t("Duration")}>{formatDuration(e.durationMinutes)}</Row>
+                <Row label={t("Time zone")}>{e.timeZoneId}</Row>
+                {e.resultsPublishedAt && <Row label={t("Results published")}>{formatExamTime(e.resultsPublishedAt, e.timeZoneId)}</Row>}
               </dl>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Settings</CardTitle>
+              <CardTitle>{t("Settings")}</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="divide-y divide-border">
-                <Row label="Attempts allowed">{s.maxAttempts}</Row>
-                <Row label="Negative marking">{s.negativeMarkPerWrong > 0 ? `−${formatMarks(s.negativeMarkPerWrong)} per wrong` : "Off"}</Row>
-                <Row label="Shuffle questions / options">{`${s.shuffleQuestions ? "Yes" : "No"} / ${s.shuffleOptions ? "Yes" : "No"}`}</Row>
-                <Row label="Back navigation">{s.allowBackNavigation ? "Allowed" : "Forward only"}</Row>
-                <Row label="Auto-submit at time-up">{s.autoSubmitOnTimeout ? "Yes" : "No"}</Row>
-                <Row label="Result shown">{s.showResultImmediately ? "Right after submitting" : "When published"}</Row>
-                <Row label="Answers in result">{s.showAnswersInResult ? "Shown" : "Hidden"}</Row>
+                <Row label={t("Attempts allowed")}>{s.maxAttempts}</Row>
+                <Row label={t("Negative marking")}>{s.negativeMarkPerWrong > 0 ? t("−{{marks}} per wrong", { marks: formatMarks(s.negativeMarkPerWrong) }) : t("Off")}</Row>
+                <Row label={t("Shuffle questions / options")}>{`${s.shuffleQuestions ? t("Yes") : t("No")} / ${s.shuffleOptions ? t("Yes") : t("No")}`}</Row>
+                <Row label={t("Back navigation")}>{s.allowBackNavigation ? t("Allowed") : t("Forward only")}</Row>
+                <Row label={t("Question pool")}>{s.questionsPerAttempt > 0 ? t("{{n}} drawn per student", { n: s.questionsPerAttempt }) : t("All questions")}</Row>
+                <Row label={t("Proctoring")}>{s.proctoring === "Off" ? t("Off") : `${s.proctoring === "Webcam" ? t("Browser and camera") : t("Browser events")}${s.requireFullscreen ? t(", fullscreen") : ""}`}</Row>
+                <Row label={t("Auto-submit at time-up")}>{s.autoSubmitOnTimeout ? t("Yes") : t("No")}</Row>
+                <Row label={t("Result shown")}>{s.showResultImmediately ? t("Right after submitting") : t("When published")}</Row>
+                <Row label={t("Answers in result")}>{s.showAnswersInResult ? t("Shown") : t("Hidden")}</Row>
               </dl>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Assigned to</CardTitle>
+              <CardTitle>{t("Assigned to")}</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="flex flex-wrap gap-1.5">
@@ -229,9 +240,9 @@ export default function ExamDetailPage() {
                 ))}
               </ul>
               <dl className="mt-3 divide-y divide-border">
-                <Row label="Created by">{e.ownerName ?? "—"}</Row>
-                {e.teacherName && <Row label="Teacher">{e.teacherName}</Row>}
-                {e.description && <Row label="Instructions">{e.description}</Row>}
+                <Row label={t("Created by")}>{e.ownerName ?? "—"}</Row>
+                {e.teacherName && <Row label={t("Teacher")}>{e.teacherName}</Row>}
+                {e.description && <Row label={t("Instructions")}>{e.description}</Row>}
               </dl>
             </CardContent>
           </Card>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -39,6 +40,7 @@ interface StaffFormDialogProps {
 }
 
 export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, submitting }: StaffFormDialogProps) {
+  const { t } = useTranslation("staff");
   const isEdit = Boolean(staff);
   const {
     register,
@@ -106,22 +108,22 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit staff member" : "New joining"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("Edit staff member") : t("New joining")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "Update this staff member's details." : "Onboard a new staff member."}
+            {isEdit ? t("Update this staff member's details.") : t("Onboard a new staff member.")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <FormSection title="School">
+          <FormSection title={t("School")}>
             <div className="space-y-1.5">
-              <Label htmlFor="branchId" required>Branch</Label>
+              <Label htmlFor="branchId" required>{t("Branch")}</Label>
               <Controller
                 control={control}
                 name="branchId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="branchId">
-                      <SelectValue placeholder="Select branch" />
+                      <SelectValue placeholder={t("Select branch")} />
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map((b) => (
@@ -133,32 +135,32 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                   </Select>
                 )}
               />
-              {errors.branchId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.branchId.message}</p>}
+              {errors.branchId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.branchId.message ?? "")}</p>}
             </div>
           </FormSection>
 
-          <FormSection title="Personal details">
+          <FormSection title={t("Personal details")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="firstName" required>First name</Label>
+                <Label htmlFor="firstName" required>{t("First name")}</Label>
                 <Input id="firstName" aria-invalid={errors.firstName ? true : undefined} {...register("firstName")} />
-                {errors.firstName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.firstName.message}</p>}
+                {errors.firstName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.firstName.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="lastName" required>Last name</Label>
+                <Label htmlFor="lastName" required>{t("Last name")}</Label>
                 <Input id="lastName" aria-invalid={errors.lastName ? true : undefined} {...register("lastName")} />
-                {errors.lastName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.lastName.message}</p>}
+                {errors.lastName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.lastName.message ?? "")}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="dateOfBirth" required>Date of birth</Label>
+                <Label htmlFor="dateOfBirth" required>{t("Date of birth")}</Label>
                 <Input id="dateOfBirth" type="date" aria-invalid={errors.dateOfBirth ? true : undefined} {...register("dateOfBirth")} />
-                {errors.dateOfBirth && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dateOfBirth.message}</p>}
+                {errors.dateOfBirth && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.dateOfBirth.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="gender" required>Gender</Label>
+                <Label htmlFor="gender" required>{t("Gender")}</Label>
                 <Controller
                   control={control}
                   name="gender"
@@ -168,9 +170,9 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="male">{t("Male")}</SelectItem>
+                        <SelectItem value="female">{t("Female")}</SelectItem>
+                        <SelectItem value="other">{t("Other")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -179,10 +181,10 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
             </div>
           </FormSection>
 
-          <FormSection title="Role">
+          <FormSection title={t("Role")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="designation" required>Designation</Label>
+                <Label htmlFor="designation" required>{t("Designation")}</Label>
                 <Controller
                   control={control}
                   name="designation"
@@ -194,7 +196,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                       <SelectContent>
                         {DESIGNATIONS.map((d) => (
                           <SelectItem key={d} value={d}>
-                            {d}
+                            {t(d)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -203,7 +205,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="department" required>Department</Label>
+                <Label htmlFor="department" required>{t("Department")}</Label>
                 {departments.length === 0 ? (
                   // A school with no departments set up yet (or non-teaching staff): keep typing it, rather than blocking the form.
                   <Input id="department" aria-invalid={errors.department ? true : undefined} {...register("department")} />
@@ -214,7 +216,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="department" aria-invalid={errors.department ? true : undefined}>
-                        <SelectValue placeholder="Select a department" />
+                        <SelectValue placeholder={t("Select a department")} />
                       </SelectTrigger>
                       <SelectContent>
                         {departmentNames(field.value).map((name) => (
@@ -227,38 +229,38 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                   )}
                 />
                 )}
-                {errors.department && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.department.message}</p>}
+                {errors.department && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.department.message ?? "")}</p>}
               </div>
             </div>
           </FormSection>
 
-          <FormSection title="Contact">
+          <FormSection title={t("Contact")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="phone" required>Phone</Label>
+                <Label htmlFor="phone" required>{t("Phone")}</Label>
                 <Input id="phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
-                {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
+                {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.phone.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="email" required>Email</Label>
+                <Label htmlFor="email" required>{t("Email")}</Label>
                 <Input id="email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
-                {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.email.message}</p>}
+                {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.email.message ?? "")}</p>}
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="address" required>Address</Label>
+              <Label htmlFor="address" required>{t("Address")}</Label>
               <Textarea id="address" rows={2} aria-invalid={errors.address ? true : undefined} {...register("address")} />
-              {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.address.message}</p>}
+              {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.address.message ?? "")}</p>}
             </div>
           </FormSection>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Add staff member"}
+              {isEdit ? t("Save changes") : t("Add staff member")}
             </Button>
           </DialogFooter>
         </form>

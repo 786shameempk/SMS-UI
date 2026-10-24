@@ -12,6 +12,7 @@ import { ACTIVITY_STATUS_LABEL, KIND_LABEL, SETTING_LABEL } from "../constants";
 import { SelectField, options } from "../shared";
 import type { Activity, ActivityInput, Category } from "../types";
 
+import { useTranslation } from "react-i18next";
 const optionalInt = z.string().refine((v) => v.trim() === "" || /^\d+$/.test(v.trim()), "Enter a whole number");
 
 const schema = z
@@ -96,6 +97,7 @@ export default function ActivityFormDialog({
   submitting: boolean;
   onSubmit: (input: ActivityInput) => Promise<void>;
 }) {
+  const { t } = useTranslation("extracurricular");
   const {
     register,
     handleSubmit,
@@ -114,18 +116,18 @@ export default function ActivityFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{activity ? "Edit activity" : "New activity"}</DialogTitle>
-          <DialogDescription>Football, chess, choir, school gardening — anything the school runs outside lessons.</DialogDescription>
+          <DialogTitle>{activity ? t("Edit activity") : t("New activity")}</DialogTitle>
+          <DialogDescription>{t("Football, chess, choir, school gardening — anything the school runs outside lessons.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((v) => onSubmit(toActivityInput(v, activity ?? undefined)))} className="space-y-4" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Name" htmlFor="act-name" required error={err("name")}>
+            <FormField label={t("Name")} htmlFor="act-name" required error={err("name")}>
               <Input id="act-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
             </FormField>
-            <FormField label="Code" htmlFor="act-code" required error={err("code")} hint="Short and unique this year, e.g. FB-U14">
+            <FormField label={t("Code")} htmlFor="act-code" required error={err("code")} hint={t("Short and unique this year, e.g. FB-U14")}>
               <Input id="act-code" aria-invalid={errors.code ? true : undefined} {...register("code")} />
             </FormField>
-            <FormField label="Category" htmlFor="act-category" required error={err("categoryId")}>
+            <FormField label={t("Category")} htmlFor="act-category" required error={err("categoryId")}>
               <Controller
                 control={control}
                 name="categoryId"
@@ -135,96 +137,96 @@ export default function ActivityFormDialog({
                     value={field.value || undefined}
                     onChange={(v) => field.onChange(v ?? "")}
                     items={categories.filter((c) => c.isActive || c.id === field.value).map((c) => ({ value: c.id, label: c.name }))}
-                    placeholder="Choose a category"
+                    placeholder={t("Choose a category")}
                     invalid={Boolean(errors.categoryId)}
                   />
                 )}
               />
             </FormField>
-            <FormField label="Academic year" htmlFor="act-year" required error={err("academicYear")}>
+            <FormField label={t("Academic year")} htmlFor="act-year" required error={err("academicYear")}>
               <Controller control={control} name="academicYear" render={({ field }) => <SelectField id="act-year" value={field.value} onChange={(v) => field.onChange(v ?? "")} items={years.map((y) => ({ value: y, label: y }))} />} />
             </FormField>
-            <FormField label="Participation" htmlFor="act-kind">
+            <FormField label={t("Participation")} htmlFor="act-kind">
               <Controller control={control} name="kind" render={({ field }) => <SelectField id="act-kind" value={field.value} onChange={(v) => v && field.onChange(v)} items={options(KIND_LABEL)} />} />
             </FormField>
-            <FormField label="Where" htmlFor="act-setting">
+            <FormField label={t("Where")} htmlFor="act-setting">
               <Controller control={control} name="setting" render={({ field }) => <SelectField id="act-setting" value={field.value} onChange={(v) => v && field.onChange(v)} items={options(SETTING_LABEL)} />} />
             </FormField>
-            <FormField label="Status" htmlFor="act-status" hint="Only active activities can be joined.">
+            <FormField label={t("Status")} htmlFor="act-status" hint={t("Only active activities can be joined.")}>
               <Controller control={control} name="status" render={({ field }) => <SelectField id="act-status" value={field.value} onChange={(v) => v && field.onChange(v)} items={options(ACTIVITY_STATUS_LABEL)} />} />
             </FormField>
-            <FormField label="Coordinator" htmlFor="act-coordinator" optional>
+            <FormField label={t("Coordinator")} htmlFor="act-coordinator" optional>
               <Input id="act-coordinator" {...register("coordinatorName")} />
             </FormField>
           </div>
 
-          <FormField label="Description" htmlFor="act-description" optional error={err("description")}>
+          <FormField label={t("Description")} htmlFor="act-description" optional error={err("description")}>
             <Textarea id="act-description" rows={3} {...register("description")} />
           </FormField>
 
           <div className="grid gap-4 sm:grid-cols-4">
-            <FormField label="Capacity" htmlFor="act-capacity" optional error={err("capacity")} hint="Empty = no limit">
+            <FormField label={t("Capacity")} htmlFor="act-capacity" optional error={err("capacity")} hint={t("Empty = no limit")}>
               <Input id="act-capacity" inputMode="numeric" aria-invalid={errors.capacity ? true : undefined} {...register("capacity")} />
             </FormField>
-            <FormField label="Minimum to run" htmlFor="act-min" optional error={err("minParticipants")}>
+            <FormField label={t("Minimum to run")} htmlFor="act-min" optional error={err("minParticipants")}>
               <Input id="act-min" inputMode="numeric" aria-invalid={errors.minParticipants ? true : undefined} {...register("minParticipants")} />
             </FormField>
-            <FormField label="Lowest grade" htmlFor="act-mingrade" optional error={err("minGrade")}>
+            <FormField label={t("Lowest grade")} htmlFor="act-mingrade" optional error={err("minGrade")}>
               <Input id="act-mingrade" inputMode="numeric" aria-invalid={errors.minGrade ? true : undefined} {...register("minGrade")} />
             </FormField>
-            <FormField label="Highest grade" htmlFor="act-maxgrade" optional error={err("maxGrade")}>
+            <FormField label={t("Highest grade")} htmlFor="act-maxgrade" optional error={err("maxGrade")}>
               <Input id="act-maxgrade" inputMode="numeric" aria-invalid={errors.maxGrade ? true : undefined} {...register("maxGrade")} />
             </FormField>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Eligibility note" htmlFor="act-eligibility" optional hint="Shown to families, e.g. Under 14, beginners welcome">
+            <FormField label={t("Eligibility note")} htmlFor="act-eligibility" optional hint={t("Shown to families, e.g. Under 14, beginners welcome")}>
               <Input id="act-eligibility" {...register("eligibility")} />
             </FormField>
-            <FormField label="Venue" htmlFor="act-location" optional>
+            <FormField label={t("Venue")} htmlFor="act-location" optional>
               <Input id="act-location" {...register("location")} />
             </FormField>
-            <FormField label="Enrollment opens" htmlFor="act-estart" optional>
+            <FormField label={t("Enrollment opens")} htmlFor="act-estart" optional>
               <Input id="act-estart" type="date" {...register("enrollmentStart")} />
             </FormField>
-            <FormField label="Enrollment closes" htmlFor="act-eend" optional error={err("enrollmentEnd")}>
+            <FormField label={t("Enrollment closes")} htmlFor="act-eend" optional error={err("enrollmentEnd")}>
               <Input id="act-eend" type="date" aria-invalid={errors.enrollmentEnd ? true : undefined} {...register("enrollmentEnd")} />
             </FormField>
-            <FormField label="When it meets" htmlFor="act-schedule" optional hint="e.g. Tuesdays and Thursdays after school">
+            <FormField label={t("When it meets")} htmlFor="act-schedule" optional hint={t("e.g. Tuesdays and Thursdays after school")}>
               <Input id="act-schedule" {...register("scheduleNote")} />
             </FormField>
-            <FormField label="Equipment needed" htmlFor="act-equipment" optional>
+            <FormField label={t("Equipment needed")} htmlFor="act-equipment" optional>
               <Input id="act-equipment" {...register("equipment")} />
             </FormField>
           </div>
 
-          <FormField label="Safety instructions" htmlFor="act-safety" optional>
+          <FormField label={t("Safety instructions")} htmlFor="act-safety" optional>
             <Textarea id="act-safety" rows={2} {...register("safetyNotes")} />
           </FormField>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
               <span>
-                <span className="block font-medium">Needs approval</span>
-                <span className="block text-xs text-muted-foreground">Requests wait for a coordinator.</span>
+                <span className="block font-medium">{t("Needs approval")}</span>
+                <span className="block text-xs text-muted-foreground">{t("Requests wait for a coordinator.")}</span>
               </span>
-              <Controller control={control} name="requiresApproval" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Needs approval" />} />
+              <Controller control={control} name="requiresApproval" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={t("Needs approval")} />} />
             </label>
             <label className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
               <span>
-                <span className="block font-medium">Needs parental consent</span>
-                <span className="block text-xs text-muted-foreground">Families must confirm when asking to join.</span>
+                <span className="block font-medium">{t("Needs parental consent")}</span>
+                <span className="block text-xs text-muted-foreground">{t("Families must confirm when asking to join.")}</span>
               </span>
-              <Controller control={control} name="requiresConsent" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Needs parental consent" />} />
+              <Controller control={control} name="requiresConsent" render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={t("Needs parental consent")} />} />
             </label>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {activity ? "Save changes" : "Create activity"}
+              {activity ? t("Save changes") : t("Create activity")}
             </Button>
           </DialogFooter>
         </form>

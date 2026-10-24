@@ -12,6 +12,7 @@ import { listSubjects } from "@/features/academics/api";
 import { getExamResults, getExamRoster, listExamSchedules, listExams, saveExamResults } from "../api";
 import type { ExamResultEntryRow } from "../types";
 
+import { useTranslation } from "react-i18next";
 // Stable fallback: an inline `= []` default is a new array every render, and the drafts effect
 // below depends on it — while loading (or forever, if the request fails) it would setState,
 // re-render, get another new [] and loop, freezing the page. See attendance/MarkAttendanceTab.
@@ -30,6 +31,7 @@ interface DraftRow {
 const EMPTY_DRAFT: DraftRow = { marksObtained: "", internalMarks: "", externalMarks: "", isAbsent: false };
 
 export default function MarksEntryTab() {
+  const { t } = useTranslation("examinations");
   const queryClient = useQueryClient();
   const { data: exams = [] } = useQuery({ queryKey: ["examinations", "exams"], queryFn: listExams });
   const { data: schedules = [] } = useQuery({ queryKey: ["examinations", "exam-schedules"], queryFn: () => listExamSchedules() });
@@ -80,9 +82,9 @@ export default function MarksEntryTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["examinations", "exam-results", examId, subjectId] });
       queryClient.invalidateQueries({ queryKey: ["examinations", "class-results", examId] });
-      toast.success("Marks saved");
+      toast.success(t("Marks saved"));
     },
-    onError: () => toast.error("Could not save marks"),
+    onError: () => toast.error(t("Could not save marks")),
   });
 
   const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "Unknown subject";
@@ -114,7 +116,7 @@ export default function MarksEntryTab() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Select exam and subject</CardTitle>
+          <CardTitle>{t("Select exam and subject")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <div className="space-y-1.5 w-64">
@@ -126,7 +128,7 @@ export default function MarksEntryTab() {
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select an exam" />
+                <SelectValue placeholder={t("Select an exam")} />
               </SelectTrigger>
               <SelectContent>
                 {exams.map((e) => (
@@ -140,13 +142,11 @@ export default function MarksEntryTab() {
           <div className="space-y-1.5 w-64">
             <Select value={subjectId} onValueChange={setSubjectId} disabled={!examId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a subject" />
+                <SelectValue placeholder={t("Select a subject")} />
               </SelectTrigger>
               <SelectContent>
                 {examSchedules.map((s) => (
-                  <SelectItem key={s.id} value={s.subjectId}>
-                    {subjectName(s.subjectId)} &middot; {s.date}
-                  </SelectItem>
+                  <SelectItem key={s.id} value={s.subjectId}>{t("{{v1}} · {{date}}", { v1: subjectName(s.subjectId), date: s.date })}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -159,16 +159,16 @@ export default function MarksEntryTab() {
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
               <CardTitle>
-                {subjectName(schedule.subjectId)} &middot; Max marks {schedule.maxMarks}
-                {hasInternal && ` (internal ${internalMax} + actual ${externalMax})`} &middot; Pass marks {schedule.passMarks}
+                {subjectName(schedule.subjectId)} {t("· Max marks")} {schedule.maxMarks}
+                {hasInternal && t(" (internal {{internalMax}} + actual {{externalMax}})", { internalMax, externalMax })} {t("· Pass marks")} {schedule.passMarks}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">{hasInternal
-                  ? "Enter the internal (CE) mark and the actual mark separately; the total is worked out for you. Each is clamped to its own max."
-                  : "Enter marks for each student, or mark them absent. Marks are clamped to the max."}</p>
+                  ? t("Enter the internal (CE) mark and the actual mark separately; the total is worked out for you. Each is clamped to its own max.")
+                  : t("Enter marks for each student, or mark them absent. Marks are clamped to the max.")}</p>
             </div>
             <Button onClick={handleSave} disabled={saveMutation.isPending || rosterLoading || resultsLoading || roster.length === 0}>
               {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save marks
+              {t("Save marks")}
             </Button>
           </CardHeader>
           <CardContent>
@@ -176,26 +176,26 @@ export default function MarksEntryTab() {
               <Table stickyHeader>
                 <TableHeader>
                   <TableRow hover={false}>
-                    <TableHead>Admission No.</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Section</TableHead>
+                    <TableHead>{t("Admission No.")}</TableHead>
+                    <TableHead>{t("Student")}</TableHead>
+                    <TableHead>{t("Section")}</TableHead>
                     {hasInternal ? (
                       <>
-                        <TableHead>Internal (CE) /{internalMax}</TableHead>
-                        <TableHead>Actual /{externalMax}</TableHead>
-                        <TableHead>Total /{schedule.maxMarks}</TableHead>
+                        <TableHead>{t("Internal (CE) /{{internalMax}}", { internalMax })}</TableHead>
+                        <TableHead>{t("Actual /{{externalMax}}", { externalMax })}</TableHead>
+                        <TableHead>{t("Total /{{maxMarks}}", { maxMarks: schedule.maxMarks })}</TableHead>
                       </>
                     ) : (
-                      <TableHead>Marks obtained</TableHead>
+                      <TableHead>{t("Marks obtained")}</TableHead>
                     )}
-                    <TableHead>Absent</TableHead>
+                    <TableHead>{t("Absent")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {roster.length === 0 && (
                     <TableRow hover={false}>
                       <TableCell colSpan={hasInternal ? 7 : 5} className="py-10 text-center text-muted-foreground">
-                        No students found in this exam's class.
+                        {t("No students found in this exam's class.")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -216,7 +216,7 @@ export default function MarksEntryTab() {
                                 min={0}
                                 max={internalMax}
                                 className="w-24"
-                                aria-label={`Internal marks for ${student.firstName} ${student.lastName}`}
+                                aria-label={t("Internal marks for {{firstName}} {{lastName}}", { firstName: student.firstName, lastName: student.lastName })}
                                 disabled={draft.isAbsent}
                                 value={draft.internalMarks}
                                 onChange={(e) => setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, internalMarks: e.target.value } }))}
@@ -228,14 +228,14 @@ export default function MarksEntryTab() {
                                 min={0}
                                 max={externalMax}
                                 className="w-24"
-                                aria-label={`Actual marks for ${student.firstName} ${student.lastName}`}
+                                aria-label={t("Actual marks for {{firstName}} {{lastName}}", { firstName: student.firstName, lastName: student.lastName })}
                                 disabled={draft.isAbsent}
                                 value={draft.externalMarks}
                                 onChange={(e) => setDrafts((prev) => ({ ...prev, [student.id]: { ...draft, externalMarks: e.target.value } }))}
                               />
                             </TableCell>
                             <TableCell className="font-medium tabular-nums">
-                              {draft.isAbsent ? "AB" : clamp(draft.internalMarks, internalMax) + clamp(draft.externalMarks, externalMax)}
+                              {draft.isAbsent ? t("AB") : clamp(draft.internalMarks, internalMax) + clamp(draft.externalMarks, externalMax)}
                             </TableCell>
                           </>
                         ) : (

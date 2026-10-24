@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { AlertOctagon, AlertTriangle, ChevronRight, Info } from "lucide-react";
 import { cn } from "@/utils/cn";
@@ -11,6 +12,7 @@ const SEVERITY = {
 
 /** Alert widget type: severity-coloured rows, each linking to the page where it can be dealt with. */
 export default function AlertList({ items, label }: { items: AlertItem[]; label: string }) {
+  const { t } = useTranslation("dashboard");
   return (
     <ul aria-label={label} className="grid gap-2 sm:grid-cols-2">
       {items.map((item) => {
@@ -19,7 +21,7 @@ export default function AlertList({ items, label }: { items: AlertItem[]; label:
           <>
             <s.icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="min-w-0 flex-1">
-              <span className="sr-only">{s.label}: </span>
+              <span className="sr-only">{t(s.label)}: </span>
               <span className="block truncate text-sm font-semibold">{item.title}</span>
               <span className="block truncate text-xs opacity-85">{item.detail}</span>
             </span>

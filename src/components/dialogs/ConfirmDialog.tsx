@@ -3,6 +3,7 @@ import { Button, type buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -20,11 +21,12 @@ export default function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Confirm",
+  confirmLabel,
   confirmVariant = "default",
   onConfirm,
   submitting,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation("common");
   const destructive = confirmVariant === "destructive";
   const Icon = destructive ? AlertTriangle : HelpCircle;
   return (
@@ -47,10 +49,10 @@ export default function ConfirmDialog({
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="button" variant={confirmVariant} onClick={onConfirm} loading={submitting} autoFocus={!destructive}>
-            {confirmLabel}
+            {confirmLabel ?? t("Confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

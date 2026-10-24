@@ -10,8 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/authStore";
 import { getEvaluationQueue } from "../api";
 import { formatExamTime, isExamStaff } from "../constants";
+import { useTranslation } from "react-i18next";
 
 export default function EvaluationsPage() {
+  const { t } = useTranslation("online-exams");
   const role = useAuthStore((s) => s.user?.role);
   const navigate = useNavigate();
   const queue = useQuery({ queryKey: ["online-exams", "evaluations"], queryFn: getEvaluationQueue, enabled: isExamStaff(role) });
@@ -25,11 +27,11 @@ export default function EvaluationsPage() {
     <PageContainer>
       <PageHeader
         icon={ClipboardPenLine}
-        title="Pending evaluation"
+        title={t("Pending evaluation")}
         description={
           items.length
-            ? `${totalAttempts} submission${totalAttempts === 1 ? "" : "s"} across ${items.length} exam${items.length === 1 ? "" : "s"} have short or long answers to mark. Multiple-choice questions are marked automatically.`
-            : "Short and long answers that need a teacher's marks appear here."
+            ? t("Submissions with short or long answers to mark: {{submissions}} (exams: {{exams}}). Multiple-choice questions are marked automatically.", { submissions: totalAttempts, exams: items.length })
+            : t("Short and long answers that need a teacher's marks appear here.")
         }
       />
 
@@ -40,9 +42,9 @@ export default function EvaluationsPage() {
           ))}
         </div>
       ) : queue.isError ? (
-        <ErrorState title="Couldn't load the evaluation queue" onRetry={() => queue.refetch()} retrying={queue.isRefetching} />
+        <ErrorState title={t("Couldn't load the evaluation queue")} onRetry={() => queue.refetch()} retrying={queue.isRefetching} />
       ) : items.length === 0 ? (
-        <EmptyState icon={PartyPopper} title="All caught up" description="No submissions are waiting for marks." action={<Button variant="outline" size="sm" onClick={() => navigate("/online-exams/results")}>See results</Button>} />
+        <EmptyState icon={PartyPopper} title={t("All caught up")} description={t("No submissions are waiting for marks.")} action={<Button variant="outline" size="sm" onClick={() => navigate("/online-exams/results")}>{t("See results")}</Button>} />
       ) : (
         <ul className="space-y-3">
           {items.map((item) => (
@@ -52,24 +54,24 @@ export default function EvaluationsPage() {
                   <div className="min-w-0">
                     <p className="font-semibold text-foreground">{item.examName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {[item.subjectName, item.className, `Closed ${formatExamTime(item.endUtc)}`].filter(Boolean).join(" · ")}
+                      {[item.subjectName, item.className, t("Closed {{time}}", { time: formatExamTime(item.endUtc) })].filter(Boolean).join(" · ")}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge variant="warning" dot>
-                        {item.attemptsPending} student{item.attemptsPending === 1 ? "" : "s"}
+                        {item.attemptsPending === 1 ? t("{{n}} student", { n: item.attemptsPending }) : t("{{n}} students", { n: item.attemptsPending })}
                       </Badge>
                       <Badge variant="neutral">
-                        {item.answersPending} answer{item.answersPending === 1 ? "" : "s"} to mark
+                        {item.answersPending === 1 ? t("{{n}} answer to mark", { n: item.answersPending }) : t("{{n}} answers to mark", { n: item.answersPending })}
                       </Badge>
                     </div>
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <Button variant="outline" size="sm" onClick={() => navigate(`/online-exams/exams/${item.examId}/results`)}>
-                      Results
+                      {t("Results")}
                     </Button>
                     {item.firstPendingAttemptId && (
                       <Button size="sm" onClick={() => navigate(`/online-exams/exams/${item.examId}/attempts/${item.firstPendingAttemptId}`)}>
-                        Start evaluating
+                        {t("Start evaluating")}
                       </Button>
                     )}
                   </div>

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -18,6 +19,7 @@ import ItemFormDialog from "./ItemFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function ItemsTab() {
+  const { t } = useTranslation("inventory");
   const queryClient = useQueryClient();
   const { data: items = [], isLoading, isError, refetch } = useQuery({ queryKey: ["inventory", "items"], queryFn: listItems });
   const { data: categories = [] } = useQuery({ queryKey: ["inventory", "categories"], queryFn: listCategories });
@@ -37,31 +39,31 @@ export default function ItemsTab() {
     mutationFn: createItem,
     onSuccess: () => {
       invalidate();
-      toast.success("Item created");
+      toast.success(t("Item created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create item"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create item")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: InventoryItemFormValues }) => updateItem(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Item updated");
+      toast.success(t("Item updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update item"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update item")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteItem,
     onSuccess: () => {
       invalidate();
-      toast.success(`${deleteTarget?.name} removed`);
+      toast.success(t("{{name}} removed", { name: deleteTarget?.name }));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete item"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete item")),
   });
 
   const filtered = useMemo(() => {
@@ -76,12 +78,12 @@ export default function ItemsTab() {
   const columns: ColumnDef<InventoryItem, unknown>[] = [
     {
       accessorKey: "code",
-      header: "Code",
+      header: t("Code"),
       cell: ({ row }) => <span className="text-sm font-medium text-foreground tabular-nums">{row.original.code}</span>,
     },
     {
       accessorKey: "name",
-      header: "Name",
+      header: t("Name"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm text-foreground">{row.original.name}</p>
@@ -91,36 +93,37 @@ export default function ItemsTab() {
     },
     {
       id: "category",
-      header: "Category",
+      header: t("Category"),
       cell: ({ row }) => <Badge variant="info">{categoryById.get(row.original.categoryId)?.name ?? "—"}</Badge>,
     },
     {
       id: "stock",
-      header: "Stock on hand",
+      header: t("Stock on hand"),
       cell: ({ row }) => {
         const item = row.original;
         const low = item.quantityInStock <= item.reorderLevel;
         return (
           <Badge variant={item.quantityInStock === 0 ? "danger" : low ? "warning" : "success"}>
-            {item.quantityInStock} {unitLabel.get(item.unit)}
-            {item.quantityInStock === 1 ? "" : "s"}
+            {item.quantityInStock === 1
+              ? t("{{count}} {{unit}}", { count: item.quantityInStock, unit: t(unitLabel.get(item.unit) ?? "") })
+              : t("{{count}} {{unit}}s", { count: item.quantityInStock, unit: t(unitLabel.get(item.unit) ?? "") })}
           </Badge>
         );
       },
     },
     {
       id: "reorderLevel",
-      header: "Reorder level",
+      header: t("Reorder level"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.reorderLevel}</span>,
     },
     {
       id: "unitCost",
-      header: "Unit cost",
+      header: t("Unit cost"),
       cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.unitCost)}</span>,
     },
     {
       id: "value",
-      header: "Stock value",
+      header: t("Stock value"),
       cell: ({ row }) => (
         <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.quantityInStock * row.original.unitCost)}</span>
       ),
@@ -139,11 +142,11 @@ export default function ItemsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(item)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -154,14 +157,14 @@ export default function ItemsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <SearchInput value={search} onValueChange={setSearch} placeholder="Search by code or name" containerClassName="sm:w-72" />
+        <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by code or name")} containerClassName="sm:w-72" />
         <div className="flex items-center gap-2">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={t("Category")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="all">{t("All categories")}</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
@@ -176,12 +179,12 @@ export default function ItemsTab() {
             }}
           >
             <Plus className="w-4 h-4" />
-            Add item
+            {t("Add item")}
           </Button>
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No items match your filters." pageSize={10} />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No items match your filters.")} pageSize={10} />
 
       <ItemFormDialog
         open={formOpen}
@@ -201,9 +204,9 @@ export default function ItemsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete item"
-        description={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete item")}
+        description={t("Delete \"{{name}}\"? This cannot be undone.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

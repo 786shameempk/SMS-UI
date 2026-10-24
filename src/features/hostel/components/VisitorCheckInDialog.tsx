@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,6 +39,7 @@ export default function VisitorCheckInDialog({
   submitting: boolean;
   onSubmit: (values: VisitorCheckInFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("hostel");
   const {
     register,
     handleSubmit,
@@ -59,22 +61,22 @@ export default function VisitorCheckInDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Check in visitor</DialogTitle>
-          <DialogDescription>Log a visitor against the resident student they're here to see.</DialogDescription>
+          <DialogTitle>{t("Check in visitor")}</DialogTitle>
+          <DialogDescription>{t("Log a visitor against the resident student they're here to see.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) => onSubmit({ ...values, purpose: values.purpose?.trim() || undefined }))}
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="vis-hostelId" required>Hostel</Label>
+            <Label htmlFor="vis-hostelId" required>{t("Hostel")}</Label>
             <Controller
               control={control}
               name="hostelId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="vis-hostelId">
-                    <SelectValue placeholder="Select a hostel" />
+                    <SelectValue placeholder={t("Select a hostel")} />
                   </SelectTrigger>
                   <SelectContent>
                     {activeHostels.map((h) => (
@@ -86,18 +88,18 @@ export default function VisitorCheckInDialog({
                 </Select>
               )}
             />
-            {errors.hostelId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostelId.message}</p>}
+            {errors.hostelId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostelId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vis-studentId" required>Resident student</Label>
+            <Label htmlFor="vis-studentId" required>{t("Resident student")}</Label>
             <Controller
               control={control}
               name="studentId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange} disabled={!hostelId}>
                   <SelectTrigger id="vis-studentId">
-                    <SelectValue placeholder={hostelId ? "Select a student" : "Select a hostel first"} />
+                    <SelectValue placeholder={hostelId ? t("Select a student") : t("Select a hostel first")} />
                   </SelectTrigger>
                   <SelectContent>
                     {hostelResidents.map((r) => (
@@ -109,39 +111,39 @@ export default function VisitorCheckInDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentId.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="vis-visitorName" required>Visitor name</Label>
-              <Input id="vis-visitorName" placeholder="e.g. Rajesh Kumar" aria-invalid={errors.visitorName ? true : undefined} {...register("visitorName")} />
-              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitorName.message}</p>}
+              <Label htmlFor="vis-visitorName" required>{t("Visitor name")}</Label>
+              <Input id="vis-visitorName" placeholder={t("e.g. Rajesh Kumar")} aria-invalid={errors.visitorName ? true : undefined} {...register("visitorName")} />
+              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.visitorName.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="vis-relation" required>Relation</Label>
-              <Input id="vis-relation" placeholder="e.g. Father" aria-invalid={errors.relation ? true : undefined} {...register("relation")} />
-              {errors.relation && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.relation.message}</p>}
+              <Label htmlFor="vis-relation" required>{t("Relation")}</Label>
+              <Input id="vis-relation" placeholder={t("e.g. Father")} aria-invalid={errors.relation ? true : undefined} {...register("relation")} />
+              {errors.relation && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.relation.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vis-phone" required>Phone</Label>
+            <Label htmlFor="vis-phone" required>{t("Phone")}</Label>
             <Input id="vis-phone" placeholder="e.g. +91 98450 12345" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
-            {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
+            {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.phone.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vis-purpose" optional>Purpose</Label>
-            <Input id="vis-purpose" placeholder="e.g. Weekly visit" {...register("purpose")} />
+            <Label htmlFor="vis-purpose" optional>{t("Purpose")}</Label>
+            <Input id="vis-purpose" placeholder={t("e.g. Weekly visit")} {...register("purpose")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Check in
+              {t("Check in")}
             </Button>
           </DialogFooter>
         </form>

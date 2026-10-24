@@ -14,7 +14,9 @@ import SubjectFormDialog from "./SubjectFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 import { useIsTeacher } from "@/lib/roleAccess";
 
+import { useTranslation } from "react-i18next";
 export default function SubjectsTab() {
+  const { t } = useTranslation("academics");
   const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: subjects = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
@@ -30,7 +32,7 @@ export default function SubjectsTab() {
     mutationFn: createSubject,
     onSuccess: () => {
       invalidate();
-      toast.success("Subject created");
+      toast.success(t("Subject created"));
       setFormOpen(false);
     },
   });
@@ -39,7 +41,7 @@ export default function SubjectsTab() {
     mutationFn: ({ id, values }: { id: string; values: SubjectFormValues }) => updateSubject(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Subject updated");
+      toast.success(t("Subject updated"));
       setFormOpen(false);
       setEditing(null);
     },
@@ -49,7 +51,7 @@ export default function SubjectsTab() {
     mutationFn: deleteSubject,
     onSuccess: () => {
       invalidate();
-      toast.success("Subject deleted");
+      toast.success(t("Subject deleted"));
       setDeleteTarget(null);
     },
   });
@@ -63,7 +65,7 @@ export default function SubjectsTab() {
   const columns: ColumnDef<Subject, unknown>[] = [
     {
       id: "subject",
-      header: "Subject",
+      header: t("Subject"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.name}</p>
@@ -73,7 +75,7 @@ export default function SubjectsTab() {
     },
     {
       accessorKey: "type",
-      header: "Type",
+      header: t("Type"),
       cell: ({ row }) => (
         <Badge variant={row.original.type === "core" ? "info" : "neutral"} className="capitalize">
           {row.original.type}
@@ -82,7 +84,7 @@ export default function SubjectsTab() {
     },
     {
       id: "classes",
-      header: "Classes",
+      header: t("Classes"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground block max-w-md truncate">{classNames(row.original.classIds)}</span>,
     },
     {
@@ -99,11 +101,11 @@ export default function SubjectsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(subject)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -114,7 +116,7 @@ export default function SubjectsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Subjects are core or elective and can be linked to one or more classes.</p>
+        <p className="text-sm text-muted-foreground">{t("Subjects are core or elective and can be linked to one or more classes.")}</p>
         {!readOnly && (
           <Button
           onClick={() => {
@@ -123,12 +125,12 @@ export default function SubjectsTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New subject
+          {t("New subject")}
         </Button>
         )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={subjects} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No subjects yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={subjects} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No subjects yet.")} />
 
       <SubjectFormDialog
         open={formOpen}
@@ -148,9 +150,9 @@ export default function SubjectsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete subject"
-        description={`This will permanently delete "${deleteTarget?.name}".`}
-        confirmLabel="Delete"
+        title={t("Delete subject")}
+        description={t("This will permanently delete \"{{name}}\".", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

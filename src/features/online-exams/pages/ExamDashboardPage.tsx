@@ -28,6 +28,7 @@ import { CHART_GRID, CHART_LEGEND_STYLE, CHART_TICK, CHART_TOOLTIP_STYLE } from 
 import { getOnlineExamDashboard } from "../api";
 import { formatDuration, formatExamTime, formatPercent, isExamStudent } from "../constants";
 import { ExamStatusBadge } from "../components/useExamActions";
+import { Trans, useTranslation } from "react-i18next";
 
 const QUICK_ACTIONS: { label: string; hint: string; icon: LucideIcon; to: string }[] = [
   { label: "Create exam", hint: "Six quick steps", icon: Plus, to: "/online-exams/exams/new" },
@@ -37,11 +38,12 @@ const QUICK_ACTIONS: { label: string; hint: string; icon: LucideIcon; to: string
 ];
 
 function ChartCard({ title, description, children, empty }: { title: string; description: string; children: ReactNode; empty: boolean }) {
+  const { t } = useTranslation("online-exams");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardTitle>{t(title)}</CardTitle>
+        <CardDescription>{t(description)}</CardDescription>
       </CardHeader>
       <CardContent>
         {empty ? (
@@ -55,6 +57,7 @@ function ChartCard({ title, description, children, empty }: { title: string; des
 }
 
 export default function ExamDashboardPage() {
+  const { t } = useTranslation("online-exams");
   const role = useAuthStore((s) => s.user?.role);
   const navigate = useNavigate();
   const dashboard = useQuery({ queryKey: ["online-exams", "dashboard"], queryFn: getOnlineExamDashboard, enabled: !isExamStudent(role) });
@@ -62,37 +65,37 @@ export default function ExamDashboardPage() {
   if (isExamStudent(role)) return <Navigate to="/online-exams/my" replace />;
 
   const d = dashboard.data;
-  const passFail = d ? [{ name: "Passed", value: d.passed }, { name: "Failed", value: d.failed }] : [];
+  const passFail = d ? [{ name: t("Passed"), value: d.passed }, { name: t("Failed"), value: d.failed }] : [];
 
   return (
     <PageContainer>
       <PageHeader
         icon={MonitorCheck}
-        title="Online exams"
-        description="Create, schedule and evaluate online exams, and see how students are doing."
+        title={t("Online exams")}
+        description={t("Create, schedule and evaluate online exams, and see how students are doing.")}
         actions={
           <Button onClick={() => navigate("/online-exams/exams/new")}>
             <Plus className="h-4 w-4" />
-            Create exam
+            {t("Create exam")}
           </Button>
         }
       />
 
       {dashboard.isError ? (
-        <ErrorState title="The exam dashboard couldn't load" onRetry={() => dashboard.refetch()} retrying={dashboard.isRefetching} />
+        <ErrorState title={t("The exam dashboard couldn't load")} onRetry={() => dashboard.refetch()} retrying={dashboard.isRefetching} />
       ) : (
         <>
-          <section aria-label="Summary" className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 xl:grid-cols-7">
-            <StatCard label="Total exams" value={d?.totalExams ?? 0} icon={Layers} loading={!d} />
-            <StatCard label="Upcoming" value={d?.upcomingExams ?? 0} icon={CalendarClock} tone="info" loading={!d} />
-            <StatCard label="Live now" value={d?.activeExams ?? 0} icon={Radio} tone="danger" loading={!d} />
-            <StatCard label="Completed" value={d?.completedExams ?? 0} icon={CheckCircle2} tone="success" loading={!d} />
-            <StatCard label="Drafts" value={d?.draftExams ?? 0} icon={FilePen} tone="neutral" loading={!d} />
-            <StatCard label="Students appeared" value={d?.studentsAppeared ?? 0} icon={Users} tone="info" loading={!d} />
-            <StatCard label="Average score" value={formatPercent(d?.averageScore)} icon={Award} tone="warning" loading={!d} />
+          <section aria-label={t("Summary")} className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 xl:grid-cols-7">
+            <StatCard label={t("Total exams")} value={d?.totalExams ?? 0} icon={Layers} loading={!d} />
+            <StatCard label={t("Upcoming")} value={d?.upcomingExams ?? 0} icon={CalendarClock} tone="info" loading={!d} />
+            <StatCard label={t("Live now")} value={d?.activeExams ?? 0} icon={Radio} tone="danger" loading={!d} />
+            <StatCard label={t("Completed")} value={d?.completedExams ?? 0} icon={CheckCircle2} tone="success" loading={!d} />
+            <StatCard label={t("Drafts")} value={d?.draftExams ?? 0} icon={FilePen} tone="neutral" loading={!d} />
+            <StatCard label={t("Students appeared")} value={d?.studentsAppeared ?? 0} icon={Users} tone="info" loading={!d} />
+            <StatCard label={t("Average score")} value={formatPercent(d?.averageScore)} icon={Award} tone="warning" loading={!d} />
           </section>
 
-          <section aria-label="Quick actions" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <section aria-label={t("Quick actions")} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {QUICK_ACTIONS.map((a) => (
               <Link
                 key={a.label}
@@ -103,8 +106,8 @@ export default function ExamDashboardPage() {
                   <a.icon className="h-4 w-4" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold text-foreground">{a.label}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{a.hint}</span>
+                  <span className="block truncate text-sm font-semibold text-foreground">{t(a.label)}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{t(a.hint)}</span>
                 </span>
               </Link>
             ))}
@@ -117,9 +120,9 @@ export default function ExamDashboardPage() {
             >
               <ClipboardPenLine className="h-4 w-4 shrink-0" />
               <span className="flex-1">
-                <strong>{d.pendingEvaluations}</strong> answer sheet{d.pendingEvaluations === 1 ? "" : "s"} waiting for evaluation.
+                <Trans t={t} i18nKey={d.pendingEvaluations === 1 ? "<0>{{n}}</0> answer sheet waiting for evaluation." : "<0>{{n}}</0> answer sheets waiting for evaluation."} values={{ n: d.pendingEvaluations }} components={[<strong key="n" />]} />
               </span>
-              <span className="font-semibold">Evaluate →</span>
+              <span className="font-semibold">{t("Evaluate →")}</span>
             </Link>
           )}
 
@@ -143,8 +146,8 @@ export default function ExamDashboardPage() {
                     <CartesianGrid {...CHART_GRID} />
                     <XAxis dataKey="examName" tickLine={false} axisLine={false} tick={CHART_TICK} interval="preserveStartEnd" />
                     <YAxis tickLine={false} axisLine={false} tick={CHART_TICK} width={32} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
-                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(v) => [`${v}%`, "Average"]} />
-                    <Area type="monotone" dataKey="averagePercentage" name="Average" stroke="var(--color-brand-500)" strokeWidth={2} fill="url(#oePerf)" />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(v) => [`${v}%`, t("Average")]} />
+                    <Area type="monotone" dataKey="averagePercentage" name={t("Average")} stroke="var(--color-brand-500)" strokeWidth={2} fill="url(#oePerf)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -155,8 +158,8 @@ export default function ExamDashboardPage() {
                     <CartesianGrid {...CHART_GRID} />
                     <XAxis dataKey="label" tickLine={false} axisLine={false} tick={CHART_TICK} />
                     <YAxis tickLine={false} axisLine={false} tick={CHART_TICK} width={32} domain={[0, 100]} />
-                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)", opacity: 0.6 }} formatter={(v) => [`${v}%`, "Average"]} />
-                    <Bar dataKey="value" name="Average" fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} maxBarSize={36} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)", opacity: 0.6 }} formatter={(v) => [`${v}%`, t("Average")]} />
+                    <Bar dataKey="value" name={t("Average")} fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} maxBarSize={36} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -182,8 +185,8 @@ export default function ExamDashboardPage() {
                     <YAxis tickLine={false} axisLine={false} tick={CHART_TICK} width={32} allowDecimals={false} />
                     <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)", opacity: 0.6 }} />
                     <Legend iconType="circle" iconSize={8} wrapperStyle={CHART_LEGEND_STYLE} />
-                    <Bar dataKey="assigned" name="Assigned" fill="var(--color-secondary)" radius={[4, 4, 0, 0]} maxBarSize={24} />
-                    <Bar dataKey="appeared" name="Appeared" fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                    <Bar dataKey="assigned" name={t("Assigned")} fill="var(--color-secondary)" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                    <Bar dataKey="appeared" name={t("Appeared")} fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} maxBarSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -192,8 +195,8 @@ export default function ExamDashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Upcoming &amp; live</CardTitle>
-              <CardDescription>The next exams on the calendar.</CardDescription>
+              <CardTitle>{t("Upcoming & live")}</CardTitle>
+              <CardDescription>{t("The next exams on the calendar.")}</CardDescription>
             </CardHeader>
             <CardContent>
               {!d ? (
@@ -203,11 +206,11 @@ export default function ExamDashboardPage() {
                   bare
                   size="sm"
                   icon={CalendarClock}
-                  title="No upcoming exams"
-                  description="Scheduled exams will appear here."
+                  title={t("No upcoming exams")}
+                  description={t("Scheduled exams will appear here.")}
                   action={
                     <Button size="sm" onClick={() => navigate("/online-exams/exams/new")}>
-                      Create exam
+                      {t("Create exam")}
                     </Button>
                   }
                 />

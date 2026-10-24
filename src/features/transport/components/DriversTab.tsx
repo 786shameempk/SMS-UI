@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -15,6 +16,7 @@ import DriverFormDialog from "./DriverFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function DriversTab() {
+  const { t } = useTranslation("transport");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Driver | null>(null);
@@ -29,37 +31,37 @@ export default function DriversTab() {
     mutationFn: createDriver,
     onSuccess: () => {
       invalidate();
-      toast.success("Driver profile added");
+      toast.success(t("Driver profile added"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add driver"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add driver")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: DriverFormValues }) => updateDriver(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Driver profile updated");
+      toast.success(t("Driver profile updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update driver"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update driver")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteDriver,
     onSuccess: () => {
       invalidate();
-      toast.success("Driver profile removed");
+      toast.success(t("Driver profile removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove driver"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not remove driver")),
   });
 
   const columns: ColumnDef<Driver, unknown>[] = [
     {
       id: "name",
-      header: "Driver",
+      header: t("Driver"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -71,25 +73,25 @@ export default function DriversTab() {
     },
     {
       id: "license",
-      header: "License",
+      header: t("License"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm text-secondary-foreground">{row.original.licenseNumber}</p>
-          <p className="text-xs text-muted-foreground">Expires {new Date(row.original.licenseExpiryDate).toLocaleDateString()}</p>
+          <p className="text-xs text-muted-foreground">{t("Expires {{date}}", { date: new Date(row.original.licenseExpiryDate).toLocaleDateString() })}</p>
         </div>
       ),
     },
     {
       id: "experience",
-      header: "Experience",
-      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.experienceYears} yrs</span>,
+      header: t("Experience"),
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{t("{{years}} yrs", { years: row.original.experienceYears })}</span>,
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = DRIVER_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -106,11 +108,11 @@ export default function DriversTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(driver)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Remove
+              {t("Remove")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -121,7 +123,7 @@ export default function DriversTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Drivers are staff members with license and experience details on top.</p>
+        <p className="text-sm text-muted-foreground">{t("Drivers are staff members with license and experience details on top.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -129,11 +131,11 @@ export default function DriversTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New driver
+          {t("New driver")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={drivers} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No driver profiles yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={drivers} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No driver profiles yet.")} pageSize={8} />
 
       <DriverFormDialog
         open={formOpen}
@@ -153,9 +155,9 @@ export default function DriversTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove driver profile"
-        description={`Remove the driver profile for "${deleteTarget?.staff.firstName} ${deleteTarget?.staff.lastName}"? This cannot be undone.`}
-        confirmLabel="Remove"
+        title={t("Remove driver profile")}
+        description={t('Remove the driver profile for "{{name}}"? This cannot be undone.', { name: `${deleteTarget?.staff.firstName} ${deleteTarget?.staff.lastName}` })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

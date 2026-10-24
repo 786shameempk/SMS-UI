@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +42,7 @@ export default function LeaveRequestFormDialog({
   onSubmit: (values: LeaveRequestFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("staff");
   const {
     register,
     handleSubmit,
@@ -63,53 +65,53 @@ export default function LeaveRequestFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New leave request</DialogTitle>
-          <DialogDescription>{selfOnly ? "Request leave for yourself. It goes to HR for approval." : "Record leave on behalf of a staff member."}</DialogDescription>
+          <DialogTitle>{t("New leave request")}</DialogTitle>
+          <DialogDescription>{selfOnly ? t("Request leave for yourself. It goes to HR for approval.") : t("Record leave on behalf of a staff member.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {selfOnly ? (
             <div className="space-y-1.5">
-              <Label htmlFor="staffId">Staff member</Label>
+              <Label htmlFor="staffId">{t("Staff member")}</Label>
               {unlinked ? (
                 <p role="alert" className="rounded-md border border-warning/30 bg-warning-soft px-3 py-2 text-sm text-warning-strong">
-                  Your login isn&apos;t linked to a staff record, so leave can&apos;t be requested from here. Ask an administrator to link it.
+                  {t("Your login isn't linked to a staff record, so leave can't be requested from here. Ask an administrator to link it.")}
                 </p>
               ) : (
                 <>
-                  <Input id="staffId" readOnly value={me ? `${me.firstName} ${me.lastName} · ${me.designation}` : "You"} aria-describedby="staffId-hint" />
-                  <p id="staffId-hint" className="text-xs text-muted-foreground">Leave is requested for you; it can&apos;t be filed for someone else.</p>
+                  <Input id="staffId" readOnly value={me ? `${me.firstName} ${me.lastName} · ${t(me.designation)}` : t("You")} aria-describedby="staffId-hint" />
+                  <p id="staffId-hint" className="text-xs text-muted-foreground">{t("Leave is requested for you; it can't be filed for someone else.")}</p>
                 </>
               )}
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="staffId">Staff member</Label>
+              <Label htmlFor="staffId">{t("Staff member")}</Label>
               <Controller
                 control={control}
                 name="staffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="staffId">
-                      <SelectValue placeholder="Select a staff member" />
+                      <SelectValue placeholder={t("Select a staff member")} />
                     </SelectTrigger>
                     <SelectContent>
                       {staffList.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          {s.firstName} {s.lastName} &middot; {s.designation}
+                          {s.firstName} {s.lastName} &middot; {t(s.designation)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.staffId.message}</p>}
+              {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.staffId.message ?? "")}</p>}
             </div>
   
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5 col-span-1">
-              <Label htmlFor="leaveType">Type</Label>
+              <Label htmlFor="leaveType">{t("Type")}</Label>
               <Controller
                 control={control}
                 name="leaveType"
@@ -119,9 +121,9 @@ export default function LeaveRequestFormDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {LEAVE_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
+                      {LEAVE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {t(type.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -130,29 +132,29 @@ export default function LeaveRequestFormDialog({
               />
             </div>
             <div className="space-y-1.5 col-span-1">
-              <Label htmlFor="fromDate">From</Label>
+              <Label htmlFor="fromDate">{t("From")}</Label>
               <Input id="fromDate" type="date" aria-invalid={errors.fromDate ? true : undefined} {...register("fromDate")} />
-              {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromDate.message}</p>}
+              {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.fromDate.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5 col-span-1">
-              <Label htmlFor="toDate">To</Label>
+              <Label htmlFor="toDate">{t("To")}</Label>
               <Input id="toDate" type="date" aria-invalid={errors.toDate ? true : undefined} {...register("toDate")} />
-              {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toDate.message}</p>}
+              {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.toDate.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="reason">Reason</Label>
+            <Label htmlFor="reason">{t("Reason")}</Label>
             <Textarea id="reason" rows={2} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
-            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.reason.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting} disabled={unlinked}>
-              Submit request
+              {t("Submit request")}
             </Button>
           </DialogFooter>
         </form>

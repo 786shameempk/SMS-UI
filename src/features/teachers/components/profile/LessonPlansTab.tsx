@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { createLessonPlan, deleteLessonPlan, listLessonPlans, updateLessonPlan }
 import type { LessonPlan, LessonPlanFormValues } from "../../types";
 
 export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("teachers");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<LessonPlan | null>(null);
@@ -32,7 +34,7 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
     mutationFn: createLessonPlan,
     onSuccess: () => {
       invalidate();
-      toast.success("Lesson plan created");
+      toast.success(t("Lesson plan created"));
       setFormOpen(false);
     },
   });
@@ -41,7 +43,7 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
     mutationFn: ({ id, values }: { id: string; values: LessonPlanFormValues }) => updateLessonPlan(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Lesson plan updated");
+      toast.success(t("Lesson plan updated"));
       setFormOpen(false);
       setEditingPlan(null);
     },
@@ -51,20 +53,20 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
     mutationFn: (id: string) => deleteLessonPlan(id),
     onSuccess: () => {
       invalidate();
-      toast.success("Lesson plan deleted");
+      toast.success(t("Lesson plan deleted"));
       setDeleteId(null);
     },
   });
 
-  const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "Unknown subject";
-  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? "Unknown class";
+  const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? t("Unknown subject");
+  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? t("Unknown class");
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-muted-foreground" />
-          Lesson plans
+          {t("Lesson plans")}
         </CardTitle>
         <Button
           size="sm"
@@ -74,12 +76,12 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
           }}
         >
           <Plus className="w-3.5 h-3.5" />
-          New lesson plan
+          {t("New lesson plan")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading lesson plans…</p>}
-        {!isLoading && plans.length === 0 && <p className="text-sm text-muted-foreground">No lesson plans yet.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading lesson plans…")}</p>}
+        {!isLoading && plans.length === 0 && <p className="text-sm text-muted-foreground">{t("No lesson plans yet.")}</p>}
         {!isLoading &&
           plans.map((plan) => (
             <div key={plan.id} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
@@ -89,8 +91,8 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
                   <StatusBadge status={plan.status} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {subjectName(plan.subjectId)} &middot; {className(plan.classId)} &middot; Week of{" "}
-                  {new Date(plan.weekOf).toLocaleDateString()}
+                  {subjectName(plan.subjectId)} &middot; {className(plan.classId)} &middot;{" "}
+                  {t("Week of {{date}}", { date: new Date(plan.weekOf).toLocaleDateString() })}
                 </p>
                 <p className="text-sm text-secondary-foreground mt-1.5">{plan.description}</p>
                 {plan.attachmentId && plan.attachmentFileName && (
@@ -144,9 +146,9 @@ export default function LessonPlansTab({ staff }: { staff: StaffMember }) {
       <ConfirmDialog
         open={Boolean(deleteId)}
         onOpenChange={(v) => !v && setDeleteId(null)}
-        title="Delete lesson plan"
-        description="This lesson plan will be permanently removed."
-        confirmLabel="Delete"
+        title={t("Delete lesson plan")}
+        description={t("This lesson plan will be permanently removed.")}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

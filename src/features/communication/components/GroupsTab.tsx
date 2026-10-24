@@ -16,7 +16,9 @@ import type { ContactGroup, ContactGroupFormValues } from "../types";
 import GroupFormDialog from "./GroupFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
+import { useTranslation } from "react-i18next";
 export default function GroupsTab() {
+  const { t } = useTranslation("communication");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ContactGroup | null>(null);
@@ -32,37 +34,37 @@ export default function GroupsTab() {
     mutationFn: createGroup,
     onSuccess: () => {
       invalidate();
-      toast.success("Group created");
+      toast.success(t("Group created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create group"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create group")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: ContactGroupFormValues }) => updateGroup(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Group updated");
+      toast.success(t("Group updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update group"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update group")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteGroup,
     onSuccess: () => {
       invalidate();
-      toast.success("Group deleted");
+      toast.success(t("Group deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete group"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete group")),
   });
 
   const columns: ColumnDef<ContactGroup, unknown>[] = [
     {
       accessorKey: "name",
-      header: "Group",
+      header: t("Group"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.name}</p>
@@ -72,12 +74,12 @@ export default function GroupsTab() {
     },
     {
       id: "audience",
-      header: "Audience",
-      cell: ({ row }) => <Badge variant="info">{AUDIENCE_TYPE_OPTIONS.find((o) => o.value === row.original.audienceType)?.label}</Badge>,
+      header: t("Audience"),
+      cell: ({ row }) => <Badge variant="info">{t(AUDIENCE_TYPE_OPTIONS.find((o) => o.value === row.original.audienceType)?.label ?? "")}</Badge>,
     },
     {
       id: "members",
-      header: "Members",
+      header: t("Members"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.memberIds.length}</span>,
     },
     {
@@ -94,11 +96,11 @@ export default function GroupsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(group)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -109,7 +111,7 @@ export default function GroupsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Named recipient lists you can target quickly when composing.</p>
+        <p className="text-sm text-muted-foreground">{t("Named recipient lists you can target quickly when composing.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -117,11 +119,11 @@ export default function GroupsTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New group
+          {t("New group")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={groups} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No groups yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={groups} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No groups yet.")} pageSize={8} />
 
       <GroupFormDialog
         open={formOpen}
@@ -142,9 +144,9 @@ export default function GroupsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete group"
-        description={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete group")}
+        description={t("Delete \"{{name}}\"? This cannot be undone.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

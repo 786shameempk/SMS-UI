@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { BookOpenCheck, Lightbulb, Loader2, RefreshCw, Sparkles, TriangleAlert } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,7 @@ const pct = (n: number) => `${Math.round(n * 10) / 10}%`;
  * calculation; the model only explains them, and it never sees student-level data.
  */
 export default function ExamInsightsCard({ examId }: { examId: string }) {
+  const { t } = useTranslation("ai");
   const analyze = useMutation({ mutationFn: () => analyzeOnlineExam(examId) });
   const insights = analyze.data?.content;
 
@@ -22,13 +24,13 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
         <div>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            AI insights
+            {t("AI insights")}
           </CardTitle>
-          <CardDescription>Which concepts the class found hard and what to revise, explained from the statistics below.</CardDescription>
+          <CardDescription>{t("Which concepts the class found hard and what to revise, explained from the statistics below.")}</CardDescription>
         </div>
         <Button variant={insights ? "outline" : "default"} onClick={() => analyze.mutate()} disabled={analyze.isPending}>
           {analyze.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : insights ? <RefreshCw className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-          {insights ? "Refresh" : "Explain with AI"}
+          {insights ? t("Refresh") : t("Explain with AI")}
         </Button>
       </CardHeader>
 
@@ -36,7 +38,7 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
         <CardContent className="space-y-5">
           {analyze.isPending && !insights && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Reading the question statistics…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t("Reading the question statistics…")}
             </p>
           )}
           {analyze.isError && (
@@ -47,14 +49,14 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
 
           {insights && (
             <>
-              <p className="text-sm leading-6" aria-label="Summary">
+              <p className="text-sm leading-6" aria-label={t("Summary")}>
                 {insights.summary}
               </p>
 
               {insights.difficultConcepts.length > 0 && (
-                <section className="space-y-2" aria-label="Difficult concepts">
+                <section className="space-y-2" aria-label={t("Difficult concepts")}>
                   <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-                    <TriangleAlert className="h-4 w-4 text-warning-strong" /> Difficult concepts
+                    <TriangleAlert className="h-4 w-4 text-warning-strong" /> {t("Difficult concepts")}
                   </h3>
                   <ul className="space-y-2">
                     {insights.difficultConcepts.map((c) => (
@@ -63,7 +65,7 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
                           <span className="font-medium">{c.concept}</span>
                           {c.questionNumbers.map((n) => (
                             <Badge key={n} variant="neutral">
-                              Q{n}
+                              {t("Q{{number}}", { number: n })}
                             </Badge>
                           ))}
                         </div>
@@ -74,27 +76,27 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
                 </section>
               )}
 
-              <section className="space-y-2" aria-label="What to revise">
+              <section className="space-y-2" aria-label={t("What to revise")}>
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-                  <BookOpenCheck className="h-4 w-4 text-primary" /> What to revise
+                  <BookOpenCheck className="h-4 w-4 text-primary" /> {t("What to revise")}
                 </h3>
                 <ul className="space-y-2">
-                  {insights.revisionTopics.map((t) => (
-                    <li key={t.topic} className="rounded-lg border border-border/80 px-3 py-2 text-sm">
-                      <p className="font-medium">{t.topic}</p>
-                      <p className="text-muted-foreground">{t.reason}</p>
-                      <p className="mt-1">{t.suggestion}</p>
+                  {insights.revisionTopics.map((r) => (
+                    <li key={r.topic} className="rounded-lg border border-border/80 px-3 py-2 text-sm">
+                      <p className="font-medium">{r.topic}</p>
+                      <p className="text-muted-foreground">{r.reason}</p>
+                      <p className="mt-1">{r.suggestion}</p>
                     </li>
                   ))}
                 </ul>
               </section>
 
               {insights.teachingSuggestions.length > 0 && (
-                <section className="space-y-2" aria-label="Teaching ideas">
+                <section className="space-y-2" aria-label={t("Teaching ideas")}>
                   <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Lightbulb className="h-4 w-4 text-primary" /> Teaching ideas
+                    <Lightbulb className="h-4 w-4 text-primary" /> {t("Teaching ideas")}
                   </h3>
-                  <ul className="list-disc space-y-1 pl-5 text-sm">
+                  <ul className="list-disc space-y-1 ps-5 text-sm">
                     {insights.teachingSuggestions.map((s) => (
                       <li key={s}>{s}</li>
                     ))}
@@ -103,23 +105,23 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
               )}
 
               {insights.topics.length > 0 && (
-                <section className="space-y-2" aria-label="Results by topic">
-                  <h3 className="text-sm font-semibold">Results by topic</h3>
+                <section className="space-y-2" aria-label={t("Results by topic")}>
+                  <h3 className="text-sm font-semibold">{t("Results by topic")}</h3>
                   <Table density="compact">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Topic</TableHead>
-                        <TableHead>Questions</TableHead>
-                        <TableHead className="text-right">Average correct</TableHead>
+                        <TableHead>{t("Topic")}</TableHead>
+                        <TableHead>{t("Questions")}</TableHead>
+                        <TableHead className="text-end">{t("Average correct")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {insights.topics.map((t) => (
-                        <TableRow key={t.topic}>
-                          <TableCell>{t.topic}</TableCell>
-                          <TableCell className="text-muted-foreground">{t.questionNumbers.map((n) => `Q${n}`).join(", ")}</TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            <Badge variant={t.averageCorrect < 40 ? "danger" : t.averageCorrect < 60 ? "warning" : "success"}>{pct(t.averageCorrect)}</Badge>
+                      {insights.topics.map((topic) => (
+                        <TableRow key={topic.topic}>
+                          <TableCell>{topic.topic}</TableCell>
+                          <TableCell className="text-muted-foreground">{topic.questionNumbers.map((n) => t("Q{{number}}", { number: n })).join(", ")}</TableCell>
+                          <TableCell className="text-end tabular-nums">
+                            <Badge variant={topic.averageCorrect < 40 ? "danger" : topic.averageCorrect < 60 ? "warning" : "success"}>{pct(topic.averageCorrect)}</Badge>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -129,7 +131,9 @@ export default function ExamInsightsCard({ examId }: { examId: string }) {
               )}
 
               <p className="text-xs text-muted-foreground">
-                AI generated from {insights.studentsSubmitted} submission{insights.studentsSubmitted === 1 ? "" : "s"}. The percentages are calculated by the system; check the suggestions against your own judgement.
+                {insights.studentsSubmitted === 1
+                  ? t("AI generated from 1 submission. The percentages are calculated by the system; check the suggestions against your own judgement.")
+                  : t("AI generated from {{count}} submissions. The percentages are calculated by the system; check the suggestions against your own judgement.", { count: insights.studentsSubmitted })}
               </p>
             </>
           )}

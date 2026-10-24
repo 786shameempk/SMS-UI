@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,6 +62,7 @@ export default function CheckInDialog({
   submitting: boolean;
   onSubmit: (values: VisitorCheckInFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("visitors");
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
@@ -89,8 +91,8 @@ export default function CheckInDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>Check in a visitor</DialogTitle>
-          <DialogDescription>Front-desk entry — issues a badge number and starts the visit.</DialogDescription>
+          <DialogTitle>{t("Check in a visitor")}</DialogTitle>
+          <DialogDescription>{t("Front-desk entry — issues a badge number and starts the visit.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -108,14 +110,14 @@ export default function CheckInDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-name">Visitor name</Label>
+              <Label htmlFor="visit-name">{t("Visitor name")}</Label>
               <Input id="visit-name" aria-invalid={errors.visitorName ? true : undefined} {...register("visitorName")} />
-              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitorName.message}</p>}
+              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.visitorName.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-phone">Phone</Label>
+              <Label htmlFor="visit-phone">{t("Phone")}</Label>
               <Input id="visit-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
-              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
+              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.phone.message ?? "")}</p>}
             </div>
           </div>
 
@@ -123,26 +125,26 @@ export default function CheckInDialog({
             <p className="text-xs rounded-md border border-destructive/30 bg-destructive-soft text-destructive-strong px-2.5 py-2 flex items-start gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>
-                <strong>{watchlistMatch.name}</strong> matches a watchlist entry: {watchlistMatch.reason}
+                <Trans t={t} i18nKey="<strong>{{name}}</strong> matches a watchlist entry: {{reason}}" values={{ name: watchlistMatch.name, reason: watchlistMatch.reason }} components={{ strong: <strong /> }} />
               </span>
             </p>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-idType" optional>ID proof type</Label>
+              <Label htmlFor="visit-idType" optional>{t("ID proof type")}</Label>
               <Controller
                 control={control}
                 name="idProofType"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="visit-idType">
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={t("Select type")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {ID_PROOF_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
+                      {ID_PROOF_TYPES.map((proof) => (
+                        <SelectItem key={proof} value={proof}>
+                          {t(proof)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -151,13 +153,13 @@ export default function CheckInDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-idNumber" optional>ID proof number</Label>
+              <Label htmlFor="visit-idNumber" optional>{t("ID proof number")}</Label>
               <Input id="visit-idNumber" {...register("idProofNumber")} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="visit-purpose">Purpose of visit</Label>
+            <Label htmlFor="visit-purpose">{t("Purpose of visit")}</Label>
             <Controller
               control={control}
               name="purpose"
@@ -169,7 +171,7 @@ export default function CheckInDialog({
                   <SelectContent>
                     {PURPOSE_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -179,12 +181,12 @@ export default function CheckInDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="visit-purposeNotes" optional>Notes</Label>
+            <Label htmlFor="visit-purposeNotes" optional>{t("Notes")}</Label>
             <Textarea id="visit-purposeNotes" rows={2} {...register("purposeNotes")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="visit-hostType">Here to see</Label>
+            <Label htmlFor="visit-hostType">{t("Here to see")}</Label>
             <Controller
               control={control}
               name="hostType"
@@ -194,9 +196,9 @@ export default function CheckInDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="staff">A staff member</SelectItem>
-                    <SelectItem value="student">A student</SelectItem>
-                    <SelectItem value="other">Somewhere else (office, event, etc.)</SelectItem>
+                    <SelectItem value="staff">{t("A staff member")}</SelectItem>
+                    <SelectItem value="student">{t("A student")}</SelectItem>
+                    <SelectItem value="other">{t("Somewhere else (office, event, etc.)")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -205,14 +207,14 @@ export default function CheckInDialog({
 
           {hostType === "staff" && (
             <div className="space-y-1.5">
-              <Label htmlFor="visit-hostStaffId">Staff member</Label>
+              <Label htmlFor="visit-hostStaffId">{t("Staff member")}</Label>
               <Controller
                 control={control}
                 name="hostStaffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="visit-hostStaffId">
-                      <SelectValue placeholder="Select staff member" />
+                      <SelectValue placeholder={t("Select staff member")} />
                     </SelectTrigger>
                     <SelectContent>
                       {staff.map((s) => (
@@ -224,20 +226,20 @@ export default function CheckInDialog({
                   </Select>
                 )}
               />
-              {errors.hostStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStaffId.message}</p>}
+              {errors.hostStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostStaffId.message ?? "")}</p>}
             </div>
           )}
 
           {hostType === "student" && (
             <div className="space-y-1.5">
-              <Label htmlFor="visit-hostStudentId">Student</Label>
+              <Label htmlFor="visit-hostStudentId">{t("Student")}</Label>
               <Controller
                 control={control}
                 name="hostStudentId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="visit-hostStudentId">
-                      <SelectValue placeholder="Select student" />
+                      <SelectValue placeholder={t("Select student")} />
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
@@ -249,24 +251,24 @@ export default function CheckInDialog({
                   </Select>
                 )}
               />
-              {errors.hostStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStudentId.message}</p>}
+              {errors.hostStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostStudentId.message ?? "")}</p>}
             </div>
           )}
 
           {hostType === "other" && (
             <div className="space-y-1.5">
-              <Label htmlFor="visit-hostOtherLabel">Where / department</Label>
-              <Input id="visit-hostOtherLabel" placeholder="e.g. Front Office, School Auditorium" aria-invalid={errors.hostOtherLabel ? true : undefined} {...register("hostOtherLabel")} />
-              {errors.hostOtherLabel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostOtherLabel.message}</p>}
+              <Label htmlFor="visit-hostOtherLabel">{t("Where / department")}</Label>
+              <Input id="visit-hostOtherLabel" placeholder={t("e.g. Front Office, School Auditorium")} aria-invalid={errors.hostOtherLabel ? true : undefined} {...register("hostOtherLabel")} />
+              {errors.hostOtherLabel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostOtherLabel.message ?? "")}</p>}
             </div>
           )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Check in
+              {t("Check in")}
             </Button>
           </DialogFooter>
         </form>

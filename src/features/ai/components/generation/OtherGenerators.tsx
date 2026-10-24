@@ -3,6 +3,7 @@ import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { useMutation } from "@tanstack/react-query";
 import { Printer } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
@@ -22,8 +23,9 @@ import { ClassSubjectFields, DraftBar, FormError, GenerateButton } from "./share
 const popupHint = "Allow pop-ups to print or save as PDF.";
 
 function DifficultySelect({ id, value, onChange }: { id: string; value: AiDifficulty; onChange: (v: AiDifficulty) => void }) {
+  const { t } = useTranslation("ai");
   return (
-    <FormField label="Difficulty" htmlFor={id}>
+    <FormField label={t("Difficulty")} htmlFor={id}>
       <Select value={value} onValueChange={(v) => onChange(v as AiDifficulty)}>
         <SelectTrigger id={id}>
           <SelectValue />
@@ -31,7 +33,7 @@ function DifficultySelect({ id, value, onChange }: { id: string; value: AiDiffic
         <SelectContent>
           {AI_DIFFICULTIES.map((d) => (
             <SelectItem key={d} value={d}>
-              {d}
+              {t(d)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -41,6 +43,7 @@ function DifficultySelect({ id, value, onChange }: { id: string; value: AiDiffic
 }
 
 export function WorksheetGenerator() {
+  const { t } = useTranslation("ai");
   const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [topic, setTopic] = useState("");
@@ -62,20 +65,20 @@ export function WorksheetGenerator() {
     <div className="max-w-3xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Worksheet generator</CardTitle>
-          <CardDescription>Printable worksheets with a teacher answer key. Use Print / PDF to save or hand out.</CardDescription>
+          <CardTitle>{t("Worksheet generator")}</CardTitle>
+          <CardDescription>{t("Printable worksheets with a teacher answer key. Use Print / PDF to save or hand out.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ClassSubjectFields idPrefix="wg" {...target} onChange={setTarget} />
-          <FormField label="Topic" htmlFor="wg-topic">
-            <Input id="wg-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Grammar: tenses" />
+          <FormField label={t("Topic")} htmlFor="wg-topic">
+            <Input id="wg-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder={t("e.g. Grammar: tenses")} />
           </FormField>
           <div className="grid gap-3 sm:grid-cols-3">
             <DifficultySelect id="wg-difficulty" value={difficulty} onChange={setDifficulty} />
-            <FormField label="Items" htmlFor="wg-count">
+            <FormField label={t("Items")} htmlFor="wg-count">
               <Input id="wg-count" type="number" min={1} max={50} value={count} onChange={(e) => setCount(Number(e.target.value))} />
             </FormField>
-            <FormField label="Language" htmlFor="wg-language">
+            <FormField label={t("Language")} htmlFor="wg-language">
               <Input id="wg-language" value={language} onChange={(e) => setLanguage(e.target.value)} />
             </FormField>
           </div>
@@ -91,13 +94,13 @@ export function WorksheetGenerator() {
           </CardHeader>
           <CardContent className="space-y-4">
             <DraftBar busy={generate.isPending} onRegenerate={run} onReject={() => setSheet(null)}>
-              <Button variant="outline" onClick={() => !printDocument(sheet.title, worksheetToHtml(sheet, false), branding) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(sheet.title, worksheetToHtml(sheet, false), branding) && toast.error(t(popupHint))}>
                 <Printer className="h-4 w-4" />
-                Print / PDF
+                {t("Print / PDF")}
               </Button>
-              <Button variant="outline" onClick={() => !printDocument(`${sheet.title} - key`, worksheetToHtml(sheet, true), branding) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(`${sheet.title} - key`, worksheetToHtml(sheet, true), branding) && toast.error(t(popupHint))}>
                 <Printer className="h-4 w-4" />
-                With answers
+                {t("With answers")}
               </Button>
               {generate.variables && (
                 <AssignHomeworkButton
@@ -115,12 +118,12 @@ export function WorksheetGenerator() {
                 <h3 className="text-sm font-semibold">
                   {s.kind} <span className="font-normal text-muted-foreground">— {s.instructions}</span>
                 </h3>
-                <ol className="list-decimal space-y-1 pl-5 text-sm">
+                <ol className="list-decimal space-y-1 ps-5 text-sm">
                   {s.items.map((item, j) => (
                     <li key={j}>
                       {item.prompt}
                       {item.options.length > 0 && <span className="text-muted-foreground"> ({item.options.join(" / ")})</span>}
-                      <span className="block text-xs text-muted-foreground">Answer: {item.answer}</span>
+                      <span className="block text-xs text-muted-foreground">{t("Answer: {{answer}}", { answer: item.answer })}</span>
                     </li>
                   ))}
                 </ol>
@@ -134,6 +137,7 @@ export function WorksheetGenerator() {
 }
 
 export function LessonPlanGenerator() {
+  const { t } = useTranslation("ai");
   const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [topic, setTopic] = useState("");
@@ -156,24 +160,24 @@ export function LessonPlanGenerator() {
     <div className="max-w-3xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Lesson plan generator</CardTitle>
-          <CardDescription>A timed plan with activities, assessment, homework and differentiation ideas.</CardDescription>
+          <CardTitle>{t("Lesson plan generator")}</CardTitle>
+          <CardDescription>{t("A timed plan with activities, assessment, homework and differentiation ideas.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ClassSubjectFields idPrefix="lp" {...target} onChange={setTarget} />
           <div className="grid gap-3 sm:grid-cols-2">
-            <FormField label="Topic" htmlFor="lp-topic">
+            <FormField label={t("Topic")} htmlFor="lp-topic">
               <Input id="lp-topic" value={topic} onChange={(e) => setTopic(e.target.value)} />
             </FormField>
-            <FormField label="Duration (minutes)" htmlFor="lp-duration">
+            <FormField label={t("Duration (minutes)")} htmlFor="lp-duration">
               <Input id="lp-duration" type="number" min={10} max={180} value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
             </FormField>
           </div>
-          <FormField label="Learning objectives" htmlFor="lp-objectives" optional>
+          <FormField label={t("Learning objectives")} htmlFor="lp-objectives" optional>
             <Input id="lp-objectives" value={objectives} onChange={(e) => setObjectives(e.target.value)} />
           </FormField>
-          <FormField label="Student level" htmlFor="lp-level" optional>
-            <Input id="lp-level" value={level} onChange={(e) => setLevel(e.target.value)} placeholder="e.g. mixed ability, needs extra practice" />
+          <FormField label={t("Student level")} htmlFor="lp-level" optional>
+            <Input id="lp-level" value={level} onChange={(e) => setLevel(e.target.value)} placeholder={t("e.g. mixed ability, needs extra practice")} />
           </FormField>
           <FormError message={error} />
           <GenerateButton busy={generate.isPending} onClick={run} />
@@ -187,15 +191,15 @@ export function LessonPlanGenerator() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <DraftBar busy={generate.isPending} onRegenerate={run} onReject={() => setPlan(null)}>
-              <Button variant="outline" onClick={() => !printDocument(plan.title, lessonPlanToHtml(plan), branding) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(plan.title, lessonPlanToHtml(plan), branding) && toast.error(t(popupHint))}>
                 <Printer className="h-4 w-4" />
-                Print / PDF
+                {t("Print / PDF")}
               </Button>
             </DraftBar>
             {can("author-content") && <SaveLessonPlanForReview key={plan.title} plan={plan} classId={target.classId} subjectId={target.subjectId} />}
             <div>
-              <h4 className="font-semibold">Learning objectives</h4>
-              <ul className="list-disc pl-5">{plan.learningObjectives.map((o, i) => <li key={i}>{o}</li>)}</ul>
+              <h4 className="font-semibold">{t("Learning objectives")}</h4>
+              <ul className="list-disc ps-5">{plan.learningObjectives.map((o, i) => <li key={i}>{o}</li>)}</ul>
             </div>
             {[
               ["Introduction", [plan.introduction]],
@@ -203,21 +207,21 @@ export function LessonPlanGenerator() {
               ["Student activities", plan.studentActivities],
             ].map(([label, acts]) => (
               <div key={label as string}>
-                <h4 className="font-semibold">{label as string}</h4>
-                <ul className="list-disc pl-5">
+                <h4 className="font-semibold">{t(label as string)}</h4>
+                <ul className="list-disc ps-5">
                   {(acts as LessonPlan["teachingActivities"]).map((a, i) => (
                     <li key={i}>
-                      <b>{a.title}</b> ({a.minutes} min): {a.description}
+                      <b>{a.title}</b> {t("({{minutes}} min)", { minutes: a.minutes })}: {a.description}
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
-            <p><b>Assessment:</b> {plan.assessment}</p>
-            <p><b>Homework:</b> {plan.homework}</p>
+            <p><b>{t("Assessment:")}</b> {plan.assessment}</p>
+            <p><b>{t("Homework:")}</b> {plan.homework}</p>
             <div>
-              <h4 className="font-semibold">Differentiation</h4>
-              <ul className="list-disc pl-5">{plan.differentiationSuggestions.map((o, i) => <li key={i}>{o}</li>)}</ul>
+              <h4 className="font-semibold">{t("Differentiation")}</h4>
+              <ul className="list-disc ps-5">{plan.differentiationSuggestions.map((o, i) => <li key={i}>{o}</li>)}</ul>
             </div>
           </CardContent>
         </Card>
@@ -227,6 +231,7 @@ export function LessonPlanGenerator() {
 }
 
 export function HomeworkGenerator() {
+  const { t } = useTranslation("ai");
   const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [topic, setTopic] = useState("");
@@ -251,24 +256,24 @@ export function HomeworkGenerator() {
     <div className="max-w-3xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Homework generator</CardTitle>
-          <CardDescription>Draft tasks with an extension and a support task. Edit before sharing with students.</CardDescription>
+          <CardTitle>{t("Homework generator")}</CardTitle>
+          <CardDescription>{t("Draft tasks with an extension and a support task. Edit before sharing with students.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ClassSubjectFields idPrefix="hg" {...target} onChange={setTarget} />
-          <FormField label="Topic" htmlFor="hg-topic">
+          <FormField label={t("Topic")} htmlFor="hg-topic">
             <Input id="hg-topic" value={topic} onChange={(e) => setTopic(e.target.value)} />
           </FormField>
           <div className="grid gap-3 sm:grid-cols-2">
             <DifficultySelect id="hg-difficulty" value={difficulty} onChange={setDifficulty} />
-            <FormField label="Number of tasks" htmlFor="hg-count">
+            <FormField label={t("Number of tasks")} htmlFor="hg-count">
               <Input id="hg-count" type="number" min={1} max={15} value={count} onChange={(e) => setCount(Number(e.target.value))} />
             </FormField>
           </div>
-          <FormField label="Learning objectives" htmlFor="hg-objectives" optional>
+          <FormField label={t("Learning objectives")} htmlFor="hg-objectives" optional>
             <Input id="hg-objectives" value={objectives} onChange={(e) => setObjectives(e.target.value)} />
           </FormField>
-          <FormField label="How the class has done so far" htmlFor="hg-performance" optional hint="Class-level notes only, for example: most of the class found fractions hard. Do not enter student names.">
+          <FormField label={t("How the class has done so far")} htmlFor="hg-performance" optional hint={t("Class-level notes only, for example: most of the class found fractions hard. Do not enter student names.")}>
             <Textarea id="hg-performance" rows={2} value={performance} onChange={(e) => setPerformance(e.target.value)} maxLength={1000} />
           </FormField>
           <FormError message={error} />
@@ -279,13 +284,13 @@ export function HomeworkGenerator() {
       {homework && (
         <Card>
           <CardHeader>
-            <CardTitle>Review draft</CardTitle>
+            <CardTitle>{t("Review draft")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <DraftBar busy={generate.isPending} onRegenerate={run} onReject={() => setHomework(null)}>
-              <Button variant="outline" onClick={() => !printDocument(homework.title, homeworkToHtml(homework), branding) && toast.error(popupHint)}>
+              <Button variant="outline" onClick={() => !printDocument(homework.title, homeworkToHtml(homework), branding) && toast.error(t(popupHint))}>
                 <Printer className="h-4 w-4" />
-                Print / PDF
+                {t("Print / PDF")}
               </Button>
               {generate.variables && (
                 <AssignHomeworkButton
@@ -298,26 +303,26 @@ export function HomeworkGenerator() {
                 />
               )}
             </DraftBar>
-            <FormField label="Title" htmlFor="hg-title">
+            <FormField label={t("Title")} htmlFor="hg-title">
               <Input id="hg-title" value={homework.title} onChange={(e) => update({ title: e.target.value })} />
             </FormField>
-            <FormField label="Instructions" htmlFor="hg-instructions">
+            <FormField label={t("Instructions")} htmlFor="hg-instructions">
               <Textarea id="hg-instructions" rows={2} value={homework.instructions} onChange={(e) => update({ instructions: e.target.value })} />
             </FormField>
-            {homework.tasks.map((t, i) => (
-              <FormField key={i} label={`Task ${i + 1} (${t.difficulty}, about ${t.estimatedMinutes} min)`} htmlFor={`hg-task-${i}`}>
+            {homework.tasks.map((task, i) => (
+              <FormField key={i} label={t("Task {{n}} ({{difficulty}}, about {{minutes}} min)", { n: i + 1, difficulty: t(task.difficulty), minutes: task.estimatedMinutes })} htmlFor={`hg-task-${i}`}>
                 <Textarea
                   id={`hg-task-${i}`}
                   rows={2}
-                  value={t.description}
+                  value={task.description}
                   onChange={(e) => update({ tasks: homework.tasks.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)) })}
                 />
               </FormField>
             ))}
-            <FormField label="Extension task" htmlFor="hg-ext">
+            <FormField label={t("Extension task")} htmlFor="hg-ext">
               <Textarea id="hg-ext" rows={2} value={homework.extensionTask} onChange={(e) => update({ extensionTask: e.target.value })} />
             </FormField>
-            <FormField label="Support task" htmlFor="hg-support">
+            <FormField label={t("Support task")} htmlFor="hg-support">
               <Textarea id="hg-support" rows={2} value={homework.supportTask} onChange={(e) => update({ supportTask: e.target.value })} />
             </FormField>
           </CardContent>

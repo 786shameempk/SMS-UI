@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Department, DepartmentFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const departmentFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
@@ -30,6 +31,7 @@ export default function DepartmentFormDialog({
   onSubmit: (values: DepartmentFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("academics");
   const isEdit = Boolean(department);
   const {
     register,
@@ -46,25 +48,25 @@ export default function DepartmentFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit department" : "New department / stream"}</DialogTitle>
-          <DialogDescription>Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit department") : t("New department / stream")}</DialogTitle>
+          <DialogDescription>{t("Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Name</Label>
-            <Input id="name" placeholder="e.g. Science" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            <Label htmlFor="name" required>{t("Name")}</Label>
+            <Input id="name" placeholder={t("e.g. Science")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
             {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="description" optional>Description</Label>
+            <Label htmlFor="description" optional>{t("Description")}</Label>
             <Textarea id="description" rows={2} {...register("description")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create department"}
+              {isEdit ? t("Save changes") : t("Create department")}
             </Button>
           </DialogFooter>
         </form>

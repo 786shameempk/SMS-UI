@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { GraduationCap, ArrowLeft, MailCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ type FormValues = z.infer<typeof schema>;
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useTranslation("authentication");
   const {
     register,
     handleSubmit,
@@ -40,9 +42,9 @@ export default function ForgotPasswordPage() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">
             <GraduationCap className="h-5 w-5" aria-hidden="true" />
           </div>
-          <h1 className="text-page-title">Forgot password</h1>
+          <h1 className="text-page-title">{t("Forgot password")}</h1>
           <p className="text-sm text-muted-foreground mt-1 text-center">
-            We&apos;ll email you a link to reset it
+            {t("We'll email you a link to reset it")}
           </p>
         </div>
 
@@ -52,20 +54,20 @@ export default function ForgotPasswordPage() {
               <div className="w-10 h-10 rounded-xl bg-success-soft flex items-center justify-center">
                 <MailCheck className="w-5 h-5 text-success-strong" />
               </div>
-              <p className="text-sm font-semibold text-foreground">Check your inbox</p>
+              <p className="text-sm font-semibold text-foreground">{t("Check your inbox")}</p>
               <p className="text-xs text-muted-foreground">
-                If that email is registered, a reset link is on its way. It may take a few minutes to arrive.
+                {t("If that email is registered, a reset link is on its way. It may take a few minutes to arrive.")}
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email" required>Email</Label>
+                <Label htmlFor="email" required>{t("Email")}</Label>
                 <Input id="email" type="email" placeholder="you@school.edu" autoComplete="username" aria-invalid={errors.email ? true : undefined} {...register("email")} />
-                {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.email.message}</p>}
+                {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.email.message ?? "")}</p>}
               </div>
               <Button type="submit" className="w-full" loading={submitting}>
-                Send reset link
+                {t("Send reset link")}
               </Button>
             </form>
           )}
@@ -75,7 +77,7 @@ export default function ForgotPasswordPage() {
             className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to sign in
+            {t("Back to sign in")}
           </Link>
         </div>
       </div>

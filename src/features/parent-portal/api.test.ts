@@ -52,8 +52,11 @@ vi.mock("@/features/examinations/api", () => ({
 vi.mock("@/features/fees/api", () => ({
   listInvoicesForStudent: vi.fn(async () => [{ id: "i1", studentId: "st1", term: "T1", netAmount: 9000, dueDate: "2026-10-10", status: "due", paidOn: undefined, paidAmount: undefined }]),
 }));
-vi.mock("./razorpayCheckout", () => ({
-  payInvoiceWithRazorpay: vi.fn(async () => ({ invoice: { id: "i1", studentId: "st1", term: "T1", netAmount: 9000, dueDate: "2026-10-10", status: "paid", paidOn: "2026-10-01", paidAmount: 9000 } })),
+vi.mock("./onlineCheckout", () => ({
+  startOnlinePayment: vi.fn(async (_invoiceId: string, provider: string) =>
+    provider === "stripe"
+      ? { kind: "redirecting" }
+      : { kind: "paid", invoice: { id: "i1", studentId: "st1", term: "T1", netAmount: 9000, dueDate: "2026-10-10", status: "paid", paidOn: "2026-10-01", paidAmount: 9000 }, receipt: null }),
 }));
 vi.mock("@/features/notifications/api", () => ({
   listMyNotifications: vi.fn(async () => [{ id: "n1", tenantId: "t", title: "PTA", body: "Sat", createdAt: "", read: false, category: "event" }]),
@@ -104,7 +107,9 @@ describe("parent portal api", () => {
 
   it("fees, online payment and notifications", async () => {
     expect(await portal.listFeeInvoices("st1")).toEqual([{ id: "i1", studentId: "st1", term: "T1", amount: 9000, dueDate: "2026-10-10", status: "due", paidOn: undefined, paidAmount: undefined }]);
-    expect((await portal.payFeeInvoice("st1", "i1", { name: "P" })).status).toBe("paid");
+    const paid = await portal.payFeeInvoice("st1", "i1", "razorpay", { name: "P" });
+    expect(paid.kind === "paid" && paid.invoice.status).toBe("paid");
+    expect(await portal.payFeeInvoice("st1", "i1", "stripe")).toEqual({ kind: "redirecting" });
     expect(await portal.listNotifications()).toEqual([{ id: "n1", tenantId: "t", title: "PTA", body: "Sat", createdAt: "", read: false }]);
     expect(await portal.markNotificationRead("n1")).toHaveLength(1);
   });

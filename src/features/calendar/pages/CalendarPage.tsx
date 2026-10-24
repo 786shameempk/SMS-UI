@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import i18n, { currentLocale } from "@/i18n";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +42,11 @@ function dateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** English keeps the browser's own date wording; other languages use their locale. */
+const dateLocale = () => (i18n.language === "en" ? undefined : currentLocale());
+
 export default function CalendarPage() {
+  const { t } = useTranslation("calendar");
   const today = useMemo(() => new Date(), []);
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected, setSelected] = useState<Date>(today);
@@ -50,7 +56,7 @@ export default function CalendarPage() {
 
   const visibleEvents = useMemo(() => events.filter((e) => activeCategories.has(e.category)), [events, activeCategories]);
   const cells = useMemo(() => buildMonthGrid(cursor.getFullYear(), cursor.getMonth()), [cursor]);
-  const monthLabel = cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const monthLabel = cursor.toLocaleDateString(dateLocale(), { month: "long", year: "numeric" });
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, AggregatedCalendarEvent[]>();
@@ -76,8 +82,8 @@ export default function CalendarPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Calendar"
-        description="Holidays, exams, the academic calendar, homework due dates, staff leave, and birthdays — all in one place."
+        title={t("Calendar")}
+        description={t("Holidays, exams, the academic calendar, homework due dates, staff leave, and birthdays — all in one place.")}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
@@ -89,7 +95,7 @@ export default function CalendarPage() {
                 type="button"
                 onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-muted-foreground cursor-pointer"
-                aria-label="Previous month"
+                aria-label={t("Previous month")}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -97,19 +103,19 @@ export default function CalendarPage() {
                 type="button"
                 onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
                 className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-muted-foreground cursor-pointer"
-                aria-label="Next month"
+                aria-label={t("Next month")}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading && <p className="text-sm text-muted-foreground py-6 text-center">Loading calendar…</p>}
+            {isLoading && <p className="text-sm text-muted-foreground py-6 text-center">{t("Loading calendar…")}</p>}
             {!isLoading && (
               <div className="grid grid-cols-7 gap-1">
                 {WEEKDAYS.map((wd) => (
                   <span key={wd} className="text-xs font-semibold text-muted-foreground text-center pb-1.5">
-                    {wd}
+                    {t(wd)}
                   </span>
                 ))}
                 {cells.map((day, i) => {
@@ -145,7 +151,7 @@ export default function CalendarPage() {
         <div className="space-y-5">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Show</CardTitle>
+              <CardTitle className="text-sm">{t("Show")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {CATEGORY_ORDER.map((category) => {
@@ -154,7 +160,7 @@ export default function CalendarPage() {
                   <label key={category} className="flex items-center gap-2.5 cursor-pointer">
                     <Checkbox checked={activeCategories.has(category)} onCheckedChange={() => toggleCategory(category)} />
                     <span className={cn("w-2 h-2 rounded-full", config.dotClass)} />
-                    <span className="text-sm text-foreground">{config.label}</span>
+                    <span className="text-sm text-foreground">{t(config.label)}</span>
                   </label>
                 );
               })}
@@ -163,16 +169,16 @@ export default function CalendarPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">{selected.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</CardTitle>
+              <CardTitle className="text-sm">{selected.toLocaleDateString(dateLocale(), { weekday: "long", month: "long", day: "numeric" })}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 max-h-96 overflow-y-auto">
-              {selectedEvents.length === 0 && <p className="text-sm text-muted-foreground">No events on this day.</p>}
+              {selectedEvents.length === 0 && <p className="text-sm text-muted-foreground">{t("No events on this day.")}</p>}
               {selectedEvents.map((e) => {
                 const config = CATEGORY_CONFIG[e.category];
                 return (
                   <div key={e.id} className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant={config.badgeVariant}>{config.label}</Badge>
+                      <Badge variant={config.badgeVariant}>{t(config.label)}</Badge>
                     </div>
                     <p className="text-sm font-medium text-foreground">{e.title}</p>
                     {e.description && <p className="text-xs text-muted-foreground">{e.description}</p>}

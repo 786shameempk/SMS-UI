@@ -29,7 +29,9 @@ import MergeSectionsDialog from "./MergeSectionsDialog";
 import { RowActions } from "@/components/ui/row-actions";
 import { useIsTeacher } from "@/lib/roleAccess";
 
+import { useTranslation } from "react-i18next";
 export default function ClassesSectionsTab() {
+  const { t } = useTranslation("academics");
   const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: classes = [], isLoading: classesLoading } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
@@ -55,7 +57,7 @@ export default function ClassesSectionsTab() {
     mutationFn: createClass,
     onSuccess: () => {
       invalidateClasses();
-      toast.success("Class created");
+      toast.success(t("Class created"));
       setClassFormOpen(false);
     },
   });
@@ -63,7 +65,7 @@ export default function ClassesSectionsTab() {
     mutationFn: ({ id, values }: { id: string; values: SchoolClassFormValues }) => updateClass(id, values),
     onSuccess: () => {
       invalidateClasses();
-      toast.success("Class updated");
+      toast.success(t("Class updated"));
       setClassFormOpen(false);
       setEditingClass(null);
     },
@@ -73,7 +75,7 @@ export default function ClassesSectionsTab() {
     onSuccess: () => {
       invalidateClasses();
       invalidateSections();
-      toast.success("Class deleted");
+      toast.success(t("Class deleted"));
       setDeleteClassTarget(null);
     },
   });
@@ -82,7 +84,7 @@ export default function ClassesSectionsTab() {
     mutationFn: createSection,
     onSuccess: () => {
       invalidateSections();
-      toast.success("Section created");
+      toast.success(t("Section created"));
       setSectionFormOpen(false);
     },
   });
@@ -90,7 +92,7 @@ export default function ClassesSectionsTab() {
     mutationFn: ({ id, values }: { id: string; values: SectionFormValues }) => updateSection(id, values),
     onSuccess: () => {
       invalidateSections();
-      toast.success("Section updated");
+      toast.success(t("Section updated"));
       setSectionFormOpen(false);
       setEditingSection(null);
     },
@@ -99,7 +101,7 @@ export default function ClassesSectionsTab() {
     mutationFn: deleteSection,
     onSuccess: () => {
       invalidateSections();
-      toast.success("Section deleted");
+      toast.success(t("Section deleted"));
       setDeleteSectionTarget(null);
     },
   });
@@ -107,10 +109,10 @@ export default function ClassesSectionsTab() {
     mutationFn: ({ primaryId, secondaryId }: { primaryId: string; secondaryId: string }) => mergeSections(primaryId, secondaryId),
     onSuccess: (result) => {
       invalidateSections();
-      toast.success(`Merged into ${result.mergedSection.name} (${result.mergedSection.currentStrength}/${result.mergedSection.capacity})`);
+      toast.success(t("Merged into {{name}} ({{currentStrength}}/{{capacity}})", { name: result.mergedSection.name, currentStrength: result.mergedSection.currentStrength, capacity: result.mergedSection.capacity }));
       setMergeOpen(false);
     },
-    onError: () => toast.error("Could not merge those sections"),
+    onError: () => toast.error(t("Could not merge those sections")),
   });
 
   const departmentName = (id?: string) => (id ? departments.find((d) => d.id === id)?.name ?? "—" : "—");
@@ -123,20 +125,20 @@ export default function ClassesSectionsTab() {
   );
 
   const classColumns: ColumnDef<SchoolClass, unknown>[] = [
-    { accessorKey: "name", header: "Class", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "name", header: t("Class"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "department",
-      header: "Department / stream",
+      header: t("Department / stream"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{departmentName(row.original.departmentId)}</span>,
     },
     {
       id: "academicYear",
-      header: "Academic year",
+      header: t("Academic year"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{academicYearName(row.original.academicYearId)}</span>,
     },
     {
       id: "sections",
-      header: "Sections",
+      header: t("Sections"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{sectionCount(row.original.id)}</span>,
     },
     {
@@ -154,7 +156,7 @@ export default function ClassesSectionsTab() {
               }}
             >
               <Plus className="w-3.5 h-3.5" />
-              Add section
+              {t("Add section")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -163,14 +165,14 @@ export default function ClassesSectionsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit class
+              {t("Edit class")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setDeleteClassTarget(schoolClass)}
               variant="destructive"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Delete class
+              {t("Delete class")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -179,20 +181,20 @@ export default function ClassesSectionsTab() {
   ];
 
   const sectionColumns: ColumnDef<Section, unknown>[] = [
-    { accessorKey: "name", header: "Section", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "name", header: t("Section"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "class",
-      header: "Class",
+      header: t("Class"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{classes.find((c) => c.id === row.original.classId)?.name ?? "—"}</span>,
     },
     {
       accessorKey: "classTeacherName",
-      header: "Class teacher",
+      header: t("Class teacher"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.classTeacherName || "—"}</span>,
     },
     {
       id: "strength",
-      header: "Strength / capacity",
+      header: t("Strength / capacity"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.currentStrength} / {row.original.capacity}
@@ -214,11 +216,11 @@ export default function ClassesSectionsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteSectionTarget(section)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -230,7 +232,7 @@ export default function ClassesSectionsTab() {
     <div className="space-y-6">
       <div className="space-y-4">
         <DataTableToolbar>
-          <p className="text-sm text-muted-foreground">Classes belong to an academic year and, optionally, a department or stream.</p>
+          <p className="text-sm text-muted-foreground">{t("Classes belong to an academic year and, optionally, a department or stream.")}</p>
           {!readOnly && (
             <Button
             onClick={() => {
@@ -239,26 +241,26 @@ export default function ClassesSectionsTab() {
             }}
           >
             <Plus className="w-4 h-4" />
-            New class
+            {t("New class")}
           </Button>
           )}
         </DataTableToolbar>
-        <DataTable searchable columns={readOnly ? classColumns.filter((col) => col.id !== "actions") : classColumns} data={classes} isLoading={classesLoading} emptyMessage="No classes yet." />
+        <DataTable searchable columns={readOnly ? classColumns.filter((col) => col.id !== "actions") : classColumns} data={classes} isLoading={classesLoading} emptyMessage={t("No classes yet.")} />
       </div>
 
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3">
           <div>
-            <CardTitle>Sections</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">Sections are nested under a class and track capacity vs. enrolled strength.</p>
+            <CardTitle>{t("Sections")}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">{t("Sections are nested under a class and track capacity vs. enrolled strength.")}</p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={sectionFilter} onValueChange={setSectionFilter}>
               <SelectTrigger className="w-44">
-                <SelectValue placeholder="Filter by class" />
+                <SelectValue placeholder={t("Filter by class")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All classes</SelectItem>
+                <SelectItem value="all">{t("All classes")}</SelectItem>
                 {classes.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -269,7 +271,7 @@ export default function ClassesSectionsTab() {
             {!readOnly && (
               <Button variant="outline" onClick={() => setMergeOpen(true)} disabled={classes.length === 0}>
                 <Merge className="w-4 h-4" />
-                Merge sections
+                {t("Merge sections")}
               </Button>
             )}
             {!readOnly && (
@@ -281,13 +283,13 @@ export default function ClassesSectionsTab() {
               }}
             >
               <Plus className="w-4 h-4" />
-              New section
+              {t("New section")}
             </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable searchable columns={readOnly ? sectionColumns.filter((col) => col.id !== "actions") : sectionColumns} data={filteredSections} isLoading={sectionsLoading} emptyMessage="No sections match this filter." />
+          <DataTable searchable columns={readOnly ? sectionColumns.filter((col) => col.id !== "actions") : sectionColumns} data={filteredSections} isLoading={sectionsLoading} emptyMessage={t("No sections match this filter.")} />
         </CardContent>
       </Card>
 
@@ -310,9 +312,9 @@ export default function ClassesSectionsTab() {
       <ConfirmDialog
         open={Boolean(deleteClassTarget)}
         onOpenChange={(v) => !v && setDeleteClassTarget(null)}
-        title="Delete class"
-        description={`This will permanently delete "${deleteClassTarget?.name}" along with its sections.`}
-        confirmLabel="Delete"
+        title={t("Delete class")}
+        description={t("This will permanently delete \"{{name}}\" along with its sections.", { name: deleteClassTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteClassMutation.isPending}
         onConfirm={() => {
@@ -342,9 +344,9 @@ export default function ClassesSectionsTab() {
       <ConfirmDialog
         open={Boolean(deleteSectionTarget)}
         onOpenChange={(v) => !v && setDeleteSectionTarget(null)}
-        title="Delete section"
-        description={`This will permanently delete "${deleteSectionTarget?.name}".`}
-        confirmLabel="Delete"
+        title={t("Delete section")}
+        description={t("This will permanently delete \"{{name}}\".", { name: deleteSectionTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteSectionMutation.isPending}
         onConfirm={() => {

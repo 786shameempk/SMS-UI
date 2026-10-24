@@ -11,8 +11,8 @@ export function BreakdownView({ breakdown: b }: { breakdown: QuoteBreakdown }) {
         <tbody>
           {b.lines.map((l) => (
             <tr key={`${l.code}-${l.description}`} className="align-top">
-              <td className="py-1 pr-2">{l.description}{l.recurring && b.cycles > 1 ? <span className="text-xs text-muted-foreground"> × {l.cycles}</span> : null}</td>
-              <td className="py-1 text-right tabular-nums">{money(l.amount, c)}</td>
+              <td className="py-1 pe-2">{l.description}{l.recurring && b.cycles > 1 ? <span className="text-xs text-muted-foreground"> × {l.cycles}</span> : null}</td>
+              <td className="py-1 text-end tabular-nums">{money(l.amount, c)}</td>
             </tr>
           ))}
         </tbody>

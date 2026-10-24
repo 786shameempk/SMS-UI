@@ -3,6 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import type { ColumnDef } from "@tanstack/react-table";
 import { CreditCard, ListPlus, Percent, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
@@ -32,7 +33,9 @@ const INSTALLMENT_COUNT = 3;
 const PAGE_SIZE = 25;
 
 export default function InvoicesTab() {
+  const { t } = useTranslation("fees");
   const queryClient = useQueryClient();
+  const translateLabel = (label: string | undefined) => (label ? t(label) : label);
 
   const [classFilter, setClassFilter] = useState<string>(ALL_FILTER);
   const [statusFilter, setStatusFilter] = useState<FeeInvoiceStatus | typeof ALL_FILTER>(ALL_FILTER);
@@ -80,50 +83,50 @@ export default function InvoicesTab() {
     mutationFn: ({ invoiceId, values }: { invoiceId: string; values: RecordPaymentParams }) => recordPayment(invoiceId, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Payment recorded and receipt generated");
+      toast.success(t("Payment recorded and receipt generated"));
       setPayTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not record payment"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not record payment")),
   });
 
   const refundMutation = useMutation({
     mutationFn: (values: RefundFormValues) => requestRefund(values),
     onSuccess: () => {
       invalidate();
-      toast.success("Refund request submitted");
+      toast.success(t("Refund request submitted"));
       setRefundTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not submit refund request"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not submit refund request")),
   });
 
   const discountMutation = useMutation({
     mutationFn: ({ invoiceId, discountId }: { invoiceId: string; discountId: string }) => applyDiscountToInvoice(invoiceId, discountId),
     onSuccess: () => {
       invalidate();
-      toast.success("Discount applied");
+      toast.success(t("Discount applied"));
       setDiscountTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not apply discount"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not apply discount")),
   });
 
   const installmentMutation = useMutation({
     mutationFn: (invoiceId: string) => generateInstallments(invoiceId, INSTALLMENT_COUNT),
     onSuccess: () => {
       invalidate();
-      toast.success(`Split into ${INSTALLMENT_COUNT} installments`);
+      toast.success(t("Split into {{count}} installments", { count: INSTALLMENT_COUNT }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not generate installments"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not generate installments")),
   });
 
   const columns: ColumnDef<FeeInvoice, unknown>[] = [
     {
       id: "student",
-      header: "Student",
+      header: t("Student"),
       cell: ({ row }) => {
         const student = studentById.get(row.original.studentId);
         return (
           <div>
-            <p className="text-sm font-medium text-foreground">{student ? `${student.firstName} ${student.lastName}` : "Unknown student"}</p>
+            <p className="text-sm font-medium text-foreground">{student ? `${student.firstName} ${student.lastName}` : t("Unknown student")}</p>
             <p className="text-xs text-muted-foreground">{student ? `${student.className} - ${student.section}` : ""}</p>
           </div>
         );
@@ -131,13 +134,13 @@ export default function InvoicesTab() {
     },
     {
       id: "feeType",
-      header: "Fee type",
-      cell: ({ row }) => <Badge variant="info">{FEE_TYPE_OPTIONS.find((o) => o.value === row.original.feeType)?.label}</Badge>,
+      header: t("Fee type"),
+      cell: ({ row }) => <Badge variant="info">{translateLabel(FEE_TYPE_OPTIONS.find((o) => o.value === row.original.feeType)?.label)}</Badge>,
     },
-    { accessorKey: "term", header: "Term", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.term}</span> },
+    { accessorKey: "term", header: t("Term"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.term}</span> },
     {
       id: "amount",
-      header: "Amount",
+      header: t("Amount"),
       cell: ({ row }) => {
         const inv = row.original;
         return (
@@ -145,27 +148,27 @@ export default function InvoicesTab() {
             <p className="text-sm font-medium text-foreground tabular-nums">{formatCurrency(inv.netAmount)}</p>
             {(inv.discountAmount > 0 || inv.fineAmount > 0) && (
               <p className="text-xs text-muted-foreground">
-                {inv.discountAmount > 0 ? `-${formatCurrency(inv.discountAmount)} discount` : ""}
+                {inv.discountAmount > 0 ? t("-{{amount}} discount", { amount: formatCurrency(inv.discountAmount) }) : ""}
                 {inv.discountAmount > 0 && inv.fineAmount > 0 ? " · " : ""}
-                {inv.fineAmount > 0 ? `+${formatCurrency(inv.fineAmount)} fine` : ""}
+                {inv.fineAmount > 0 ? t("+{{amount}} fine", { amount: formatCurrency(inv.fineAmount) }) : ""}
               </p>
             )}
-            {inv.paidAmount ? <p className="text-xs text-success-strong">{formatCurrency(inv.paidAmount)} paid</p> : null}
+            {inv.paidAmount ? <p className="text-xs text-success-strong">{t("{{amount}} paid", { amount: formatCurrency(inv.paidAmount) })}</p> : null}
           </div>
         );
       },
     },
     {
       accessorKey: "dueDate",
-      header: "Due date",
+      header: t("Due date"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.dueDate).toLocaleDateString()}</span>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = INVOICE_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -180,23 +183,23 @@ export default function InvoicesTab() {
             {invoice.status !== "paid" && (
               <DropdownMenuItem onClick={() => setPayTarget(invoice)}>
                 <CreditCard className="w-3.5 h-3.5" />
-                Record payment
+                {t("Record payment")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => setDiscountTarget(invoice)}>
               <Percent className="w-3.5 h-3.5" />
-              Apply discount
+              {t("Apply discount")}
             </DropdownMenuItem>
             {canInstallments && (
               <DropdownMenuItem onClick={() => installmentMutation.mutate(invoice.id)}>
                 <ListPlus className="w-3.5 h-3.5" />
-                Generate installments
+                {t("Generate installments")}
               </DropdownMenuItem>
             )}
             {(invoice.paidAmount ?? 0) > 0 && (
               <DropdownMenuItem onClick={() => setRefundTarget(invoice)}>
                 <RotateCcw className="w-3.5 h-3.5" />
-                Refund
+                {t("Refund")}
               </DropdownMenuItem>
             )}
           </RowActions>
@@ -211,10 +214,10 @@ export default function InvoicesTab() {
         <div className="flex items-center gap-2">
           <Select value={classFilter} onValueChange={setClassFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="All classes" />
+              <SelectValue placeholder={t("All classes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_FILTER}>All classes</SelectItem>
+              <SelectItem value={ALL_FILTER}>{t("All classes")}</SelectItem>
               {classOptions.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
@@ -224,19 +227,19 @@ export default function InvoicesTab() {
           </Select>
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as FeeInvoiceStatus | typeof ALL_FILTER)}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder={t("All statuses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_FILTER}>All statuses</SelectItem>
+              <SelectItem value={ALL_FILTER}>{t("All statuses")}</SelectItem>
               {(Object.entries(INVOICE_STATUS_CONFIG) as Array<[FeeInvoiceStatus, { label: string }]>).map(([value, config]) => (
                 <SelectItem key={value} value={value}>
-                  {config.label}
+                  {t(config.label)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        <p className="text-sm text-muted-foreground">{page?.totalCount ?? 0} invoice(s)</p>
+        <p className="text-sm text-muted-foreground">{t("{{count}} invoice(s)", { count: page?.totalCount ?? 0 })}</p>
       </DataTableToolbar>
 
       <DataTable
@@ -245,7 +248,7 @@ export default function InvoicesTab() {
         isLoading={isLoading}
         isError={isError}
         onRetry={() => refetch()}
-        emptyMessage="No invoices match the selected filters."
+        emptyMessage={t("No invoices match the selected filters.")}
         serverPagination={{ pageIndex, pageSize: PAGE_SIZE, totalCount: page?.totalCount ?? 0, onPageChange: setPageIndex }}
       />
 

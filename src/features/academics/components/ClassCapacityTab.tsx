@@ -9,6 +9,7 @@ import { cn } from "@/utils/cn";
 import { listClasses, listSections } from "../api";
 import type { Section } from "../types";
 
+import { useTranslation } from "react-i18next";
 interface CapacityRow extends Section {
   className: string;
   utilization: number;
@@ -28,6 +29,7 @@ function UtilizationBar({ utilization }: { utilization: number }) {
 }
 
 export default function ClassCapacityTab() {
+  const { t } = useTranslation("academics");
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
   const { data: sections = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
   const [classFilter, setClassFilter] = useState("all");
@@ -56,7 +58,7 @@ export default function ClassCapacityTab() {
   const columns: ColumnDef<CapacityRow, unknown>[] = [
     {
       id: "section",
-      header: "Section",
+      header: t("Section"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.className}</p>
@@ -66,27 +68,27 @@ export default function ClassCapacityTab() {
     },
     {
       id: "strength",
-      header: "Enrolled",
+      header: t("Enrolled"),
       cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.currentStrength}</span>,
     },
     {
       accessorKey: "capacity",
-      header: "Capacity",
+      header: t("Capacity"),
       cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.capacity}</span>,
     },
     {
       id: "utilization",
-      header: "Utilization",
+      header: t("Utilization"),
       cell: ({ row }) => <UtilizationBar utilization={row.original.utilization} />,
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const u = row.original.utilization;
-        if (u >= 1) return <Badge variant="danger">Full</Badge>;
-        if (u >= 0.75) return <Badge variant="warning">Near capacity</Badge>;
-        return <Badge variant="success">Available</Badge>;
+        if (u >= 1) return <Badge variant="danger">{t("Full")}</Badge>;
+        if (u >= 0.75) return <Badge variant="warning">{t("Near capacity")}</Badge>;
+        return <Badge variant="success">{t("Available")}</Badge>;
       },
     },
   ];
@@ -95,24 +97,24 @@ export default function ClassCapacityTab() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Overall enrollment</CardTitle>
-          <CardDescription>Total enrolled students against seat capacity across all sections.</CardDescription>
+          <CardTitle>{t("Overall enrollment")}</CardTitle>
+          <CardDescription>{t("Total enrolled students against seat capacity across all sections.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-6">
             <div>
               <p className="text-2xl font-bold text-foreground tabular-nums">{totals.strength}</p>
-              <p className="text-xs text-muted-foreground">Enrolled</p>
+              <p className="text-xs text-muted-foreground">{t("Enrolled")}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground tabular-nums">{totals.capacity}</p>
-              <p className="text-xs text-muted-foreground">Total capacity</p>
+              <p className="text-xs text-muted-foreground">{t("Total capacity")}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground tabular-nums">
                 {totals.capacity > 0 ? Math.round((totals.strength / totals.capacity) * 100) : 0}%
               </p>
-              <p className="text-xs text-muted-foreground">Utilization</p>
+              <p className="text-xs text-muted-foreground">{t("Utilization")}</p>
             </div>
           </div>
         </CardContent>
@@ -121,10 +123,10 @@ export default function ClassCapacityTab() {
       <DataTableToolbar>
         <Select value={classFilter} onValueChange={setClassFilter}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="Filter by class" />
+            <SelectValue placeholder={t("Filter by class")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All classes</SelectItem>
+            <SelectItem value="all">{t("All classes")}</SelectItem>
             {classes.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -134,7 +136,7 @@ export default function ClassCapacityTab() {
         </Select>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No sections match this filter." />
+      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No sections match this filter.")} />
     </div>
   );
 }

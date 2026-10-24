@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { StatCard, StatGrid, type StatTone } from "@/components/ui/stat-card";
+import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { StatCardData } from "../types";
 
@@ -36,6 +37,7 @@ const ICONS: Record<string, LucideIcon> = {
 const TONES: StatTone[] = ["brand", "info", "success", "warning"];
 
 export default function StatCards({ stats }: { stats: StatCardData[] }) {
+  const { t } = useTranslation("dashboard");
   return (
     // Four across when the widget itself is wide enough (container query), not the window: with the sidebar open on
     // a laptop the window is "xl" but the content isn't, and a user can resize this widget to half width.
@@ -44,7 +46,7 @@ export default function StatCards({ stats }: { stats: StatCardData[] }) {
       {stats.map((stat, index) => (
         <StatCard
           key={stat.id}
-          label={stat.label}
+          label={t(stat.label)}
           value={stat.value}
           icon={ICONS[stat.icon] ?? Users}
           tone={TONES[index % TONES.length]}
@@ -58,8 +60,9 @@ export default function StatCards({ stats }: { stats: StatCardData[] }) {
 
 /** Four placeholder tiles while the key figures load. */
 export function StatsSkeleton() {
+  const { t } = useTranslation("dashboard");
   return (
-    <div className="@container" aria-busy="true" aria-label="Loading key figures">
+    <div className="@container" aria-busy="true" aria-label={t("Loading key figures")}>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 @2xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-[112px] rounded-xl" />

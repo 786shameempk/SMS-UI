@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ACADEMIC_YEAR_STATUSES } from "../constants";
 import type { AcademicYear, AcademicYearFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const academicYearFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   startDate: z.string().min(1, "Start date is required"),
@@ -35,6 +36,7 @@ export default function AcademicYearFormDialog({
   onSubmit: (values: AcademicYearFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("academics");
   const isEdit = Boolean(academicYear);
   const {
     register,
@@ -64,24 +66,24 @@ export default function AcademicYearFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit academic year" : "New academic year"}</DialogTitle>
-          <DialogDescription>Academic years anchor terms, classes, and the school calendar.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit academic year") : t("New academic year")}</DialogTitle>
+          <DialogDescription>{t("Academic years anchor terms, classes, and the school calendar.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Name</Label>
-            <Input id="name" placeholder="e.g. 2025-2026" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            <Label htmlFor="name" required>{t("Name")}</Label>
+            <Input id="name" placeholder={t("e.g. 2025-2026")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
             {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="startDate" required>Start date</Label>
+              <Label htmlFor="startDate" required>{t("Start date")}</Label>
               <Input id="startDate" type="date" aria-invalid={errors.startDate ? true : undefined} {...register("startDate")} />
               {errors.startDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endDate" required>End date</Label>
+              <Label htmlFor="endDate" required>{t("End date")}</Label>
               <Input id="endDate" type="date" aria-invalid={errors.endDate ? true : undefined} {...register("endDate")} />
               {errors.endDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endDate.message}</p>}
             </div>
@@ -89,7 +91,7 @@ export default function AcademicYearFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
             <div className="space-y-1.5">
-              <Label htmlFor="status" required>Status</Label>
+              <Label htmlFor="status" required>{t("Status")}</Label>
               <Controller
                 control={control}
                 name="status"
@@ -115,16 +117,16 @@ export default function AcademicYearFormDialog({
                 name="isCurrent"
                 render={({ field }) => <Switch id="isCurrent" checked={field.value} onCheckedChange={field.onChange} />}
               />
-              <Label htmlFor="isCurrent">Set as current year</Label>
+              <Label htmlFor="isCurrent">{t("Set as current year")}</Label>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create academic year"}
+              {isEdit ? t("Save changes") : t("Create academic year")}
             </Button>
           </DialogFooter>
         </form>

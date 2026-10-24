@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
 import type { ApprovalStatus, ChapterStatus, CompletionMode, CurriculumBoard, LessonPlanType, PortionFilters, PortionRisk, ProgressStatus, ResourceKind, SyllabusStatus } from "./types";
 
+import { useTranslation } from "react-i18next";
 export const ALL = "__all";
 
 export interface Option<T extends string = string> {
@@ -146,10 +147,11 @@ export const ALERT_LABEL: Record<string, string> = {
 export const options = <T extends string>(labels: Record<T, string>): Option<T>[] => (Object.keys(labels) as T[]).map((value) => ({ value, label: labels[value] }));
 
 export function StatusBadge({ map, value, className }: { map: Record<string, { label: string; variant: BadgeVariant }>; value: string; className?: string }) {
+  const { t } = useTranslation("lesson-portions");
   const s = map[value] ?? { label: value, variant: "neutral" as BadgeVariant };
   return (
     <Badge variant={s.variant} dot className={className}>
-      {s.label}
+      {t(s.label)}
     </Badge>
   );
 }
@@ -179,6 +181,7 @@ export const mondayOf = (iso: string) => {
 
 /** Actual completion as a bar with a tick for where the plan says it should be by now. */
 export function ProgressBar({ percent, planned, risk, className, label }: { percent: number; planned?: number | null; risk?: PortionRisk; className?: string; label?: string }) {
+  const { t } = useTranslation("lesson-portions");
   const value = Math.max(0, Math.min(100, percent));
   const tone = risk ? RISK[risk].bar : "bg-primary";
   const plannedText = planned === null || planned === undefined ? "" : `, planned ${pct(planned)}`;
@@ -189,15 +192,15 @@ export function ProgressBar({ percent, planned, risk, className, label }: { perc
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(value)}
-        aria-label={label ?? `Completion ${pct(percent)}${plannedText}`}
+        aria-label={label ?? t("Completion {{v1}}{{plannedText}}", { v1: pct(percent), plannedText })}
         className="relative h-2 min-w-16 flex-1 overflow-hidden rounded-full bg-secondary"
       >
         <div className={cn("h-full rounded-full transition-all", tone)} style={{ width: `${value}%` }} />
         {planned !== null && planned !== undefined && (
-          <span aria-hidden="true" className="absolute top-0 h-full w-0.5 bg-foreground/60" style={{ left: `calc(${Math.max(0, Math.min(100, planned))}% - 1px)` }} title={`Planned ${pct(planned)}`} />
+          <span aria-hidden="true" className="absolute top-0 h-full w-0.5 bg-foreground/60" style={{ left: `calc(${Math.max(0, Math.min(100, planned))}% - 1px)` }} title={t("Planned {{v1}}", { v1: pct(planned) })} />
         )}
       </div>
-      <span className="w-12 shrink-0 text-right text-xs font-medium tabular-nums text-foreground">{pct(percent)}</span>
+      <span className="w-12 shrink-0 text-end text-xs font-medium tabular-nums text-foreground">{pct(percent)}</span>
     </div>
   );
 }
@@ -287,16 +290,17 @@ export function SelectField<T extends string>({
   invalid?: boolean;
   "aria-label"?: string;
 }) {
+  const { t } = useTranslation("lesson-portions");
   return (
     <Select value={value ?? (allLabel ? ALL : undefined)} onValueChange={(v) => onChange(v === ALL ? undefined : (v as T))} disabled={disabled}>
       <SelectTrigger id={id} className={className} aria-label={ariaLabel} aria-invalid={invalid ? true : undefined}>
-        <SelectValue placeholder={placeholder ?? "Select"} />
+        <SelectValue placeholder={placeholder ?? t("Select")} />
       </SelectTrigger>
       <SelectContent>
         {allLabel && <SelectItem value={ALL}>{allLabel}</SelectItem>}
         {items.map((o) => (
           <SelectItem key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </SelectItem>
         ))}
       </SelectContent>

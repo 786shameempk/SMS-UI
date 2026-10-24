@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { listQuizAttempts, submitQuizAttempt } from "../api";
 import type { Quiz } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function TakeQuizDialog({
   open,
   onOpenChange,
@@ -18,6 +19,7 @@ export default function TakeQuizDialog({
   quiz: Quiz | null;
   studentId: string;
 }) {
+  const { t } = useTranslation("homework");
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<number | null>(null);
@@ -45,9 +47,9 @@ export default function TakeQuizDialog({
       setResult(attempt.score);
       queryClient.invalidateQueries({ queryKey: ["homework", "quiz-attempts", quiz?.id] });
       queryClient.invalidateQueries({ queryKey: ["homework", "progress"] });
-      toast.success(`Quiz submitted — score ${attempt.score}%`);
+      toast.success(t("Quiz submitted — score {{score}}%", { score: attempt.score }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not submit quiz"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not submit quiz")),
   });
 
   if (!quiz) return null;
@@ -59,16 +61,16 @@ export default function TakeQuizDialog({
         <DialogHeader>
           <DialogTitle>{quiz.title}</DialogTitle>
           <DialogDescription>
-            {quiz.questions.length} question(s)
-            {myPreviousAttempts.length > 0 && ` · Best previous score: ${Math.max(...myPreviousAttempts.map((a) => a.score))}%`}
+            {quiz.questions.length} {t("question(s)")}
+            {myPreviousAttempts.length > 0 && t(" · Best previous score: {{v1}}%", { v1: Math.max(...myPreviousAttempts.map((a) => a.score)) })}
           </DialogDescription>
         </DialogHeader>
 
         {result !== null ? (
           <div className="rounded-lg border border-success/30 bg-success-soft p-4 text-center space-y-2">
             <CheckCircle2 className="w-8 h-8 text-success-strong mx-auto" />
-            <p className="text-lg font-semibold text-success-strong">Score: {result}%</p>
-            <p className="text-sm text-success-strong">Your attempt has been recorded.</p>
+            <p className="text-lg font-semibold text-success-strong">{t("Score: {{result}}%", { result })}</p>
+            <p className="text-sm text-success-strong">{t("Your attempt has been recorded.")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -98,12 +100,12 @@ export default function TakeQuizDialog({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t("Close")}
           </Button>
           {result === null && (
             <Button type="button" disabled={!allAnswered || submitMutation.isPending} onClick={() => submitMutation.mutate()}>
               {submitMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Submit quiz
+              {t("Submit quiz")}
             </Button>
           )}
         </DialogFooter>

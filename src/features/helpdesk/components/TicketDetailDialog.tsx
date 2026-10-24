@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, Send } from "lucide-react";
@@ -24,6 +25,7 @@ export default function TicketDetailDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation("helpdesk");
   const queryClient = useQueryClient();
   const { data: ticket } = useQuery({ queryKey: ["helpdesk", "ticket", ticketId], queryFn: () => getTicket(ticketId!), enabled: Boolean(ticketId) && open });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
@@ -43,7 +45,7 @@ export default function TicketDetailDialog({
     mutationFn: ({ id, staffId }: { id: string; staffId: string }) => assignTicket(id, staffId),
     onSuccess: () => {
       invalidate();
-      toast.success("Ticket assigned");
+      toast.success(t("Ticket assigned"));
       setAssigneeId("");
     },
   });
@@ -52,36 +54,36 @@ export default function TicketDetailDialog({
     mutationFn: ({ id, notes }: { id: string; notes: string }) => resolveTicket(id, { resolutionNotes: notes }),
     onSuccess: () => {
       invalidate();
-      toast.success("Ticket resolved");
+      toast.success(t("Ticket resolved"));
       setShowResolveForm(false);
       setResolutionNotes("");
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not resolve ticket"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not resolve ticket")),
   });
 
   const closeMutation = useMutation({
     mutationFn: closeTicket,
     onSuccess: () => {
       invalidate();
-      toast.success("Ticket closed");
+      toast.success(t("Ticket closed"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not close ticket"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not close ticket")),
   });
 
   const reopenMutation = useMutation({
     mutationFn: reopenTicket,
     onSuccess: () => {
       invalidate();
-      toast.success("Ticket reopened");
+      toast.success(t("Ticket reopened"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not reopen ticket"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not reopen ticket")),
   });
 
   const commentMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof addComment>[1] }) => addComment(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Comment added");
+      toast.success(t("Comment added"));
       setCommentMessage("");
       setCommentAuthorId("");
     },
@@ -91,7 +93,7 @@ export default function TicketDetailDialog({
     mutationFn: deleteTicket,
     onSuccess: () => {
       invalidate();
-      toast.success("Ticket deleted");
+      toast.success(t("Ticket deleted"));
       onOpenChange(false);
     },
   });
@@ -101,72 +103,72 @@ export default function TicketDetailDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Loading…</DialogTitle>
+            <DialogTitle>{t("Loading…")}</DialogTitle>
           </DialogHeader>
         </DialogContent>
       </Dialog>
     );
   }
 
-  const t: TicketRow = ticket;
-  const canResolve = t.status === "open" || t.status === "in_progress" || t.status === "reopened";
-  const canClose = t.status === "resolved";
-  const canReopen = t.status === "resolved" || t.status === "closed";
+  const tk: TicketRow = ticket;
+  const canResolve = tk.status === "open" || tk.status === "in_progress" || tk.status === "reopened";
+  const canClose = tk.status === "resolved";
+  const canReopen = tk.status === "resolved" || tk.status === "closed";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
-            {t.ticketNumber}
-            <Badge variant={STATUS_CONFIG[t.status].variant}>{STATUS_CONFIG[t.status].label}</Badge>
-            <Badge variant={PRIORITY_CONFIG[t.priority].variant}>{PRIORITY_CONFIG[t.priority].label}</Badge>
-            <Badge variant="info">{CATEGORY_CONFIG[t.category].label}</Badge>
-            {t.isOverdue && (
+            {tk.ticketNumber}
+            <Badge variant={STATUS_CONFIG[tk.status].variant}>{t(STATUS_CONFIG[tk.status].label)}</Badge>
+            <Badge variant={PRIORITY_CONFIG[tk.priority].variant}>{t(PRIORITY_CONFIG[tk.priority].label)}</Badge>
+            <Badge variant="info">{t(CATEGORY_CONFIG[tk.category].label)}</Badge>
+            {tk.isOverdue && (
               <Badge variant="danger">
-                <AlertTriangle className="w-3 h-3 mr-1 inline" />
-                Overdue
+                <AlertTriangle className="w-3 h-3 me-1 inline" />
+                {t("Overdue")}
               </Badge>
             )}
           </DialogTitle>
-          <DialogDescription>{t.subject}</DialogDescription>
+          <DialogDescription>{tk.subject}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-muted-foreground">Raised by</p>
-              <p className="text-foreground">{t.raisedByLabel}</p>
+              <p className="text-xs text-muted-foreground">{t("Raised by")}</p>
+              <p className="text-foreground">{tk.raisedByLabel}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Assigned to</p>
-              <p className="text-foreground">{t.assignedTo ? `${t.assignedTo.firstName} ${t.assignedTo.lastName} (${t.assignedTo.designation})` : "Unassigned"}</p>
+              <p className="text-xs text-muted-foreground">{t("Assigned to")}</p>
+              <p className="text-foreground">{tk.assignedTo ? `${tk.assignedTo.firstName} ${tk.assignedTo.lastName} (${tk.assignedTo.designation})` : t("Unassigned")}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Created</p>
-              <p className="text-foreground">{formatDateTime(t.createdAt)}</p>
+              <p className="text-xs text-muted-foreground">{t("Created")}</p>
+              <p className="text-foreground">{formatDateTime(tk.createdAt)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Last updated</p>
-              <p className="text-foreground">{formatDateTime(t.updatedAt)}</p>
+              <p className="text-xs text-muted-foreground">{t("Last updated")}</p>
+              <p className="text-foreground">{formatDateTime(tk.updatedAt)}</p>
             </div>
           </div>
 
           <div className="rounded-lg border border-border p-3 bg-secondary/30">
-            <p className="text-sm text-foreground whitespace-pre-wrap">{t.description}</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{tk.description}</p>
           </div>
 
-          {t.resolutionNotes && (
+          {tk.resolutionNotes && (
             <div className="rounded-lg border border-success/30 bg-success-soft p-3">
-              <p className="text-xs font-medium text-success-strong mb-1">Resolution notes</p>
-              <p className="text-sm text-success-strong whitespace-pre-wrap">{t.resolutionNotes}</p>
+              <p className="text-xs font-medium text-success-strong mb-1">{t("Resolution notes")}</p>
+              <p className="text-sm text-success-strong whitespace-pre-wrap">{tk.resolutionNotes}</p>
             </div>
           )}
 
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={assigneeId} onValueChange={setAssigneeId}>
               <SelectTrigger className="w-56">
-                <SelectValue placeholder="Assign to staff member" />
+                <SelectValue placeholder={t("Assign to staff member")} />
               </SelectTrigger>
               <SelectContent>
                 {staff.map((s) => (
@@ -180,61 +182,61 @@ export default function TicketDetailDialog({
               variant="outline"
               size="sm"
               disabled={!assigneeId || assignMutation.isPending}
-              onClick={() => assignMutation.mutate({ id: t.id, staffId: assigneeId })}
+              onClick={() => assignMutation.mutate({ id: tk.id, staffId: assigneeId })}
             >
               {assignMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              Assign
+              {t("Assign")}
             </Button>
 
             {canResolve && !showResolveForm && (
               <Button variant="outline" size="sm" onClick={() => setShowResolveForm(true)}>
-                Resolve
+                {t("Resolve")}
               </Button>
             )}
             {canClose && (
-              <Button variant="outline" size="sm" disabled={closeMutation.isPending} onClick={() => closeMutation.mutate(t.id)}>
-                Close ticket
+              <Button variant="outline" size="sm" disabled={closeMutation.isPending} onClick={() => closeMutation.mutate(tk.id)}>
+                {t("Close ticket")}
               </Button>
             )}
             {canReopen && (
-              <Button variant="outline" size="sm" disabled={reopenMutation.isPending} onClick={() => reopenMutation.mutate(t.id)}>
-                Reopen
+              <Button variant="outline" size="sm" disabled={reopenMutation.isPending} onClick={() => reopenMutation.mutate(tk.id)}>
+                {t("Reopen")}
               </Button>
             )}
-            <Button variant="ghost" size="sm" className="text-destructive-strong hover:text-destructive-strong" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(t.id)}>
-              Delete
+            <Button variant="ghost" size="sm" className="text-destructive-strong hover:text-destructive-strong" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(tk.id)}>
+              {t("Delete")}
             </Button>
           </div>
 
           {showResolveForm && (
             <div className="space-y-2 rounded-lg border border-border p-3">
-              <Label htmlFor="resolve-notes">Resolution notes</Label>
-              <Textarea id="resolve-notes" rows={2} value={resolutionNotes} onChange={(e) => setResolutionNotes(e.target.value)} placeholder="How was this resolved?" />
+              <Label htmlFor="resolve-notes">{t("Resolution notes")}</Label>
+              <Textarea id="resolve-notes" rows={2} value={resolutionNotes} onChange={(e) => setResolutionNotes(e.target.value)} placeholder={t("How was this resolved?")} />
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
                   disabled={!resolutionNotes.trim() || resolveMutation.isPending}
-                  onClick={() => resolveMutation.mutate({ id: t.id, notes: resolutionNotes })}
+                  onClick={() => resolveMutation.mutate({ id: tk.id, notes: resolutionNotes })}
                 >
                   {resolveMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Mark resolved
+                  {t("Mark resolved")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setShowResolveForm(false)}>
-                  Cancel
+                  {t("Cancel")}
                 </Button>
               </div>
             </div>
           )}
 
           <div className="space-y-3">
-            <p className="text-sm font-medium text-foreground">Comments &amp; timeline</p>
-            {t.comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
-            {t.comments.map((c) => (
+            <p className="text-sm font-medium text-foreground">{t("Comments & timeline")}</p>
+            {tk.comments.length === 0 && <p className="text-sm text-muted-foreground">{t("No comments yet.")}</p>}
+            {tk.comments.map((c) => (
               <div key={c.id} className="rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium text-foreground">{c.authorLabel}</p>
                   <div className="flex items-center gap-1.5">
-                    {!c.visibleToSubmitter && <Badge variant="neutral">Internal only</Badge>}
+                    {!c.visibleToSubmitter && <Badge variant="neutral">{t("Internal only")}</Badge>}
                     <span className="text-xs text-muted-foreground">{formatDateTime(c.createdAt)}</span>
                   </div>
                 </div>
@@ -243,12 +245,12 @@ export default function TicketDetailDialog({
             ))}
 
             <div className="space-y-2 rounded-lg border border-border p-3">
-              <Textarea rows={2} placeholder="Add an update…" value={commentMessage} onChange={(e) => setCommentMessage(e.target.value)} />
+              <Textarea rows={2} placeholder={t("Add an update…")} value={commentMessage} onChange={(e) => setCommentMessage(e.target.value)} />
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                   <Select value={commentAuthorId} onValueChange={setCommentAuthorId}>
                     <SelectTrigger className="w-44">
-                      <SelectValue placeholder="Posted by (optional)" />
+                      <SelectValue placeholder={t("Posted by (optional)")} />
                     </SelectTrigger>
                     <SelectContent>
                       {staff.map((s) => (
@@ -260,7 +262,7 @@ export default function TicketDetailDialog({
                   </Select>
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <Checkbox checked={commentVisible} onCheckedChange={(v) => setCommentVisible(v === true)} />
-                    <span className="text-xs text-secondary-foreground">Visible to submitter</span>
+                    <span className="text-xs text-secondary-foreground">{t("Visible to submitter")}</span>
                   </label>
                 </div>
                 <Button
@@ -268,13 +270,13 @@ export default function TicketDetailDialog({
                   disabled={!commentMessage.trim() || commentMutation.isPending}
                   onClick={() =>
                     commentMutation.mutate({
-                      id: t.id,
+                      id: tk.id,
                       values: { message: commentMessage, visibleToSubmitter: commentVisible, authorStaffId: commentAuthorId || undefined },
                     })
                   }
                 >
                   {commentMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  Post
+                  {t("Post")}
                 </Button>
               </div>
             </div>

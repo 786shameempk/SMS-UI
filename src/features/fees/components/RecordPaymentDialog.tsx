@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +33,7 @@ export default function RecordPaymentDialog({
   submitting: boolean;
   onSubmit: (values: RecordPaymentParams) => Promise<void>;
 }) {
+  const { t } = useTranslation("fees");
   const remaining = invoice ? invoice.netAmount - (invoice.paidAmount ?? 0) : 0;
 
   const {
@@ -50,14 +52,16 @@ export default function RecordPaymentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Record payment</DialogTitle>
+          <DialogTitle>{t("Record payment")}</DialogTitle>
           <DialogDescription>
-            {invoice ? `${invoice.term} · ${invoice.feeType} · Balance due: ${formatCurrency(remaining)}` : ""}
+            {invoice
+              ? t("{{term}} · {{feeType}} · Balance due: {{amount}}", { term: invoice.term, feeType: invoice.feeType, amount: formatCurrency(remaining) })
+              : ""}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="pay-mode" required>Payment mode</Label>
+            <Label htmlFor="pay-mode" required>{t("Payment mode")}</Label>
             <Controller
               control={control}
               name="mode"
@@ -69,7 +73,7 @@ export default function RecordPaymentDialog({
                   <SelectContent>
                     {PAYMENT_MODE_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -78,17 +82,17 @@ export default function RecordPaymentDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pay-amount" required>Amount</Label>
+            <Label htmlFor="pay-amount" required>{t("Amount")}</Label>
             <Input id="pay-amount" type="number" step="1" min="1" aria-invalid={errors.amount ? true : undefined} {...register("amount")} />
-            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.amount.message}</p>}
-            <p className="text-xs text-muted-foreground">Paying less than the balance marks the invoice as partially paid.</p>
+            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.amount.message ?? "")}</p>}
+            <p className="text-xs text-muted-foreground">{t("Paying less than the balance marks the invoice as partially paid.")}</p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Record payment
+              {t("Record payment")}
             </Button>
           </DialogFooter>
         </form>

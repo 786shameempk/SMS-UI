@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Laptop, Monitor, Smartphone, Tablet } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 function ChangePasswordTab() {
   const email = useAuthStore((s) => s.user?.email ?? "");
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useTranslation("authentication");
   const {
     register,
     handleSubmit,
@@ -49,7 +51,7 @@ function ChangePasswordTab() {
       toast.success(message);
       reset();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not update password");
+      toast.error(err instanceof Error ? err.message : t("Could not update password"));
     } finally {
       setSubmitting(false);
     }
@@ -58,28 +60,28 @@ function ChangePasswordTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Change password</CardTitle>
-        <CardDescription>Choose a strong password you don&apos;t use elsewhere.</CardDescription>
+        <CardTitle>{t("Change password")}</CardTitle>
+        <CardDescription>{t("Choose a strong password you don't use elsewhere.")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-sm">
           <div className="space-y-1.5">
-            <Label htmlFor="currentPassword">Current password</Label>
+            <Label htmlFor="currentPassword">{t("Current password")}</Label>
             <Input id="currentPassword" type="password" autoComplete="current-password" aria-invalid={errors.currentPassword ? true : undefined} {...register("currentPassword")} />
-            {errors.currentPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.currentPassword.message}</p>}
+            {errors.currentPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.currentPassword.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="newPassword">New password</Label>
+            <Label htmlFor="newPassword">{t("New password")}</Label>
             <Input id="newPassword" type="password" autoComplete="new-password" aria-invalid={errors.newPassword ? true : undefined} {...register("newPassword")} />
-            {errors.newPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.newPassword.message}</p>}
+            {errors.newPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.newPassword.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="confirmPassword">Confirm new password</Label>
+            <Label htmlFor="confirmPassword">{t("Confirm new password")}</Label>
             <Input id="confirmPassword" type="password" autoComplete="new-password" aria-invalid={errors.confirmPassword ? true : undefined} {...register("confirmPassword")} />
-            {errors.confirmPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.confirmPassword.message}</p>}
+            {errors.confirmPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.confirmPassword.message ?? "")}</p>}
           </div>
           <Button type="submit" loading={submitting}>
-            Update password
+            {t("Update password")}
           </Button>
         </form>
       </CardContent>
@@ -90,10 +92,11 @@ function ChangePasswordTab() {
 function SessionsTab() {
   const queryClient = useQueryClient();
   const { data: sessions, isLoading } = useQuery({ queryKey: ["auth", "sessions"], queryFn: listSessions });
+  const { t } = useTranslation("authentication");
   const revokeMutation = useMutation({
     mutationFn: (session: SessionRecord) => revokeSession(session.id),
     onSuccess: (_res, session) => {
-      toast.success(`Signed out on ${session.device}`);
+      toast.success(t("Signed out on {{device}}", { device: session.device }));
       queryClient.setQueryData<SessionRecord[]>(["auth", "sessions"], (prev) =>
         (prev ?? []).filter((s) => s.id !== session.id),
       );
@@ -103,11 +106,11 @@ function SessionsTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Active sessions</CardTitle>
-        <CardDescription>Everywhere you&apos;re currently signed in.</CardDescription>
+        <CardTitle>{t("Active sessions")}</CardTitle>
+        <CardDescription>{t("Everywhere you're currently signed in.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading sessions…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading sessions…")}</p>}
         {sessions?.map((session) => (
           <div key={session.id} className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -117,11 +120,11 @@ function SessionsTab() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-foreground truncate">{session.browser}</p>
-                  {session.isCurrent && <Badge variant="success">Current</Badge>}
+                  {session.isCurrent && <Badge variant="success">{t("Current")}</Badge>}
                 </div>
                 <p className="text-xs text-muted-foreground truncate">
-                  {session.location} &middot; {session.ipAddress} &middot; last active{" "}
-                  {new Date(session.lastActiveAt).toLocaleString()}
+                  {session.location} &middot; {session.ipAddress} &middot;{" "}
+                  {t("last active {{time}}", { time: new Date(session.lastActiveAt).toLocaleString() })}
                 </p>
               </div>
             </div>
@@ -133,7 +136,7 @@ function SessionsTab() {
                 onClick={() => revokeMutation.mutate(session)}
                 disabled={revokeMutation.isPending}
               >
-                Sign out
+                {t("Sign out")}
               </Button>
             )}
           </div>
@@ -148,10 +151,11 @@ const DEVICE_ICONS = { desktop: Laptop, mobile: Smartphone, tablet: Tablet } as 
 function DevicesTab() {
   const queryClient = useQueryClient();
   const { data: devices, isLoading } = useQuery({ queryKey: ["auth", "devices"], queryFn: listDevices });
+  const { t } = useTranslation("authentication");
   const revokeMutation = useMutation({
     mutationFn: (device: DeviceRecord) => revokeDevice(device.id),
     onSuccess: (_res, device) => {
-      toast.success(`${device.name} removed`);
+      toast.success(t("{{device}} removed", { device: device.name }));
       queryClient.setQueryData<DeviceRecord[]>(["auth", "devices"], (prev) => (prev ?? []).filter((d) => d.id !== device.id));
     },
   });
@@ -159,11 +163,11 @@ function DevicesTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Trusted devices</CardTitle>
-        <CardDescription>Devices that can skip two-factor verification.</CardDescription>
+        <CardTitle>{t("Trusted devices")}</CardTitle>
+        <CardDescription>{t("Devices that can skip two-factor verification.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading devices…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading devices…")}</p>}
         {devices?.map((device) => {
           const Icon = DEVICE_ICONS[device.type];
           return (
@@ -175,7 +179,7 @@ function DevicesTab() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{device.name}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {device.os} &middot; last used {new Date(device.lastUsedAt).toLocaleString()}
+                    {device.os} &middot; {t("last used {{time}}", { time: new Date(device.lastUsedAt).toLocaleString() })}
                   </p>
                 </div>
               </div>
@@ -186,7 +190,7 @@ function DevicesTab() {
                 onClick={() => revokeMutation.mutate(device)}
                 disabled={revokeMutation.isPending}
               >
-                Remove
+                {t("Remove")}
               </Button>
             </div>
           );
@@ -197,15 +201,16 @@ function DevicesTab() {
 }
 
 export default function SecuritySettingsPage() {
+  const { t } = useTranslation("authentication");
   return (
     <PageContainer>
-      <PageHeader title="Security" description="Manage your password, sessions, and trusted devices." />
+      <PageHeader title={t("Security")} description={t("Manage your password, sessions, and trusted devices.")} />
 
       <Tabs defaultValue="password">
         <TabsList>
-          <TabsTrigger value="password">Password</TabsTrigger>
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="devices">Devices</TabsTrigger>
+          <TabsTrigger value="password">{t("Password")}</TabsTrigger>
+          <TabsTrigger value="sessions">{t("Sessions")}</TabsTrigger>
+          <TabsTrigger value="devices">{t("Devices")}</TabsTrigger>
         </TabsList>
         <TabsContent value="password">
           <ChangePasswordTab />

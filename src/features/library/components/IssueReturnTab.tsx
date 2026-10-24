@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { PackageCheck, Plus } from "lucide-react";
@@ -16,6 +17,7 @@ import type { BookLoan, LibraryMember } from "../types";
 import IssueBookDialog from "./IssueBookDialog";
 
 export default function IssueReturnTab() {
+  const { t } = useTranslation("library");
   const queryClient = useQueryClient();
   const [issueOpen, setIssueOpen] = useState(false);
   const [returnTarget, setReturnTarget] = useState<BookLoan | null>(null);
@@ -33,7 +35,7 @@ export default function IssueReturnTab() {
 
   const memberLabel = (member: LibraryMember): string => {
     const person = member.personType === "student" ? studentById.get(member.personId) : staffById.get(member.personId);
-    const name = person ? `${person.firstName} ${person.lastName}` : "Unknown";
+    const name = person ? `${person.firstName} ${person.lastName}` : t("Unknown");
     return `${name} (${member.membershipId})`;
   };
 
@@ -43,42 +45,42 @@ export default function IssueReturnTab() {
     mutationFn: issueBook,
     onSuccess: () => {
       invalidate();
-      toast.success("Book issued");
+      toast.success(t("Book issued"));
       setIssueOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not issue book"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not issue book")),
   });
 
   const returnMutation = useMutation({
     mutationFn: returnBook,
     onSuccess: (loan) => {
       invalidate();
-      toast.success(loan.fineAmount ? `Book returned — fine of ${formatCurrency(loan.fineAmount)} applies` : "Book returned");
+      toast.success(loan.fineAmount ? t("Book returned — fine of {{amount}} applies", { amount: formatCurrency(loan.fineAmount) }) : t("Book returned"));
       setReturnTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not return book"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not return book")),
   });
 
   const sorted = [...loans].sort((a, b) => new Date(b.issuedOn).getTime() - new Date(a.issuedOn).getTime());
 
   const columns: ColumnDef<BookLoan, unknown>[] = [
-    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
+    { id: "book", header: t("Book"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.bookId)?.title ?? "—"}</span> },
     {
       id: "member",
-      header: "Member",
+      header: t("Member"),
       cell: ({ row }) => {
         const member = memberById.get(row.original.memberId);
         return <span className="text-sm text-foreground">{member ? memberLabel(member) : "—"}</span>;
       },
     },
-    { id: "issuedOn", header: "Issued", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.issuedOn).toLocaleDateString()}</span> },
-    { id: "dueDate", header: "Due", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.dueDate).toLocaleDateString()}</span> },
+    { id: "issuedOn", header: t("Issued"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.issuedOn).toLocaleDateString()}</span> },
+    { id: "dueDate", header: t("Due"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.dueDate).toLocaleDateString()}</span> },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = LOAN_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -88,11 +90,11 @@ export default function IssueReturnTab() {
         row.original.status !== "returned" ? (
           <Button variant="outline" size="sm" onClick={() => setReturnTarget(row.original)}>
             <PackageCheck className="w-3.5 h-3.5" />
-            Return
+            {t("Return")}
           </Button>
         ) : (
           <span className="text-xs text-muted-foreground">
-            {row.original.fineAmount ? `Fine: ${formatCurrency(row.original.fineAmount)}` : "No fine"}
+            {row.original.fineAmount ? t("Fine: {{amount}}", { amount: formatCurrency(row.original.fineAmount) }) : t("No fine")}
           </span>
         ),
     },
@@ -104,21 +106,21 @@ export default function IssueReturnTab() {
     const daysLate = Math.max(0, Math.floor((Date.now() - new Date(returnTarget.dueDate).getTime()) / (1000 * 60 * 60 * 24)));
     const fine = daysLate * FINE_PER_DAY;
     return fine > 0
-      ? `Mark "${book?.title}" as returned? It is ${daysLate} day(s) overdue — a fine of ${formatCurrency(fine)} will be recorded.`
-      : `Mark "${book?.title}" as returned? It is not overdue, so no fine applies.`;
-  }, [returnTarget, bookById]);
+      ? t('Mark "{{title}}" as returned? It is {{days}} day(s) overdue — a fine of {{amount}} will be recorded.', { title: book?.title, days: daysLate, amount: formatCurrency(fine) })
+      : t('Mark "{{title}}" as returned? It is not overdue, so no fine applies.', { title: book?.title });
+  }, [returnTarget, bookById, t]);
 
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Issue books to members and record returns; fines are computed automatically for late returns.</p>
+        <p className="text-sm text-muted-foreground">{t("Issue books to members and record returns; fines are computed automatically for late returns.")}</p>
         <Button onClick={() => setIssueOpen(true)}>
           <Plus className="w-4 h-4" />
-          Issue book
+          {t("Issue book")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No loans recorded yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No loans recorded yet.")} />
 
       <IssueBookDialog
         open={issueOpen}
@@ -135,9 +137,9 @@ export default function IssueReturnTab() {
       <ConfirmDialog
         open={Boolean(returnTarget)}
         onOpenChange={(v) => !v && setReturnTarget(null)}
-        title="Return book"
+        title={t("Return book")}
         description={returnDescription}
-        confirmLabel="Mark returned"
+        confirmLabel={t("Mark returned")}
         submitting={returnMutation.isPending}
         onConfirm={() => {
           if (returnTarget) returnMutation.mutate(returnTarget.id);

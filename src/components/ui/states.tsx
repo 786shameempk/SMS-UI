@@ -3,6 +3,7 @@ import { AlertTriangle, Inbox, Loader2, RotateCw, type LucideIcon } from "lucide
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 interface EmptyStateProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   icon?: LucideIcon;
@@ -54,8 +55,8 @@ interface ErrorStateProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "ti
 
 /** A friendly failure message. Deliberately never renders the raw API/Axios error text. */
 export function ErrorState({
-  title = "We couldn't load this",
-  description = "Something went wrong while fetching the data. Check your connection and try again.",
+  title,
+  description,
   onRetry,
   retrying,
   bare,
@@ -63,6 +64,9 @@ export function ErrorState({
   className,
   ...props
 }: ErrorStateProps) {
+  const { t } = useTranslation("common");
+  title ??= t("We couldn't load this");
+  description ??= t("Something went wrong while fetching the data. Check your connection and try again.");
   return (
     <div
       role="alert"
@@ -89,7 +93,7 @@ export function ErrorState({
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry} loading={retrying} className="mt-1">
           {!retrying && <RotateCw className="h-3.5 w-3.5" />}
-          Try again
+          {t("Try again")}
         </Button>
       )}
     </div>
@@ -97,19 +101,21 @@ export function ErrorState({
 }
 
 /** Inline "busy" row for small regions (a card body, a panel section) where a skeleton would be overkill. */
-export function LoadingState({ label = "Loading…", className }: { label?: string; className?: string }) {
+export function LoadingState({ label, className }: { label?: string; className?: string }) {
+  const { t } = useTranslation("common");
   return (
     <div role="status" aria-live="polite" className={cn("flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground", className)}>
       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-      {label}
+      {label ?? t("Loading…")}
     </div>
   );
 }
 
 /** Full-page placeholder shaped like a standard page (header + stat row + a content card). */
 export function PageSkeleton({ stats = 0, className }: { stats?: number; className?: string }) {
+  const { t } = useTranslation("common");
   return (
-    <div role="status" aria-label="Loading" className={cn("mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 space-y-6", className)}>
+    <div role="status" aria-label={t("Loading")} className={cn("mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 space-y-6", className)}>
       <div className="space-y-2">
         <Skeleton className="h-6 w-56" />
         <Skeleton className="h-4 w-80 max-w-full" />
@@ -127,7 +133,7 @@ export function PageSkeleton({ stats = 0, className }: { stats?: number; classNa
           <Skeleton key={i} className="h-4" style={{ width: `${90 - i * 9}%` }} />
         ))}
       </div>
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only">{t("Loading…")}</span>
     </div>
   );
 }

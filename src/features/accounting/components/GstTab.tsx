@@ -4,13 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatRelativeDay } from "@/utils/format";
 import { getGstSummary } from "../api";
+import { useTranslation } from "react-i18next";
 
 export default function GstTab() {
+  const { t } = useTranslation("accounting");
   const { data, isLoading } = useQuery({ queryKey: ["accounting", "gst"], queryFn: getGstSummary });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
-  const netLabel = data.netPayable >= 0 ? "Net payable" : "Net refundable";
+  const netLabel = data.netPayable >= 0 ? t("Net payable") : t("Net refundable");
 
   return (
     <div className="space-y-5">
@@ -18,7 +20,7 @@ export default function GstTab() {
         <Card>
           <CardContent className="p-5 flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Output tax collected</p>
+              <p className="text-xs font-medium text-muted-foreground">{t("Output tax collected")}</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{formatCurrency(data.outputTax)}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-success-soft text-success-strong flex items-center justify-center shrink-0">
@@ -29,7 +31,7 @@ export default function GstTab() {
         <Card>
           <CardContent className="p-5 flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Input tax credit</p>
+              <p className="text-xs font-medium text-muted-foreground">{t("Input tax credit")}</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{formatCurrency(data.inputTax)}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-info-soft text-info-strong flex items-center justify-center shrink-0">
@@ -52,11 +54,11 @@ export default function GstTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Taxable entries</CardTitle>
-          <CardDescription>Journal entries tagged as GST-applicable, posted to the ledger.</CardDescription>
+          <CardTitle>{t("Taxable entries")}</CardTitle>
+          <CardDescription>{t("Journal entries tagged as GST-applicable, posted to the ledger.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          {data.entries.length === 0 && <p className="text-sm text-muted-foreground">No GST-applicable entries yet.</p>}
+          {data.entries.length === 0 && <p className="text-sm text-muted-foreground">{t("No GST-applicable entries yet.")}</p>}
           {data.entries.map((e) => (
             <div key={e.entryId} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="min-w-0">
@@ -66,7 +68,7 @@ export default function GstTab() {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Badge variant={e.direction === "output" ? "success" : "info"}>{e.direction === "output" ? "Output" : "Input"}</Badge>
+                <Badge variant={e.direction === "output" ? "success" : "info"}>{e.direction === "output" ? t("Output") : t("Input")}</Badge>
                 <span className="text-sm font-medium text-foreground tabular-nums">{formatCurrency(e.taxAmount)}</span>
               </div>
             </div>

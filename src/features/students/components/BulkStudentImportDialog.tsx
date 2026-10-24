@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import BulkImportDialog, { type ImportColumn, type ParsedRow } from "@/components/dialogs/BulkImportDialog";
 import { normalizeDate } from "@/utils/csvParse";
 import { getCurrentBranchId } from "@/utils/tenant";
@@ -24,17 +25,22 @@ const COLUMNS: ImportColumn[] = [
 const GENDERS: Gender[] = ["male", "female", "other"];
 const EMAIL = /^\S+@\S+\.\S+$/;
 
-export function parseStudentRow(r: Record<string, string>): ParsedRow<StudentFormValues> {
+/** Translator for row errors; defaults to plain English with {{placeholders}} filled in. */
+type Translate = (key: string, options?: Record<string, string>) => string;
+const plainEnglish: Translate = (key, options) => key.replace(/\{\{(\w+)\}\}/g, (_, name: string) => options?.[name] ?? "");
+
+// Column labels stay English: they are the CSV header names the importer matches on.
+export function parseStudentRow(r: Record<string, string>, t: Translate = plainEnglish): ParsedRow<StudentFormValues> {
   const missing = COLUMNS.filter((c) => c.required && !r[c.key]).map((c) => c.label);
-  if (missing.length) return { ok: false, error: `Missing ${missing.join(", ")}` };
+  if (missing.length) return { ok: false, error: t("Missing {{fields}}", { fields: missing.join(", ") }) };
   const dateOfBirth = normalizeDate(r.dateOfBirth);
-  if (!dateOfBirth) return { ok: false, error: `Date of birth "${r.dateOfBirth}" is not a valid date` };
+  if (!dateOfBirth) return { ok: false, error: t('Date of birth "{{value}}" is not a valid date', { value: r.dateOfBirth }) };
   const gender = GENDERS.find((g) => g === r.gender.toLowerCase());
-  if (!gender) return { ok: false, error: `Gender must be ${GENDERS.join(", ")}` };
+  if (!gender) return { ok: false, error: t("Gender must be {{options}}", { options: GENDERS.join(", ") }) };
   const guardianRelation = GUARDIAN_RELATIONS.find((g) => g === r.guardianRelation.toLowerCase());
-  if (!guardianRelation) return { ok: false, error: `Guardian relation must be ${GUARDIAN_RELATIONS.join(", ")}` };
+  if (!guardianRelation) return { ok: false, error: t("Guardian relation must be {{options}}", { options: GUARDIAN_RELATIONS.join(", ") }) };
   for (const key of ["studentEmail", "parentEmail"] as const) {
-    if (r[key] && !EMAIL.test(r[key])) return { ok: false, error: `${key === "studentEmail" ? "Student" : "Parent"} email "${r[key]}" is not valid` };
+    if (r[key] && !EMAIL.test(r[key])) return { ok: false, error: key === "studentEmail" ? t('Student email "{{value}}" is not valid', { value: r[key] }) : t('Parent email "{{value}}" is not valid', { value: r[key] }) };
   }
   return {
     ok: true,
@@ -64,15 +70,16 @@ interface Props {
 }
 
 export default function BulkStudentImportDialog({ open, onOpenChange, onFinished }: Props) {
+  const { t } = useTranslation("students");
   return (
     <BulkImportDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Import students"
-      description="Register many students from a CSV file. Class and section must already exist. An email creates a login for that student or parent."
+      title={t("Import students")}
+      description={t("Register many students from a CSV file. Class and section must already exist. An email creates a login for that student or parent.")}
       templateFileName="students-import-template"
       columns={COLUMNS}
-      parseRow={parseStudentRow}
+      parseRow={(r) => parseStudentRow(r, t)}
       importRow={createStudent}
       onFinished={onFinished}
     />

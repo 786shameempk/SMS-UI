@@ -18,7 +18,9 @@ import { EVENT_STATUS_LABEL, LEVELS, PARTICIPANT_LABEL } from "../constants";
 import { SelectField, formatDate, options, todayIso, useApiMutation, useExtracurricularAccess, useStudentOptions } from "../shared";
 import type { ActivityEvent, EventResult, EventStatus, ParticipantType } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function EventsPage() {
+  const { t } = useTranslation("extracurricular");
   const access = useExtracurricularAccess();
   const [status, setStatus] = useState<EventStatus | undefined>();
   const [editing, setEditing] = useState<ActivityEvent | null>(null);
@@ -38,15 +40,15 @@ export default function EventsPage() {
           <SelectField value={status} onChange={setStatus} allLabel="Any status" items={options(EVENT_STATUS_LABEL)} />
         </div>
         {access.canManage && (
-          <Button className="ml-auto" onClick={() => { setEditing(null); setFormOpen(true); }}>
-            <CalendarPlus className="h-4 w-4" /> New event
+          <Button className="ms-auto" onClick={() => { setEditing(null); setFormOpen(true); }}>
+            <CalendarPlus className="h-4 w-4" /> {t("New event")}
           </Button>
         )}
       </div>
 
       {events.isError && <ErrorState onRetry={() => events.refetch()} retrying={events.isFetching} />}
       {events.isLoading && <Skeleton className="h-40 w-full" />}
-      {events.data && items.length === 0 && <EmptyState icon={Medal} title="No events" description={access.canManage ? "Sports days, festivals, tournaments, exhibitions — add the first one." : "No events are published yet."} />}
+      {events.data && items.length === 0 && <EmptyState icon={Medal} title={t("No events")} description={access.canManage ? t("Sports days, festivals, tournaments, exhibitions — add the first one.") : t("No events are published yet.")} />}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {items.map((e) => (
@@ -60,26 +62,26 @@ export default function EventsPage() {
                 <StatusBadge status={e.status} label={EVENT_STATUS_LABEL[e.status]} />
               </div>
               <dl className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
-                <dt>When</dt>
-                <dd className="text-right text-foreground">{formatDate(e.startDate)}{e.endDate !== e.startDate ? ` – ${formatDate(e.endDate)}` : ""}</dd>
-                {e.venue && (<><dt>Where</dt><dd className="truncate text-right text-foreground">{e.venue}</dd></>)}
-                {e.organizer && (<><dt>Organiser</dt><dd className="truncate text-right text-foreground">{e.organizer}</dd></>)}
-                {e.registrationDeadline && (<><dt>Register by</dt><dd className="text-right text-foreground">{formatDate(e.registrationDeadline)}</dd></>)}
-                <dt>Registered</dt>
-                <dd className="text-right text-foreground">{e.registrations}</dd>
+                <dt>{t("When")}</dt>
+                <dd className="text-end text-foreground">{formatDate(e.startDate)}{e.endDate !== e.startDate ? ` – ${formatDate(e.endDate)}` : ""}</dd>
+                {e.venue && (<><dt>{t("Where")}</dt><dd className="truncate text-end text-foreground">{e.venue}</dd></>)}
+                {e.organizer && (<><dt>{t("Organiser")}</dt><dd className="truncate text-end text-foreground">{e.organizer}</dd></>)}
+                {e.registrationDeadline && (<><dt>{t("Register by")}</dt><dd className="text-end text-foreground">{formatDate(e.registrationDeadline)}</dd></>)}
+                <dt>{t("Registered")}</dt>
+                <dd className="text-end text-foreground">{e.registrations}</dd>
               </dl>
               {e.description && <p className="line-clamp-2 text-sm text-secondary-foreground">{e.description}</p>}
               <div className="flex flex-wrap items-center gap-1">
                 <Button size="sm" variant={e.registrationOpen ? "default" : "outline"} onClick={() => setRegistering(e)}>
-                  <ListChecks className="h-3.5 w-3.5" /> {e.registrationOpen ? "Register" : "Registrations"}
+                  <ListChecks className="h-3.5 w-3.5" /> {e.registrationOpen ? t("Register") : t("Registrations")}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setScoring(e)}>
-                  <Medal className="h-3.5 w-3.5" /> Results
+                  <Medal className="h-3.5 w-3.5" /> {t("Results")}
                 </Button>
                 {access.canManage && (
                   <>
-                    <Button size="sm" variant="ghost" onClick={() => { setEditing(e); setFormOpen(true); }}>Edit</Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Delete ${e.name}`} onClick={() => setRemoving(e)}>
+                    <Button size="sm" variant="ghost" onClick={() => { setEditing(e); setFormOpen(true); }}>{t("Edit")}</Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Delete {{name}}", { name: e.name })} onClick={() => setRemoving(e)}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive-strong" />
                     </Button>
                   </>
@@ -96,9 +98,9 @@ export default function EventsPage() {
       <ConfirmDialog
         open={Boolean(removing)}
         onOpenChange={(v) => !v && setRemoving(null)}
-        title="Delete event"
-        description={`Delete "${removing?.name}" and its registrations? An event with recorded results can only be cancelled.`}
-        confirmLabel="Delete"
+        title={t("Delete event")}
+        description={t("Delete \"{{name}}\" and its registrations? An event with recorded results can only be cancelled.", { name: removing?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {
@@ -110,6 +112,7 @@ export default function EventsPage() {
 }
 
 function EventFormDialog({ open, onOpenChange, event }: { open: boolean; onOpenChange: (o: boolean) => void; event: ActivityEvent | null }) {
+  const { t } = useTranslation("extracurricular");
   const blank = () => ({ name: "", eventType: "", startDate: todayIso(), endDate: todayIso(), venue: "", organizer: "", registrationDeadline: "", level: "", description: "", status: "Draft" as EventStatus });
   const [v, setV] = useState(blank());
   const [touched, setTouched] = useState(false);
@@ -131,45 +134,45 @@ function EventFormDialog({ open, onOpenChange, event }: { open: boolean; onOpenC
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{event ? "Edit event" : "New event"}</DialogTitle>
-          <DialogDescription>Families only see an event once it is no longer a draft.</DialogDescription>
+          <DialogTitle>{event ? t("Edit event") : t("New event")}</DialogTitle>
+          <DialogDescription>{t("Families only see an event once it is no longer a draft.")}</DialogDescription>
         </DialogHeader>
         <form className="space-y-4" noValidate onSubmit={(e) => { e.preventDefault(); setTouched(true); if (Object.values(errors).some(Boolean)) return; save.mutate({ id: event?.id, name: v.name.trim(), eventType: v.eventType.trim(), activityId: event?.activityId ?? null, startDate: v.startDate, endDate: v.endDate, venue: v.venue.trim() || null, organizer: v.organizer.trim() || null, registrationDeadline: v.registrationDeadline || null, level: v.level || null, description: v.description.trim() || null, status: v.status }); }}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Name" htmlFor="ev-name" required error={touched ? errors.name : undefined}>
+            <FormField label={t("Name")} htmlFor="ev-name" required error={touched ? errors.name : undefined}>
               <Input id="ev-name" value={v.name} onChange={(e) => set("name", e.target.value)} aria-invalid={touched && errors.name ? true : undefined} />
             </FormField>
-            <FormField label="Kind of event" htmlFor="ev-type" required error={touched ? errors.eventType : undefined} hint="Sports Day, Arts Festival, Tournament…">
+            <FormField label={t("Kind of event")} htmlFor="ev-type" required error={touched ? errors.eventType : undefined} hint={t("Sports Day, Arts Festival, Tournament…")}>
               <Input id="ev-type" value={v.eventType} onChange={(e) => set("eventType", e.target.value)} aria-invalid={touched && errors.eventType ? true : undefined} />
             </FormField>
-            <FormField label="Starts" htmlFor="ev-start" required>
+            <FormField label={t("Starts")} htmlFor="ev-start" required>
               <Input id="ev-start" type="date" value={v.startDate} onChange={(e) => set("startDate", e.target.value)} />
             </FormField>
-            <FormField label="Ends" htmlFor="ev-end" required error={touched ? errors.endDate : undefined}>
+            <FormField label={t("Ends")} htmlFor="ev-end" required error={touched ? errors.endDate : undefined}>
               <Input id="ev-end" type="date" value={v.endDate} onChange={(e) => set("endDate", e.target.value)} />
             </FormField>
-            <FormField label="Register by" htmlFor="ev-deadline" optional error={touched ? errors.registrationDeadline : undefined}>
+            <FormField label={t("Register by")} htmlFor="ev-deadline" optional error={touched ? errors.registrationDeadline : undefined}>
               <Input id="ev-deadline" type="date" value={v.registrationDeadline} onChange={(e) => set("registrationDeadline", e.target.value)} />
             </FormField>
-            <FormField label="Level" htmlFor="ev-level" optional>
+            <FormField label={t("Level")} htmlFor="ev-level" optional>
               <SelectField id="ev-level" value={v.level || undefined} onChange={(x) => set("level", x ?? "")} allLabel="Not set" items={LEVELS.map((l) => ({ value: l, label: l }))} />
             </FormField>
-            <FormField label="Venue" htmlFor="ev-venue" optional>
+            <FormField label={t("Venue")} htmlFor="ev-venue" optional>
               <Input id="ev-venue" value={v.venue} onChange={(e) => set("venue", e.target.value)} />
             </FormField>
-            <FormField label="Organiser" htmlFor="ev-org" optional>
+            <FormField label={t("Organiser")} htmlFor="ev-org" optional>
               <Input id="ev-org" value={v.organizer} onChange={(e) => set("organizer", e.target.value)} />
             </FormField>
           </div>
-          <FormField label="Status" htmlFor="ev-status" hint="Open lets families register until the deadline.">
+          <FormField label={t("Status")} htmlFor="ev-status" hint={t("Open lets families register until the deadline.")}>
             <SelectField id="ev-status" value={v.status} onChange={(x) => x && set("status", x)} items={options(EVENT_STATUS_LABEL)} />
           </FormField>
-          <FormField label="Description" htmlFor="ev-desc" optional>
+          <FormField label={t("Description")} htmlFor="ev-desc" optional>
             <Textarea id="ev-desc" rows={3} value={v.description} onChange={(e) => set("description", e.target.value)} />
           </FormField>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" loading={save.isPending}>{event ? "Save changes" : "Create event"}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("Cancel")}</Button>
+            <Button type="submit" loading={save.isPending}>{event ? t("Save changes") : t("Create event")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -178,6 +181,7 @@ function EventFormDialog({ open, onOpenChange, event }: { open: boolean; onOpenC
 }
 
 function RegistrationsDialog({ event, onOpenChange, canManage, isFamily }: { event: ActivityEvent | null; onOpenChange: (o: boolean) => void; canManage: boolean; isFamily: boolean }) {
+  const { t: tr } = useTranslation("extracurricular");
   const regs = useQuery({ queryKey: ["extracurricular", "registrations", event?.id], queryFn: () => listRegistrations(event!.id), enabled: Boolean(event) });
   const students = useStudentOptions(Boolean(event));
   const teams = useQuery({ queryKey: ["extracurricular", "teams", "all", undefined], queryFn: () => listTeams(undefined, true), enabled: Boolean(event) && canManage });
@@ -201,33 +205,33 @@ function RegistrationsDialog({ event, onOpenChange, canManage, isFamily }: { eve
           <DialogTitle>{event?.name}</DialogTitle>
           <DialogDescription>
             {event && EVENT_STATUS_LABEL[event.status]}
-            {event?.registrationDeadline ? ` · register by ${formatDate(event.registrationDeadline)}` : ""}
+            {event?.registrationDeadline ? tr(" · register by {{v1}}", { v1: formatDate(event.registrationDeadline) }) : ""}
           </DialogDescription>
         </DialogHeader>
         {regs.isLoading && <Skeleton className="h-24 w-full" />}
-        {regs.data && regs.data.length === 0 && <EmptyState size="sm" bare title="Nobody registered yet" />}
+        {regs.data && regs.data.length === 0 && <EmptyState size="sm" bare title={tr("Nobody registered yet")} />}
         <ul className="divide-y divide-border rounded-lg border border-border text-sm empty:hidden">
           {regs.data?.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-2">
               <span>{r.participantName} <Badge variant="neutral">{PARTICIPANT_LABEL[r.participantType]}</Badge></span>
-              {(canManage || isFamily) && event?.registrationOpen && <Button size="sm" variant="ghost" onClick={() => drop.mutate(r.id)}>Withdraw</Button>}
+              {(canManage || isFamily) && event?.registrationOpen && <Button size="sm" variant="ghost" onClick={() => drop.mutate(r.id)}>{tr("Withdraw")}</Button>}
             </li>
           ))}
         </ul>
         {mayRegister ? (
           <div className="space-y-3 rounded-lg border border-border p-3">
-            <p className="text-sm font-medium">Register</p>
+            <p className="text-sm font-medium">{tr("Register")}</p>
             <div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
               {!isFamily && <SelectField value={type} onChange={(v) => v && setType(v)} items={typeItems} />}
-              <Combobox aria-label="Participant" value={participant} onValueChange={setParticipant} options={choices} placeholder="Choose…" />
+              <Combobox aria-label={tr("Participant")} value={participant} onValueChange={setParticipant} options={choices} placeholder={tr("Choose…")} />
             </div>
-            <Button type="button" disabled={!participant} loading={add.isPending} onClick={() => add.mutate(undefined)}>Register</Button>
+            <Button type="button" disabled={!participant} loading={add.isPending} onClick={() => add.mutate(undefined)}>{tr("Register")}</Button>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Registration is closed.</p>
+          <p className="text-sm text-muted-foreground">{tr("Registration is closed.")}</p>
         )}
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{tr("Close")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -237,6 +241,7 @@ function RegistrationsDialog({ event, onOpenChange, canManage, isFamily }: { eve
 type Row = { key: string; participantType: ParticipantType; participantName: string; participantId?: string | null; round: string; score: string; rank: string; award: string };
 
 function ResultsDialog({ event, onOpenChange, canManage }: { event: ActivityEvent | null; onOpenChange: (o: boolean) => void; canManage: boolean }) {
+  const { t } = useTranslation("extracurricular");
   const results = useQuery({ queryKey: ["extracurricular", "results", event?.id], queryFn: () => listResults(event!.id), enabled: Boolean(event) });
   const regs = useQuery({ queryKey: ["extracurricular", "registrations", event?.id], queryFn: () => listRegistrations(event!.id), enabled: Boolean(event) && canManage });
   const [rows, setRows] = useState<Row[]>([]);
@@ -275,26 +280,26 @@ function ResultsDialog({ event, onOpenChange, canManage }: { event: ActivityEven
     <Dialog open={Boolean(event)} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Results — {event?.name}</DialogTitle>
-          <DialogDescription>Scores, ranks and awards by round. Saving a round replaces that round's results.</DialogDescription>
+          <DialogTitle>{t("Results —")} {event?.name}</DialogTitle>
+          <DialogDescription>{t("Scores, ranks and awards by round. Saving a round replaces that round's results.")}</DialogDescription>
         </DialogHeader>
         {results.isLoading && <Skeleton className="h-32 w-full" />}
-        {!canManage && rows.length === 0 && results.data && <EmptyState size="sm" bare title="No results yet" />}
+        {!canManage && rows.length === 0 && results.data && <EmptyState size="sm" bare title={t("No results yet")} />}
         {rows.length > 0 && (
           <div className="overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-secondary/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr><th className="px-2 py-2">Participant</th><th className="px-2 py-2">Round</th><th className="px-2 py-2">Score</th><th className="px-2 py-2">Rank</th><th className="px-2 py-2">Award</th>{canManage && <th />}</tr>
+              <thead className="bg-secondary/50 text-start text-xs uppercase tracking-wide text-muted-foreground">
+                <tr><th className="px-2 py-2">{t("Participant")}</th><th className="px-2 py-2">{t("Round")}</th><th className="px-2 py-2">{t("Score")}</th><th className="px-2 py-2">{t("Rank")}</th><th className="px-2 py-2">{t("Award")}</th>{canManage && <th />}</tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {rows.map((r) => (
                   <tr key={r.key}>
-                    <td className="px-2 py-1.5">{canManage ? <Input aria-label="Participant" value={r.participantName} onChange={(e) => update(r.key, { participantName: e.target.value })} /> : r.participantName}</td>
-                    <td className="px-2 py-1.5">{canManage ? <Input aria-label="Round" value={r.round} onChange={(e) => update(r.key, { round: e.target.value })} className="w-28" /> : r.round}</td>
-                    <td className="px-2 py-1.5">{canManage ? <Input aria-label="Score" inputMode="decimal" value={r.score} onChange={(e) => update(r.key, { score: e.target.value })} className="w-20" /> : r.score}</td>
-                    <td className="px-2 py-1.5">{canManage ? <Input aria-label="Rank" inputMode="numeric" value={r.rank} onChange={(e) => update(r.key, { rank: e.target.value })} className="w-16" /> : r.rank}</td>
-                    <td className="px-2 py-1.5">{canManage ? <Input aria-label="Award" value={r.award} onChange={(e) => update(r.key, { award: e.target.value })} className="w-28" /> : r.award}</td>
-                    {canManage && <td className="px-2"><Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Remove row" onClick={() => setRows((s) => s.filter((x) => x.key !== r.key))}><Trash2 className="h-3.5 w-3.5" /></Button></td>}
+                    <td className="px-2 py-1.5">{canManage ? <Input aria-label={t("Participant")} value={r.participantName} onChange={(e) => update(r.key, { participantName: e.target.value })} /> : r.participantName}</td>
+                    <td className="px-2 py-1.5">{canManage ? <Input aria-label={t("Round")} value={r.round} onChange={(e) => update(r.key, { round: e.target.value })} className="w-28" /> : r.round}</td>
+                    <td className="px-2 py-1.5">{canManage ? <Input aria-label={t("Score")} inputMode="decimal" value={r.score} onChange={(e) => update(r.key, { score: e.target.value })} className="w-20" /> : r.score}</td>
+                    <td className="px-2 py-1.5">{canManage ? <Input aria-label={t("Rank")} inputMode="numeric" value={r.rank} onChange={(e) => update(r.key, { rank: e.target.value })} className="w-16" /> : r.rank}</td>
+                    <td className="px-2 py-1.5">{canManage ? <Input aria-label={t("Award")} value={r.award} onChange={(e) => update(r.key, { award: e.target.value })} className="w-28" /> : r.award}</td>
+                    {canManage && <td className="px-2"><Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Remove row")} onClick={() => setRows((s) => s.filter((x) => x.key !== r.key))}><Trash2 className="h-3.5 w-3.5" /></Button></td>}
                   </tr>
                 ))}
               </tbody>
@@ -303,15 +308,15 @@ function ResultsDialog({ event, onOpenChange, canManage }: { event: ActivityEven
         )}
         {canManage && (
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={addFromRegistrations}><Plus className="h-3.5 w-3.5" /> Add registered participants</Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => setRows((s) => [...s, { key: `blank-${Date.now()}`, participantType: "Student", participantName: "", round: "", score: "", rank: "", award: "" }])}><Plus className="h-3.5 w-3.5" /> Add a row</Button>
-            <label className="ml-auto flex items-center gap-2 text-sm"><input type="checkbox" checked={rankByScore} onChange={(e) => setRankByScore(e.target.checked)} /> Rank by score when no rank is given</label>
+            <Button type="button" size="sm" variant="outline" onClick={addFromRegistrations}><Plus className="h-3.5 w-3.5" /> {t("Add registered participants")}</Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setRows((s) => [...s, { key: `blank-${Date.now()}`, participantType: "Student", participantName: "", round: "", score: "", rank: "", award: "" }])}><Plus className="h-3.5 w-3.5" /> {t("Add a row")}</Button>
+            <label className="ms-auto flex items-center gap-2 text-sm"><input type="checkbox" checked={rankByScore} onChange={(e) => setRankByScore(e.target.checked)} /> {t("Rank by score when no rank is given")}</label>
           </div>
         )}
         {errors && <p role="alert" className="text-sm text-destructive-strong">{errors}</p>}
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-          {canManage && <Button type="button" loading={save.isPending} disabled={rows.length === 0} onClick={submit}>Save results</Button>}
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("Close")}</Button>
+          {canManage && <Button type="button" loading={save.isPending} disabled={rows.length === 0} onClick={submit}>{t("Save results")}</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

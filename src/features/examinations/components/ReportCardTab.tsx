@@ -16,7 +16,9 @@ import { useAiCapabilities } from "@/features/ai/capabilities";
 import { getRemark, getReportCard, listExams, saveRemark } from "../api";
 import { EXAM_TYPE_LABELS, gradeBadgeVariant } from "../constants";
 
+import { useTranslation } from "react-i18next";
 export default function ReportCardTab() {
+  const { t } = useTranslation("examinations");
   const queryClient = useQueryClient();
   // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
   const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
@@ -49,7 +51,7 @@ export default function ReportCardTab() {
     mutationFn: () => saveRemark(examId as string, studentId as string, remarkDraft),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["examinations", "remark", examId, studentId] });
-      toast.success("Remarks saved");
+      toast.success(t("Remarks saved"));
     },
   });
 
@@ -59,13 +61,13 @@ export default function ReportCardTab() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Select student and exam</CardTitle>
+          <CardTitle>{t("Select student and exam")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <div className="w-64">
             <Select value={studentId} onValueChange={setStudentId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a student" />
+                <SelectValue placeholder={t("Select a student")} />
               </SelectTrigger>
               <SelectContent>
                 {students.map((s) => (
@@ -79,7 +81,7 @@ export default function ReportCardTab() {
           <div className="w-64">
             <Select value={examId} onValueChange={setExamId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select an exam" />
+                <SelectValue placeholder={t("Select an exam")} />
               </SelectTrigger>
               <SelectContent>
                 {exams.map((e) => (
@@ -96,7 +98,7 @@ export default function ReportCardTab() {
       {Boolean(studentId && examId) && !isLoading && !report && (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No marks recorded for this student in this exam yet.
+            {t("No marks recorded for this student in this exam yet.")}
           </CardContent>
         </Card>
       )}
@@ -105,30 +107,28 @@ export default function ReportCardTab() {
         <Card className={showSplit ? "max-w-4xl" : "max-w-3xl"}>
           <CardContent className="p-8 space-y-6">
             <div className="text-center space-y-1 border-b border-border pb-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Report Card</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("Report Card")}</p>
               <h2 className="text-lg font-bold text-foreground">{exam.name}</h2>
-              <p className="text-sm text-muted-foreground">
-                {EXAM_TYPE_LABELS[exam.examType]} &middot; {exam.startDate} &rarr; {exam.endDate}
-              </p>
+              <p className="text-sm text-muted-foreground">{t("{{v1}} · {{startDate}} → {{endDate}}", { v1: EXAM_TYPE_LABELS[exam.examType], startDate: exam.startDate, endDate: exam.endDate })}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-muted-foreground">Student: </span>
+                <span className="text-muted-foreground">{t("Student:")} </span>
                 <span className="font-medium text-foreground">{report.studentName}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Admission No.: </span>
+                <span className="text-muted-foreground">{t("Admission No.:")} </span>
                 <span className="font-medium text-foreground">{report.admissionNumber}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Class: </span>
+                <span className="text-muted-foreground">{t("Class:")} </span>
                 <span className="font-medium text-foreground">
                   {report.className} - {report.section}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">Rank in class: </span>
+                <span className="text-muted-foreground">{t("Rank in class:")} </span>
                 <span className="font-medium text-foreground">#{report.rank}</span>
               </div>
             </div>
@@ -136,12 +136,12 @@ export default function ReportCardTab() {
             <Table containerClassName="rounded-xl border border-border">
               <TableHeader>
                 <TableRow hover={false}>
-                  <TableHead>Subject</TableHead>
-                  {showSplit && <TableHead className="text-right">Internal (CE)</TableHead>}
-                  {showSplit && <TableHead className="text-right">Actual</TableHead>}
-                  <TableHead className="text-right">{showSplit ? "Total" : "Marks obtained"}</TableHead>
-                  <TableHead className="text-right">Max marks</TableHead>
-                  <TableHead className="text-right">Grade</TableHead>
+                  <TableHead>{t("Subject")}</TableHead>
+                  {showSplit && <TableHead className="text-end">{t("Internal (CE)")}</TableHead>}
+                  {showSplit && <TableHead className="text-end">{t("Actual")}</TableHead>}
+                  <TableHead className="text-end">{showSplit ? t("Total") : t("Marks obtained")}</TableHead>
+                  <TableHead className="text-end">{t("Max marks")}</TableHead>
+                  <TableHead className="text-end">{t("Grade")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -151,16 +151,16 @@ export default function ReportCardTab() {
                       {s.subjectName} <span className="text-xs text-muted-foreground">({s.subjectCode})</span>
                     </TableCell>
                     {showSplit && (
-                      <TableCell className="text-right tabular-nums">
-                        {s.isAbsent ? "Absent" : s.internalMaxMarks != null ? `${s.internalMarks ?? 0} / ${s.internalMaxMarks}` : "—"}
+                      <TableCell className="text-end tabular-nums">
+                        {s.isAbsent ? t("Absent") : s.internalMaxMarks != null ? `${s.internalMarks ?? 0} / ${s.internalMaxMarks}` : "—"}
                       </TableCell>
                     )}
                     {showSplit && (
-                      <TableCell className="text-right tabular-nums">{s.isAbsent ? "Absent" : `${s.externalMarks} / ${s.externalMaxMarks}`}</TableCell>
+                      <TableCell className="text-end tabular-nums">{s.isAbsent ? t("Absent") : `${s.externalMarks} / ${s.externalMaxMarks}`}</TableCell>
                     )}
-                    <TableCell className="text-right tabular-nums">{s.isAbsent ? "Absent" : s.marksObtained}</TableCell>
-                    <TableCell className="text-right tabular-nums text-secondary-foreground">{s.maxMarks}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end tabular-nums">{s.isAbsent ? t("Absent") : s.marksObtained}</TableCell>
+                    <TableCell className="text-end tabular-nums text-secondary-foreground">{s.maxMarks}</TableCell>
+                    <TableCell className="text-end">
                       <Badge variant={gradeBadgeVariant(s.grade)}>{s.grade}</Badge>
                     </TableCell>
                   </TableRow>
@@ -168,19 +168,19 @@ export default function ReportCardTab() {
               </TableBody>
               <TableFooter>
                 <TableRow hover={false}>
-                  <TableCell className="font-semibold">Total</TableCell>
+                  <TableCell className="font-semibold">{t("Total")}</TableCell>
                   {showSplit && (
-                    <TableCell className="text-right font-semibold tabular-nums">
+                    <TableCell className="text-end font-semibold tabular-nums">
                       {report.subjects.reduce((sum, s) => sum + (s.internalMarks ?? 0), 0)} / {report.subjects.reduce((sum, s) => sum + (s.internalMaxMarks ?? 0), 0)}
                     </TableCell>
                   )}
                   {showSplit && (
-                    <TableCell className="text-right font-semibold tabular-nums">
+                    <TableCell className="text-end font-semibold tabular-nums">
                       {report.subjects.reduce((sum, s) => sum + s.externalMarks, 0)} / {report.subjects.reduce((sum, s) => sum + s.externalMaxMarks, 0)}
                     </TableCell>
                   )}
-                  <TableCell className="text-right font-semibold tabular-nums">{report.totalObtained}</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">{report.totalMax}</TableCell>
+                  <TableCell className="text-end font-semibold tabular-nums">{report.totalObtained}</TableCell>
+                  <TableCell className="text-end font-semibold tabular-nums">{report.totalMax}</TableCell>
                   <TableCell />
                 </TableRow>
               </TableFooter>
@@ -188,30 +188,30 @@ export default function ReportCardTab() {
 
             <div className="flex flex-wrap items-center gap-6">
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Percentage</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("Percentage")}</p>
                 <p className="text-lg font-bold text-foreground tabular-nums">{report.percentage}%</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Overall grade</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("Overall grade")}</p>
                 <Badge variant={gradeBadgeVariant(report.grade)} className="mt-1">
                   {report.grade}
                 </Badge>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">GPA</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("GPA")}</p>
                 <p className="text-lg font-bold text-foreground tabular-nums">{report.gpa.toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Rank</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("Rank")}</p>
                 <p className="text-lg font-bold text-foreground tabular-nums">#{report.rank}</p>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="remarks">Remarks</Label>
+              <Label htmlFor="remarks">{t("Remarks")}</Label>
               <Textarea
                 id="remarks"
-                placeholder="Add teacher/principal remarks for this report card…"
+                placeholder={t("Add teacher/principal remarks for this report card…")}
                 value={remarkDraft}
                 onChange={(e) => setRemarkDraft(e.target.value)}
               />
@@ -222,7 +222,7 @@ export default function ReportCardTab() {
                 <Button size="sm" onClick={() => saveRemarkMutation.mutate()} disabled={saveRemarkMutation.isPending}>
                   {saveRemarkMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <Save className="w-3.5 h-3.5" />
-                  Save remarks
+                  {t("Save remarks")}
                 </Button>
               </div>
             </div>

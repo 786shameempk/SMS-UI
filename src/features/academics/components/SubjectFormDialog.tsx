@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SUBJECT_TYPES } from "../constants";
 import type { SchoolClass, Subject, SubjectFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const subjectFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   code: z.string().min(1, "Code is required"),
@@ -36,6 +37,7 @@ export default function SubjectFormDialog({
   onSubmit: (values: SubjectFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t: tr } = useTranslation("academics");
   const isEdit = Boolean(subject);
   const {
     register,
@@ -55,25 +57,25 @@ export default function SubjectFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit subject" : "New subject"}</DialogTitle>
-          <DialogDescription>Subjects are core or elective and can be linked to one or more classes.</DialogDescription>
+          <DialogTitle>{isEdit ? tr("Edit subject") : tr("New subject")}</DialogTitle>
+          <DialogDescription>{tr("Subjects are core or elective and can be linked to one or more classes.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="name" required>Name</Label>
-              <Input id="name" placeholder="e.g. Mathematics" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+              <Label htmlFor="name" required>{tr("Name")}</Label>
+              <Input id="name" placeholder={tr("e.g. Mathematics")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
               {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="code" required>Code</Label>
-              <Input id="code" placeholder="e.g. MATH" aria-invalid={errors.code ? true : undefined} {...register("code")} />
+              <Label htmlFor="code" required>{tr("Code")}</Label>
+              <Input id="code" placeholder={tr("e.g. MATH")} aria-invalid={errors.code ? true : undefined} {...register("code")} />
               {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="type" required>Type</Label>
+            <Label htmlFor="type" required>{tr("Type")}</Label>
             <Controller
               control={control}
               name="type"
@@ -95,7 +97,7 @@ export default function SubjectFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Classes</Label>
+            <Label>{tr("Classes")}</Label>
             <Controller
               control={control}
               name="classIds"
@@ -124,10 +126,10 @@ export default function SubjectFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create subject"}
+              {isEdit ? tr("Save changes") : tr("Create subject")}
             </Button>
           </DialogFooter>
         </form>

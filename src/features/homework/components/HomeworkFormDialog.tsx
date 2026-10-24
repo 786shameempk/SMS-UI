@@ -16,6 +16,7 @@ import AttachmentField from "@/features/attachments/AttachmentField";
 import { attachmentChange, toAttachmentRef, type AttachmentRef } from "@/features/attachments/api";
 import type { Homework, HomeworkFormValues, HomeworkStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 const NONE_SECTION = "__none__";
 
 const homeworkSchema = z.object({
@@ -70,6 +71,7 @@ export default function HomeworkFormDialog({
   submitting: boolean;
   onSubmit: (values: HomeworkFormValues) => Promise<void>;
 }) {
+  const { t: tr } = useTranslation("homework");
   const isEdit = Boolean(homework);
   // The uploaded file is held beside the form fields: it is uploaded when chosen, and only its id is saved with the homework.
   const [attachment, setAttachment] = useState<AttachmentRef | null>(null);
@@ -112,8 +114,8 @@ export default function HomeworkFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit homework" : "New homework"}</DialogTitle>
-          <DialogDescription>Assign homework to a class (and optionally a single section) for a subject.</DialogDescription>
+          <DialogTitle>{isEdit ? tr("Edit homework") : tr("New homework")}</DialogTitle>
+          <DialogDescription>{tr("Assign homework to a class (and optionally a single section) for a subject.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -127,27 +129,27 @@ export default function HomeworkFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="hw-title" required>Title</Label>
+            <Label htmlFor="hw-title" required>{tr("Title")}</Label>
             <Input id="hw-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
             {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hw-description" required>Description</Label>
+            <Label htmlFor="hw-description" required>{tr("Description")}</Label>
             <Textarea id="hw-description" rows={3} aria-invalid={errors.description ? true : undefined} {...register("description")} />
             {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="hw-classId" required>Class</Label>
+              <Label htmlFor="hw-classId" required>{tr("Class")}</Label>
               <Controller
                 control={control}
                 name="classId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="hw-classId">
-                      <SelectValue placeholder="Select a class" />
+                      <SelectValue placeholder={tr("Select a class")} />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map((c) => (
@@ -162,17 +164,17 @@ export default function HomeworkFormDialog({
               {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="hw-sectionId" optional>Section</Label>
+              <Label htmlFor="hw-sectionId" optional>{tr("Section")}</Label>
               <Controller
                 control={control}
                 name="sectionId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange} disabled={!classId}>
                     <SelectTrigger id="hw-sectionId">
-                      <SelectValue placeholder="Whole class" />
+                      <SelectValue placeholder={tr("Whole class")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE_SECTION}>Whole class</SelectItem>
+                      <SelectItem value={NONE_SECTION}>{tr("Whole class")}</SelectItem>
                       {availableSections.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
                           {s.name}
@@ -187,14 +189,14 @@ export default function HomeworkFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="hw-subjectId" required>Subject</Label>
+              <Label htmlFor="hw-subjectId" required>{tr("Subject")}</Label>
               <Controller
                 control={control}
                 name="subjectId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="hw-subjectId">
-                      <SelectValue placeholder="Select a subject" />
+                      <SelectValue placeholder={tr("Select a subject")} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableSubjects.map((s) => (
@@ -209,14 +211,14 @@ export default function HomeworkFormDialog({
               {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="hw-staffId" required>Assigned by</Label>
+              <Label htmlFor="hw-staffId" required>{tr("Assigned by")}</Label>
               <Controller
                 control={control}
                 name="staffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="hw-staffId">
-                      <SelectValue placeholder="Select a teacher" />
+                      <SelectValue placeholder={tr("Select a teacher")} />
                     </SelectTrigger>
                     <SelectContent>
                       {teachers.map((t) => (
@@ -234,21 +236,21 @@ export default function HomeworkFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="hw-assignedDate" required>Assigned date</Label>
+              <Label htmlFor="hw-assignedDate" required>{tr("Assigned date")}</Label>
               <Input id="hw-assignedDate" type="date" aria-invalid={errors.assignedDate ? true : undefined} {...register("assignedDate")} />
               {errors.assignedDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.assignedDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="hw-dueDate" required>Due date</Label>
+              <Label htmlFor="hw-dueDate" required>{tr("Due date")}</Label>
               <Input id="hw-dueDate" type="date" aria-invalid={errors.dueDate ? true : undefined} {...register("dueDate")} />
               {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dueDate.message}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <AttachmentField label="Attachment" value={attachment} onChange={setAttachment} />
+            <AttachmentField label={tr("Attachment")} value={attachment} onChange={setAttachment} />
             <div className="space-y-1.5">
-              <Label htmlFor="hw-status" required>Status</Label>
+              <Label htmlFor="hw-status" required>{tr("Status")}</Label>
               <Controller
                 control={control}
                 name="status"
@@ -260,7 +262,7 @@ export default function HomeworkFormDialog({
                     <SelectContent>
                       {HOMEWORK_STATUSES.map((s) => (
                         <SelectItem key={s.value} value={s.value}>
-                          {s.label}
+                          {tr(s.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -272,10 +274,10 @@ export default function HomeworkFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create homework"}
+              {isEdit ? tr("Save changes") : tr("Create homework")}
             </Button>
           </DialogFooter>
         </form>

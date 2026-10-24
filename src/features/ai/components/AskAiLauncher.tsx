@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { NAV_SECTIONS } from "@/constants/nav";
 import { useAskAi, useAskAiAvailable } from "../askAi";
@@ -49,6 +50,8 @@ function readStoredPos(): Pos {
  * screen it was opened from. Shown only when the school and role include AI and the backend reports chat available.
  */
 export default function AskAiLauncher() {
+  const { t } = useTranslation("ai");
+  const { t: tNav } = useTranslation("nav");
   const { pathname } = useLocation();
   const available = useAskAiAvailable();
   const page = usePageLabel(pathname);
@@ -142,7 +145,7 @@ export default function AskAiLauncher() {
           <motion.section
             role="dialog"
             aria-modal="false"
-            aria-label="Ask School AI"
+            aria-label={t("Ask School AI")}
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -153,11 +156,11 @@ export default function AskAiLauncher() {
             <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 text-sm font-semibold">
-                  <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" /> Ask School AI
+                  <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" /> {t("Ask School AI")}
                 </p>
-                {page && <p className="truncate text-xs text-muted-foreground">Asking from {page}</p>}
+                {page && <p className="truncate text-xs text-muted-foreground">{t("Asking from {{page}}", { page: tNav(page) })}</p>}
               </div>
-              <Button variant="ghost" size="icon-sm" onClick={() => setOpen(false)} aria-label="Close Ask School AI">
+              <Button variant="ghost" size="icon-sm" onClick={() => setOpen(false)} aria-label={t("Close Ask School AI")}>
                 <X className="h-4 w-4" />
               </Button>
             </header>
@@ -177,7 +180,7 @@ export default function AskAiLauncher() {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           onKeyDown={onKeyDown}
-          title="Drag to move"
+          title={t("Drag to move")}
           onClick={() => {
             if (justDragged.current) {
               justDragged.current = false;
@@ -186,11 +189,11 @@ export default function AskAiLauncher() {
             setOpen(true);
           }}
           aria-expanded={false}
-          aria-label="Ask School AI"
+          aria-label={t("Ask School AI")}
           className="fixed z-40 h-12 cursor-grab touch-none rounded-full px-4 shadow-lg shadow-primary/25 active:cursor-grabbing"
         >
           <Sparkles className="h-5 w-5" />
-          <span className="hidden sm:inline">Ask School AI</span>
+          <span className="hidden sm:inline">{t("Ask School AI")}</span>
         </Button>
       )}
     </>

@@ -2,6 +2,7 @@ import * as React from "react";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 export interface ComboboxOption {
   value: string;
@@ -32,13 +33,17 @@ export function Combobox({
   value,
   onValueChange,
   options,
-  placeholder = "Select…",
-  searchPlaceholder = "Search…",
-  emptyText = "No matches",
+  placeholder: placeholderProp,
+  searchPlaceholder: searchPlaceholderProp,
+  emptyText: emptyTextProp,
   "aria-label": ariaLabel,
   className,
   disabled,
 }: ComboboxProps) {
+  const { t } = useTranslation("common");
+  const placeholder = placeholderProp ?? t("Select…");
+  const searchPlaceholder = searchPlaceholderProp ?? t("Search…");
+  const emptyText = emptyTextProp ?? t("No matches");
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [active, setActive] = React.useState(0);
@@ -89,7 +94,7 @@ export function Combobox({
           aria-controls={open ? listId : undefined}
           disabled={disabled}
           className={cn(
-            "flex h-9 w-56 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm text-left cursor-pointer",
+            "flex h-9 w-56 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm text-start cursor-pointer",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
             className,
           )}
@@ -100,7 +105,7 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-72 p-0">
         <div className="relative border-b border-border">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
             autoFocus
             value={query}
@@ -112,7 +117,7 @@ export function Combobox({
             placeholder={searchPlaceholder}
             aria-label={searchPlaceholder}
             aria-controls={listId}
-            className="h-10 w-full bg-transparent pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground"
+            className="h-10 w-full bg-transparent ps-9 pe-3 text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
         <ul id={listId} role="listbox" aria-label={ariaLabel} className="max-h-64 overflow-y-auto p-1">

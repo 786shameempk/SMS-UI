@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2, ClipboardCheck, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,33 +18,35 @@ const TITLE: Record<string, string> = {
  * again and runs it once. Cancel discards it.
  */
 export default function ActionCard({ action }: { action: ProposedAction }) {
+  const { t } = useTranslation("ai");
   const [state, setState] = useState(action);
+  const title = t(TITLE[action.kind] ?? "Prepared action");
   const confirm = useMutation({ mutationFn: () => confirmAction(action.id), onSuccess: setState });
   const cancel = useMutation({ mutationFn: () => cancelAction(action.id), onSuccess: setState });
   const busy = confirm.isPending || cancel.isPending;
   const error = confirm.error ?? cancel.error;
 
   return (
-    <div role="group" aria-label={TITLE[action.kind] ?? "Prepared action"} className="mt-2 space-y-2 rounded-md border border-border bg-secondary/40 p-2.5 text-sm">
+    <div role="group" aria-label={title} className="mt-2 space-y-2 rounded-md border border-border bg-secondary/40 p-2.5 text-sm">
       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" /> {TITLE[action.kind] ?? "Prepared action"}
+        <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" /> {title}
       </p>
       <p className="text-foreground">{state.status === "Completed" ? state.summary : action.summary}</p>
       {state.status === "Pending" ? (
         <>
-          <p className="text-xs text-muted-foreground">Nothing has been sent yet. Check the details, then confirm.</p>
+          <p className="text-xs text-muted-foreground">{t("Nothing has been sent yet. Check the details, then confirm.")}</p>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => confirm.mutate()} disabled={busy}>
-              {confirm.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} Confirm
+              {confirm.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} {t("Confirm")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => cancel.mutate()} disabled={busy}>
-              <X className="h-3.5 w-3.5" /> Cancel
+              <X className="h-3.5 w-3.5" /> {t("Cancel")}
             </Button>
           </div>
         </>
       ) : (
         <p className={state.status === "Completed" ? "text-xs text-success" : "text-xs text-muted-foreground"} role="status">
-          {state.status === "Completed" ? "Done." : state.status === "Cancelled" ? "Cancelled. Nothing was sent." : `This action is ${state.status.toLowerCase()}.`}
+          {state.status === "Completed" ? t("Done.") : state.status === "Cancelled" ? t("Cancelled. Nothing was sent.") : t("This action is {{status}}.", { status: state.status.toLowerCase() })}
         </p>
       )}
       {error && (

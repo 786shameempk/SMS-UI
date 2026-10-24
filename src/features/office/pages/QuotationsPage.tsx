@@ -58,7 +58,7 @@ export default function QuotationsPage() {
                   <TableHead>Quotation</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-end">Total</TableHead>
                   <TableHead>Valid until</TableHead>
                   <TableHead>Prepared by</TableHead>
                 </TableRow>
@@ -73,9 +73,9 @@ export default function QuotationsPage() {
                     <TableCell>{x.planName} v{x.planVersion}</TableCell>
                     <TableCell>
                       <StatusBadge status={x.status} />
-                      {x.requiresHighDiscountApproval && <span className="ml-1 text-xs text-warning-strong">{x.discountPercent.toFixed(0)}% off</span>}
+                      {x.requiresHighDiscountApproval && <span className="ms-1 text-xs text-warning-strong">{x.discountPercent.toFixed(0)}% off</span>}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">{money(x.total, x.currency)}</TableCell>
+                    <TableCell className="text-end tabular-nums">{money(x.total, x.currency)}</TableCell>
                     <TableCell>{day(x.validUntil)}</TableCell>
                     <TableCell>{x.createdByName ?? "—"}</TableCell>
                   </TableRow>

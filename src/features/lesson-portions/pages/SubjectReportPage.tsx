@@ -12,6 +12,7 @@ import { FilterBar, ProgressBar, RiskBadge, formatDate, pct, usePortionAccess, u
 import type { ExamCoverage, PortionFilters, SubjectStatus } from "../types";
 import { PrintButton } from "./TrackingPage";
 
+import { useTranslation } from "react-i18next";
 interface SubjectRow {
   subjectId: string;
   subjectName: string;
@@ -27,6 +28,7 @@ interface SubjectRow {
 const avg = (xs: number[]) => (xs.length === 0 ? 0 : Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10);
 
 export default function SubjectReportPage() {
+  const { t } = useTranslation("lesson-portions");
   const access = usePortionAccess();
   const data = useReferenceData({ teachers: access.seesAll });
   const [filters, setFilters] = useState<PortionFilters>({});
@@ -54,48 +56,48 @@ export default function SubjectReportPage() {
   }, [query.data]);
 
   const subjectColumns: ColumnDef<SubjectRow, unknown>[] = [
-    { id: "subject", header: "Subject", accessorFn: (r) => r.subjectName, cell: ({ row }) => <span className="text-sm font-medium">{row.original.subjectName}</span> },
-    { id: "classes", header: "Classes", accessorFn: (r) => r.classes, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.classes} ({row.original.sections} sections)</span> },
-    { id: "chapters", header: "Chapters done", accessorFn: (r) => r.chaptersDone, meta: { exportValue: (r: SubjectRow) => `${r.chaptersDone}/${r.chaptersTotal}` }, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.chaptersDone} / {row.original.chaptersTotal}</span> },
-    { id: "percent", header: "Average completion", accessorFn: (r) => r.percent, meta: { exportValue: (r: SubjectRow) => r.percent }, cell: ({ row }) => <ProgressBar percent={row.original.percent} planned={row.original.planned} className="min-w-44" /> },
-    { id: "planned", header: "Planned", accessorFn: (r) => r.planned ?? -1, meta: { exportValue: (r: SubjectRow) => r.planned ?? "" }, cell: ({ row }) => <span className="text-sm tabular-nums">{pct(row.original.planned)}</span> },
-    { id: "behind", header: "Behind", accessorFn: (r) => r.behind, cell: ({ row }) => (row.original.behind > 0 ? <Badge variant="danger">{row.original.behind}</Badge> : <span className="text-sm text-muted-foreground">0</span>) },
+    { id: "subject", header: t("Subject"), accessorFn: (r) => r.subjectName, cell: ({ row }) => <span className="text-sm font-medium">{row.original.subjectName}</span> },
+    { id: "classes", header: t("Classes"), accessorFn: (r) => r.classes, cell: ({ row }) => <span className="text-sm tabular-nums">{t("{{classes}} ({{sections}} sections)", { classes: row.original.classes, sections: row.original.sections })}</span> },
+    { id: "chapters", header: t("Chapters done"), accessorFn: (r) => r.chaptersDone, meta: { exportValue: (r: SubjectRow) => `${r.chaptersDone}/${r.chaptersTotal}` }, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.chaptersDone} / {row.original.chaptersTotal}</span> },
+    { id: "percent", header: t("Average completion"), accessorFn: (r) => r.percent, meta: { exportValue: (r: SubjectRow) => r.percent }, cell: ({ row }) => <ProgressBar percent={row.original.percent} planned={row.original.planned} className="min-w-44" /> },
+    { id: "planned", header: t("Planned"), accessorFn: (r) => r.planned ?? -1, meta: { exportValue: (r: SubjectRow) => r.planned ?? "" }, cell: ({ row }) => <span className="text-sm tabular-nums">{pct(row.original.planned)}</span> },
+    { id: "behind", header: t("Behind"), accessorFn: (r) => r.behind, cell: ({ row }) => (row.original.behind > 0 ? <Badge variant="danger">{row.original.behind}</Badge> : <span className="text-sm text-muted-foreground">0</span>) },
   ];
 
   const detailColumns: ColumnDef<SubjectStatus, unknown>[] = [
-    { id: "subject", header: "Subject", accessorFn: (r) => r.subjectName, cell: ({ row }) => <span className="text-sm font-medium">{row.original.subjectName}</span> },
-    { id: "class", header: "Class", accessorFn: (r) => `${r.className} ${r.sectionName}`, cell: ({ row }) => <span className="text-sm">{row.original.className} {row.original.sectionName}</span> },
-    { id: "actual", header: "Actual", accessorFn: (r) => r.percent, cell: ({ row }) => <span className="text-sm tabular-nums">{pct(row.original.percent)}</span> },
-    { id: "planned", header: "Planned", accessorFn: (r) => r.plannedPercent ?? -1, meta: { exportValue: (r: SubjectStatus) => r.plannedPercent ?? "" }, cell: ({ row }) => <span className="text-sm tabular-nums">{pct(row.original.plannedPercent)}</span> },
+    { id: "subject", header: t("Subject"), accessorFn: (r) => r.subjectName, cell: ({ row }) => <span className="text-sm font-medium">{row.original.subjectName}</span> },
+    { id: "class", header: t("Class"), accessorFn: (r) => `${r.className} ${r.sectionName}`, cell: ({ row }) => <span className="text-sm">{row.original.className} {row.original.sectionName}</span> },
+    { id: "actual", header: t("Actual"), accessorFn: (r) => r.percent, cell: ({ row }) => <span className="text-sm tabular-nums">{pct(row.original.percent)}</span> },
+    { id: "planned", header: t("Planned"), accessorFn: (r) => r.plannedPercent ?? -1, meta: { exportValue: (r: SubjectStatus) => r.plannedPercent ?? "" }, cell: ({ row }) => <span className="text-sm tabular-nums">{pct(row.original.plannedPercent)}</span> },
     {
       id: "variance",
-      header: "Ahead / behind",
+      header: t("Ahead / behind"),
       accessorFn: (r) => r.variance ?? 0,
       meta: { exportValue: (r: SubjectStatus) => r.variance ?? "" },
       cell: ({ row }) => {
         const v = row.original.variance;
-        return v === null || v === undefined ? <span className="text-sm text-muted-foreground">—</span> : <span className={`text-sm tabular-nums ${v < 0 ? "text-destructive-strong" : "text-success-strong"}`}>{v > 0 ? "+" : ""}{v.toFixed(1)} pts</span>;
+        return v === null || v === undefined ? <span className="text-sm text-muted-foreground">—</span> : <span className={`text-sm tabular-nums ${v < 0 ? "text-destructive-strong" : "text-success-strong"}`}>{v > 0 ? "+" : ""}{v.toFixed(1)} {t("pts")}</span>;
       },
     },
-    { id: "risk", header: "Status", accessorFn: (r) => r.risk, cell: ({ row }) => <RiskBadge risk={row.original.risk} /> },
-    { id: "deadline", header: "Deadline", accessorFn: (r) => r.deadline ?? "", cell: ({ row }) => <span className="text-sm">{formatDate(row.original.deadline)}</span> },
+    { id: "risk", header: t("Status"), accessorFn: (r) => r.risk, cell: ({ row }) => <RiskBadge risk={row.original.risk} /> },
+    { id: "deadline", header: t("Deadline"), accessorFn: (r) => r.deadline ?? "", cell: ({ row }) => <span className="text-sm">{formatDate(row.original.deadline)}</span> },
     {
       id: "forecast",
-      header: "Term-end forecast",
+      header: t("Term-end forecast"),
       accessorFn: (r) => r.forecast ?? "",
       cell: ({ row }) => {
         const { forecast, deadline } = row.original;
-        if (!forecast) return <span className="text-sm text-muted-foreground">Not enough data</span>;
+        if (!forecast) return <span className="text-sm text-muted-foreground">{t("Not enough data")}</span>;
         const late = deadline && forecast > deadline;
         return (
           <span className="flex items-center gap-1.5 text-sm">
             {formatDate(forecast)}
-            {late && <Badge variant="warning">after deadline</Badge>}
+            {late && <Badge variant="warning">{t("after deadline")}</Badge>}
           </span>
         );
       },
     },
-    { id: "periods", header: "Periods left / available", accessorFn: (r) => r.remainingPeriods, meta: { exportValue: (r: SubjectStatus) => `${r.remainingPeriods}/${r.availablePeriods ?? ""}` }, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.remainingPeriods} / {row.original.availablePeriods ?? "—"}</span> },
+    { id: "periods", header: t("Periods left / available"), accessorFn: (r) => r.remainingPeriods, meta: { exportValue: (r: SubjectStatus) => `${r.remainingPeriods}/${r.availablePeriods ?? ""}` }, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.remainingPeriods} / {row.original.availablePeriods ?? "—"}</span> },
   ];
 
   const chart = subjects.map((s) => ({ name: s.subjectName, Actual: s.percent, Planned: s.planned ?? undefined }));
@@ -106,15 +108,15 @@ export default function SubjectReportPage() {
       <Tabs defaultValue="subjects">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <TabsList variant="line">
-            <TabsTrigger value="subjects">By subject</TabsTrigger>
-            <TabsTrigger value="planned">Planned vs actual</TabsTrigger>
-            <TabsTrigger value="exams">Exam portions not covered</TabsTrigger>
+            <TabsTrigger value="subjects">{t("By subject")}</TabsTrigger>
+            <TabsTrigger value="planned">{t("Planned vs actual")}</TabsTrigger>
+            <TabsTrigger value="exams">{t("Exam portions not covered")}</TabsTrigger>
           </TabsList>
           <PrintButton />
         </div>
         <TabsContent value="subjects" className="space-y-4">
-          <Panel title="Completion by subject" description="Average across the classes and sections that match the filters." loading={query.isLoading} error={query.isError} onRetry={() => query.refetch()} empty={subjects.length === 0 && !query.isLoading ? { title: "No published syllabus matches these filters" } : null}>
-            <div className="w-full" style={{ height: Math.max(200, chart.length * 34 + 40) }} role="img" aria-label="Actual and planned completion by subject">
+          <Panel title={t("Completion by subject")} description={t("Average across the classes and sections that match the filters.")} loading={query.isLoading} error={query.isError} onRetry={() => query.refetch()} empty={subjects.length === 0 && !query.isLoading ? { title: t("No published syllabus matches these filters") } : null}>
+            <div className="w-full" style={{ height: Math.max(200, chart.length * 34 + 40) }} role="img" aria-label={t("Actual and planned completion by subject")}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chart} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 0 }}>
                   <CartesianGrid {...CHART_GRID} horizontal={false} vertical />
@@ -131,7 +133,7 @@ export default function SubjectReportPage() {
           <DataTable searchable columns={subjectColumns} data={subjects} isLoading={query.isLoading} isError={query.isError} onRetry={() => query.refetch()} exportFileName="subject-completion" pageSize={15} />
         </TabsContent>
         <TabsContent value="planned">
-          <DataTable searchable columns={detailColumns} data={query.data ?? []} isLoading={query.isLoading} isError={query.isError} onRetry={() => query.refetch()} exportFileName="planned-vs-actual" pageSize={15} empty={{ title: "No published syllabus matches these filters" }} />
+          <DataTable searchable columns={detailColumns} data={query.data ?? []} isLoading={query.isLoading} isError={query.isError} onRetry={() => query.refetch()} exportFileName="planned-vs-actual" pageSize={15} empty={{ title: t("No published syllabus matches these filters") }} />
         </TabsContent>
         <TabsContent value="exams">
           <ExamGaps classId={filters.classId} />
@@ -142,20 +144,21 @@ export default function SubjectReportPage() {
 }
 
 function ExamGaps({ classId }: { classId?: string }) {
+  const { t } = useTranslation("lesson-portions");
   const query = useQuery({ queryKey: ["portions", "exam-coverage-report", classId], queryFn: () => examCoverageReport(classId) });
   const rows = (query.data ?? []).filter((r) => r.untaught.length > 0);
   const columns: ColumnDef<ExamCoverage, unknown>[] = [
-    { id: "exam", header: "Exam", accessorFn: (r) => r.examName, cell: ({ row }) => <span className="text-sm font-medium">{row.original.examName}</span> },
-    { id: "subject", header: "Subject", accessorFn: (r) => r.subjectName, cell: ({ row }) => <span className="text-sm">{row.original.subjectName}</span> },
-    { id: "coverage", header: "Covered", accessorFn: (r) => r.coveragePercent, meta: { exportValue: (r: ExamCoverage) => `${r.taughtTopics}/${r.portionTopics}` }, cell: ({ row }) => <ProgressBar percent={row.original.coveragePercent} className="min-w-36" /> },
+    { id: "exam", header: t("Exam"), accessorFn: (r) => r.examName, cell: ({ row }) => <span className="text-sm font-medium">{row.original.examName}</span> },
+    { id: "subject", header: t("Subject"), accessorFn: (r) => r.subjectName, cell: ({ row }) => <span className="text-sm">{row.original.subjectName}</span> },
+    { id: "coverage", header: t("Covered"), accessorFn: (r) => r.coveragePercent, meta: { exportValue: (r: ExamCoverage) => `${r.taughtTopics}/${r.portionTopics}` }, cell: ({ row }) => <ProgressBar percent={row.original.coveragePercent} className="min-w-36" /> },
     {
       id: "untaught",
-      header: "Not yet taught",
+      header: t("Not yet taught"),
       accessorFn: (r) => r.untaught.map((u) => u.topicTitle).join("; "),
       cell: ({ row }) => (
         <span className="text-sm">
           {row.original.untaught.slice(0, 4).map((u) => u.topicTitle).join(", ")}
-          {row.original.untaught.length > 4 ? ` and ${row.original.untaught.length - 4} more` : ""}
+          {row.original.untaught.length > 4 ? t(" and {{v1}} more", { v1: row.original.untaught.length - 4 }) : ""}
         </span>
       ),
     },
@@ -170,7 +173,7 @@ function ExamGaps({ classId }: { classId?: string }) {
       onRetry={() => query.refetch()}
       exportFileName="exam-portions-not-covered"
       pageSize={15}
-      empty={{ title: "No gaps before upcoming exams", description: "Every topic in the portions of upcoming exams has been taught, or no exam portions are set yet." }}
+      empty={{ title: t("No gaps before upcoming exams"), description: t("Every topic in the portions of upcoming exams has been taught, or no exam portions are set yet.") }}
     />
   );
 }

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,7 @@ export default function AnnouncementFormDialog({
     control,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(announcementSchema), defaultValues: emptyValues });
+  const { t } = useTranslation("notifications");
 
   useEffect(() => {
     if (open) reset(emptyValues);
@@ -56,28 +58,28 @@ export default function AnnouncementFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Post announcement</DialogTitle>
-          <DialogDescription>Shows up in the in-app notification inbox for the chosen audience.</DialogDescription>
+          <DialogTitle>{t("Post announcement")}</DialogTitle>
+          <DialogDescription>{t("Shows up in the in-app notification inbox for the chosen audience.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) => onSubmit({ ...values, actionUrl: values.actionUrl?.trim() || undefined }))}
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="ann-title" required>Title</Label>
-            <Input id="ann-title" placeholder="e.g. Sports Day rescheduled" aria-invalid={errors.title ? true : undefined} {...register("title")} />
-            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
+            <Label htmlFor="ann-title" required>{t("Title")}</Label>
+            <Input id="ann-title" placeholder={t("e.g. Sports Day rescheduled")} aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.title.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ann-body" required>Message</Label>
-            <Textarea id="ann-body" rows={4} placeholder="Write the announcement…" aria-invalid={errors.body ? true : undefined} {...register("body")} />
-            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
+            <Label htmlFor="ann-body" required>{t("Message")}</Label>
+            <Textarea id="ann-body" rows={4} placeholder={t("Write the announcement…")} aria-invalid={errors.body ? true : undefined} {...register("body")} />
+            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.body.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="ann-category">Category</Label>
+              <Label htmlFor="ann-category">{t("Category")}</Label>
               <Controller
                 control={control}
                 name="category"
@@ -89,7 +91,7 @@ export default function AnnouncementFormDialog({
                     <SelectContent>
                       {CATEGORY_OPTIONS.map((c) => (
                         <SelectItem key={c} value={c}>
-                          {CATEGORY_CONFIG[c].label}
+                          {t(CATEGORY_CONFIG[c].label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -98,7 +100,7 @@ export default function AnnouncementFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ann-audience">Audience</Label>
+              <Label htmlFor="ann-audience">{t("Audience")}</Label>
               <Controller
                 control={control}
                 name="audience"
@@ -110,7 +112,7 @@ export default function AnnouncementFormDialog({
                     <SelectContent>
                       {AUDIENCE_OPTIONS.map((a) => (
                         <SelectItem key={a.value} value={a.value}>
-                          {a.label}
+                          {t(a.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -121,17 +123,17 @@ export default function AnnouncementFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ann-actionUrl" optional>Link</Label>
-            <Input id="ann-actionUrl" placeholder="e.g. /fees" {...register("actionUrl")} />
-            <p className="text-xs text-muted-foreground">Where "View" takes the reader, e.g. /fees or /examinations.</p>
+            <Label htmlFor="ann-actionUrl" optional>{t("Link")}</Label>
+            <Input id="ann-actionUrl" placeholder={t("e.g. /fees")} {...register("actionUrl")} />
+            <p className="text-xs text-muted-foreground">{t("Where \"View\" takes the reader, e.g. /fees or /examinations.")}</p>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Post announcement
+              {t("Post announcement")}
             </Button>
           </DialogFooter>
         </form>

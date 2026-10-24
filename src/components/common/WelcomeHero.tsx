@@ -2,12 +2,14 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
+import i18n, { currentLocale } from "@/i18n";
 
 export function timeOfDayGreeting(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return i18n.t("Good morning", { ns: "common" });
+  if (hour < 17) return i18n.t("Good afternoon", { ns: "common" });
+  return i18n.t("Good evening", { ns: "common" });
 }
 
 /** The greeting header every role's home page opens with (dashboard, parent portal). A plain page header,
@@ -24,7 +26,8 @@ export function WelcomeHero({
   /** Right-hand content: child chips, page controls, ... */
   aside?: ReactNode;
 }) {
-  const today = new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  // English keeps the browser's own date order; other languages use their locale.
+  const today = new Date().toLocaleDateString(i18n.language === "en" ? undefined : currentLocale(), { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   return (
     // Wraps rather than squeezes: the greeting keeps at least ~20rem, and when the controls don't fit beside it
     // (a super admin's toolbar is wide) they drop onto their own line instead of crushing the title.
@@ -60,7 +63,7 @@ export function QuickActionTile({ action }: { action: QuickAction }) {
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground ring-1 ring-inset ring-primary/20 transition-colors duration-200 group-hover:bg-primary group-hover:text-primary-foreground group-hover:ring-transparent">
         <action.icon className="h-[18px] w-[18px]" aria-hidden="true" />
       </span>
-      <span className="min-w-0 flex-1 text-left">
+      <span className="min-w-0 flex-1 text-start">
         <span className="block truncate text-sm font-semibold text-foreground">{action.label}</span>
         <span className="block truncate text-xs text-muted-foreground">{action.hint}</span>
       </span>
@@ -94,9 +97,10 @@ const GRID_COLS: Record<number, string> = {
 };
 
 export function QuickActionGrid({ actions }: { actions: QuickAction[] }) {
+  const { t } = useTranslation("common");
   if (actions.length === 0) return null;
   return (
-    <section aria-label="Quick actions" className={cn("grid grid-cols-1 min-[480px]:grid-cols-2 gap-3", GRID_COLS[Math.min(actions.length, 6)])}>
+    <section aria-label={t("Quick actions")} className={cn("grid grid-cols-1 min-[480px]:grid-cols-2 gap-3", GRID_COLS[Math.min(actions.length, 6)])}>
       {actions.map((action) => (
         <QuickActionTile key={action.label} action={action} />
       ))}

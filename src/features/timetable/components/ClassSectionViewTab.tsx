@@ -16,6 +16,7 @@ import SectionScheduleGrid from "./SectionScheduleGrid";
 import SlotEditorDialog, { type SlotEditorContext } from "./SlotEditorDialog";
 import TimetableGrid from "./TimetableGrid";
 
+import { useTranslation } from "react-i18next";
 function sectionFullLabel(section: Section | undefined, classes: { id: string; name: string }[]): string {
   if (!section) return "Unknown section";
   const className = classes.find((c) => c.id === section.classId)?.name ?? "";
@@ -23,6 +24,7 @@ function sectionFullLabel(section: Section | undefined, classes: { id: string; n
 }
 
 export default function ClassSectionViewTab() {
+  const { t } = useTranslation("timetable");
   const queryClient = useQueryClient();
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
   const { data: sections = [] } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
@@ -62,10 +64,10 @@ export default function ClassSectionViewTab() {
         const conflict = findTeacherConflict(allSlots, saved.staffId, saved.dayOfWeek, saved.periodNumber, saved.sectionId);
         if (conflict) {
           const conflictSection = sections.find((s) => s.id === conflict.sectionId);
-          toast(`Teacher is already scheduled for ${sectionFullLabel(conflictSection, classes)} at this time.`, { icon: "⚠️" });
+          toast(t("Teacher is already scheduled for {{v1}} at this time.", { v1: sectionFullLabel(conflictSection, classes) }), { icon: "⚠️" });
         }
       }
-      toast.success("Slot updated");
+      toast.success(t("Slot updated"));
       setEditorContext(null);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -76,7 +78,7 @@ export default function ClassSectionViewTab() {
       clearSlot(sid, dayOfWeek, periodNumber),
     onSuccess: () => {
       invalidateSlots();
-      toast.success("Slot cleared");
+      toast.success(t("Slot cleared"));
       setEditorContext(null);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -86,7 +88,7 @@ export default function ClassSectionViewTab() {
     mutationFn: autoGenerateSectionTimetable,
     onSuccess: () => {
       invalidateSlots();
-      toast.success("Draft timetable generated. Review and adjust manually before publishing.");
+      toast.success(t("Draft timetable generated. Review and adjust manually before publishing."));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -100,8 +102,8 @@ export default function ClassSectionViewTab() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs value={viewBy} onValueChange={(v) => setViewBy(v as "section" | "room")}>
           <TabsList>
-            <TabsTrigger value="section">By section</TabsTrigger>
-            <TabsTrigger value="room">By room</TabsTrigger>
+            <TabsTrigger value="section">{t("By section")}</TabsTrigger>
+            <TabsTrigger value="room">{t("By room")}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -115,7 +117,7 @@ export default function ClassSectionViewTab() {
               }}
             >
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="Class" />
+                <SelectValue placeholder={t("Class")} />
               </SelectTrigger>
               <SelectContent>
                 {classes.map((c) => (
@@ -127,7 +129,7 @@ export default function ClassSectionViewTab() {
             </Select>
             <Select value={activeSectionId} onValueChange={setSectionId}>
               <SelectTrigger className="w-40">
-                <SelectValue placeholder="Section" />
+                <SelectValue placeholder={t("Section")} />
               </SelectTrigger>
               <SelectContent>
                 {effectiveSections.map((s) => (
@@ -143,13 +145,13 @@ export default function ClassSectionViewTab() {
               onClick={() => activeSectionId && autoGenerateMutation.mutate(activeSectionId)}
             >
               <Sparkles className="w-4 h-4" />
-              Auto-generate draft
+              {t("Auto-generate draft")}
             </Button>
           </div>
         ) : (
           <Select value={activeRoomId} onValueChange={setRoomId}>
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="Room" />
+              <SelectValue placeholder={t("Room")} />
             </SelectTrigger>
             <SelectContent>
               {rooms.map((r) => (
@@ -224,20 +226,21 @@ function TimetableGridRoom({
   classes: SchoolClass[];
   holidayDays: Set<DayOfWeek>;
 }) {
+  const { t: tr } = useTranslation("timetable");
   return (
     <TimetableGrid
       slots={slots}
       holidayDays={holidayDays}
       renderCell={(slot) => {
-        if (!slot?.subjectId) return <span className="text-xs text-muted-foreground">Free</span>;
+        if (!slot?.subjectId) return <span className="text-xs text-muted-foreground">{tr("Free")}</span>;
         const subject = subjects.find((s) => s.id === slot.subjectId);
         const teacher = teachers.find((t) => t.id === slot.staffId);
         const section = sections.find((s) => s.id === slot.sectionId);
         return (
           <div>
             <p className="text-sm font-medium text-foreground">{sectionFullLabel(section, classes)}</p>
-            <p className="text-xs text-muted-foreground">{subject?.name ?? "Subject"}</p>
-            <p className="text-xs text-muted-foreground">{teacher ? `${teacher.firstName} ${teacher.lastName}` : "No teacher"}</p>
+            <p className="text-xs text-muted-foreground">{subject?.name ?? tr("Subject")}</p>
+            <p className="text-xs text-muted-foreground">{teacher ? `${teacher.firstName} ${teacher.lastName}` : tr("No teacher")}</p>
           </div>
         );
       }}

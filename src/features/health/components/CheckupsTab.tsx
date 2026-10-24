@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -15,6 +16,7 @@ import CheckupFormDialog from "./CheckupFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function CheckupsTab() {
+  const { t } = useTranslation("health");
   const queryClient = useQueryClient();
   const { data: checkups = [], isLoading, isError, refetch } = useQuery({ queryKey: ["health", "checkups"], queryFn: () => listHealthCheckups() });
   const [formOpen, setFormOpen] = useState(false);
@@ -30,17 +32,17 @@ export default function CheckupsTab() {
     mutationFn: createHealthCheckup,
     onSuccess: () => {
       invalidate();
-      toast.success("Checkup recorded");
+      toast.success(t("Checkup recorded"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not record checkup"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not record checkup")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteHealthCheckup,
     onSuccess: () => {
       invalidate();
-      toast.success("Checkup record deleted");
+      toast.success(t("Checkup record deleted"));
       setDeleteTarget(null);
     },
   });
@@ -48,7 +50,7 @@ export default function CheckupsTab() {
   const columns: ColumnDef<HealthCheckupRow, unknown>[] = [
     {
       id: "student",
-      header: "Student",
+      header: t("Student"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -62,12 +64,12 @@ export default function CheckupsTab() {
     },
     {
       accessorKey: "checkupDate",
-      header: "Date",
+      header: t("Date"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.checkupDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>,
     },
     {
       id: "vitals",
-      header: "Height / Weight",
+      header: t("Height / Weight"),
       cell: ({ row }) => (
         <span className="text-sm text-foreground tabular-nums">
           {row.original.heightCm} cm / {row.original.weightKg} kg
@@ -76,16 +78,16 @@ export default function CheckupsTab() {
     },
     {
       id: "bmi",
-      header: "BMI",
+      header: t("BMI"),
       cell: ({ row }) => (
         <Badge variant={BMI_CATEGORY_CONFIG[row.original.bmiCategory].variant}>
-          {row.original.bmi} &middot; {BMI_CATEGORY_CONFIG[row.original.bmiCategory].label}
+          {row.original.bmi} &middot; {t(BMI_CATEGORY_CONFIG[row.original.bmiCategory].label)}
         </Badge>
       ),
     },
     {
       id: "vision",
-      header: "Vision (L/R)",
+      header: t("Vision (L/R)"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.visionLeft} / {row.original.visionRight}
@@ -94,7 +96,7 @@ export default function CheckupsTab() {
     },
     {
       id: "examinedBy",
-      header: "Examined by",
+      header: t("Examined by"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.examinedBy ? `${row.original.examinedBy.firstName} ${row.original.examinedBy.lastName}` : "—"}</span>,
     },
     {
@@ -104,7 +106,7 @@ export default function CheckupsTab() {
         <RowActions>
           <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} variant="destructive">
             <Trash2 className="w-3.5 h-3.5" />
-            Delete
+            {t("Delete")}
           </DropdownMenuItem>
         </RowActions>
       ),
@@ -114,14 +116,14 @@ export default function CheckupsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Periodic checkup records — height, weight, vision, and dental notes.</p>
+        <p className="text-sm text-muted-foreground">{t("Periodic checkup records — height, weight, vision, and dental notes.")}</p>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          Record checkup
+          {t("Record checkup")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={checkups} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No checkups recorded yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={checkups} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No checkups recorded yet.")} pageSize={10} />
 
       <CheckupFormDialog
         open={formOpen}
@@ -135,9 +137,9 @@ export default function CheckupsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete checkup record"
-        description={`Delete this checkup for ${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete checkup record")}
+        description={t("Delete this checkup for {{name}}? This cannot be undone.", { name: `${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}` })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

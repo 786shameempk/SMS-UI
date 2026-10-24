@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Footprints, X } from "lucide-react";
 import { getRoute } from "@/app/routeRegistry";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface Box {
 export default function WalkthroughHost() {
   const { tourId, step, go, stop } = useTour();
   const { pathname } = useLocation();
+  const { t } = useTranslation("help");
   const tour = tourId ? getTour(tourId) : undefined;
   const current = tour?.steps[step];
   const [found, setBox] = useState<Box | null>(null);
@@ -70,31 +72,31 @@ export default function WalkthroughHost() {
           style={{ top: box.top - 4, left: box.left - 4, width: box.width + 8, height: box.height + 8 }}
         />
       )}
-      <div role="dialog" aria-label={`Walkthrough: ${tour.title}`} className="pointer-events-auto fixed bottom-4 left-4 z-[71] w-[min(22rem,calc(100vw-2rem))] space-y-2 rounded-xl border border-border bg-card p-4 shadow-xl">
+      <div role="dialog" aria-label={t("Walkthrough: {{title}}", { title: tour.title })} className="pointer-events-auto fixed bottom-4 start-4 z-[71] w-[min(22rem,calc(100vw-2rem))] space-y-2 rounded-xl border border-border bg-card p-4 shadow-xl">
         <div className="flex items-start justify-between gap-2">
           <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             <Footprints className="h-3.5 w-3.5" aria-hidden="true" />
-            {tour.title} · step {step + 1} of {tour.steps.length}
+            {t("{{title}} · step {{step}} of {{total}}", { title: tour.title, step: step + 1, total: tour.steps.length })}
           </p>
-          <button type="button" onClick={stop} aria-label="End walkthrough" className="rounded p-0.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <button type="button" onClick={stop} aria-label={t("End walkthrough")} className="rounded p-0.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
         <p className="text-sm font-semibold text-foreground">{current.title}</p>
         <p className="text-sm text-muted-foreground">{current.body}</p>
         {lookingFor && current.ifMissing && <p className="rounded-md bg-warning-soft px-2.5 py-1.5 text-xs text-warning-strong">{current.ifMissing}</p>}
-        {route && pathname !== route.path && <p className="text-xs text-muted-foreground">This walkthrough is for {route.label}.</p>}
+        {route && pathname !== route.path && <p className="text-xs text-muted-foreground">{t("This walkthrough is for {{screen}}.", { screen: route.label })}</p>}
         <div className="flex justify-between gap-2 pt-1">
           <Button type="button" size="sm" variant="outline" onClick={() => go(step - 1)} disabled={step === 0}>
-            Back
+            {t("Back")}
           </Button>
           {lastStep ? (
             <Button type="button" size="sm" onClick={stop}>
-              Done
+              {t("Done")}
             </Button>
           ) : (
             <Button type="button" size="sm" onClick={() => go(step + 1)}>
-              Next
+              {t("Next")}
             </Button>
           )}
         </div>

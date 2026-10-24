@@ -1,3 +1,5 @@
+import type { AttemptProctoring, ProctoringMode } from "./proctoring/types";
+
 /** Online Exams - mirrors AcademicService's DTOs (enums arrive as their PascalCase names). */
 
 export type QuestionType = "SingleChoice" | "MultipleSelect" | "TrueFalse" | "FillInBlank" | "ShortAnswer" | "LongAnswer";
@@ -95,6 +97,14 @@ export interface ExamSettings {
   allowReviewBeforeSubmit: boolean;
   showAnswersInResult: boolean;
   negativeMarkPerWrong: number;
+  /** Question pool: questions drawn per attempt (0 = all). */
+  questionsPerAttempt: number;
+  proctoring: ProctoringMode;
+  requireFullscreen: boolean;
+  warningThreshold: number;
+  autoSubmitAfterIncidents: number;
+  snapshotIntervalSeconds: number;
+  evidenceRetentionDays: number;
 }
 
 export interface ExamQuestion {
@@ -393,6 +403,8 @@ export interface AttemptSession {
   allowReviewBeforeSubmit: boolean;
   questions: AttemptQuestion[];
   answers: SavedAnswer[];
+  /** Present when the exam is proctored. */
+  proctoring?: AttemptProctoring | null;
 }
 
 export interface AnswerInput {

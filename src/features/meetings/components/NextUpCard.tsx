@@ -8,11 +8,13 @@ import { countdown, formatDayLabel, formatDuration, formatTime, relativeStart } 
 import { MeetingStatusBadge } from "./Badges";
 import JoinMeetingButton from "./JoinMeetingButton";
 
+import { useTranslation } from "react-i18next";
 /**
  * The one thing every screen answers first: "what's next, and can I join it?" A single large card with a
  * single button; everything else on the page is secondary (design doc, "UI concept").
  */
 export default function NextUpCard({ meeting }: { meeting: MeetingSummary | undefined }) {
+  const { t } = useTranslation("meetings");
   const now = useNow(1000);
 
   if (!meeting) {
@@ -22,8 +24,8 @@ export default function NextUpCard({ meeting }: { meeting: MeetingSummary | unde
           <CalendarCheck2 className="h-6 w-6" />
         </div>
         <div>
-          <p className="font-semibold text-foreground">You're all caught up</p>
-          <p className="text-sm text-muted-foreground">No more classes or meetings today.</p>
+          <p className="font-semibold text-foreground">{t("You're all caught up")}</p>
+          <p className="text-sm text-muted-foreground">{t("No more classes or meetings today.")}</p>
         </div>
       </div>
     );
@@ -43,18 +45,18 @@ export default function NextUpCard({ meeting }: { meeting: MeetingSummary | unde
           : "border-primary/30 bg-gradient-to-br from-brand-50 via-card to-card dark:border-border dark:from-brand-900/30",
       )}
     >
-      <Link to={`/online-classes/${meeting.id}`} className="absolute inset-0 focus-visible:outline-none" aria-label={`Open ${meeting.title}`} />
+      <Link to={`/online-classes/${meeting.id}`} className="absolute inset-0 focus-visible:outline-none" aria-label={t("Open {{title}}", { title: meeting.title })} />
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-4 sm:w-40 sm:shrink-0 sm:flex-col sm:items-start sm:gap-1 sm:border-r sm:border-border sm:pr-5">
+        <div className="flex items-center gap-4 sm:w-40 sm:shrink-0 sm:flex-col sm:items-start sm:gap-1 sm:border-e sm:border-border sm:pe-5">
           <p className="text-3xl font-extrabold tabular-nums tracking-tight text-foreground">{formatTime(meeting.startUtc)}</p>
           <p className={cn("text-sm font-medium", live ? "text-success-strong" : "text-primary-text dark:text-brand-300")}>
-            {live ? "Happening now" : clock ? `Starts in ${clock}` : `${formatDayLabel(meeting.startUtc)} · ${relativeStart(meeting.startUtc, now)}`}
+            {live ? t("Happening now") : clock ? t("Starts in {{clock}}", { clock }) : `${formatDayLabel(meeting.startUtc)} · ${relativeStart(meeting.startUtc, now)}`}
           </p>
         </div>
 
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next up</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("Next up")}</span>
             <MeetingStatusBadge status={meeting.status} isRescheduled={meeting.isRescheduled} />
           </div>
           <h2 className="truncate text-xl font-bold text-foreground">
@@ -64,7 +66,7 @@ export default function NextUpCard({ meeting }: { meeting: MeetingSummary | unde
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <span className={cn("h-2 w-2 rounded-full", type.dot)} aria-hidden />
-              {type.label}
+              {t(type.label)}
             </span>
             <span>{who}</span>
             <span className="inline-flex items-center gap-1">

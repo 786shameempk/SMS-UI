@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import JsBarcode from "jsbarcode";
 import { Printer } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import BrandLogo from "@/components/common/BrandLogo";
 import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ function initialsOf(first: string, last: string) {
 }
 
 export default function IdCardTab({ student }: { student: Student }) {
+  const { t } = useTranslation("students");
   const branding = useTenantBranding();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const barcodeRef = useRef<SVGSVGElement | null>(null);
@@ -51,12 +53,12 @@ export default function IdCardTab({ student }: { student: Student }) {
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <div>
-          <CardTitle>Student ID card</CardTitle>
-          <CardDescription>QR code and barcode encode the admission number for scanning at gates and libraries.</CardDescription>
+          <CardTitle>{t("Student ID card")}</CardTitle>
+          <CardDescription>{t("QR code and barcode encode the admission number for scanning at gates and libraries.")}</CardDescription>
         </div>
         <Button size="sm" onClick={() => window.print()}>
           <Printer className="w-3.5 h-3.5" />
-          Print ID card
+          {t("Print ID card")}
         </Button>
       </CardHeader>
       <CardContent>
@@ -72,7 +74,7 @@ export default function IdCardTab({ student }: { student: Student }) {
             <BrandLogo className="h-8 w-8 rounded-lg" iconClassName="h-4 w-4" />
             <div className="min-w-0 text-white">
               <p className="truncate text-sm font-bold leading-none">{branding.name}</p>
-              <p className="text-[10px] opacity-80 leading-none mt-0.5">Student Identity Card</p>
+              <p className="text-[10px] opacity-80 leading-none mt-0.5">{t("Student Identity Card")}</p>
             </div>
           </div>
 
@@ -89,14 +91,19 @@ export default function IdCardTab({ student }: { student: Student }) {
                 {student.firstName} {student.lastName}
               </p>
               <p className="text-xs text-slate-500">
-                {student.className} - {student.section} &middot; Roll {student.rollNumber || "—"}
+                {student.className} - {student.section} &middot; {t("Roll {{number}}", { number: student.rollNumber || "—" })}
               </p>
-              <p className="text-xs text-slate-500">Adm. No: {student.admissionNumber}</p>
+              <p className="text-xs text-slate-500">{t("Adm. No: {{number}}", { number: student.admissionNumber })}</p>
               <p className="text-xs text-slate-500">
-                Blood group: <span className="font-semibold text-slate-700">{student.medical.bloodGroup === "unknown" ? "—" : student.medical.bloodGroup}</span>
+                <Trans
+                  t={t}
+                  i18nKey="Blood group: <0>{{value}}</0>"
+                  values={{ value: student.medical.bloodGroup === "unknown" ? "—" : student.medical.bloodGroup }}
+                  components={[<span className="font-semibold text-slate-700" />]}
+                />
               </p>
             </div>
-            {qrDataUrl && <img src={qrDataUrl} alt="Student QR code" className="w-16 h-16 shrink-0" />}
+            {qrDataUrl && <img src={qrDataUrl} alt={t("Student QR code")} className="w-16 h-16 shrink-0" />}
           </div>
 
           <div className="px-4 pb-4 flex justify-center">

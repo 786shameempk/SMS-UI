@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "@/components/layouts/Sidebar";
 import Header from "@/components/layouts/Header";
@@ -13,6 +14,7 @@ import { clearUnsavedEdits, trackFormEdits } from "@/features/help/navigation";
 import { useTour } from "@/features/help/tourStore";
 import RouteGate from "@/routes/RouteGate";
 import SubscriptionBanner from "@/features/settings/components/SubscriptionBanner";
+import { useAttendanceSyncDriver } from "@/features/attendance/offline/hooks";
 
 // Only downloaded when a Help Center walkthrough is started.
 const WalkthroughHost = lazy(() => import("@/features/help/components/WalkthroughHost"));
@@ -20,10 +22,13 @@ const WalkthroughHost = lazy(() => import("@/features/help/components/Walkthroug
 export default function AppLayout() {
   const { pathname } = useLocation();
   const { open, setOpen } = useMobileNav();
+  const { t } = useTranslation("common");
   const mainRef = useRef<HTMLElement>(null);
   const touring = useTour((s) => s.tourId !== null);
   // Tabs the school hides from this user's roles (Roles & permissions → Sub-menus).
   useMySubMenus();
+  // Sends attendance registers saved on this device while offline, as soon as the connection is back.
+  useAttendanceSyncDriver();
   // Switching school (tenant) or branch remounts the page, so every screen - not only those whose
   // queries happen to include the scope in their keys - reloads its data, filters and forms for the new scope.
   const scopeKey = useAuthStore((s) => `${s.activeTenantId}:${s.activeBranchId}`);
@@ -58,9 +63,9 @@ export default function AppLayout() {
     <div className="fixed inset-0 flex overflow-hidden bg-background">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
 
       {/* Tablet and desktop: the sidebar sits beside the page. */}
@@ -71,7 +76,7 @@ export default function AppLayout() {
       {/* Phones: the same navigation as a slide-in drawer, so pages get the full screen width. */}
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")}>
             <motion.button
               type="button"
               initial={{ opacity: 0 }}
@@ -79,7 +84,7 @@ export default function AppLayout() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
               className="absolute inset-0 bg-slate-950/40 cursor-default dark:bg-black/60"
-              aria-label="Close menu"
+              aria-label={t("Close menu")}
               onClick={() => setOpen(false)}
             />
             <motion.div
@@ -87,7 +92,7 @@ export default function AppLayout() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              className="absolute inset-y-0 left-0 max-w-[85vw] shadow-lg"
+              className="absolute inset-y-0 start-0 max-w-[85vw] shadow-lg"
             >
               <Sidebar forceExpanded onClose={() => setOpen(false)} />
             </motion.div>

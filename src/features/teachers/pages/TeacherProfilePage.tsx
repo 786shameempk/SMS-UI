@@ -1,6 +1,7 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, SearchX } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMyStaffId, getStaffMember } from "@/features/staff/api";
@@ -20,6 +21,7 @@ import { useIsTeacher } from "@/lib/roleAccess";
 
 export default function TeacherProfilePage() {
   const { staffId } = useParams<{ staffId: string }>();
+  const { t } = useTranslation("teachers");
   const navigate = useNavigate();
   // A teacher only ever opens their own profile: any other id sends them to it, and there is no list to go back to.
   const isTeacher = useIsTeacher();
@@ -50,12 +52,12 @@ export default function TeacherProfilePage() {
       <PageContainer>
         <EmptyState
           icon={SearchX}
-          title="Record not found"
-          description="That teacher record could not be found. It may have been removed, or you may not have access to it."
+          title={t("Record not found")}
+          description={t("That teacher record could not be found. It may have been removed, or you may not have access to it.")}
           action={
             <Button variant="outline" size="sm" onClick={() => navigate("/teachers")}>
               <ArrowLeft className="w-3.5 h-3.5" />
-              Back to teachers
+              {t("Back to teachers")}
             </Button>
           }
         />
@@ -67,9 +69,9 @@ export default function TeacherProfilePage() {
     <PageContainer>
       <div>
         {!isTeacher && (
-          <Button variant="ghost" size="sm" onClick={() => navigate("/teachers")} className="-ml-2 mb-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/teachers")} className="-ms-2 mb-2">
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to teachers
+            {t("Back to teachers")}
           </Button>
         )}
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -85,15 +87,15 @@ export default function TeacherProfilePage() {
 
       <Tabs defaultValue="overview">
         <TabsList variant="line">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="qualifications">Qualifications &amp; Experience</TabsTrigger>
-          <TabsTrigger value="salary">Salary</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="subjects-classes">Subjects &amp; Classes</TabsTrigger>
-          <TabsTrigger value="lesson-plans">Lesson Plans</TabsTrigger>
-          <TabsTrigger value="student-performance">Student Performance</TabsTrigger>
+          <TabsTrigger value="overview">{t("Overview")}</TabsTrigger>
+          <TabsTrigger value="qualifications">{t("Qualifications & Experience")}</TabsTrigger>
+          <TabsTrigger value="salary">{t("Salary")}</TabsTrigger>
+          <TabsTrigger value="attendance">{t("Attendance")}</TabsTrigger>
+          <TabsTrigger value="performance">{t("Performance")}</TabsTrigger>
+          <TabsTrigger value="documents">{t("Documents")}</TabsTrigger>
+          <TabsTrigger value="subjects-classes">{t("Subjects & Classes")}</TabsTrigger>
+          <TabsTrigger value="lesson-plans">{t("Lesson Plans")}</TabsTrigger>
+          <TabsTrigger value="student-performance">{t("Student Performance")}</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
           <StaffOverviewTab staff={staff} />

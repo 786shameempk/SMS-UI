@@ -46,6 +46,13 @@ export function isWithinRange(iso: string | undefined | null, range: { start: Da
 }
 
 /** Month buckets covered by the range, oldest first — the x-axis of the trend charts. */
+/** A chart month label ("Jan", or "Jan 26" when the range spans years) with the month name translated. */
+export function translateMonthLabel(label: string, t: (key: string) => string): string {
+  const [month, year] = String(label).split(" ");
+  if (!MONTH_LABELS.includes(month)) return String(label);
+  return year ? `${t(month)} ${year}` : t(month);
+}
+
 export function monthsInRange(range: { start: Date; end: Date }): Array<{ key: string; label: string }> {
   const months: Array<{ key: string; label: string }> = [];
   const spansYears = range.start.getFullYear() !== range.end.getFullYear();

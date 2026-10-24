@@ -1,4 +1,4 @@
-import { createRazorpayOrder, verifyRazorpayPayment } from "@/features/fees/api";
+import { createRazorpayOrder, verifyRazorpayPayment, type RazorpayOrder } from "@/features/fees/api";
 
 /**
  * Razorpay Standard Checkout (checkout.js) for the web parent portal. Card/UPI details are entered on
@@ -7,7 +7,7 @@ import { createRazorpayOrder, verifyRazorpayPayment } from "@/features/fees/api"
 
 const SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
 
-interface RazorpaySuccess {
+export interface RazorpaySuccess {
   razorpay_payment_id: string;
   razorpay_order_id: string;
   razorpay_signature: string;
@@ -44,12 +44,13 @@ function loadScript(): Promise<void> {
   return scriptPromise;
 }
 
-export async function payInvoiceWithRazorpay(invoiceId: string, prefill: { name?: string; email?: string }) {
-  const [order] = await Promise.all([createRazorpayOrder(invoiceId), loadScript()]);
+/** Opens Razorpay's checkout for an order and resolves with its signed result; rejects with CheckoutDismissed when closed unpaid. */
+export async function openRazorpayCheckout(order: RazorpayOrder, prefill: { name?: string; email?: string }): Promise<RazorpaySuccess> {
+  await loadScript();
   if (!window.Razorpay) throw new Error("Couldn't load the payment page. Please try again.");
   const Razorpay = window.Razorpay;
 
-  const result = await new Promise<RazorpaySuccess>((resolve, reject) => {
+  return new Promise<RazorpaySuccess>((resolve, reject) => {
     const checkout = new Razorpay({
       key: order.keyId,
       order_id: order.orderId,
@@ -66,6 +67,11 @@ export async function payInvoiceWithRazorpay(invoiceId: string, prefill: { name?
     checkout.on("payment.failed", () => undefined);
     checkout.open();
   });
+}
 
+export async function payInvoiceWithRazorpay(invoiceId: string, prefill: { name?: string; email?: string }) {
+  // The page's script and the order are fetched together, so checkout opens as soon as both are ready.
+  const [order] = await Promise.all([createRazorpayOrder(invoiceId), loadScript()]);
+  const result = await openRazorpayCheckout(order, prefill);
   return verifyRazorpayPayment({ orderId: result.razorpay_order_id, paymentId: result.razorpay_payment_id, signature: result.razorpay_signature });
 }

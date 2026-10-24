@@ -65,7 +65,7 @@ export default function OfficeRolesPage() {
                     {r.name}
                     {r.isSystem && (
                       <Badge variant="neutral">
-                        <Lock className="mr-1 h-3 w-3" aria-hidden="true" />
+                        <Lock className="me-1 h-3 w-3" aria-hidden="true" />
                         Built-in
                       </Badge>
                     )}

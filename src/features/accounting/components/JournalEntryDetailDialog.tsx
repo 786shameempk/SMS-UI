@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import { JOURNAL_STATUS_CONFIG } from "../constants";
 import type { Account, JournalEntry } from "../types";
+import { useTranslation } from "react-i18next";
 
 export default function JournalEntryDetailDialog({
   open,
@@ -15,6 +16,7 @@ export default function JournalEntryDetailDialog({
   entry: JournalEntry | null;
   accounts: Account[];
 }) {
+  const { t } = useTranslation("accounting");
   if (!entry) return null;
   const accountById = new Map(accounts.map((a) => [a.id, a] as const));
   const totalDebit = entry.lines.reduce((sum, l) => sum + l.debit, 0);
@@ -27,19 +29,19 @@ export default function JournalEntryDetailDialog({
         <DialogHeader>
           <div className="flex items-center gap-2">
             <DialogTitle>{entry.entryNumber}</DialogTitle>
-            <Badge variant={config.variant}>{config.label}</Badge>
-            {entry.gstApplicable && <Badge variant="info">GST</Badge>}
+            <Badge variant={config.variant}>{t(config.label)}</Badge>
+            {entry.gstApplicable && <Badge variant="info">{t("GST")}</Badge>}
           </div>
           <DialogDescription>{entry.narration}</DialogDescription>
         </DialogHeader>
 
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
-            <dt className="text-xs text-muted-foreground">Date</dt>
+            <dt className="text-xs text-muted-foreground">{t("Date")}</dt>
             <dd className="text-foreground font-medium">{formatDateTime(entry.date)}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Reference</dt>
+            <dt className="text-xs text-muted-foreground">{t("Reference")}</dt>
             <dd className="text-foreground font-medium">{entry.reference || "—"}</dd>
           </div>
         </dl>
@@ -51,11 +53,11 @@ export default function JournalEntryDetailDialog({
               <div key={line.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
-                    {account ? `${account.code} · ${account.name}` : "Unknown account"}
+                    {account ? `${account.code} · ${account.name}` : t("Unknown account")}
                   </p>
                   {line.description && <p className="text-xs text-muted-foreground truncate">{line.description}</p>}
                 </div>
-                <div className="text-right shrink-0 text-sm tabular-nums">
+                <div className="text-end shrink-0 text-sm tabular-nums">
                   {line.debit > 0 && <p className="text-foreground">{formatCurrency(line.debit)}</p>}
                   {line.credit > 0 && <p className="text-muted-foreground">{formatCurrency(line.credit)}</p>}
                 </div>
@@ -65,9 +67,9 @@ export default function JournalEntryDetailDialog({
         </div>
 
         <div className="flex items-center justify-between border-t border-border pt-3 text-sm font-medium">
-          <span className="text-secondary-foreground">Total</span>
+          <span className="text-secondary-foreground">{t("Total")}</span>
           <span className="tabular-nums">
-            Dr {formatCurrency(totalDebit)} &middot; Cr {formatCurrency(totalCredit)}
+            {t("Dr {{debit}} · Cr {{credit}}", { debit: formatCurrency(totalDebit), credit: formatCurrency(totalCredit) })}
           </span>
         </div>
       </DialogContent>

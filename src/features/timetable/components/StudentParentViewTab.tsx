@@ -8,7 +8,9 @@ import { DAY_DEFINITIONS, holidayForDayThisWeek } from "../constants";
 import type { DayOfWeek } from "../types";
 import SectionScheduleGrid from "./SectionScheduleGrid";
 
+import { useTranslation } from "react-i18next";
 export default function StudentParentViewTab() {
+  const { t } = useTranslation("timetable");
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
   const { data: sections = [] } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
   const { data: subjects = [] } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
@@ -33,7 +35,7 @@ export default function StudentParentViewTab() {
     <div className="space-y-4">
       <Select value={activeSectionId} onValueChange={setSectionId}>
         <SelectTrigger className="w-56">
-          <SelectValue placeholder="Select section" />
+          <SelectValue placeholder={t("Select section")} />
         </SelectTrigger>
         <SelectContent>
           {sections.map((s) => {
@@ -47,7 +49,7 @@ export default function StudentParentViewTab() {
         </SelectContent>
       </Select>
 
-      <p className="text-xs text-muted-foreground">Read-only view. Contact the school office for schedule changes.</p>
+      <p className="text-xs text-muted-foreground">{t("Read-only view. Contact the school office for schedule changes.")}</p>
 
       <SectionScheduleGrid slots={slots} subjects={subjects} teachers={teachers} rooms={rooms} holidayDays={holidayDays} />
     </div>

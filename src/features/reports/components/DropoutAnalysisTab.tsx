@@ -6,6 +6,7 @@ import { CATEGORICAL_COLORS, CHART_AXIS_TICK, CHART_DANGER, CHART_GRID_COLOR, CH
 import { getDropoutReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 const STATUS_LABEL: Record<string, string> = {
   active: "Active",
   inactive: "Inactive (dropout)",
@@ -15,25 +16,26 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function DropoutAnalysisTab() {
+  const { t } = useTranslation("reports");
   const { data, isLoading } = useQuery({ queryKey: ["reports", "dropout"], queryFn: getDropoutReport });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   const inactiveCount = data.statusBreakdown.find((s) => s.status === "inactive")?.count ?? 0;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatTile label="Total students" value={String(data.totalStudents)} icon={Users} />
-        <StatTile label="Inactive (dropout)" value={String(inactiveCount)} icon={UserRoundX} />
-        <StatTile label="Dropout rate" value={`${data.dropoutRate}%`} icon={Percent} />
+        <StatTile label={t("Total students")} value={String(data.totalStudents)} icon={Users} />
+        <StatTile label={t("Inactive (dropout)")} value={String(inactiveCount)} icon={UserRoundX} />
+        <StatTile label={t("Dropout rate")} value={`${data.dropoutRate}%`} icon={Percent} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card>
           <CardHeader>
-            <CardTitle>Students by status</CardTitle>
-            <CardDescription>Current enrollment status across the whole school.</CardDescription>
+            <CardTitle>{t("Students by status")}</CardTitle>
+            <CardDescription>{t("Current enrollment status across the whole school.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-64 w-full">
@@ -54,13 +56,13 @@ export default function DropoutAnalysisTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Inactive students by class</CardTitle>
-            <CardDescription>Where dropouts are concentrated.</CardDescription>
+            <CardTitle>{t("Inactive students by class")}</CardTitle>
+            <CardDescription>{t("Where dropouts are concentrated.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-64 w-full">
               {data.inactiveByClass.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-10 text-center">No inactive students on record.</p>
+                <p className="text-sm text-muted-foreground py-10 text-center">{t("No inactive students on record.")}</p>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.inactiveByClass} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>

@@ -106,7 +106,7 @@ export default function MonitoringPage() {
                   <StatusBadge status={a.severity} />
                   <StatusBadge status={a.status} />
                   <span className="text-xs text-muted-foreground">{spaced(a.kind)}</span>
-                  <span className="ml-auto text-xs text-muted-foreground">first seen {ago(a.firstSeenAt)}</span>
+                  <span className="ms-auto text-xs text-muted-foreground">first seen {ago(a.firstSeenAt)}</span>
                 </div>
                 <p className="mt-1 font-medium">{a.title}</p>
                 {a.detail && <p className="text-sm text-muted-foreground">{a.detail}</p>}
@@ -125,7 +125,7 @@ export default function MonitoringPage() {
                     <span className="text-muted-foreground">{a.assignedToName ? `Assigned to ${a.assignedToName}` : "Unassigned"}</span>
                   )}
                   {a.status !== "Resolved" && canManage && (
-                    <span className="ml-auto flex gap-2">
+                    <span className="ms-auto flex gap-2">
                       {a.status === "Open" && <Button size="sm" variant="outline" onClick={() => ack.mutate(a.id)}>Acknowledge</Button>}
                       <Button size="sm" onClick={() => setResolving(a)}>Resolve</Button>
                     </span>

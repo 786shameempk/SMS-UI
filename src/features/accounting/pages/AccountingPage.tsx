@@ -5,22 +5,24 @@ import TrialBalanceTab from "../components/TrialBalanceTab";
 import ProfitAndLossTab from "../components/ProfitAndLossTab";
 import GstTab from "../components/GstTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
+import { useTranslation } from "react-i18next";
 
 export default function AccountingPage() {
+  const { t } = useTranslation("accounting");
   return (
     <PageContainer>
       <PageHeader
-        title="Accounting"
-        description="Chart of accounts, double-entry journal, trial balance, profit &amp; loss, and GST."
+        title={t("Accounting")}
+        description={t("Chart of accounts, double-entry journal, trial balance, profit & loss, and GST.")}
       />
 
       <Tabs defaultValue="journal">
         <TabsList variant="line">
-          <TabsTrigger value="accounts">Chart of Accounts</TabsTrigger>
-          <TabsTrigger value="journal">Journal</TabsTrigger>
-          <TabsTrigger value="trial-balance">Trial Balance</TabsTrigger>
-          <TabsTrigger value="pnl">Profit &amp; Loss</TabsTrigger>
-          <TabsTrigger value="gst">GST</TabsTrigger>
+          <TabsTrigger value="accounts">{t("Chart of Accounts")}</TabsTrigger>
+          <TabsTrigger value="journal">{t("Journal")}</TabsTrigger>
+          <TabsTrigger value="trial-balance">{t("Trial Balance")}</TabsTrigger>
+          <TabsTrigger value="pnl">{t("Profit & Loss")}</TabsTrigger>
+          <TabsTrigger value="gst">{t("GST")}</TabsTrigger>
         </TabsList>
         <TabsContent value="accounts">
           <ChartOfAccountsTab />

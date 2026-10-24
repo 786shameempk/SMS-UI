@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { BookOpen, CalendarCheck, GraduationCap, Presentation, ShieldCheck, UserRound, UsersRound, Video } from "lucide-react";
 import BrandLogo from "@/components/common/BrandLogo";
 import { useTenantBranding } from "@/features/tenant/TenantProvider";
@@ -16,6 +17,7 @@ const ROLES = [
 ];
 
 function Sphere() {
+  const { t } = useTranslation("authentication");
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[22rem]">
       {/* Orbits */}
@@ -75,7 +77,7 @@ function Sphere() {
           <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-indigo-950/80 text-indigo-100 shadow-lg shadow-black/30 backdrop-blur">
             <role.icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
           </span>
-          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-indigo-100/90">{role.label}</span>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-indigo-100/90">{t(role.label)}</span>
         </motion.div>
       ))}
 
@@ -84,14 +86,14 @@ function Sphere() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: [0, -6, 0] }}
         transition={{ opacity: { delay: 0.9, duration: 0.4 }, y: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
-        className="absolute -right-6 top-[14%] flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md xl:-right-12"
+        className="absolute -end-6 top-[14%] flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md xl:-end-12"
       >
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-400/15 text-emerald-300">
           <CalendarCheck className="h-3.5 w-3.5" />
         </span>
         <div>
-          <p className="text-[10px] text-indigo-200/80">Attendance today</p>
-          <p className="text-xs font-semibold text-white">96% present</p>
+          <p className="text-[10px] text-indigo-200/80">{t("Attendance today")}</p>
+          <p className="text-xs font-semibold text-white">{t("96% present")}</p>
         </div>
       </motion.div>
 
@@ -99,14 +101,14 @@ function Sphere() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: [0, 6, 0] }}
         transition={{ opacity: { delay: 1.1, duration: 0.4 }, y: { delay: 1.5, duration: 5.5, repeat: Infinity, ease: "easeInOut" } }}
-        className="absolute -left-8 bottom-[14%] flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md xl:-left-14"
+        className="absolute -start-8 bottom-[14%] flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md xl:-start-14"
       >
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-400/15 text-brand-300">
           <Video className="h-3.5 w-3.5" />
         </span>
         <div>
-          <p className="text-[10px] text-indigo-200/80">Physics · Grade 10 A</p>
-          <p className="text-xs font-semibold text-white">Class starts in 10 min</p>
+          <p className="text-[10px] text-indigo-200/80">{t("Physics · Grade 10 A")}</p>
+          <p className="text-xs font-semibold text-white">{t("Class starts in 10 min")}</p>
         </div>
       </motion.div>
 
@@ -114,10 +116,10 @@ function Sphere() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: [0, -5, 0] }}
         transition={{ opacity: { delay: 1.3, duration: 0.4 }, y: { delay: 1.7, duration: 6, repeat: Infinity, ease: "easeInOut" } }}
-        className="absolute -left-4 top-[18%] hidden items-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md xl:flex"
+        className="absolute -start-4 top-[18%] hidden items-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md xl:flex"
       >
         <BookOpen className="h-3.5 w-3.5 text-teal-300" />
-        <p className="text-xs font-medium text-white">New study material</p>
+        <p className="text-xs font-medium text-white">{t("New study material")}</p>
       </motion.div>
     </div>
   );
@@ -135,12 +137,13 @@ export function BrandMark({ inverted }: { inverted?: boolean }) {
 }
 
 export default function LoginShowcase() {
+  const { t } = useTranslation("authentication");
   return (
     <aside className="relative isolate hidden overflow-hidden bg-[#0b0f2a] lg:flex lg:w-[46%] lg:flex-col xl:w-1/2">
       {/* Backdrop */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_30%_20%,#312e81_0%,transparent_60%)]" />
-        <div className="absolute -bottom-40 -right-24 h-[30rem] w-[30rem] rounded-full bg-teal-500/10 blur-3xl" />
+        <div className="absolute -bottom-40 -end-24 h-[30rem] w-[30rem] rounded-full bg-teal-500/10 blur-3xl" />
         <div className="absolute right-1/4 top-1/3 h-40 w-40 rounded-full bg-brand-500/10 blur-3xl" />
         <div
           className="absolute inset-0 opacity-[0.08]"
@@ -166,19 +169,19 @@ export default function LoginShowcase() {
             className="mx-auto mt-14 max-w-md text-center"
           >
             <h2 className="text-3xl font-bold leading-tight tracking-[-0.03em] text-white xl:text-[2.1rem]">
-              Simplifying School.
+              {t("Simplifying School.")}
               <br />
-              <span className="bg-gradient-to-r from-indigo-200 via-white to-teal-200 bg-clip-text text-transparent">Connecting Everyone.</span>
+              <span className="bg-gradient-to-r from-indigo-200 via-white to-teal-200 bg-clip-text text-transparent">{t("Connecting Everyone.")}</span>
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-indigo-100/70">
-              Administrators, teachers, students, and parents — together in one secure school workspace.
+              {t("Administrators, teachers, students, and parents — together in one secure school workspace.")}
             </p>
           </motion.div>
         </div>
 
         <div className="flex items-center justify-between text-xs text-indigo-200/60">
           <span className="flex items-center gap-1.5">
-            <UserRound className="h-3.5 w-3.5" /> One login for every role
+            <UserRound className="h-3.5 w-3.5" /> {t("One login for every role")}
           </span>
           <span>&copy; {new Date().getFullYear()} School Sphere</span>
         </div>

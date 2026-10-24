@@ -9,10 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TEMPLATE_CATEGORIES } from "../constants";
+import { TEMPLATE_CATEGORIES, TEMPLATE_LANGUAGES } from "../constants";
 import type { MessageTemplate, MessageTemplateFormValues } from "../types";
 import ChannelSelector from "./ChannelSelector";
 
+import { useTranslation } from "react-i18next";
 const NONE = "__none__";
 
 const channelEnum = z.enum(["email", "sms", "push", "whatsapp", "in-app"]);
@@ -23,11 +24,25 @@ const templateSchema = z.object({
   subject: z.string().optional(),
   body: z.string().min(1, "Message body is required"),
   channels: z.array(channelEnum).min(1, "Select at least one default channel"),
+  language: z.string(),
+  smsTemplateId: z.string().optional(),
+  whatsAppTemplateName: z.string().optional(),
+  whatsAppTemplateLanguage: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof templateSchema>;
 
-const emptyValues: FormValues = { name: "", category: NONE, subject: "", body: "", channels: ["email"] };
+const emptyValues: FormValues = {
+  name: "",
+  category: NONE,
+  subject: "",
+  body: "",
+  channels: ["email"],
+  language: "en",
+  smsTemplateId: "",
+  whatsAppTemplateName: "",
+  whatsAppTemplateLanguage: "",
+};
 
 export default function TemplateFormDialog({
   open,
@@ -42,6 +57,7 @@ export default function TemplateFormDialog({
   submitting: boolean;
   onSubmit: (values: MessageTemplateFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("communication");
   const isEdit = Boolean(template);
   const {
     register,
@@ -61,6 +77,10 @@ export default function TemplateFormDialog({
             subject: template.subject ?? "",
             body: template.body,
             channels: template.channels,
+            language: template.language ?? "en",
+            smsTemplateId: template.smsTemplateId ?? "",
+            whatsAppTemplateName: template.whatsAppTemplateName ?? "",
+            whatsAppTemplateLanguage: template.whatsAppTemplateLanguage ?? "",
           }
         : emptyValues,
     );
@@ -70,8 +90,8 @@ export default function TemplateFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit template" : "New template"}</DialogTitle>
-          <DialogDescription>Reusable message content that can be picked when composing a broadcast.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit template") : t("New template")}</DialogTitle>
+          <DialogDescription>{t("Reusable message content that can be picked when composing a broadcast.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -85,22 +105,22 @@ export default function TemplateFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="tpl-name" required>Template name</Label>
-              <Input id="tpl-name" placeholder="e.g. Fee due reminder" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+              <Label htmlFor="tpl-name" required>{t("Template name")}</Label>
+              <Input id="tpl-name" placeholder={t("e.g. Fee due reminder")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
               {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tpl-category">Category</Label>
+              <Label htmlFor="tpl-category">{t("Category")}</Label>
               <Controller
                 control={control}
                 name="category"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="tpl-category">
-                      <SelectValue placeholder="None" />
+                      <SelectValue placeholder={t("None")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE}>None</SelectItem>
+                      <SelectItem value={NONE}>{t("None")}</SelectItem>
                       {TEMPLATE_CATEGORIES.map((c) => (
                         <SelectItem key={c} value={c}>
                           {c}
@@ -114,28 +134,67 @@ export default function TemplateFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-subject">Subject (optional, used for email)</Label>
-            <Input id="tpl-subject" placeholder="e.g. Fee payment reminder" {...register("subject")} />
+            <Label htmlFor="tpl-subject">{t("Subject (optional, used for email)")}</Label>
+            <Input id="tpl-subject" placeholder={t("e.g. Fee payment reminder")} {...register("subject")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-body" required>Message body</Label>
-            <Textarea id="tpl-body" rows={5} placeholder="Write the reusable message content…" aria-invalid={errors.body ? true : undefined} {...register("body")} />
+            <Label htmlFor="tpl-body" required>{t("Message body")}</Label>
+            <Textarea id="tpl-body" rows={5} placeholder={t("Write the reusable message content…")} aria-invalid={errors.body ? true : undefined} {...register("body")} />
             {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-language">{t("Language")}</Label>
+              <Controller
+                control={control}
+                name="language"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="tpl-language">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TEMPLATE_LANGUAGES.map((l) => (
+                        <SelectItem key={l.value} value={l.value}>
+                          {t(l.label)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-sms-id">{t("SMS DLT template / MSG91 flow id")}</Label>
+              <Input id="tpl-sms-id" placeholder={t("Required for SMS in India")} {...register("smsTemplateId")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-wa-name">{t("WhatsApp template name")}</Label>
+              <Input id="tpl-wa-name" placeholder={t("Approved in WhatsApp Manager")} {...register("whatsAppTemplateName")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-wa-lang">{t("WhatsApp template language")}</Label>
+              <Input id="tpl-wa-lang" placeholder={t("e.g. en, en_US, ml")} {...register("whatsAppTemplateLanguage")} />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("The approved SMS and WhatsApp templates must accept this message text as their variable. Messages sent from this template use them.")}
+          </p>
+
           <div className="space-y-1.5">
-            <Label>Default channels</Label>
+            <Label>{t("Default channels")}</Label>
             <Controller control={control} name="channels" render={({ field }) => <ChannelSelector value={field.value} onChange={field.onChange} />} />
             {errors.channels && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.channels.message}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create template"}
+              {isEdit ? t("Save changes") : t("Create template")}
             </Button>
           </DialogFooter>
         </form>

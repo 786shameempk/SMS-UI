@@ -6,6 +6,7 @@ import { cn } from "@/utils/cn";
 import type { DayOfWeek, TimetableSlot } from "../types";
 import { useTimetableSetup } from "../useTimetableSetup";
 
+import { useTranslation } from "react-i18next";
 interface TimetableGridProps {
   slots: TimetableSlot[];
   renderCell: (slot: TimetableSlot | undefined, dayOfWeek: DayOfWeek, periodNumber: number) => ReactNode;
@@ -14,23 +15,24 @@ interface TimetableGridProps {
 }
 
 export default function TimetableGrid({ slots, renderCell, onCellClick, holidayDays }: TimetableGridProps) {
+  const { t } = useTranslation("timetable");
   // The branch's own periods and school days (the standard ones until it sets up its own).
   const { periods, days } = useTimetableSetup();
   return (
     <Table containerClassName="rounded-xl border border-border bg-card" className="border-collapse">
       <TableHeader>
         <TableRow hover={false}>
-          <TableHead className="w-32 border-r border-border px-3">Period</TableHead>
+          <TableHead className="w-32 border-e border-border px-3">{t("Period")}</TableHead>
           {days.map((day) => {
             const isHoliday = holidayDays?.has(day.value);
             return (
               <TableHead key={day.value} className="min-w-[150px] px-3">
                 <div className="flex items-center gap-1.5">
-                  <span>{day.label}</span>
+                  <span>{t(day.label)}</span>
                   {isHoliday && (
                     <Badge variant="warning" className="gap-1">
                       <CalendarOff className="h-3 w-3" />
-                      Holiday
+                      {t("Holiday")}
                     </Badge>
                   )}
                 </div>
@@ -42,15 +44,15 @@ export default function TimetableGrid({ slots, renderCell, onCellClick, holidayD
       <TableBody>
         {periods.map((period) => (
           <TableRow key={period.periodNumber} hover={false} className="border-border">
-            <TableCell className="border-r border-border px-3 py-2 align-top">
-              <p className="text-sm font-medium text-foreground">{period.label}</p>
+            <TableCell className="border-e border-border px-3 py-2 align-top">
+              <p className="text-sm font-medium text-foreground">{t(period.label)}</p>
               <p className="text-xs text-muted-foreground">{period.time}</p>
             </TableCell>
             {days.map((day) => {
               if (period.isBreak) {
                 return (
                   <TableCell key={day.value} className="bg-secondary/30 px-3 py-2 text-center text-xs text-muted-foreground">
-                    {period.label}
+                    {t(period.label)}
                   </TableCell>
                 );
               }

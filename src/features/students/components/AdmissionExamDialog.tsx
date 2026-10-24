@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -35,6 +36,7 @@ export default function AdmissionExamDialog({
   submitting: boolean;
   onSubmit: (values: AdmissionExamFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("students");
   const {
     register,
     handleSubmit,
@@ -59,22 +61,23 @@ export default function AdmissionExamDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Entrance exam</DialogTitle>
+          <DialogTitle>{t("Entrance exam")}</DialogTitle>
           <DialogDescription>
-            Schedule the entrance exam for {application.applicantFirstName} {application.applicantLastName}, then reopen this
-            to record the result once it's taken.
+            {t("Schedule the entrance exam for {{name}}, then reopen this to record the result once it's taken.", {
+              name: `${application.applicantFirstName} ${application.applicantLastName}`,
+            })}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="exam-date">Exam date</Label>
+            <Label htmlFor="exam-date">{t("Exam date")}</Label>
             <Input id="exam-date" type="date" aria-invalid={errors.examDate ? true : undefined} {...register("examDate")} />
-            {errors.examDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.examDate.message}</p>}
+            {errors.examDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.examDate.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="exam-status">Status</Label>
+              <Label htmlFor="exam-status">{t("Status")}</Label>
               <Controller
                 control={control}
                 name="examStatus"
@@ -86,7 +89,7 @@ export default function AdmissionExamDialog({
                     <SelectContent>
                       {EXAM_STATUS_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -95,18 +98,18 @@ export default function AdmissionExamDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="exam-score">Score (0-100, optional)</Label>
+              <Label htmlFor="exam-score">{t("Score (0-100, optional)")}</Label>
               <Input id="exam-score" type="number" min="0" max="100" aria-invalid={errors.examScore ? true : undefined} {...register("examScore")} />
-              {errors.examScore && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.examScore.message}</p>}
+              {errors.examScore && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.examScore.message ?? "")}</p>}
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save
+              {t("Save")}
             </Button>
           </DialogFooter>
         </form>

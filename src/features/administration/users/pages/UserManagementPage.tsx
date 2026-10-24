@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { KeyRound, Lock, Pencil, Plus, Trash2, Unlock, UserCheck, UserCog, UserX } from "lucide-react";
@@ -38,6 +39,7 @@ function initialsOf(name: string) {
 }
 
 export default function UserManagementPage() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const { data: users = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "users"], queryFn: listUsers });
   const { data: roles = [] } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
@@ -59,49 +61,49 @@ export default function UserManagementPage() {
     onSuccess: ({ user, tempPassword }) => {
       invalidate();
       // Also emailed when email delivery is configured; shown here so the admin can hand it over.
-      toast.success(`${user.name} created. Temporary password: ${tempPassword}`, { duration: 30000 });
+      toast.success(t("{{name}} created. Temporary password: {{password}}", { name: user.name, password: tempPassword }), { duration: 30000 });
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create user"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create user")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: UserFormValues }) => updateUser(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("User updated");
+      toast.success(t("User updated"));
       setFormOpen(false);
       setEditingUser(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update user"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update user")),
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: SystemUser["status"] }) => setUserStatus(id, status),
     onSuccess: (user) => {
       invalidate();
-      toast.success(`${user.name} is now ${user.status}`);
+      toast.success(t(`{{name}} is now ${user.status}`, { name: user.name }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not change status"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not change status")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteUser(id),
     onSuccess: () => {
       invalidate();
-      toast.success(`${deleteTarget?.name} removed`);
+      toast.success(t("{{name}} removed", { name: deleteTarget?.name }));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove user"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not remove user")),
   });
 
   const resetMutation = useMutation({
     mutationFn: (id: string) => resetUserPassword(id),
     onSuccess: ({ tempPassword }) => {
-      toast.success(`Password reset for ${resetTarget?.email}. Temporary password: ${tempPassword}`, { duration: 30000 });
+      toast.success(t("Password reset for {{email}}. Temporary password: {{password}}", { email: resetTarget?.email, password: tempPassword }), { duration: 30000 });
       setResetTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not reset password"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not reset password")),
   });
 
   const filteredUsers = useMemo(() => {
@@ -122,9 +124,9 @@ export default function UserManagementPage() {
     },
     onSuccess: ({ status, ok, failed }) => {
       invalidate();
-      if (ok) toast.success(`${ok} user${ok === 1 ? "" : "s"} ${status === "active" ? "activated" : "deactivated"}`);
-      if (failed) toast.error(`${failed} user${failed === 1 ? "" : "s"} could not be updated`);
-      if (!ok && !failed) toast(`Selected users are already ${status}`);
+      if (ok) toast.success(t(`{{count}} ${ok === 1 ? "user" : "users"} ${status === "active" ? "activated" : "deactivated"}`, { count: ok }));
+      if (failed) toast.error(failed === 1 ? t("{{count}} user could not be updated", { count: failed }) : t("{{count}} users could not be updated", { count: failed }));
+      if (!ok && !failed) toast(t(`Selected users are already ${status}`));
     },
   });
 
@@ -134,12 +136,13 @@ export default function UserManagementPage() {
     setStatusFilter("all");
   };
   const activeFilters: ActiveFilter[] = [];
-  if (search.trim()) activeFilters.push({ id: "search", label: "Search", value: search.trim(), onRemove: () => setSearch("") });
+  if (search.trim()) activeFilters.push({ id: "search", label: t("Search"), value: search.trim(), onRemove: () => setSearch("") });
   if (roleFilter !== "all")
-    activeFilters.push({ id: "role", label: "Role", value: roles.find((r) => r.id === roleFilter)?.name ?? roleFilter, onRemove: () => setRoleFilter("all") });
+    activeFilters.push({ id: "role", label: t("Role"), value: roles.find((r) => r.id === roleFilter)?.name ?? roleFilter, onRemove: () => setRoleFilter("all") });
   if (statusFilter !== "all") {
-    const label = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? statusFilter;
-    activeFilters.push({ id: "status", label: "Status", value: label, onRemove: () => setStatusFilter("all") });
+    const option = STATUS_OPTIONS.find((o) => o.value === statusFilter);
+    const label = option ? t(option.label) : statusFilter;
+    activeFilters.push({ id: "status", label: t("Status"), value: label, onRemove: () => setStatusFilter("all") });
   }
 
   const profileUser = users.find((u) => u.id === profileUserId) ?? null;
@@ -147,11 +150,11 @@ export default function UserManagementPage() {
   const columns: ColumnDef<SystemUser, unknown>[] = [
     {
       accessorKey: "name",
-      header: "User",
+      header: t("User"),
       cell: ({ row }) => {
         const u = row.original;
         return (
-          <button type="button" onClick={() => setProfileUserId(u.id)} className="flex items-center gap-3 text-left cursor-pointer group">
+          <button type="button" onClick={() => setProfileUserId(u.id)} className="flex items-center gap-3 text-start cursor-pointer group">
             <Avatar className="w-8 h-8">
               {u.avatarUrl && <AvatarImage src={u.avatarUrl} alt={u.name} />}
               <AvatarFallback className="text-[11px]">{initialsOf(u.name)}</AvatarFallback>
@@ -166,30 +169,30 @@ export default function UserManagementPage() {
     },
     {
       accessorKey: "roleId",
-      header: "Role",
+      header: t("Role"),
       cell: ({ row }) => <span className="text-sm text-foreground">{roles.find((r) => r.id === row.original.roleId)?.name}</span>,
     },
     {
       accessorKey: "department",
-      header: "Department",
+      header: t("Department"),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.department || "—"}</span>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => <UserStatusBadge status={row.original.status} />,
     },
     {
       accessorKey: "mfaEnabled",
-      header: "2FA",
-      cell: ({ row }) => <Badge variant={row.original.mfaEnabled ? "success" : "neutral"}>{row.original.mfaEnabled ? "On" : "Off"}</Badge>,
+      header: t("2FA"),
+      cell: ({ row }) => <Badge variant={row.original.mfaEnabled ? "success" : "neutral"}>{row.original.mfaEnabled ? t("On") : t("Off")}</Badge>,
     },
     {
       accessorKey: "lastLoginAt",
-      header: "Last login",
+      header: t("Last login"),
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
-          {row.original.lastLoginAt ? new Date(row.original.lastLoginAt).toLocaleDateString() : "Never"}
+          {row.original.lastLoginAt ? new Date(row.original.lastLoginAt).toLocaleDateString() : t("Never")}
         </span>
       ),
     },
@@ -207,43 +210,43 @@ export default function UserManagementPage() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit user
+              {t("Edit user")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setProfileUserId(u.id)}>
               <UserCog className="w-3.5 h-3.5" />
-              View profile
+              {t("View profile")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setResetTarget(u)}>
               <KeyRound className="w-3.5 h-3.5" />
-              Reset password
+              {t("Reset password")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {u.status === "active" ? (
               <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "inactive" })}>
                 <UserX className="w-3.5 h-3.5" />
-                Deactivate
+                {t("Deactivate")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "active" })}>
                 <UserCog className="w-3.5 h-3.5" />
-                Activate
+                {t("Activate")}
               </DropdownMenuItem>
             )}
             {u.status === "locked" ? (
               <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "active" })}>
                 <Unlock className="w-3.5 h-3.5" />
-                Unlock account
+                {t("Unlock account")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={() => statusMutation.mutate({ id: u.id, status: "locked" })}>
                 <Lock className="w-3.5 h-3.5" />
-                Lock account
+                {t("Lock account")}
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setDeleteTarget(u)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete user
+              {t("Delete user")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -254,8 +257,8 @@ export default function UserManagementPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="User management"
-        description="Create and manage staff and administrator accounts."
+        title={t("User management")}
+        description={t("Create and manage staff and administrator accounts.")}
         actions={
           <>
             <Button
@@ -265,7 +268,7 @@ export default function UserManagementPage() {
               }}
             >
               <Plus className="w-4 h-4" />
-              Add user
+              {t("Add user")}
             </Button>
           </>
         }
@@ -278,16 +281,16 @@ export default function UserManagementPage() {
         isError={isError}
         onRetry={() => refetch()}
         getRowId={(u) => u.id}
-        empty={{ icon: UserCog, title: "No users yet", description: "Add staff and administrator accounts so they can sign in." }}
+        empty={{ icon: UserCog, title: t("No users yet"), description: t("Add staff and administrator accounts so they can sign in.") }}
         filters={
           <>
-            <SearchInput value={search} onValueChange={setSearch} placeholder="Search by name or email" containerClassName="sm:w-72" />
+            <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by name or email")} containerClassName="sm:w-72" />
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="sm:w-40" aria-label="Filter by role">
-                <SelectValue placeholder="Role" />
+              <SelectTrigger className="sm:w-40" aria-label={t("Filter by role")}>
+                <SelectValue placeholder={t("Role")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
+                <SelectItem value="all">{t("All roles")}</SelectItem>
                 {roles.map((role) => (
                   <SelectItem key={role.id} value={role.id}>
                     {role.name}
@@ -296,14 +299,14 @@ export default function UserManagementPage() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="sm:w-36" aria-label="Filter by status">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="sm:w-36" aria-label={t("Filter by status")}>
+                <SelectValue placeholder={t("Status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">{t("All statuses")}</SelectItem>
                 {STATUS_OPTIONS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
-                    {o.label}
+                    {t(o.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -318,11 +321,11 @@ export default function UserManagementPage() {
           <>
             <Button variant="outline" size="sm" loading={bulkStatusMutation.isPending} onClick={() => bulkStatusMutation.mutate({ users: selected, status: "active" }, { onSuccess: clear })}>
               <UserCheck className="h-3.5 w-3.5" />
-              Activate
+              {t("Activate")}
             </Button>
             <Button variant="destructive-outline" size="sm" loading={bulkStatusMutation.isPending} onClick={() => bulkStatusMutation.mutate({ users: selected, status: "inactive" }, { onSuccess: clear })}>
               <UserX className="h-3.5 w-3.5" />
-              Deactivate
+              {t("Deactivate")}
             </Button>
           </>
         )}
@@ -357,9 +360,9 @@ export default function UserManagementPage() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete user"
-        description={`This will permanently remove ${deleteTarget?.name}'s account. This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete user")}
+        description={t("This will permanently remove {{name}}'s account. This cannot be undone.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {
@@ -370,9 +373,9 @@ export default function UserManagementPage() {
       <ConfirmDialog
         open={Boolean(resetTarget)}
         onOpenChange={(v) => !v && setResetTarget(null)}
-        title="Reset password"
-        description={`A temporary password will be generated and sent to ${resetTarget?.email}.`}
-        confirmLabel="Send reset"
+        title={t("Reset password")}
+        description={t("A temporary password will be generated and sent to {{email}}.", { email: resetTarget?.email })}
+        confirmLabel={t("Send reset")}
         submitting={resetMutation.isPending}
         onConfirm={() => {
           if (resetTarget) resetMutation.mutate(resetTarget.id);

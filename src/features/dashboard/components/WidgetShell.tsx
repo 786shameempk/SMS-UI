@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Lock, RotateCw, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,8 +47,9 @@ function StateCard({
 
 /** Placeholder card while a widget's code or data loads. */
 export function WidgetSkeleton({ title, height = 220 }: { title: string; height?: number }) {
+  const { t } = useTranslation("dashboard");
   return (
-    <Card aria-busy="true" aria-label={`Loading ${title}`}>
+    <Card aria-busy="true" aria-label={t("Loading {{title}}", { title })}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
@@ -80,27 +82,28 @@ export default function WidgetShell<T>({
   skeleton?: ReactNode;
   children: (data: T) => ReactNode;
 }) {
+  const { t } = useTranslation("dashboard");
   const online = useOnlineStatus();
 
   if (query.data !== undefined) return <>{children(query.data)}</>;
 
   if (query.isError && isAccessDenied(query.error)) {
-    return <StateCard title={title} icon={Lock} tone="muted" role="status" message="You don't have permission to view this information." />;
+    return <StateCard title={title} icon={Lock} tone="muted" role="status" message={t("You don't have permission to view this information.")} />;
   }
 
   const retry = (
     <Button variant="outline" size="sm" onClick={() => void query.refetch()} loading={query.isRefetching}>
       {!query.isRefetching && <RotateCw className="h-3.5 w-3.5" />}
-      Try again
+      {t("Try again")}
     </Button>
   );
 
   if (!online) {
-    return <StateCard title={title} icon={WifiOff} tone="muted" role="status" message="You're offline. This will load when you reconnect." action={retry} />;
+    return <StateCard title={title} icon={WifiOff} tone="muted" role="status" message={t("You're offline. This will load when you reconnect.")} action={retry} />;
   }
 
   if (query.isError) {
-    return <StateCard title={title} icon={AlertTriangle} tone="error" role="alert" message="Couldn't load this right now." action={retry} />;
+    return <StateCard title={title} icon={AlertTriangle} tone="error" role="alert" message={t("Couldn't load this right now.")} action={retry} />;
   }
 
   return <>{skeleton ?? <WidgetSkeleton title={title} height={height} />}</>;

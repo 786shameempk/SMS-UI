@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowUpRight, HeartPulse, Pencil, Phone, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ export default function StudentQuickView({
   /** Omit for read-only viewers (teachers): the Edit button is hidden. */
   onEdit?: (s: Student) => void;
 }) {
+  const { t } = useTranslation("students");
   const s = student;
   const guardians = s?.guardians ?? [];
 
@@ -69,33 +71,33 @@ export default function StudentQuickView({
             <Tabs defaultValue="overview">
               <TabsList className="w-full">
                 <TabsTrigger value="overview" className="flex-1">
-                  Overview
+                  {t("Overview")}
                 </TabsTrigger>
                 <TabsTrigger value="guardians" className="flex-1" count={guardians.length}>
-                  Guardians
+                  {t("Guardians")}
                 </TabsTrigger>
                 <TabsTrigger value="health" className="flex-1">
-                  Health
+                  {t("Health")}
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="mt-4">
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  <Field label="Admission no.">{s.admissionNumber}</Field>
-                  <Field label="Roll no.">{s.rollNumber}</Field>
-                  <Field label="Date of birth">{s.dateOfBirth && formatDate(s.dateOfBirth)}</Field>
-                  <Field label="Gender">{capitalize(s.gender)}</Field>
-                  <Field label="Admitted on">{s.admissionDate && formatDate(s.admissionDate)}</Field>
-                  <Field label="Transport">{s.transport?.required ? s.transport.routeName || "Required" : "Not required"}</Field>
+                  <Field label={t("Admission no.")}>{s.admissionNumber}</Field>
+                  <Field label={t("Roll no.")}>{s.rollNumber}</Field>
+                  <Field label={t("Date of birth")}>{s.dateOfBirth && formatDate(s.dateOfBirth)}</Field>
+                  <Field label={t("Gender")}>{s.gender ? t(capitalize(s.gender)) : ""}</Field>
+                  <Field label={t("Admitted on")}>{s.admissionDate && formatDate(s.admissionDate)}</Field>
+                  <Field label={t("Transport")}>{s.transport?.required ? s.transport.routeName || t("Required") : t("Not required")}</Field>
                   <div className="col-span-2">
-                    <Field label="Address">{s.address}</Field>
+                    <Field label={t("Address")}>{s.address}</Field>
                   </div>
                 </dl>
               </TabsContent>
 
               <TabsContent value="guardians" className="mt-4">
                 {guardians.length === 0 ? (
-                  <EmptyState size="sm" icon={Users} title="No guardians on file" description="Add a guardian from the student's details." />
+                  <EmptyState size="sm" icon={Users} title={t("No guardians on file")} description={t("Add a guardian from the student's details.")} />
                 ) : (
                   <ul className="divide-y divide-border rounded-lg border border-border">
                     {guardians.map((g) => (
@@ -103,12 +105,12 @@ export default function StudentQuickView({
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{g.name}</p>
                           <p className="truncate text-xs text-muted-foreground">
-                            {[capitalize(g.relation), g.occupation].filter(Boolean).join(" • ")}
+                            {[g.relation ? t(capitalize(g.relation)) : "", g.occupation].filter(Boolean).join(" • ")}
                           </p>
                         </div>
                         {g.phone && (
                           <Button asChild variant="ghost" size="sm" className="shrink-0">
-                            <a href={`tel:${g.phone}`} aria-label={`Call ${g.name}`}>
+                            <a href={`tel:${g.phone}`} aria-label={t("Call {{name}}", { name: g.name })}>
                               <Phone className="h-3.5 w-3.5" />
                               <span className="tabular-nums">{g.phone}</span>
                             </a>
@@ -123,22 +125,22 @@ export default function StudentQuickView({
               <TabsContent value="health" className="mt-4">
                 {s.medical ? (
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <Field label="Blood group">{s.medical.bloodGroup}</Field>
-                    <Field label="Doctor">{s.medical.doctorName}</Field>
+                    <Field label={t("Blood group")}>{s.medical.bloodGroup}</Field>
+                    <Field label={t("Doctor")}>{s.medical.doctorName}</Field>
                     <div className="col-span-2">
-                      <Field label="Allergies">{s.medical.allergies}</Field>
+                      <Field label={t("Allergies")}>{s.medical.allergies}</Field>
                     </div>
                     <div className="col-span-2">
-                      <Field label="Conditions">{s.medical.conditions}</Field>
+                      <Field label={t("Conditions")}>{s.medical.conditions}</Field>
                     </div>
                     <div className="col-span-2">
-                      <Field label="Emergency contact">
+                      <Field label={t("Emergency contact")}>
                         {s.emergencyContact?.name && `${s.emergencyContact.name} (${s.emergencyContact.relation}) · ${s.emergencyContact.phone}`}
                       </Field>
                     </div>
                   </dl>
                 ) : (
-                  <EmptyState size="sm" icon={HeartPulse} title="No health details" description="Medical information hasn't been recorded yet." />
+                  <EmptyState size="sm" icon={HeartPulse} title={t("No health details")} description={t("Medical information hasn't been recorded yet.")} />
                 )}
               </TabsContent>
             </Tabs>
@@ -147,11 +149,11 @@ export default function StudentQuickView({
               {onEdit && (
                 <Button variant="outline" onClick={() => onEdit(s)}>
                   <Pencil className="h-4 w-4" />
-                  Edit
+                  {t("Edit")}
                 </Button>
               )}
               <Button onClick={() => onOpenProfile(s)}>
-                Open full profile
+                {t("Open full profile")}
                 <ArrowUpRight className="h-4 w-4" />
               </Button>
             </DialogFooter>

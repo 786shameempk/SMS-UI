@@ -1,3 +1,7 @@
+import { dashboardT, type Translate } from "./i18n";
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 /** Compact rupee amounts for tiles: ₹1.2L, ₹3.4Cr, ₹850. Indian digit grouping, as the Overview's fee cards use. */
 export function compactInr(value: number): string {
   const abs = Math.abs(value);
@@ -21,24 +25,26 @@ export function share(part: number, whole: number): number {
   return whole <= 0 ? 0 : Math.round((part / whole) * 100);
 }
 
-/** "2026-07" -> "Jul 26", for chart axes. */
-export function monthLabel(month: string): string {
+/** "2026-07" -> "Jul 26", for chart axes. Month names follow the interface language. */
+export function monthLabel(month: string, t: Translate = dashboardT): string {
   const [y, m] = month.split("-").map(Number);
-  return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1] ?? month} ${String(y).slice(2)}`;
+  const name = MONTHS[m - 1];
+  return `${name ? t(name) : month} ${String(y).slice(2)}`;
 }
 
 /** "2026-10-07" -> "7 Oct". */
-export function dayLabel(day: string): string {
+export function dayLabel(day: string, t: Translate = dashboardT): string {
   const [, m, d] = day.split("-").map(Number);
-  return `${d} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1] ?? ""}`.trim();
+  const name = MONTHS[m - 1];
+  return `${d} ${name ? t(name) : ""}`.trim();
 }
 
 /** "09:05:00" -> "9:05 AM". */
-export function timeLabel(time: string | null | undefined): string {
+export function timeLabel(time: string | null | undefined, t: Translate = dashboardT): string {
   if (!time) return "";
   const [h, m] = time.split(":").map(Number);
   const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+  return t(h >= 12 ? "{{time}} PM" : "{{time}} AM", { time: `${hour}:${String(m).padStart(2, "0")}` });
 }
 
 /** Splits CamelCase from the API ("FeeCollection" -> "Fee collection"). */

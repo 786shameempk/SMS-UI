@@ -23,7 +23,9 @@ import { Detail } from "../components/bits";
 import { SYLLABUS_STATUS, StatusBadge, formatDate, guardedClose, useApiMutation, usePortionAccess } from "../shared";
 import type { Chapter, ImportRow, SyllabusDetail, Topic } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function SyllabusDetailPage() {
+  const { t: tr } = useTranslation("lesson-portions");
   const { id = "" } = useParams();
   const access = usePortionAccess();
   const query = useQuery({ queryKey: ["portions", "syllabus", id], queryFn: () => getSyllabus(id), enabled: Boolean(id) });
@@ -54,7 +56,7 @@ export default function SyllabusDetailPage() {
   return (
     <div className="space-y-5">
       <Link to="/lesson-portions/syllabus" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All syllabus plans
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> {tr("All syllabus plans")}
       </Link>
 
       <Card>
@@ -62,60 +64,58 @@ export default function SyllabusDetailPage() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="truncate text-lg font-semibold">{s.isTemplate ? (s.templateName ?? s.title) : s.title}</h2>
-              <p className="text-sm text-muted-foreground">
-                {s.className} · {s.subjectName} · {s.curriculumName} · version {s.version}
-              </p>
+              <p className="text-sm text-muted-foreground">{tr("{{className}} · {{subjectName}} · {{curriculumName}} · version {{version}}", { className: s.className, subjectName: s.subjectName, curriculumName: s.curriculumName, version: s.version })}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {s.isTemplate ? <Badge variant="info">Template</Badge> : <StatusBadge map={SYLLABUS_STATUS} value={s.status} />}
+              {s.isTemplate ? <Badge variant="info">{tr("Template")}</Badge> : <StatusBadge map={SYLLABUS_STATUS} value={s.status} />}
               {editable && (
                 <>
                   <Button size="sm" variant="outline" onClick={() => setImporting(true)}>
-                    <FileUp className="h-4 w-4" /> Import CSV
+                    <FileUp className="h-4 w-4" /> {tr("Import CSV")}
                   </Button>
                   {!s.isTemplate && s.status === "Draft" && (
                     <Button size="sm" onClick={() => setConfirm({ kind: "publish", id, label: s.title })} disabled={d.chapters.length === 0}>
-                      <Send className="h-4 w-4" /> Publish
+                      <Send className="h-4 w-4" /> {tr("Publish")}
                     </Button>
                   )}
                 </>
               )}
               {access.canManage && !s.isTemplate && (
                 <Button size="sm" variant="outline" onClick={() => version.mutate(undefined)} loading={version.isPending}>
-                  <Copy className="h-4 w-4" /> New version
+                  <Copy className="h-4 w-4" /> {tr("New version")}
                 </Button>
               )}
             </div>
           </div>
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Detail label="Chapters">{s.chapterCount}</Detail>
-            <Detail label="Topics">{s.topicCount}</Detail>
-            <Detail label="Planned periods">{s.plannedPeriods}</Detail>
-            <Detail label="Teaching window">
+            <Detail label={tr("Chapters")}>{s.chapterCount}</Detail>
+            <Detail label={tr("Topics")}>{s.topicCount}</Detail>
+            <Detail label={tr("Planned periods")}>{s.plannedPeriods}</Detail>
+            <Detail label={tr("Teaching window")}>
               {formatDate(s.startDate)} – {formatDate(s.completionDeadline)}
             </Detail>
           </dl>
           {(d.textbooks || d.referenceMaterials || d.learningObjectives) && (
             <dl className="grid gap-3 border-t border-border pt-3 sm:grid-cols-3">
-              {d.textbooks && <Detail label="Textbooks"><span className="whitespace-pre-line">{d.textbooks}</span></Detail>}
-              {d.referenceMaterials && <Detail label="Reference materials"><span className="whitespace-pre-line">{d.referenceMaterials}</span></Detail>}
-              {d.learningObjectives && <Detail label="Learning objectives"><span className="whitespace-pre-line">{d.learningObjectives}</span></Detail>}
+              {d.textbooks && <Detail label={tr("Textbooks")}><span className="whitespace-pre-line">{d.textbooks}</span></Detail>}
+              {d.referenceMaterials && <Detail label={tr("Reference materials")}><span className="whitespace-pre-line">{d.referenceMaterials}</span></Detail>}
+              {d.learningObjectives && <Detail label={tr("Learning objectives")}><span className="whitespace-pre-line">{d.learningObjectives}</span></Detail>}
             </dl>
           )}
         </CardContent>
       </Card>
 
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-semibold">Chapters and topics</h3>
+        <h3 className="text-base font-semibold">{tr("Chapters and topics")}</h3>
         {editable && (
           <Button size="sm" onClick={() => setChapterDialog({ open: true, editing: null })}>
-            <Plus className="h-4 w-4" /> Add chapter
+            <Plus className="h-4 w-4" /> {tr("Add chapter")}
           </Button>
         )}
       </div>
 
       {d.chapters.length === 0 ? (
-        <EmptyState icon={ListPlus} title="No chapters yet" description={editable ? "Add chapters one by one, or import the whole syllabus from a CSV file." : "The syllabus has no chapters yet."} />
+        <EmptyState icon={ListPlus} title={tr("No chapters yet")} description={editable ? tr("Add chapters one by one, or import the whole syllabus from a CSV file.") : tr("The syllabus has no chapters yet.")} />
       ) : (
         <ol className="space-y-3">
           {d.chapters.map((c, ci) => (
@@ -127,26 +127,26 @@ export default function SyllabusDetailPage() {
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">
                         {c.title}
-                        {c.code && <span className="ml-2 text-xs text-muted-foreground">{c.code}</span>}
+                        {c.code && <span className="ms-2 text-xs text-muted-foreground">{c.code}</span>}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {c.plannedPeriods} periods · weight {c.weight}
-                        {c.deadline ? ` · due ${formatDate(c.deadline)}` : " · no deadline"}
+                        {c.plannedPeriods} {tr("periods · weight")} {c.weight}
+                        {c.deadline ? tr(" · due {{v1}}", { v1: formatDate(c.deadline) }) : tr(" · no deadline")}
                       </p>
                       {c.learningObjectives && <p className="mt-1 whitespace-pre-line text-xs text-muted-foreground">{c.learningObjectives}</p>}
                     </div>
                     {editable && (
                       <div className="flex shrink-0 items-center gap-1">
-                        <Button size="icon-sm" variant="ghost" aria-label={`Move ${c.title} up`} disabled={ci === 0 || moveChapters.isPending} onClick={() => moveChapters.mutate(swap(d.chapters, ci, -1))}>
+                        <Button size="icon-sm" variant="ghost" aria-label={tr("Move {{title}} up", { title: c.title })} disabled={ci === 0 || moveChapters.isPending} onClick={() => moveChapters.mutate(swap(d.chapters, ci, -1))}>
                           <ArrowUp className="h-4 w-4" />
                         </Button>
-                        <Button size="icon-sm" variant="ghost" aria-label={`Move ${c.title} down`} disabled={ci === d.chapters.length - 1 || moveChapters.isPending} onClick={() => moveChapters.mutate(swap(d.chapters, ci, 1))}>
+                        <Button size="icon-sm" variant="ghost" aria-label={tr("Move {{title}} down", { title: c.title })} disabled={ci === d.chapters.length - 1 || moveChapters.isPending} onClick={() => moveChapters.mutate(swap(d.chapters, ci, 1))}>
                           <ArrowDown className="h-4 w-4" />
                         </Button>
-                        <Button size="icon-sm" variant="ghost" aria-label={`Edit ${c.title}`} onClick={() => setChapterDialog({ open: true, editing: c })}>
+                        <Button size="icon-sm" variant="ghost" aria-label={tr("Edit {{title}}", { title: c.title })} onClick={() => setChapterDialog({ open: true, editing: c })}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button size="icon-sm" variant="ghost" aria-label={`Delete ${c.title}`} onClick={() => setConfirm({ kind: "chapter", id: c.id, label: c.title })}>
+                        <Button size="icon-sm" variant="ghost" aria-label={tr("Delete {{title}}", { title: c.title })} onClick={() => setConfirm({ kind: "chapter", id: c.id, label: c.title })}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -167,7 +167,7 @@ export default function SyllabusDetailPage() {
                   />
                   {editable && (
                     <Button size="sm" variant="ghost" onClick={() => setTopicDialog({ chapter: c, editing: null })}>
-                      <Plus className="h-4 w-4" /> Add topic
+                      <Plus className="h-4 w-4" /> {tr("Add topic")}
                     </Button>
                   )}
                 </CardContent>
@@ -184,13 +184,13 @@ export default function SyllabusDetailPage() {
       <ConfirmDialog
         open={Boolean(confirm)}
         onOpenChange={(open) => !open && setConfirm(null)}
-        title={confirm?.kind === "publish" ? "Publish this syllabus?" : `Delete "${confirm?.label}"?`}
+        title={confirm?.kind === "publish" ? tr("Publish this syllabus?") : tr("Delete \"{{label}}\"?", { label: confirm?.label })}
         description={
           confirm?.kind === "publish"
-            ? "Teachers can then record progress against it. An earlier published version of the same syllabus is archived."
-            : "This can't be undone. Anything with teaching records, lesson plans or an exam portion can't be deleted; create a new version without it instead."
+            ? tr("Teachers can then record progress against it. An earlier published version of the same syllabus is archived.")
+            : tr("This can't be undone. Anything with teaching records, lesson plans or an exam portion can't be deleted; create a new version without it instead.")
         }
-        confirmLabel={confirm?.kind === "publish" ? "Publish" : "Delete"}
+        confirmLabel={confirm?.kind === "publish" ? tr("Publish") : tr("Delete")}
         confirmVariant={confirm?.kind === "publish" ? "default" : "destructive"}
         submitting={removeChapter.isPending || removeTopic.isPending || publish.isPending}
         onConfirm={() => {
@@ -221,6 +221,7 @@ function TopicList({
   onDelete: (t: Topic) => void;
   onMove: (index: number, delta: number) => void;
 }) {
+  const { t: tr } = useTranslation("lesson-portions");
   const top = chapter.topics.filter((t) => !t.parentTopicId).sort((a, b) => a.sequence - b.sequence);
   if (top.length === 0) return null;
   return (
@@ -232,13 +233,13 @@ function TopicList({
             <TopicRow topic={t} editable={editable} onEdit={onEdit} onDelete={onDelete} extra={
               editable && (
                 <>
-                  <Button size="icon-sm" variant="ghost" aria-label={`Move ${t.title} up`} disabled={i === 0 || busy} onClick={() => onMove(i, -1)}>
+                  <Button size="icon-sm" variant="ghost" aria-label={tr("Move {{title}} up", { title: t.title })} disabled={i === 0 || busy} onClick={() => onMove(i, -1)}>
                     <ArrowUp className="h-4 w-4" />
                   </Button>
-                  <Button size="icon-sm" variant="ghost" aria-label={`Move ${t.title} down`} disabled={i === top.length - 1 || busy} onClick={() => onMove(i, 1)}>
+                  <Button size="icon-sm" variant="ghost" aria-label={tr("Move {{title}} down", { title: t.title })} disabled={i === top.length - 1 || busy} onClick={() => onMove(i, 1)}>
                     <ArrowDown className="h-4 w-4" />
                   </Button>
-                  <Button size="icon-sm" variant="ghost" aria-label={`Add a subtopic to ${t.title}`} onClick={() => onAdd(t)}>
+                  <Button size="icon-sm" variant="ghost" aria-label={tr("Add a subtopic to {{title}}", { title: t.title })} onClick={() => onAdd(t)}>
                     <ListPlus className="h-4 w-4" />
                   </Button>
                 </>
@@ -261,17 +262,18 @@ function TopicList({
 }
 
 function TopicRow({ topic, editable, onEdit, onDelete, extra, indent }: { topic: Topic; editable: boolean; onEdit: (t: Topic) => void; onDelete: (t: Topic) => void; extra?: React.ReactNode; indent?: boolean }) {
+  const { t: tr } = useTranslation("lesson-portions");
   return (
-    <div className={`flex flex-wrap items-center gap-2 px-3 py-2 text-sm ${indent ? "pl-8" : ""}`}>
+    <div className={`flex flex-wrap items-center gap-2 px-3 py-2 text-sm ${indent ? "ps-8" : ""}`}>
       <span className="min-w-0 flex-1">{topic.title}</span>
-      <span className="text-xs text-muted-foreground">{topic.plannedPeriods} period{topic.plannedPeriods === 1 ? "" : "s"}</span>
+      <span className="text-xs text-muted-foreground">{topic.plannedPeriods} {tr("period")}{topic.plannedPeriods === 1 ? "" : "s"}</span>
       {editable && (
         <span className="flex items-center gap-0.5">
           {extra}
-          <Button size="icon-sm" variant="ghost" aria-label={`Edit ${topic.title}`} onClick={() => onEdit(topic)}>
+          <Button size="icon-sm" variant="ghost" aria-label={tr("Edit {{title}}", { title: topic.title })} onClick={() => onEdit(topic)}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button size="icon-sm" variant="ghost" aria-label={`Delete ${topic.title}`} onClick={() => onDelete(topic)}>
+          <Button size="icon-sm" variant="ghost" aria-label={tr("Delete {{title}}", { title: topic.title })} onClick={() => onDelete(topic)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </span>
@@ -296,6 +298,7 @@ const chapterSchema = z
 type ChapterForm = z.input<typeof chapterSchema>;
 
 function ChapterDialog({ open, editing, planId, onOpenChange, invalidate, deadlineHint }: { open: boolean; editing: Chapter | null; planId: string; onOpenChange: (o: boolean) => void; invalidate: string[][]; deadlineHint?: string | null }) {
+  const { t } = useTranslation("lesson-portions");
   const { register, handleSubmit, reset, formState } = useForm<ChapterForm, unknown, z.output<typeof chapterSchema>>({ resolver: zodResolver(chapterSchema) });
   const { errors, isDirty } = formState;
   useEffect(() => {
@@ -312,42 +315,42 @@ function ChapterDialog({ open, editing, planId, onOpenChange, invalidate, deadli
     <Dialog open={open} onOpenChange={guardedClose(isDirty, save.isPending, onOpenChange)}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit chapter" : "Add chapter"}</DialogTitle>
-          <DialogDescription>Periods and the deadline drive planned progress and delay warnings.</DialogDescription>
+          <DialogTitle>{editing ? t("Edit chapter") : t("Add chapter")}</DialogTitle>
+          <DialogDescription>{t("Periods and the deadline drive planned progress and delay warnings.")}</DialogDescription>
         </DialogHeader>
         <form id="chapter-form" onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4 overflow-y-auto" noValidate>
-          <FormField label="Title" htmlFor="ch-title" required error={errors.title?.message}>
+          <FormField label={t("Title")} htmlFor="ch-title" required error={errors.title?.message}>
             <Input id="ch-title" {...register("title")} aria-invalid={errors.title ? true : undefined} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-3">
-            <FormField label="Code" htmlFor="ch-code" optional error={errors.code?.message}>
+            <FormField label={t("Code")} htmlFor="ch-code" optional error={errors.code?.message}>
               <Input id="ch-code" {...register("code")} />
             </FormField>
-            <FormField label="Periods" htmlFor="ch-periods" required error={errors.plannedPeriods?.message}>
+            <FormField label={t("Periods")} htmlFor="ch-periods" required error={errors.plannedPeriods?.message}>
               <Input id="ch-periods" inputMode="numeric" {...register("plannedPeriods")} aria-invalid={errors.plannedPeriods ? true : undefined} />
             </FormField>
-            <FormField label="Weight" htmlFor="ch-weight" required error={errors.weight?.message} hint="1 = normal">
+            <FormField label={t("Weight")} htmlFor="ch-weight" required error={errors.weight?.message} hint={t("1 = normal")}>
               <Input id="ch-weight" inputMode="decimal" {...register("weight")} aria-invalid={errors.weight ? true : undefined} />
             </FormField>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Starts" htmlFor="ch-start" optional error={errors.startDate?.message} hint="Defaults to the previous chapter's deadline.">
+            <FormField label={t("Starts")} htmlFor="ch-start" optional error={errors.startDate?.message} hint={t("Defaults to the previous chapter's deadline.")}>
               <Input id="ch-start" type="date" {...register("startDate")} />
             </FormField>
-            <FormField label="Complete by" htmlFor="ch-end" optional error={errors.deadline?.message} hint={deadlineHint ? `Syllabus ends ${formatDate(deadlineHint)}.` : undefined}>
+            <FormField label={t("Complete by")} htmlFor="ch-end" optional error={errors.deadline?.message} hint={deadlineHint ? t("Syllabus ends {{v1}}.", { v1: formatDate(deadlineHint) }) : undefined}>
               <Input id="ch-end" type="date" {...register("deadline")} aria-invalid={errors.deadline ? true : undefined} />
             </FormField>
           </div>
-          <FormField label="Learning objectives" htmlFor="ch-obj" optional error={errors.learningObjectives?.message}>
+          <FormField label={t("Learning objectives")} htmlFor="ch-obj" optional error={errors.learningObjectives?.message}>
             <Textarea id="ch-obj" rows={3} {...register("learningObjectives")} />
           </FormField>
         </form>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => guardedClose(isDirty, save.isPending, onOpenChange)(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="submit" form="chapter-form" loading={save.isPending}>
-            {editing ? "Save changes" : "Add chapter"}
+            {editing ? t("Save changes") : t("Add chapter")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -366,6 +369,7 @@ const topicSchema = z.object({
 type TopicForm = z.input<typeof topicSchema>;
 
 function TopicDialog({ target, onClose, invalidate }: { target: { chapter: Chapter; editing: Topic | null; parent?: Topic } | null; onClose: () => void; invalidate: string[][] }) {
+  const { t } = useTranslation("lesson-portions");
   const { register, handleSubmit, reset, formState } = useForm<TopicForm, unknown, z.output<typeof topicSchema>>({ resolver: zodResolver(topicSchema) });
   const { errors, isDirty } = formState;
   const editing = target?.editing ?? null;
@@ -384,31 +388,31 @@ function TopicDialog({ target, onClose, invalidate }: { target: { chapter: Chapt
     <Dialog open={Boolean(target)} onOpenChange={close}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit topic" : target?.parent ? `Add a subtopic to ${target.parent.title}` : `Add a topic to ${target?.chapter.title ?? ""}`}</DialogTitle>
-          <DialogDescription>Teaching progress is recorded on topics (or on subtopics where a topic has them).</DialogDescription>
+          <DialogTitle>{editing ? t("Edit topic") : target?.parent ? t("Add a subtopic to {{title}}", { title: target.parent.title }) : t("Add a topic to {{v1}}", { v1: target?.chapter.title ?? "" })}</DialogTitle>
+          <DialogDescription>{t("Teaching progress is recorded on topics (or on subtopics where a topic has them).")}</DialogDescription>
         </DialogHeader>
         <form id="topic-form" onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4" noValidate>
-          <FormField label="Title" htmlFor="tp-title" required error={errors.title?.message}>
+          <FormField label={t("Title")} htmlFor="tp-title" required error={errors.title?.message}>
             <Input id="tp-title" {...register("title")} aria-invalid={errors.title ? true : undefined} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Periods" htmlFor="tp-periods" required error={errors.plannedPeriods?.message}>
+            <FormField label={t("Periods")} htmlFor="tp-periods" required error={errors.plannedPeriods?.message}>
               <Input id="tp-periods" inputMode="numeric" {...register("plannedPeriods")} aria-invalid={errors.plannedPeriods ? true : undefined} />
             </FormField>
-            <FormField label="Weight" htmlFor="tp-weight" required error={errors.weight?.message} hint="1 = normal">
+            <FormField label={t("Weight")} htmlFor="tp-weight" required error={errors.weight?.message} hint={t("1 = normal")}>
               <Input id="tp-weight" inputMode="decimal" {...register("weight")} aria-invalid={errors.weight ? true : undefined} />
             </FormField>
           </div>
-          <FormField label="Learning objectives" htmlFor="tp-obj" optional error={errors.learningObjectives?.message}>
+          <FormField label={t("Learning objectives")} htmlFor="tp-obj" optional error={errors.learningObjectives?.message}>
             <Textarea id="tp-obj" rows={3} {...register("learningObjectives")} />
           </FormField>
         </form>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => close(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="submit" form="topic-form" loading={save.isPending}>
-            {editing ? "Save changes" : "Add"}
+            {editing ? t("Save changes") : t("Add")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -428,6 +432,7 @@ const IMPORT_COLUMNS = [
 ];
 
 function ImportDialog({ open, onOpenChange, detail, invalidate }: { open: boolean; onOpenChange: (o: boolean) => void; detail: SyllabusDetail; invalidate: string[][] }) {
+  const { t } = useTranslation("lesson-portions");
   const input = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [problems, setProblems] = useState<string[]>([]);
@@ -494,16 +499,16 @@ function ImportDialog({ open, onOpenChange, detail, invalidate }: { open: boolea
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Import chapters and topics</DialogTitle>
+          <DialogTitle>{t("Import chapters and topics")}</DialogTitle>
           <DialogDescription>
-            Upload a CSV (in Excel, use Save As → CSV UTF-8). A row with a Chapter starts or continues that chapter; Topic and Subtopic fill in below it. Everything is imported together, or nothing is.
+            {t("Upload a CSV (in Excel, use Save As → CSV UTF-8). A row with a Chapter starts or continues that chapter; Topic and Subtopic fill in below it. Everything is imported together, or nothing is.")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 overflow-y-auto">
           {result ? (
             <div className="space-y-2">
               <p role="status" className="rounded-lg bg-secondary/50 px-3 py-2 text-sm">
-                Added {result.chapters} chapter{result.chapters === 1 ? "" : "s"} and {result.topics} topic{result.topics === 1 ? "" : "s"}.
+                {t("Added")} {result.chapters} {t("chapter")}{result.chapters === 1 ? "" : "s"} {t("and")} {result.topics} {t("topic")}{result.topics === 1 ? "" : "s"}.
               </p>
               {result.warnings.length > 0 && (
                 <ul className="max-h-40 space-y-1 overflow-auto rounded-lg border border-border p-2 text-sm">
@@ -519,15 +524,15 @@ function ImportDialog({ open, onOpenChange, detail, invalidate }: { open: boolea
             <>
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={template}>
-                  <Download className="h-4 w-4" /> Download template
+                  <Download className="h-4 w-4" /> {t("Download template")}
                 </Button>
                 <Button type="button" size="sm" onClick={() => input.current?.click()}>
-                  <FileUp className="h-4 w-4" /> {fileName ? "Choose another file" : "Choose CSV file"}
+                  <FileUp className="h-4 w-4" /> {fileName ? t("Choose another file") : t("Choose CSV file")}
                 </Button>
-                <input ref={input} type="file" accept=".csv,text/csv" className="sr-only" aria-label="CSV file" onChange={(e) => void onFile(e.target.files?.[0])} />
+                <input ref={input} type="file" accept=".csv,text/csv" className="sr-only" aria-label={t("CSV file")} onChange={(e) => void onFile(e.target.files?.[0])} />
                 {fileName && <span className="truncate text-sm text-muted-foreground">{fileName}</span>}
               </div>
-              <p className="text-xs text-muted-foreground">Columns: Chapter*, Topic, Subtopic, Periods, Deadline (yyyy-mm-dd or dd/mm/yyyy), Objectives.</p>
+              <p className="text-xs text-muted-foreground">{t("Columns: Chapter*, Topic, Subtopic, Periods, Deadline (yyyy-mm-dd or dd/mm/yyyy), Objectives.")}</p>
               {fileError && (
                 <p role="alert" className="text-sm text-destructive-strong">
                   {fileError}
@@ -542,16 +547,16 @@ function ImportDialog({ open, onOpenChange, detail, invalidate }: { open: boolea
               )}
               {rows.length > 0 && problems.length === 0 && (
                 <p role="status" className="text-sm">
-                  <Badge variant="success">{rows.length} rows ready</Badge> covering {new Set(rows.map((r) => r.chapter).filter(Boolean)).size} chapters.
+                  <Badge variant="success">{t("{{length}} rows ready", { length: rows.length })}</Badge> {t("covering")} {new Set(rows.map((r) => r.chapter).filter(Boolean)).size} {t("chapters.")}
                 </p>
               )}
               {detail.chapters.length > 0 && (
                 <label className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
                   <span>
-                    Replace the existing {detail.chapters.length} chapters
-                    <span className="block text-xs text-muted-foreground">Off: the imported chapters are added after the existing ones. Replacing is refused once teaching has been recorded.</span>
+                    {t("Replace the existing")} {detail.chapters.length} {t("chapters")}
+                    <span className="block text-xs text-muted-foreground">{t("Off: the imported chapters are added after the existing ones. Replacing is refused once teaching has been recorded.")}</span>
                   </span>
-                  <Switch checked={replace} onCheckedChange={setReplace} aria-label="Replace existing chapters" />
+                  <Switch checked={replace} onCheckedChange={setReplace} aria-label={t("Replace existing chapters")} />
                 </label>
               )}
             </>
@@ -559,11 +564,11 @@ function ImportDialog({ open, onOpenChange, detail, invalidate }: { open: boolea
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => close(false)} disabled={run.isPending}>
-            {result ? "Close" : "Cancel"}
+            {result ? t("Close") : t("Cancel")}
           </Button>
           {!result && (
             <Button onClick={() => run.mutate(undefined)} disabled={rows.length === 0 || problems.length > 0} loading={run.isPending}>
-              Import {rows.length > 0 ? `${rows.length} rows` : ""}
+              {t("Import")} {rows.length > 0 ? t("{{length}} rows", { length: rows.length }) : ""}
             </Button>
           )}
         </DialogFooter>

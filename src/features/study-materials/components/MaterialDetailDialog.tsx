@@ -12,6 +12,7 @@ import { CATEGORY_CONFIG, fileKind, formatBytes } from "../constants";
 import type { StudyMaterial } from "../types";
 import { audienceText, MaterialActionsMenu, type MaterialAction } from "./MaterialCard";
 
+import { useTranslation } from "react-i18next";
 /** YouTube links become an embedded player; anything else is opened in a new tab. */
 function youTubeEmbed(url?: string): string | null {
   if (!url) return null;
@@ -30,6 +31,7 @@ export default function MaterialDetailDialog({
   onAction: (a: MaterialAction, m: StudyMaterial) => void;
   showStats: boolean;
 }) {
+  const { t } = useTranslation("study-materials");
   const embed = youTubeEmbed(m?.linkUrl);
   const isImage = m?.contentType?.startsWith("image/");
   // Asking needs the study assistant; files only (links can't be read). The server re-checks access every time.
@@ -49,16 +51,16 @@ export default function MaterialDetailDialog({
           <>
             <DialogHeader>
               <div className="flex flex-wrap items-center gap-1.5">
-                <Badge variant="neutral">{CATEGORY_CONFIG[m.category].label}</Badge>
+                <Badge variant="neutral">{t(CATEGORY_CONFIG[m.category].label)}</Badge>
                 {m.isGlobal && (
                   <Badge variant="info">
-                    <Globe2 className="h-3 w-3" aria-hidden="true" /> Shared by School Sphere
+                    <Globe2 className="h-3 w-3" aria-hidden="true" /> {t("Shared by School Sphere")}
                   </Badge>
                 )}
                 {m.status !== "published" && <StatusBadge status={m.status} />}
-                {m.isScheduled && <Badge variant="warning">Visible to students from {formatDate(m.availableFrom!)}</Badge>}
+                {m.isScheduled && <Badge variant="warning">{t("Visible to students from {{v1}}", { v1: formatDate(m.availableFrom!) })}</Badge>}
               </div>
-              <DialogTitle className="pr-8">{m.title}</DialogTitle>
+              <DialogTitle className="pe-8">{m.title}</DialogTitle>
               <DialogDescription>{[m.subjectName, m.chapter, audienceText(m)].filter(Boolean).join(" · ")}</DialogDescription>
             </DialogHeader>
 
@@ -67,11 +69,11 @@ export default function MaterialDetailDialog({
               isImage ? (
                 <img src={m.viewUrl} alt={m.title} className="max-h-[60vh] w-full rounded-lg border border-border bg-muted object-contain" />
               ) : (
-                <iframe title={`Preview of ${m.title}`} src={m.viewUrl} className="h-[60vh] w-full rounded-lg border border-border bg-muted" />
+                <iframe title={t("Preview of {{title}}", { title: m.title })} src={m.viewUrl} className="h-[60vh] w-full rounded-lg border border-border bg-muted" />
               )
             ) : embed ? (
               <iframe
-                title={`Video: ${m.title}`}
+                title={t("Video: {{title}}", { title: m.title })}
                 src={embed}
                 className="aspect-video w-full rounded-lg border border-border"
                 allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
@@ -82,9 +84,7 @@ export default function MaterialDetailDialog({
                 <FileText className="h-8 w-8 shrink-0 text-muted-foreground" aria-hidden="true" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{m.fileName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {fileKind(m)} · {formatBytes(m.sizeBytes)} · download to open
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("{{v1}} · {{v2}} · download to open", { v1: fileKind(m), v2: formatBytes(m.sizeBytes) })}</p>
                 </div>
               </div>
             ) : null}
@@ -92,13 +92,13 @@ export default function MaterialDetailDialog({
             {m.description && <p className="whitespace-pre-line text-sm leading-6 text-secondary-foreground">{m.description}</p>}
 
             {canAsk && (
-              <section className="space-y-3 rounded-lg border border-border p-4" aria-label="Ask AI about this material">
+              <section className="space-y-3 rounded-lg border border-border p-4" aria-label={t("Ask AI about this material")}>
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" /> Ask AI about this material
+                    <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" /> {t("Ask AI about this material")}
                   </h3>
                   <Button type="button" size="sm" variant={aiOpen ? "ghost" : "outline"} onClick={() => setAiOpen((o) => !o)} aria-expanded={aiOpen}>
-                    {aiOpen ? "Hide" : "Open"}
+                    {aiOpen ? t("Hide") : t("Open")}
                   </Button>
                 </div>
                 {aiOpen && <MaterialAiPanel key={m.id} materialId={m.id} fileName={m.fileName} canPrepare={can("upload-document")} />}
@@ -131,14 +131,14 @@ export default function MaterialDetailDialog({
                 {m.linkUrl && (
                   <Button asChild variant="outline">
                     <a href={m.linkUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" /> Open link
+                      <ExternalLink className="h-4 w-4" /> {t("Open link")}
                     </a>
                   </Button>
                 )}
                 {m.downloadUrl && (
                   <Button asChild>
                     <a href={m.downloadUrl}>
-                      <Download className="h-4 w-4" /> Download
+                      <Download className="h-4 w-4" /> {t("Download")}
                     </a>
                   </Button>
                 )}

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, IndianRupee, Sparkles, UserRoundSearch } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { MODULE_COUNT } from "../data";
 import DashboardMockup, { FloatingCard } from "./DashboardMockup";
@@ -9,6 +10,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function Hero() {
   const { openDemo } = useLeadCapture();
+  const { t } = useTranslation("marketing");
 
   return (
     // -mt-16/pt-16 lets the backdrop run up under the transparent sticky header.
@@ -35,10 +37,10 @@ export default function Hero() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease }}
-            className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 py-1 pl-1 pr-3 text-xs font-medium text-slate-600 shadow-sm backdrop-blur transition-colors hover:border-brand-300"
+            className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 py-1 ps-1 pe-3 text-xs font-medium text-slate-600 shadow-sm backdrop-blur transition-colors hover:border-brand-300"
           >
-            <span className="bg-brand-gradient rounded-full px-2 py-0.5 text-[11px] font-semibold text-white">New</span>
-            Ask School AI<span className="hidden sm:inline">, AI question papers &amp; exam insights</span>
+            <span className="bg-brand-gradient rounded-full px-2 py-0.5 text-[11px] font-semibold text-white">{t("New")}</span>
+            <Trans t={t} i18nKey="Ask School AI<more>, AI question papers & exam insights</more>" components={{ more: <span className="hidden sm:inline" /> }} />
             <ArrowRight className="h-3 w-3 text-slate-400 transition-transform group-hover:translate-x-0.5" />
           </motion.a>
 
@@ -48,8 +50,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.05, ease }}
             className="mt-7 text-[2.6rem] font-bold leading-[1.05] tracking-[-0.035em] text-balance text-slate-950 sm:text-6xl lg:text-7xl"
           >
-            AI School Management System{" "}
-            <span className="text-brand-gradient">for Modern Schools</span>
+            <Trans t={t} i18nKey="AI School Management System <hl>for Modern Schools</hl>" components={{ hl: <span className="text-brand-gradient" /> }} />
           </motion.h1>
 
           <motion.p
@@ -58,9 +59,9 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.12, ease }}
             className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-pretty text-slate-600 sm:text-lg"
           >
-            School Sphere is an AI school management system that brings administration, academics, attendance, fees,
-            communication, and everyday school operations together in one platform — for administrators, teachers,
-            students, and parents.
+            {t(
+              "School Sphere is an AI school management system that brings administration, academics, attendance, fees, communication, and everyday school operations together in one platform — for administrators, teachers, students, and parents.",
+            )}
           </motion.p>
 
           <motion.div
@@ -70,11 +71,11 @@ export default function Hero() {
             className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
           >
             <Button size="lg" onClick={openDemo} className="group h-12 px-6 text-[15px] shadow-lg shadow-brand-600/25">
-              Get Started
+              {t("Get Started")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
             <Button size="lg" variant="outline" asChild className="h-12 bg-white/80 px-6 text-[15px] backdrop-blur">
-              <a href="#features">Explore School Management Features</a>
+              <a href="#features">{t("Explore School Management Features")}</a>
             </Button>
           </motion.div>
 
@@ -84,7 +85,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mt-5 text-xs font-medium text-slate-500"
           >
-            Guided setup &middot; {MODULE_COUNT} modules, one login &middot; Works on any device
+            {t("Guided setup · {{modules}} modules, one login · Works on any device", { modules: MODULE_COUNT })}
           </motion.p>
         </div>
 
@@ -99,45 +100,45 @@ export default function Hero() {
             style={{ transformOrigin: "50% 0%" }}
             className="rounded-[1.25rem] border border-white/60 bg-white/40 p-1.5 shadow-2xl shadow-slate-900/10 backdrop-blur sm:p-2"
           >
-            <figure aria-label="AI school management system dashboard">
+            <figure aria-label={t("AI school management system dashboard")}>
               <DashboardMockup />
             </figure>
           </motion.div>
 
-          <FloatingCard className="-left-10 top-24" delay={1.3}>
+          <FloatingCard className="-start-10 top-24" delay={1.3}>
             <div className="flex items-start gap-2.5">
               <span className="bg-brand-gradient flex h-8 w-8 items-center justify-center rounded-lg">
                 <Sparkles className="h-4 w-4 text-white" />
               </span>
               <div>
-                <p className="text-[11px] font-medium text-slate-500">Ask School AI · “Which topics did 8 B find hard?”</p>
-                <p className="text-[13px] font-semibold text-slate-900">Simplifying fractions · 35% correct</p>
+                <p className="text-[11px] font-medium text-slate-500">{t("Ask School AI · “Which topics did 8 B find hard?”")}</p>
+                <p className="text-[13px] font-semibold text-slate-900">{t("Simplifying fractions · 35% correct")}</p>
               </div>
             </div>
           </FloatingCard>
 
-          <FloatingCard className="-right-8 top-40" delay={1.5} drift={10}>
+          <FloatingCard className="-end-8 top-40" delay={1.5} drift={10}>
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50">
                 <IndianRupee className="h-4 w-4 text-brand-700" />
               </span>
               <div>
-                <p className="text-[11px] font-medium text-slate-500">Payment received · Invoice #1204</p>
-                <p className="text-[13px] font-semibold text-slate-900">₹12,500 paid online</p>
+                <p className="text-[11px] font-medium text-slate-500">{t("Payment received · Invoice #1204")}</p>
+                <p className="text-[13px] font-semibold text-slate-900">{t("₹12,500 paid online")}</p>
               </div>
             </div>
           </FloatingCard>
 
-          <FloatingCard className="-left-6 bottom-16" delay={1.7} drift={6}>
+          <FloatingCard className="-start-6 bottom-16" delay={1.7} drift={6}>
             <div className="flex items-start gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900">
                 <UserRoundSearch className="h-4 w-4 text-brand-300" />
               </span>
               <div>
                 <p className="flex items-center gap-1 text-[11px] font-medium text-slate-500">
-                  <Sparkles className="h-3 w-3 text-brand-600" /> Needs attention
+                  <Sparkles className="h-3 w-3 text-brand-600" /> {t("Needs attention")}
                 </p>
-                <p className="text-[13px] font-semibold text-slate-900">6 students below 75% attendance</p>
+                <p className="text-[13px] font-semibold text-slate-900">{t("6 students below 75% attendance")}</p>
               </div>
             </div>
           </FloatingCard>

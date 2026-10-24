@@ -1,4 +1,5 @@
 import type { BadgeVariant } from "@/components/ui/badge";
+import i18n from "@/i18n";
 import type { UserRole } from "@/types/auth";
 import type {
   ExamSettings,
@@ -98,6 +99,13 @@ export const DEFAULT_SETTINGS: ExamSettings = {
   allowReviewBeforeSubmit: true,
   showAnswersInResult: false,
   negativeMarkPerWrong: 0,
+  questionsPerAttempt: 0,
+  proctoring: "Off",
+  requireFullscreen: false,
+  warningThreshold: 3,
+  autoSubmitAfterIncidents: 0,
+  snapshotIntervalSeconds: 0,
+  evidenceRetentionDays: 90,
 };
 
 /**
@@ -146,10 +154,11 @@ export function formatExamWindow(startIso: string, endIso: string, timeZone?: st
 }
 
 export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
+  const t = (key: string, values: Record<string, number>) => i18n.t(key, { ns: "online-exams", ...values });
+  if (minutes < 60) return t("{{m}} min", { m: minutes });
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return m ? `${h} h ${m} min` : `${h} h`;
+  return m ? t("{{h}} h {{m}} min", { h, m }) : t("{{h}} h", { h });
 }
 
 export const formatMarks = (n: number | null | undefined) =>

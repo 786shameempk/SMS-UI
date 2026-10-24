@@ -22,6 +22,8 @@ export interface AttendanceRecord {
   captureMode: CaptureMode;
   remarks?: string;
   markedAt: string;
+  /** First scan of the day when the record came from a device or pass. */
+  checkInAt?: string | null;
 }
 
 export interface MarkAttendanceEntry {
@@ -35,6 +37,20 @@ export interface SaveAttendanceParams {
   date: string;
   captureMode: CaptureMode;
   entries: MarkAttendanceEntry[];
+  /** Client-made id for this save: sending the same id again never saves twice. */
+  operationId?: string;
+  /** The register version the entries were edited from ("none" when the day had no records). */
+  baseVersion?: string;
+  /** Save even if the register changed since baseVersion. */
+  force?: boolean;
+  /** School and branch the register belongs to, for a save sent after the user switched scope. */
+  tenantId?: string;
+  branchId?: string;
+}
+
+export interface AttendanceRegister {
+  version: string;
+  records: AttendanceRecord[];
 }
 
 export interface StaffAttendanceRecord {

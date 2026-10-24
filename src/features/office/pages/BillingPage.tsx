@@ -73,7 +73,7 @@ export default function BillingPage() {
                   <TableHead>Received</TableHead>
                   <TableHead>Recorded by</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-end">Amount</TableHead>
                   <TableHead className="w-48" />
                 </TableRow>
               </TableHeader>
@@ -91,8 +91,8 @@ export default function BillingPage() {
                       {p.verifiedByName && <p className="text-xs text-muted-foreground">by {p.verifiedByName}</p>}
                       {p.rejectionReason && <p className="text-xs text-muted-foreground">{p.rejectionReason}</p>}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">{money(p.amount, p.currency)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end tabular-nums">{money(p.amount, p.currency)}</TableCell>
+                    <TableCell className="text-end">
                       {p.status === "PendingVerification" && canVerify && (
                         <div className="flex justify-end gap-2">
                           <Button size="sm" onClick={() => verify.mutate(p.id)} loading={verify.isPending && verify.variables === p.id} disabled={!p.canVerify} title={p.canVerify ? undefined : "You recorded this payment, so someone else must verify it."}>Verify</Button>

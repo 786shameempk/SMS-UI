@@ -13,6 +13,7 @@ import type { StaffMember } from "@/features/staff/types";
 import { MAX_QUIZ_QUESTIONS, MIN_QUIZ_QUESTIONS, QUIZ_OPTION_COUNT } from "../constants";
 import type { QuizFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const questionSchema = z.object({
   text: z.string().min(1, "Question text is required"),
   options: z.array(z.string().min(1, "Option can't be empty")).length(QUIZ_OPTION_COUNT),
@@ -55,6 +56,7 @@ export default function QuizFormDialog({
   submitting: boolean;
   onSubmit: (values: QuizFormValues, createdByStaffId: string) => Promise<void>;
 }) {
+  const { t: tr } = useTranslation("homework");
   const {
     register,
     handleSubmit,
@@ -77,8 +79,8 @@ export default function QuizFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-2xl">
         <DialogHeader>
-          <DialogTitle>New quiz</DialogTitle>
-          <DialogDescription>Add a few multiple-choice questions. Students are auto-scored on submission.</DialogDescription>
+          <DialogTitle>{tr("New quiz")}</DialogTitle>
+          <DialogDescription>{tr("Add a few multiple-choice questions. Students are auto-scored on submission.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit(({ createdByStaffId, ...values }) => onSubmit(values, createdByStaffId))}
@@ -86,14 +88,14 @@ export default function QuizFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-classId" required>Class</Label>
+              <Label htmlFor="quiz-classId" required>{tr("Class")}</Label>
               <Controller
                 control={control}
                 name="classId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="quiz-classId">
-                      <SelectValue placeholder="Select a class" />
+                      <SelectValue placeholder={tr("Select a class")} />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map((c) => (
@@ -108,14 +110,14 @@ export default function QuizFormDialog({
               {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-subjectId" required>Subject</Label>
+              <Label htmlFor="quiz-subjectId" required>{tr("Subject")}</Label>
               <Controller
                 control={control}
                 name="subjectId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="quiz-subjectId">
-                      <SelectValue placeholder="Select a subject" />
+                      <SelectValue placeholder={tr("Select a subject")} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableSubjects.map((s) => (
@@ -133,19 +135,19 @@ export default function QuizFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-title" required>Quiz title</Label>
+              <Label htmlFor="quiz-title" required>{tr("Quiz title")}</Label>
               <Input id="quiz-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
               {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="quiz-createdByStaffId" required>Created by</Label>
+              <Label htmlFor="quiz-createdByStaffId" required>{tr("Created by")}</Label>
               <Controller
                 control={control}
                 name="createdByStaffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="quiz-createdByStaffId">
-                      <SelectValue placeholder="Select a teacher" />
+                      <SelectValue placeholder={tr("Select a teacher")} />
                     </SelectTrigger>
                     <SelectContent>
                       {teachers.map((t) => (
@@ -165,14 +167,14 @@ export default function QuizFormDialog({
             {fields.map((field, qIndex) => (
               <div key={field.id} className="rounded-lg border border-border p-3 space-y-2.5">
                 <div className="flex items-start justify-between gap-2">
-                  <Label htmlFor={`quiz-q-${qIndex}`}>Question {qIndex + 1}</Label>
+                  <Label htmlFor={`quiz-q-${qIndex}`}>{tr("Question {{v1}}", { v1: qIndex + 1 })}</Label>
                   {fields.length > MIN_QUIZ_QUESTIONS && (
                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => remove(qIndex)}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   )}
                 </div>
-                <Input id={`quiz-q-${qIndex}`} placeholder="Question text" {...register(`questions.${qIndex}.text`)} />
+                <Input id={`quiz-q-${qIndex}`} placeholder={tr("Question text")} {...register(`questions.${qIndex}.text`)} />
                 {errors.questions?.[qIndex]?.text && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.questions[qIndex]?.text?.message}</p>}
 
                 <div className="space-y-1.5">
@@ -184,10 +186,10 @@ export default function QuizFormDialog({
                         value={oIndex}
                         {...register(`questions.${qIndex}.correctIndex`, { valueAsNumber: true })}
                       />
-                      <Input placeholder={`Option ${oIndex + 1}`} {...register(`questions.${qIndex}.options.${oIndex}`)} />
+                      <Input placeholder={tr("Option {{v1}}", { v1: oIndex + 1 })} {...register(`questions.${qIndex}.options.${oIndex}`)} />
                     </div>
                   ))}
-                  <p className="text-xs text-muted-foreground">Select the radio button next to the correct option.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Select the radio button next to the correct option.")}</p>
                 </div>
               </div>
             ))}
@@ -202,15 +204,15 @@ export default function QuizFormDialog({
             onClick={() => append({ ...emptyQuestion, options: [...emptyQuestion.options] })}
           >
             <Plus className="w-3.5 h-3.5" />
-            Add question
+            {tr("Add question")}
           </Button>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Create quiz
+              {tr("Create quiz")}
             </Button>
           </DialogFooter>
         </form>

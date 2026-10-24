@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MapPin, Pencil, Plus, Trash2 } from "lucide-react";
@@ -16,6 +17,7 @@ import RouteStopsDialog from "./RouteStopsDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function RoutesTab() {
+  const { t } = useTranslation("transport");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TransportRoute | null>(null);
@@ -42,65 +44,65 @@ export default function RoutesTab() {
     mutationFn: createRoute,
     onSuccess: () => {
       invalidate();
-      toast.success("Route created");
+      toast.success(t("Route created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create route"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create route")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: TransportRouteFormValues }) => updateRoute(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Route updated");
+      toast.success(t("Route updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update route"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update route")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteRoute,
     onSuccess: () => {
       invalidate();
-      toast.success("Route deleted");
+      toast.success(t("Route deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete route"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete route")),
   });
 
   const columns: ColumnDef<TransportRoute, unknown>[] = [
     {
       accessorKey: "name",
-      header: "Route",
+      header: t("Route"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.name}</p>
           <p className="text-xs text-muted-foreground">
-            {row.original.startTime} – {row.original.endTime} · {stopCountByRoute.get(row.original.id) ?? 0} stops
+            {row.original.startTime} – {row.original.endTime} · {t("{{stops}} stops", { stops: stopCountByRoute.get(row.original.id) ?? 0 })}
           </p>
         </div>
       ),
     },
     {
       id: "bus",
-      header: "Bus",
-      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.busId ? busById.get(row.original.busId)?.regNumber ?? "—" : "Unassigned"}</span>,
+      header: t("Bus"),
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.busId ? busById.get(row.original.busId)?.regNumber ?? "—" : t("Unassigned")}</span>,
     },
     {
       id: "driver",
-      header: "Driver",
+      header: t("Driver"),
       cell: ({ row }) => {
         const driver = row.original.driverId ? driverById.get(row.original.driverId) : undefined;
-        return <span className="text-sm text-secondary-foreground">{driver ? `${driver.staff.firstName} ${driver.staff.lastName}` : "Unassigned"}</span>;
+        return <span className="text-sm text-secondary-foreground">{driver ? `${driver.staff.firstName} ${driver.staff.lastName}` : t("Unassigned")}</span>;
       },
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = ROUTE_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -117,7 +119,7 @@ export default function RoutesTab() {
               }}
             >
               <MapPin className="w-3.5 h-3.5" />
-              Manage stops
+              {t("Manage stops")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -126,11 +128,11 @@ export default function RoutesTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(route)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -141,7 +143,7 @@ export default function RoutesTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Manage transport routes, their bus/driver assignment, and stops.</p>
+        <p className="text-sm text-muted-foreground">{t("Manage transport routes, their bus/driver assignment, and stops.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -149,11 +151,11 @@ export default function RoutesTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New route
+          {t("New route")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={routes} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No routes yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={routes} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No routes yet.")} pageSize={8} />
 
       <RouteFormDialog
         open={formOpen}
@@ -184,9 +186,9 @@ export default function RoutesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete route"
-        description={`Delete "${deleteTarget?.name}"? All of its stops will be removed too. This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete route")}
+        description={t('Delete "{{name}}"? All of its stops will be removed too. This cannot be undone.', { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

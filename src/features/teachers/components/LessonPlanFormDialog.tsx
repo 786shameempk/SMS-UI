@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ export default function LessonPlanFormDialog({
   onSubmit: (values: Omit<LessonPlanFormValues, "staffId">) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("teachers");
   const isEdit = Boolean(plan);
   // The uploaded file is held beside the form fields: it is uploaded when chosen, and only its id is saved with the plan.
   const [attachment, setAttachment] = useState<AttachmentRef | null>(null);
@@ -89,8 +91,8 @@ export default function LessonPlanFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit lesson plan" : "New lesson plan"}</DialogTitle>
-          <DialogDescription>Outline what will be taught for a subject and class in a given week.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit lesson plan") : t("New lesson plan")}</DialogTitle>
+          <DialogDescription>{t("Outline what will be taught for a subject and class in a given week.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -100,14 +102,14 @@ export default function LessonPlanFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="lp-classId" required>Class</Label>
+              <Label htmlFor="lp-classId" required>{t("Class")}</Label>
               <Controller
                 control={control}
                 name="classId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="lp-classId">
-                      <SelectValue placeholder="Select a class" />
+                      <SelectValue placeholder={t("Select a class")} />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map((c) => (
@@ -119,17 +121,17 @@ export default function LessonPlanFormDialog({
                   </Select>
                 )}
               />
-              {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
+              {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.classId.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lp-subjectId" required>Subject</Label>
+              <Label htmlFor="lp-subjectId" required>{t("Subject")}</Label>
               <Controller
                 control={control}
                 name="subjectId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="lp-subjectId">
-                      <SelectValue placeholder="Select a subject" />
+                      <SelectValue placeholder={t("Select a subject")} />
                     </SelectTrigger>
                     <SelectContent>
                       {subjects.map((s) => (
@@ -141,30 +143,30 @@ export default function LessonPlanFormDialog({
                   </Select>
                 )}
               />
-              {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
+              {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.subjectId.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lp-title" required>Title</Label>
+            <Label htmlFor="lp-title" required>{t("Title")}</Label>
             <Input id="lp-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
-            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.title.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lp-description" required>Description</Label>
+            <Label htmlFor="lp-description" required>{t("Description")}</Label>
             <Textarea id="lp-description" rows={3} aria-invalid={errors.description ? true : undefined} {...register("description")} />
-            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
+            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.description.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="lp-weekOf" required>Week of</Label>
+              <Label htmlFor="lp-weekOf" required>{t("Week of")}</Label>
               <Input id="lp-weekOf" type="date" aria-invalid={errors.weekOf ? true : undefined} {...register("weekOf")} />
-              {errors.weekOf && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.weekOf.message}</p>}
+              {errors.weekOf && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.weekOf.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lp-status" required>Status</Label>
+              <Label htmlFor="lp-status" required>{t("Status")}</Label>
               <Controller
                 control={control}
                 name="status"
@@ -176,7 +178,7 @@ export default function LessonPlanFormDialog({
                     <SelectContent>
                       {LESSON_PLAN_STATUSES.map((s) => (
                         <SelectItem key={s.value} value={s.value}>
-                          {s.label}
+                          {t(s.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -186,14 +188,14 @@ export default function LessonPlanFormDialog({
             </div>
           </div>
 
-          <AttachmentField label="Attachment" value={attachment} onChange={setAttachment} />
+          <AttachmentField label={t("Attachment")} value={attachment} onChange={setAttachment} />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create lesson plan"}
+              {isEdit ? t("Save changes") : t("Create lesson plan")}
             </Button>
           </DialogFooter>
         </form>

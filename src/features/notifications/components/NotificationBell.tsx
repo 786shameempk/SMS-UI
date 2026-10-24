@@ -1,6 +1,7 @@
 import { Bell, Check, Megaphone, Banknote, CalendarDays, GraduationCap, Settings, AlertTriangle, Sparkles, Video, MessageSquare } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const CATEGORY_ICON: Record<NotificationCategory, LucideIcon> = {
 export default function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation("notifications");
 
   const { data: notifications = [] } = useQuery({ queryKey: ["notifications", "mine"], queryFn: listMyNotifications });
   const { data: unreadCount = 0 } = useQuery({ queryKey: ["notifications", "unread-count"], queryFn: getUnreadCountForCurrentUser });
@@ -44,11 +46,11 @@ export default function NotificationBell() {
         <button
           type="button"
           className="relative w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
-          aria-label="Notifications"
+          aria-label={t("Notifications")}
         >
           <Bell className="w-4.5 h-4.5" />
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-white text-[10px] font-semibold flex items-center justify-center">
+            <span className="absolute top-1 end-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-white text-[10px] font-semibold flex items-center justify-center">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -56,7 +58,7 @@ export default function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-3.5 py-3 border-b border-border">
-          <p className="text-sm font-semibold text-foreground">Notifications</p>
+          <p className="text-sm font-semibold text-foreground">{t("Notifications")}</p>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -66,12 +68,12 @@ export default function NotificationBell() {
               disabled={markAllReadMutation.isPending}
             >
               <Check className="w-3 h-3" />
-              Mark all read
+              {t("Mark all read")}
             </Button>
           )}
         </div>
         <div className="max-h-80 overflow-y-auto divide-y divide-border">
-          {notifications.length === 0 && <p className="px-3.5 py-6 text-sm text-muted-foreground text-center">You're all caught up.</p>}
+          {notifications.length === 0 && <p className="px-3.5 py-6 text-sm text-muted-foreground text-center">{t("You're all caught up.")}</p>}
           {notifications.slice(0, 8).map((n) => {
             const Icon = CATEGORY_ICON[n.category];
             return (
@@ -79,7 +81,7 @@ export default function NotificationBell() {
                 key={n.id}
                 type="button"
                 onClick={() => handleOpen(n)}
-                className={cn("flex w-full items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-secondary/50 cursor-pointer", !n.read && "bg-accent/50")}
+                className={cn("flex w-full items-start gap-2.5 px-3.5 py-2.5 text-start hover:bg-secondary/50 cursor-pointer", !n.read && "bg-accent/50")}
               >
                 <div className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center shrink-0 mt-0.5">
                   <Icon className="w-3.5 h-3.5 text-muted-foreground" />
@@ -98,7 +100,7 @@ export default function NotificationBell() {
         </div>
         <div className="px-3.5 py-2.5 border-t border-border">
           <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => navigate("/notifications")}>
-            View all notifications
+            {t("View all notifications")}
           </Button>
         </div>
       </PopoverContent>

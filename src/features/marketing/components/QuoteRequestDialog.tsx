@@ -3,6 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle2, MessageSquareQuote } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -72,6 +73,7 @@ const emptyValues = (d: QuoteDefaults = {}): QuoteFormValues => ({
 export default function QuoteRequestDialog({ open, onOpenChange, defaults, variant = "public" }: QuoteRequestDialogProps) {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation("marketing");
 
   const {
     register,
@@ -112,7 +114,7 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
     }
   };
 
-  const fieldError = (msg?: string) => (msg ? <p className="text-xs text-destructive-strong">{msg}</p> : null);
+  const fieldError = (msg?: string) => (msg ? <p className="text-xs text-destructive-strong">{t(msg)}</p> : null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -122,12 +124,12 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success-soft text-success-strong">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            <DialogTitle className="mt-5 text-xl">Request received</DialogTitle>
+            <DialogTitle className="mt-5 text-xl">{t("Request received")}</DialogTitle>
             <DialogDescription className="mt-2 max-w-md">
-              Thank you for your interest. Our team will contact you to discuss the plan that best fits your school's requirements.
+              {t("Thank you for your interest. Our team will contact you to discuss the plan that best fits your school's requirements.")}
             </DialogDescription>
             <Button className="mt-6" onClick={() => onOpenChange(false)}>
-              Done
+              {t("Done")}
             </Button>
           </div>
         ) : (
@@ -135,25 +137,25 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
             <DialogHeader>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand-600">
                 <MessageSquareQuote className="h-3.5 w-3.5" />
-                {variant === "upgrade" ? "Additional features" : "Tailored to your school"}
+                {variant === "upgrade" ? t("Additional features") : t("Tailored to your school")}
               </div>
-              <DialogTitle className="text-xl">{variant === "upgrade" ? "Ask about more features" : "Request a quote"}</DialogTitle>
+              <DialogTitle className="text-xl">{variant === "upgrade" ? t("Ask about more features") : t("Request a quote")}</DialogTitle>
               <DialogDescription>
                 {variant === "upgrade"
-                  ? "Tell us what your school needs next. The School Sphere team will get in touch with the options for your plan."
-                  : "Pricing depends on your school's size and the modules you need. Share a few details and we'll prepare a proposal for you."}
+                  ? t("Tell us what your school needs next. The School Sphere team will get in touch with the options for your plan.")
+                  : t("Pricing depends on your school's size and the modules you need. Share a few details and we'll prepare a proposal for you.")}
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="quote-school">School name *</Label>
+                  <Label htmlFor="quote-school">{t("School name *")}</Label>
                   <Input id="quote-school" autoComplete="organization" aria-invalid={errors.schoolName ? true : undefined} {...register("schoolName")} />
                   {fieldError(errors.schoolName?.message)}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="quote-name">Contact person *</Label>
+                  <Label htmlFor="quote-name">{t("Contact person *")}</Label>
                   <Input id="quote-name" autoComplete="name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
                   {fieldError(errors.name?.message)}
                 </div>
@@ -161,18 +163,18 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="quote-email">Email *</Label>
+                  <Label htmlFor="quote-email">{t("Email *")}</Label>
                   <Input id="quote-email" type="email" autoComplete="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
                   {fieldError(errors.email?.message)}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="quote-phone">Phone *</Label>
+                  <Label htmlFor="quote-phone">{t("Phone *")}</Label>
                   <div className="flex h-9 overflow-hidden rounded-md border border-input bg-card shadow-sm focus-within:ring-2 focus-within:ring-ring">
                     <Controller
                       control={control}
                       name="dialCode"
                       render={({ field }) => (
-                        <select {...field} aria-label="Country code" className="cursor-pointer border-r border-input bg-secondary/60 pl-2 pr-1 text-sm text-foreground outline-none">
+                        <select {...field} aria-label={t("Country code")} className="cursor-pointer border-e border-input bg-secondary/60 ps-2 pe-1 text-sm text-foreground outline-none">
                           {COUNTRY_CODES.map((c) => (
                             <option key={c.code} value={c.dial}>
                               {c.flag} {c.dial}
@@ -197,19 +199,19 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="quote-students">Number of students *</Label>
+                  <Label htmlFor="quote-students">{t("Number of students *")}</Label>
                   <Controller
                     control={control}
                     name="studentCount"
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger id="quote-students" aria-invalid={errors.studentCount ? true : undefined}>
-                          <SelectValue placeholder="Select" />
+                          <SelectValue placeholder={t("Select")} />
                         </SelectTrigger>
                         <SelectContent>
                           {STUDENT_COUNT_OPTIONS.map((o) => (
                             <SelectItem key={o} value={o}>
-                              {o}
+                              {t(o)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -219,19 +221,19 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
                   {fieldError(errors.studentCount?.message)}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="quote-staff">Number of staff</Label>
+                  <Label htmlFor="quote-staff">{t("Number of staff")}</Label>
                   <Controller
                     control={control}
                     name="staffCount"
                     render={({ field }) => (
                       <Select value={field.value || undefined} onValueChange={field.onChange}>
                         <SelectTrigger id="quote-staff">
-                          <SelectValue placeholder="Select" />
+                          <SelectValue placeholder={t("Select")} />
                         </SelectTrigger>
                         <SelectContent>
                           {STAFF_COUNT_OPTIONS.map((o) => (
                             <SelectItem key={o} value={o}>
-                              {o}
+                              {t(o)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -240,7 +242,7 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="quote-plan">Preferred plan</Label>
+                  <Label htmlFor="quote-plan">{t("Preferred plan")}</Label>
                   <Controller
                     control={control}
                     name="preferredPlan"
@@ -252,10 +254,10 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
                         <SelectContent>
                           {PLAN_KEYS.map((p) => (
                             <SelectItem key={p} value={p}>
-                              {p}
+                              {t(p)}
                             </SelectItem>
                           ))}
-                          <SelectItem value={NOT_SURE}>{NOT_SURE}</SelectItem>
+                          <SelectItem value={NOT_SURE}>{t(NOT_SURE)}</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -264,7 +266,7 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
               </div>
 
               <fieldset className="space-y-2">
-                <legend className="text-sm font-medium text-foreground">Required modules</legend>
+                <legend className="text-sm font-medium text-foreground">{t("Required modules")}</legend>
                 <Controller
                   control={control}
                   name="requiredModules"
@@ -285,7 +287,7 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
                               onCheckedChange={(c) => field.onChange(c === true ? [...field.value, m] : field.value.filter((x) => x !== m))}
                               className="h-3.5 w-3.5"
                             />
-                            {m}
+                            {t(m)}
                           </label>
                         );
                       })}
@@ -295,33 +297,33 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
               </fieldset>
 
               <div className="space-y-1.5">
-                <Label htmlFor="quote-requirements">Additional requirements</Label>
+                <Label htmlFor="quote-requirements">{t("Additional requirements")}</Label>
                 <Textarea
                   id="quote-requirements"
                   rows={2}
                   maxLength={2000}
-                  placeholder="e.g. multiple branches, integrations with an existing system, data migration, hosting preferences…"
+                  placeholder={t("e.g. multiple branches, integrations with an existing system, data migration, hosting preferences…")}
                   {...register("requirements")}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="quote-message">Message</Label>
-                <Textarea id="quote-message" rows={3} maxLength={2000} placeholder="Anything else you'd like us to know" {...register("message")} />
+                <Label htmlFor="quote-message">{t("Message")}</Label>
+                <Textarea id="quote-message" rows={3} maxLength={2000} placeholder={t("Anything else you'd like us to know")} {...register("message")} />
               </div>
 
               {error && (
                 <p role="alert" className="text-sm text-destructive-strong">
-                  {error}
+                  {t(error)}
                 </p>
               )}
 
               <DialogFooter className="mt-auto">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t("Cancel")}
                 </Button>
                 <Button type="submit" loading={isSubmitting}>
-                  Request a Quote
+                  {t("Request a Quote")}
                 </Button>
               </DialogFooter>
             </form>

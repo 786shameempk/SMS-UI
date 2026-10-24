@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
 import type { DashboardContext } from "../sources/types";
 import { GRID_CLASS, HEIGHT_CLASS, WIDTH_CLASS, moveOnto, moveVisible, packedWidthClasses, updateItem, type LayoutItem } from "../layout";
@@ -30,6 +31,7 @@ export default function DashboardLayout({
   env: WidgetEnv;
   onEdit?: (items: LayoutItem[], announcement: string) => void;
 }) {
+  const { t } = useTranslation("dashboard");
   const byId = new Map(widgets.map((w) => [w.id, w]));
   const visible = items.filter((i) => i.visible && byId.has(i.id));
   const [dragId, setDragIdState] = useState<DashboardWidgetId | null>(null);
@@ -43,10 +45,10 @@ export default function DashboardLayout({
   // Viewing: rows are filled to the edge. Editing: exact sizes, so what you resize is what you see.
   const packed = onEdit ? null : packedWidthClasses(visible);
 
-  const name = (id: DashboardWidgetId) => byId.get(id)?.name ?? id;
-  const positionText = (next: LayoutItem[], id: DashboardWidgetId) => {
+  const name = (id: DashboardWidgetId) => t(byId.get(id)?.name ?? id);
+  const movedText = (next: LayoutItem[], id: DashboardWidgetId) => {
     const shown = next.filter((i) => i.visible && byId.has(i.id));
-    return `position ${shown.findIndex((i) => i.id === id) + 1} of ${shown.length}`;
+    return t("{{name}} moved to position {{position}} of {{total}}.", { name: name(id), position: shown.findIndex((i) => i.id === id) + 1, total: shown.length });
   };
 
   return (
@@ -67,17 +69,17 @@ export default function DashboardLayout({
                 handlers={{
                   onMove: (direction) => {
                     const next = moveVisible(items, item.id, direction);
-                    onEdit(next, `${config.name} moved to ${positionText(next, item.id)}.`);
+                    onEdit(next, movedText(next, item.id));
                   },
-                  onResize: (size) => onEdit(updateItem(items, item.id, size), `${config.name} resized.`),
-                  onHide: () => onEdit(updateItem(items, item.id, { visible: false }), `${config.name} hidden.`),
+                  onResize: (size) => onEdit(updateItem(items, item.id, size), t("{{name}} resized.", { name: t(config.name) })),
+                  onHide: () => onEdit(updateItem(items, item.id, { visible: false }), t("{{name}} hidden.", { name: t(config.name) })),
                   onDragStart: () => setDragId(item.id),
                   onDragOver: () => setOverId(item.id),
                   onDrop: () => {
                     const dragged = dragRef.current;
                     if (dragged && dragged !== item.id && byId.get(dragged)?.configurable) {
                       const next = moveOnto(items, dragged, item.id);
-                      onEdit(next, `${name(dragged)} moved to ${positionText(next, dragged)}.`);
+                      onEdit(next, movedText(next, dragged));
                     }
                     setDragId(null);
                     setOverId(null);

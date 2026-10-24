@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useLeadCapture } from "./LeadCapture";
 import { Logo } from "./Navbar";
 
@@ -75,6 +76,7 @@ const SOCIALS: Array<{ label: string; path: ReactNode }> = [
 
 export default function Footer() {
   const { openContact } = useLeadCapture();
+  const { t } = useTranslation("marketing");
   const linkCls = "text-sm text-slate-500 transition-colors hover:text-slate-900";
 
   return (
@@ -84,7 +86,7 @@ export default function Footer() {
           <div className="col-span-2 sm:col-span-4 lg:col-span-1">
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
-              The AI school management system for administrators, teachers, students, and parents — one campus or many.
+              {t("The AI school management system for administrators, teachers, students, and parents — one campus or many.")}
             </p>
             <ul className="mt-6 flex items-center gap-2">
               {SOCIALS.map((s) => (
@@ -105,17 +107,17 @@ export default function Footer() {
 
           {COLUMNS.map((col) => (
             <div key={col.title}>
-              <h4 className="text-sm font-semibold text-slate-900">{col.title}</h4>
+              <h4 className="text-sm font-semibold text-slate-900">{t(col.title)}</h4>
               <ul className="mt-4 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
                     {link.action === "contact" ? (
                       <button type="button" onClick={openContact} className={linkCls}>
-                        {link.label}
+                        {t(link.label)}
                       </button>
                     ) : (
                       <a href={link.href} className={linkCls}>
-                        {link.label}
+                        {t(link.label)}
                       </a>
                     )}
                   </li>
@@ -126,8 +128,8 @@ export default function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 sm:flex-row">
-          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} School Sphere. All rights reserved.</p>
-          <p className="text-xs text-slate-400">Made for schools, teachers, students, and parents.</p>
+          <p className="text-xs text-slate-400">{t("© {{year}} School Sphere. All rights reserved.", { year: new Date().getFullYear() })}</p>
+          <p className="text-xs text-slate-400">{t("Made for schools, teachers, students, and parents.")}</p>
         </div>
       </div>
     </footer>

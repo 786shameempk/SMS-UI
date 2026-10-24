@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,6 +19,7 @@ const FAMILY_ROLES = ["parent", "student"];
  * given to parents or students (the server refuses too).
  */
 export default function AiPermissionsTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const roles = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
   const ai = useQuery({ queryKey: AI_PERMISSIONS_QUERY_KEY, queryFn: getAiPermissions });
@@ -38,12 +40,12 @@ export default function AiPermissionsTab() {
   };
   const save = useMutation({
     mutationFn: () => setRoleAiPermissions(selectedId, [...keys]),
-    onSuccess: () => done("AI permissions saved. They apply at each user's next sign-in."),
+    onSuccess: () => done(t("AI permissions saved. They apply at each user's next sign-in.")),
     onError: (e: Error) => toast.error(e.message),
   });
   const reset = useMutation({
     mutationFn: () => resetRoleAiPermissions(selectedId),
-    onSuccess: () => done("Back to the default AI permissions."),
+    onSuccess: () => done(t("Back to the default AI permissions.")),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -63,15 +65,14 @@ export default function AiPermissionsTab() {
   };
 
   const groups = [
-    { title: "For everyone", items: ai.data!.catalog.filter((p) => !p.staffOnly) },
-    { title: "Staff only", items: ai.data!.catalog.filter((p) => p.staffOnly) },
+    { title: t("For everyone"), items: ai.data!.catalog.filter((p) => !p.staffOnly) },
+    { title: t("Staff only"), items: ai.data!.catalog.filter((p) => p.staffOnly) },
   ];
 
   return (
     <div className="space-y-4">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Choose which AI features each role can use. The &ldquo;AI Features&rdquo; module must also be on for the role in the permission matrix. Changes apply at
-        each user&apos;s next sign-in.
+        {t("Choose which AI features each role can use. The “AI Features” module must also be on for the role in the permission matrix. Changes apply at each user's next sign-in.")}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Select
@@ -81,8 +82,8 @@ export default function AiPermissionsTab() {
             setDraft(null);
           }}
         >
-          <SelectTrigger className="w-60" aria-label="Role">
-            <SelectValue placeholder="Choose a role" />
+          <SelectTrigger className="w-60" aria-label={t("Role")}>
+            <SelectValue placeholder={t("Choose a role")} />
           </SelectTrigger>
           <SelectContent>
             {roles.data?.map((r) => (
@@ -92,7 +93,7 @@ export default function AiPermissionsTab() {
             ))}
           </SelectContent>
         </Select>
-        {current && <Badge variant={current.configured ? "info" : "neutral"}>{current.configured ? "Customised for this school" : "Using defaults"}</Badge>}
+        {current && <Badge variant={current.configured ? "info" : "neutral"}>{current.configured ? t("Customised for this school") : t("Using defaults")}</Badge>}
       </div>
 
       {groups.map((g) => (
@@ -113,7 +114,7 @@ export default function AiPermissionsTab() {
                     />
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-foreground">{p.label}</span>
-                      <span className="block text-xs text-muted-foreground">{blocked ? "Only for school staff." : p.description}</span>
+                      <span className="block text-xs text-muted-foreground">{blocked ? t("Only for school staff.") : p.description}</span>
                     </span>
                   </label>
                 );
@@ -125,11 +126,11 @@ export default function AiPermissionsTab() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-          {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save
+          {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t("Save")}
         </Button>
         {current?.configured && (
           <Button variant="outline" onClick={() => reset.mutate()} disabled={reset.isPending}>
-            <RotateCcw className="h-4 w-4" /> Reset to defaults
+            <RotateCcw className="h-4 w-4" /> {t("Reset to defaults")}
           </Button>
         )}
       </div>

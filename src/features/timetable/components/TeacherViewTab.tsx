@@ -7,6 +7,7 @@ import { listTeachers } from "@/features/teachers/api";
 import { listRooms, listSlots } from "../api";
 import TimetableGrid from "./TimetableGrid";
 
+import { useTranslation } from "react-i18next";
 function sectionFullLabel(section: Section | undefined, classes: SchoolClass[]): string {
   if (!section) return "Unknown section";
   const className = classes.find((c) => c.id === section.classId)?.name ?? "";
@@ -14,6 +15,7 @@ function sectionFullLabel(section: Section | undefined, classes: SchoolClass[]):
 }
 
 export default function TeacherViewTab() {
+  const { t: tr } = useTranslation("timetable");
   const { data: teachers = [] } = useQuery({ queryKey: ["teachers", "directory"], queryFn: listTeachers });
   const { data: sections = [] } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
@@ -29,7 +31,7 @@ export default function TeacherViewTab() {
     <div className="space-y-4">
       <Select value={activeStaffId} onValueChange={setStaffId}>
         <SelectTrigger className="w-56">
-          <SelectValue placeholder="Select teacher" />
+          <SelectValue placeholder={tr("Select teacher")} />
         </SelectTrigger>
         <SelectContent>
           {teachers.map((t) => (
@@ -41,18 +43,18 @@ export default function TeacherViewTab() {
       </Select>
 
       {!activeStaffId ? (
-        <p className="text-sm text-muted-foreground">No teachers found.</p>
+        <p className="text-sm text-muted-foreground">{tr("No teachers found.")}</p>
       ) : (
         <TimetableGrid
           slots={slots}
           renderCell={(slot) => {
-            if (!slot?.subjectId) return <span className="text-xs text-muted-foreground">Free</span>;
+            if (!slot?.subjectId) return <span className="text-xs text-muted-foreground">{tr("Free")}</span>;
             const subject = subjects.find((s) => s.id === slot.subjectId);
             const section = sections.find((s) => s.id === slot.sectionId);
             const room = rooms.find((r) => r.id === slot.room);
             return (
               <div>
-                <p className="text-sm font-medium text-foreground">{subject?.name ?? "Subject"}</p>
+                <p className="text-sm font-medium text-foreground">{subject?.name ?? tr("Subject")}</p>
                 <p className="text-xs text-muted-foreground">{sectionFullLabel(section, classes)}</p>
                 {room && <p className="text-xs text-muted-foreground">{room.name}</p>}
               </div>

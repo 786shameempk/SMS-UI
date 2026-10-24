@@ -29,7 +29,7 @@ export function PageContainer({
 interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title: React.ReactNode;
   description?: React.ReactNode;
-  /** Primary page actions, right-aligned on wide screens and stacked under the title on phones. */
+  /** Primary page actions, end-aligned on wide screens and stacked under the title on phones. */
   actions?: React.ReactNode;
   /** Small element above the title (e.g. a back link or a status badge row). */
   eyebrow?: React.ReactNode;
@@ -70,7 +70,7 @@ export function PageHeader({ title, description, actions, eyebrow, icon: Icon, c
       {...props}
     >
       {/* A soft brand glow in the corner: depth without competing with the content. */}
-      <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -end-14 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
       <div className="relative flex min-w-0 items-center gap-3.5">
         {Icon ? <HeaderTile icon={Icon} /> : inRouter ? <RouteTile /> : null}
         <div className="min-w-0 space-y-1">

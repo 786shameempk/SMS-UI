@@ -9,6 +9,7 @@ import { getDailySectionSummaries } from "../../api";
 import { todayDateKey } from "../../constants";
 import type { DailySectionSummary } from "../../types";
 
+import { useTranslation } from "react-i18next";
 const columns: ColumnDef<DailySectionSummary, unknown>[] = [
   {
     id: "class",
@@ -33,6 +34,7 @@ const columns: ColumnDef<DailySectionSummary, unknown>[] = [
 ];
 
 export default function DailyAttendanceReport() {
+  const { t } = useTranslation("attendance");
   const [date, setDate] = useState(todayDateKey());
   const { data: summaries = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["attendance", "report-daily", date],
@@ -42,16 +44,16 @@ export default function DailyAttendanceReport() {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-3 flex-wrap">
-        <CardTitle>Daily attendance</CardTitle>
+        <CardTitle>{t("Daily attendance")}</CardTitle>
         <div className="space-y-1.5">
           <Label htmlFor="daily-report-date" className="sr-only">
-            Date
+            {t("Date")}
           </Label>
           <Input id="daily-report-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} max={todayDateKey()} />
         </div>
       </CardHeader>
       <CardContent>
-        <DataTable searchable columns={columns} data={summaries} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No attendance marked for this date." />
+        <DataTable searchable columns={columns} data={summaries} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No attendance marked for this date.")} />
       </CardContent>
     </Card>
   );

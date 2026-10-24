@@ -49,6 +49,7 @@ Disallow: /talents
 Disallow: /teachers
 Disallow: /timetable
 Disallow: /transport
+Disallow: /verify
 Disallow: /visitors
 
 Sitemap: https://sms-schoolsphere.com/sitemap.xml

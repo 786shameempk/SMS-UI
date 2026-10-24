@@ -12,6 +12,7 @@ import type { SchoolClass, Term } from "@/features/academics/types";
 import { EXAM_STATUSES, EXAM_TYPES, EXAM_TYPE_LABELS } from "../constants";
 import type { Exam, ExamFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const examFormSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
@@ -51,6 +52,7 @@ export default function ExamFormDialog({
   onSubmit: (values: ExamFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t: tr } = useTranslation("examinations");
   const isEdit = Boolean(exam);
   const {
     register,
@@ -82,19 +84,19 @@ export default function ExamFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit exam" : "New exam"}</DialogTitle>
-          <DialogDescription>Exams are scoped to a class and term, with subject schedules added separately.</DialogDescription>
+          <DialogTitle>{isEdit ? tr("Edit exam") : tr("New exam")}</DialogTitle>
+          <DialogDescription>{tr("Exams are scoped to a class and term, with subject schedules added separately.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="e.g. Mid-term Examination" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            <Label htmlFor="name">{tr("Name")}</Label>
+            <Input id="name" placeholder={tr("e.g. Mid-term Examination")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
             {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="examType">Exam type</Label>
+              <Label htmlFor="examType">{tr("Exam type")}</Label>
               <Controller
                 control={control}
                 name="examType"
@@ -115,7 +117,7 @@ export default function ExamFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{tr("Status")}</Label>
               <Controller
                 control={control}
                 name="status"
@@ -139,14 +141,14 @@ export default function ExamFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="classId">Class</Label>
+              <Label htmlFor="classId">{tr("Class")}</Label>
               <Controller
                 control={control}
                 name="classId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="classId">
-                      <SelectValue placeholder="Select a class" />
+                      <SelectValue placeholder={tr("Select a class")} />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map((c) => (
@@ -161,14 +163,14 @@ export default function ExamFormDialog({
               {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="termId">Term</Label>
+              <Label htmlFor="termId">{tr("Term")}</Label>
               <Controller
                 control={control}
                 name="termId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="termId">
-                      <SelectValue placeholder="Select a term" />
+                      <SelectValue placeholder={tr("Select a term")} />
                     </SelectTrigger>
                     <SelectContent>
                       {terms.map((t) => (
@@ -186,12 +188,12 @@ export default function ExamFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="startDate">Start date</Label>
+              <Label htmlFor="startDate">{tr("Start date")}</Label>
               <Input id="startDate" type="date" aria-invalid={errors.startDate ? true : undefined} {...register("startDate")} />
               {errors.startDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endDate">End date</Label>
+              <Label htmlFor="endDate">{tr("End date")}</Label>
               <Input id="endDate" type="date" aria-invalid={errors.endDate ? true : undefined} {...register("endDate")} />
               {errors.endDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endDate.message}</p>}
             </div>
@@ -199,10 +201,10 @@ export default function ExamFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create exam"}
+              {isEdit ? tr("Save changes") : tr("Create exam")}
             </Button>
           </DialogFooter>
         </form>

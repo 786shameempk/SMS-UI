@@ -7,22 +7,24 @@ import SubstitutionsTab from "../components/SubstitutionsTab";
 import TeacherViewTab from "../components/TeacherViewTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
+import { useTranslation } from "react-i18next";
 export default function TimetableManagementPage() {
+  const { t } = useTranslation("timetable");
   return (
     <PageContainer>
       <PageHeader
-        title="Timetable management"
-        description="Weekly period grids per section, your branch's periods and school days, room allocation, substitute teachers, and holiday awareness."
+        title={t("Timetable management")}
+        description={t("Weekly period grids per section, your branch's periods and school days, room allocation, substitute teachers, and holiday awareness.")}
       />
 
       <Tabs defaultValue="class-section">
         <TabsList variant="line">
-          <TabsTrigger value="class-section">Class/Section View</TabsTrigger>
-          <TabsTrigger value="teacher">Teacher View</TabsTrigger>
-          <TabsTrigger value="student-parent">Student/Parent View</TabsTrigger>
-          <TabsTrigger value="periods">Periods</TabsTrigger>
-          <TabsTrigger value="rooms">Rooms</TabsTrigger>
-          <TabsTrigger value="substitutions">Substitutions</TabsTrigger>
+          <TabsTrigger value="class-section">{t("Class/Section View")}</TabsTrigger>
+          <TabsTrigger value="teacher">{t("Teacher View")}</TabsTrigger>
+          <TabsTrigger value="student-parent">{t("Student/Parent View")}</TabsTrigger>
+          <TabsTrigger value="periods">{t("Periods")}</TabsTrigger>
+          <TabsTrigger value="rooms">{t("Rooms")}</TabsTrigger>
+          <TabsTrigger value="substitutions">{t("Substitutions")}</TabsTrigger>
         </TabsList>
         <TabsContent value="class-section">
           <ClassSectionViewTab />

@@ -9,8 +9,10 @@ import { familyOverview } from "../api";
 import { CHAPTER_STATUS, PROGRESS_STATUS, ProgressBar, SelectField, StatusBadge, formatDate } from "../shared";
 import type { FamilyOverview, FamilySubject } from "../types";
 
+import { useTranslation } from "react-i18next";
 /** The read-only syllabus view for parents and students. Everything on it comes from a server projection that has no teacher notes in it. */
 export default function FamilyPage() {
+  const { t } = useTranslation("lesson-portions");
   const query = useQuery({ queryKey: ["portions", "family"], queryFn: () => familyOverview() });
   const [studentId, setStudentId] = useState<string | undefined>();
   const children = query.data ?? [];
@@ -21,14 +23,14 @@ export default function FamilyPage() {
 
   if (query.isLoading) return <Skeleton className="h-64 w-full" />;
   if (query.isError) return <ErrorState onRetry={() => query.refetch()} retrying={query.isFetching} />;
-  if (!child) return <EmptyState icon={GraduationCap} title="No student linked to this login" description="Ask the school office to link your child to your account." />;
+  if (!child) return <EmptyState icon={GraduationCap} title={t("No student linked to this login")} description={t("Ask the school office to link your child to your account.")} />;
 
   return (
     <div className="space-y-5">
       {children.length > 1 && (
         <div className="max-w-xs space-y-1">
           <label htmlFor="fm-child" className="text-sm font-medium">
-            Student
+            {t("Student")}
           </label>
           <SelectField id="fm-child" value={child.studentId} onChange={setStudentId} items={children.map((c) => ({ value: c.studentId, label: `${c.studentName} · ${c.className} ${c.sectionName}` }))} className="w-full" />
         </div>
@@ -37,9 +39,9 @@ export default function FamilyPage() {
         {child.studentName} · {child.className} {child.sectionName}
       </p>
       {!child.enabled ? (
-        <EmptyState icon={BookOpen} title="Syllabus progress isn't shown yet" description="Your school hasn't turned this view on. It will appear here when they do." />
+        <EmptyState icon={BookOpen} title={t("Syllabus progress isn't shown yet")} description={t("Your school hasn't turned this view on. It will appear here when they do.")} />
       ) : child.subjects.length === 0 ? (
-        <EmptyState icon={BookOpen} title="No syllabus published yet" description="Subjects appear here once the school publishes their syllabus." />
+        <EmptyState icon={BookOpen} title={t("No syllabus published yet")} description={t("Subjects appear here once the school publishes their syllabus.")} />
       ) : (
         <Content child={child} />
       )}
@@ -48,6 +50,7 @@ export default function FamilyPage() {
 }
 
 function Content({ child }: { child: FamilyOverview }) {
+  const { t } = useTranslation("lesson-portions");
   return (
     <div className="space-y-6">
       <ul className="grid gap-4 lg:grid-cols-2">
@@ -61,7 +64,7 @@ function Content({ child }: { child: FamilyOverview }) {
       {child.exams.length > 0 && (
         <section aria-labelledby="fm-exams" className="space-y-3">
           <h2 id="fm-exams" className="text-base font-semibold">
-            Exam syllabus
+            {t("Exam syllabus")}
           </h2>
           {child.exams.map((e) => (
             <Card key={e.examId}>
@@ -78,12 +81,12 @@ function Content({ child }: { child: FamilyOverview }) {
                       <p className="font-medium">{s.subjectName}</p>
                       {s.chapters.length > 0 && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">Chapters:</span> {s.chapters.join(", ")}
+                          <span className="font-medium text-foreground">{t("Chapters:")}</span> {s.chapters.join(", ")}
                         </p>
                       )}
                       {s.topics.length > 0 && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">Topics:</span> {s.topics.join(", ")}
+                          <span className="font-medium text-foreground">{t("Topics:")}</span> {s.topics.join(", ")}
                         </p>
                       )}
                     </li>
@@ -99,30 +102,29 @@ function Content({ child }: { child: FamilyOverview }) {
 }
 
 function SubjectCard({ subject: s }: { subject: FamilySubject }) {
+  const { t: tr } = useTranslation("lesson-portions");
   const [open, setOpen] = useState(false);
   return (
     <Card>
       <CardContent className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-medium">{s.subjectName}</h3>
-          <Badge variant="neutral">
-            {s.completedChapters} of {s.totalChapters} chapters
-          </Badge>
+          <Badge variant="neutral">{tr("{{completedChapters}} of {{totalChapters}} chapters", { completedChapters: s.completedChapters, totalChapters: s.totalChapters })}</Badge>
         </div>
-        <ProgressBar percent={s.percent} label={`${s.subjectName} syllabus covered ${s.percent}%`} />
+        <ProgressBar percent={s.percent} label={tr("{{subjectName}} syllabus covered {{percent}}%", { subjectName: s.subjectName, percent: s.percent })} />
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-xs text-muted-foreground">Being taught now</dt>
+            <dt className="text-xs text-muted-foreground">{tr("Being taught now")}</dt>
             <dd>{s.currentTopic ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">Coming up</dt>
+            <dt className="text-xs text-muted-foreground">{tr("Coming up")}</dt>
             <dd>{s.upcomingTopics.length > 0 ? s.upcomingTopics.join(", ") : "—"}</dd>
           </div>
         </dl>
         <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="inline-flex items-center gap-1 text-sm font-medium text-primary">
           {open ? <ChevronDown className="h-4 w-4" aria-hidden="true" /> : <ChevronRight className="h-4 w-4" aria-hidden="true" />}
-          {open ? "Hide chapters" : "Show chapters"}
+          {open ? tr("Hide chapters") : tr("Show chapters")}
         </button>
         {open && (
           <ul className="space-y-3">
@@ -141,7 +143,7 @@ function SubjectCard({ subject: s }: { subject: FamilySubject }) {
                       </div>
                       {t.homework && (
                         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                          <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> Homework: {t.homework}
+                          <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {tr("Homework:")} {t.homework}
                         </p>
                       )}
                       {t.resources.map((r) => (
@@ -151,7 +153,7 @@ function SubjectCard({ subject: s }: { subject: FamilySubject }) {
                               {r.title} <ExternalLink className="h-3 w-3" aria-hidden="true" />
                             </a>
                           ) : (
-                            <span>{r.title} (in Study Materials)</span>
+                            <span>{tr("{{title}} (in Study Materials)", { title: r.title })}</span>
                           )}
                         </p>
                       ))}

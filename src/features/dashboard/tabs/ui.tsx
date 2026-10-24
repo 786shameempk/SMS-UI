@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 import { getApiErrorStatus } from "@/lib/httpClient";
 import { cn } from "@/utils/cn";
@@ -26,9 +27,10 @@ export function TabBody<T>({
   skeletonCards?: number;
   children: (data: T) => ReactNode;
 }) {
+  const { t } = useTranslation("dashboard");
   if (query.isLoading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-label="Loading">
+      <div className="space-y-4" aria-busy="true" aria-label={t("Loading")}>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           {Array.from({ length: skeletonCards }, (_, i) => (
             <Skeleton key={i} className="h-28 rounded-xl" />
@@ -44,7 +46,7 @@ export function TabBody<T>({
   if (query.isError || query.data === undefined) {
     const denied = [401, 403].includes(getApiErrorStatus(query.error) ?? 0);
     return denied ? (
-      <EmptyState title="You don't have access to this view" description="Ask your school administrator to open the module behind it for your role." />
+      <EmptyState title={t("You don't have access to this view")} description={t("Ask your school administrator to open the module behind it for your role.")} />
     ) : (
       <ErrorState onRetry={() => query.refetch()} retrying={query.isRefetching} />
     );
@@ -57,7 +59,7 @@ export function Panel({
   title,
   description,
   href,
-  hrefLabel = "Open",
+  hrefLabel,
   action,
   className,
   children,
@@ -70,6 +72,7 @@ export function Panel({
   className?: string;
   children: ReactNode;
 }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card className={cn("flex h-full min-w-0 flex-col p-4 sm:p-[var(--space-card-padding)]", className)}>
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -83,7 +86,7 @@ export function Panel({
             to={href}
             className="inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-medium text-primary-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {hrefLabel}
+            {hrefLabel ?? t("Open")}
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         )}
@@ -132,13 +135,14 @@ export function Bar({ label, value, max, display, tone = "brand", sub }: { label
 export function BarList({
   items,
   max,
-  empty = "Nothing to show yet.",
+  empty,
 }: {
   items: Array<{ key?: string; label: ReactNode; value: number; display?: ReactNode; tone?: BarTone; sub?: ReactNode }>;
   max?: number;
   empty?: string;
 }) {
-  if (items.length === 0) return <p className="py-6 text-center text-sm text-muted-foreground">{empty}</p>;
+  const { t } = useTranslation("dashboard");
+  if (items.length === 0) return <p className="py-6 text-center text-sm text-muted-foreground">{empty ?? t("Nothing to show yet.")}</p>;
   const top = max ?? Math.max(...items.map((i) => i.value), 1);
   return (
     <div className="space-y-3">
@@ -180,7 +184,7 @@ export function Row({ title, sub, right, href }: { title: ReactNode; sub?: React
         <p className="truncate text-sm font-medium text-foreground">{title}</p>
         {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
       </div>
-      {right && <div className="shrink-0 text-right text-sm tabular-nums text-muted-foreground">{right}</div>}
+      {right && <div className="shrink-0 text-end text-sm tabular-nums text-muted-foreground">{right}</div>}
     </>
   );
   const cls = "flex items-center justify-between gap-3 border-b border-border/60 py-2.5 last:border-0";

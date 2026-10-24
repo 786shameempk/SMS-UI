@@ -115,7 +115,7 @@ export default function OfficeUsersPage() {
                   <TableHead>Status</TableHead>
                   <TableHead>MFA</TableHead>
                   <TableHead>Last sign-in</TableHead>
-                  <TableHead className="text-right">Sessions</TableHead>
+                  <TableHead className="text-end">Sessions</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -132,7 +132,7 @@ export default function OfficeUsersPage() {
                     </TableCell>
                     <TableCell>{u.mfaEnabled ? <Badge variant="success">On</Badge> : <Badge variant="neutral">Off</Badge>}</TableCell>
                     <TableCell className="text-muted-foreground">{ago(u.lastLoginAt)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{u.activeSessions}</TableCell>
+                    <TableCell className="text-end tabular-nums">{u.activeSessions}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

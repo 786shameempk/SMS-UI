@@ -1,4 +1,5 @@
 import type { UserRole } from "@/types/auth";
+import { dashboardT as tr } from "../tabs/i18n";
 import { academicHttpClient } from "@/lib/httpClient";
 import { useAuthStore } from "@/store/authStore";
 import * as academicsApi from "@/features/academics/api";
@@ -341,7 +342,7 @@ async function feesDue(ctx: DashboardContext): Promise<FeeDueSummary> {
           const student = studentById.get(inv.studentId);
           return {
             id: inv.id,
-            studentName: student ? `${student.firstName} ${student.lastName}` : "Unknown student",
+            studentName: student ? `${student.firstName} ${student.lastName}` : tr("Unknown student"),
             term: inv.term,
             amount: outstanding(inv),
             dueDate: inv.dueDate,
@@ -369,7 +370,7 @@ async function libraryDue(ctx: DashboardContext): Promise<LibraryDueItem[]> {
       .filter(({ member }) => member?.personType === "student" && learnerById.has(member.personId))
       .map(({ loan, member }) => ({
         id: loan.id,
-        bookTitle: bookById.get(loan.bookId) ?? "Unknown title",
+        bookTitle: bookById.get(loan.bookId) ?? tr("Unknown title"),
         borrowerName: learnerById.get(member!.personId)?.name ?? "—",
         dueDate: loan.dueDate,
         overdue: loan.status === "overdue",
@@ -387,13 +388,13 @@ async function libraryDue(ctx: DashboardContext): Promise<LibraryDueItem[]> {
   const [students, staff] = await Promise.all([settle(listStudents()), settle(listStaff())]);
   const nameOf = (personType: string, personId: string) => {
     const person = personType === "student" ? students?.find((s) => s.id === personId) : staff?.find((s) => s.id === personId);
-    return person ? `${person.firstName} ${person.lastName}` : personType === "student" ? "Student" : "Staff member";
+    return person ? `${person.firstName} ${person.lastName}` : personType === "student" ? tr("Student") : tr("Staff member");
   };
   return relevant.map((loan) => {
     const member = memberById.get(loan.memberId);
     return {
       id: loan.id,
-      bookTitle: bookById.get(loan.bookId) ?? "Unknown title",
+      bookTitle: bookById.get(loan.bookId) ?? tr("Unknown title"),
       borrowerName: member ? nameOf(member.personType, member.personId) : "Unknown",
       dueDate: loan.dueDate,
       overdue: loan.status === "overdue",
@@ -633,7 +634,7 @@ async function calendarEvents(ctx: DashboardContext): Promise<CalendarEvent[]> {
   for (const sch of schedules ?? []) {
     if (!inWindow(sch.date)) continue;
     if (classFilter && !classFilter.has(classIdByExam.get(sch.examId) ?? "")) continue;
-    out.push({ date: sch.date, kind: "exam", label: `${subjectById.get(sch.subjectId) ?? "Subject"} exam` });
+    out.push({ date: sch.date, kind: "exam", label: tr("{{subject}} exam", { subject: subjectById.get(sch.subjectId) ?? tr("Subject") }) });
   }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -739,7 +740,7 @@ async function attendanceStat(sectionFilter?: Set<string>): Promise<StatCardData
   return {
     id: "st-attendance",
     label: "Attendance today",
-    value: today === null ? "Not marked" : `${today}%`,
+    value: today === null ? tr("Not marked") : `${today}%`,
     delta: today !== null && before !== null && before !== undefined ? delta(today, before, "pts") : undefined,
     icon: "CalendarCheck",
   };
@@ -773,7 +774,7 @@ async function schoolAttendanceStat(ctx: DashboardContext): Promise<StatCardData
   return {
     id: "st-attendance",
     label: "Attendance today",
-    value: today.percent === null ? "Not marked" : `${Math.round(today.percent)}%`,
+    value: today.percent === null ? tr("Not marked") : `${Math.round(today.percent)}%`,
     delta:
       today.percent !== null && previousSchoolDay.percent !== null
         ? delta(Math.round(today.percent), Math.round(previousSchoolDay.percent), "pts")
@@ -810,7 +811,7 @@ async function stats(ctx: DashboardContext): Promise<StatCardData[]> {
             id: "st-fees",
             label: "Fees pending",
             value: formatInrCompact(fees.totalPending),
-            delta: fees.totalOverdue > 0 ? { value: `${formatInrCompact(fees.totalOverdue)} overdue`, direction: "down" } : undefined,
+            delta: fees.totalOverdue > 0 ? { value: tr("{{amount}} overdue", { amount: formatInrCompact(fees.totalOverdue) }), direction: "down" } : undefined,
             icon: "Wallet",
           };
         },
@@ -886,7 +887,7 @@ async function stats(ctx: DashboardContext): Promise<StatCardData[]> {
             id: "st-students",
             label: "Total students",
             value: activeStudents.toLocaleString("en-IN"),
-            delta: admittedInRange ? { value: `+${admittedInRange} admitted`, direction: "up" } : undefined,
+            delta: admittedInRange ? { value: tr("+{{count}} admitted", { count: admittedInRange }), direction: "up" } : undefined,
             icon: "Users",
           };
         },
@@ -896,7 +897,7 @@ async function stats(ctx: DashboardContext): Promise<StatCardData[]> {
             id: "st-staff",
             label: "Total staff",
             value: activeStaff.toLocaleString("en-IN"),
-            delta: staffOnLeaveToday ? { value: `${staffOnLeaveToday} on leave today`, direction: "flat" } : undefined,
+            delta: staffOnLeaveToday ? { value: tr("{{count}} on leave today", { count: staffOnLeaveToday }), direction: "flat" } : undefined,
             icon: "Briefcase",
           };
         },
@@ -926,14 +927,14 @@ async function classAttendance(ctx: DashboardContext): Promise<RankedItem[]> {
       .filter((s) => sections.size === 0 || sections.has(s.sectionId))
       .map((s) => {
         const pct = s.marked ? Math.round(((s.present + s.late + s.halfDay) / s.marked) * 100) : null;
-        return { id: s.sectionId, label: `${s.className} ${s.sectionName}`.trim(), sublabel: `${s.marked}/${s.totalStudents} marked`, value: pct, display: pct === null ? "Not marked" : `${pct}%`, tone: attendanceTone(pct) };
+        return { id: s.sectionId, label: `${s.className} ${s.sectionName}`.trim(), sublabel: tr("{{marked}}/{{total}} marked", { marked: s.marked, total: s.totalStudents }), value: pct, display: pct === null ? tr("Not marked") : `${pct}%`, tone: attendanceTone(pct) };
       })
       .sort(byValueDesc);
   }
   return (await academicSummary(ctx.range)).sectionAttendance
     .map((s) => {
       const pct = s.percent === null ? null : Math.round(s.percent);
-      return { id: s.sectionId, label: s.label, sublabel: `${s.marked}/${s.students} marked`, value: pct, display: pct === null ? "Not marked" : `${pct}%`, tone: attendanceTone(pct) };
+      return { id: s.sectionId, label: s.label, sublabel: tr("{{marked}}/{{total}} marked", { marked: s.marked, total: s.students }), value: pct, display: pct === null ? tr("Not marked") : `${pct}%`, tone: attendanceTone(pct) };
     })
     .sort(byValueDesc);
 }
@@ -942,7 +943,10 @@ async function topPerformers(ctx: DashboardContext): Promise<RankedItem[]> {
   return (await academicSummary(ctx.range)).topPerformers.map((t) => ({
     id: t.studentId,
     label: t.name,
-    sublabel: `${t.classLabel} · ${t.results} result${t.results === 1 ? "" : "s"}`,
+    sublabel:
+      t.results === 1
+        ? tr("{{classLabel}} · {{count}} result", { classLabel: t.classLabel, count: t.results })
+        : tr("{{classLabel}} · {{count}} results", { classLabel: t.classLabel, count: t.results }),
     value: t.averageScore,
     display: `${t.averageScore}%`,
     tone: t.averageScore >= 75 ? "success" : "brand",
@@ -963,7 +967,10 @@ async function feeStatus(ctx: DashboardContext): Promise<StatusSlice[]> {
       id: b.status,
       label: FEE_STATUS[b.status]?.label ?? b.status,
       value: b.amount,
-      detail: `${formatInrCompact(b.amount)} · ${b.count} invoice${b.count === 1 ? "" : "s"}`,
+      detail:
+        b.count === 1
+          ? tr("{{amount}} · {{count}} invoice", { amount: formatInrCompact(b.amount), count: b.count })
+          : tr("{{amount}} · {{count}} invoices", { amount: formatInrCompact(b.amount), count: b.count }),
       tone: FEE_STATUS[b.status]?.tone ?? "muted",
     }));
 }
@@ -977,7 +984,7 @@ async function feeDefaulters(ctx: DashboardContext): Promise<FeeDefaulter[]> {
     const st = students.get(d.studentId);
     return {
       studentId: d.studentId,
-      studentName: st ? `${st.firstName} ${st.lastName}`.trim() : "Unknown student",
+      studentName: st ? `${st.firstName} ${st.lastName}`.trim() : tr("Unknown student"),
       className: st ? [st.className, st.section].filter(Boolean).join(" ") : "—",
       outstanding: d.outstanding,
       invoices: d.invoices,
@@ -988,29 +995,35 @@ async function feeDefaulters(ctx: DashboardContext): Promise<FeeDefaulter[]> {
 
 async function alerts(ctx: DashboardContext): Promise<AlertItem[]> {
   const [academic, fees] = await Promise.all([settle(academicSummary(ctx.range)), settle(feeSummary(ctx.range))]);
-  if (!academic && !fees) throw new Error("Couldn't load the school's figures.");
+  if (!academic && !fees) throw new Error(tr("Couldn't load the school's figures."));
   const items: AlertItem[] = [];
   if (fees && fees.overdueCount > 0) {
     items.push({
       id: "fees-overdue",
       severity: fees.overdueAmount >= 1_00_000 ? "critical" : "warning",
-      title: `${formatInrCompact(fees.overdueAmount)} in overdue fees`,
-      detail: `${fees.overdueCount} overdue invoice${fees.overdueCount === 1 ? "" : "s"} need follow-up.`,
+      title: tr("{{amount}} in overdue fees", { amount: formatInrCompact(fees.overdueAmount) }),
+      detail:
+        fees.overdueCount === 1
+          ? tr("{{count}} overdue invoice need follow-up.", { count: fees.overdueCount })
+          : tr("{{count}} overdue invoices need follow-up.", { count: fees.overdueCount }),
       href: "/fees",
     });
   }
   if (academic) {
     const low = academic.sectionAttendance.filter((s) => s.percent !== null && s.percent < LOW_ATTENDANCE_PERCENT);
     for (const s of low.slice(0, 3)) {
-      items.push({ id: `low-${s.sectionId}`, severity: "warning", title: `Low attendance in ${s.label}`, detail: `${Math.round(s.percent!)}% present today.`, href: "/attendance" });
+      items.push({ id: `low-${s.sectionId}`, severity: "warning", title: tr("Low attendance in {{section}}", { section: s.label }), detail: tr("{{percent}}% present today.", { percent: Math.round(s.percent!) }), href: "/attendance" });
     }
     const unmarked = academic.sectionAttendance.filter((s) => s.marked === 0).length;
     if (unmarked > 0) {
       items.push({
         id: "unmarked",
         severity: "info",
-        title: `${unmarked} section${unmarked === 1 ? " hasn't" : "s haven't"} marked attendance`,
-        detail: "Today's register is still open.",
+        title:
+          unmarked === 1
+            ? tr("{{count}} section hasn't marked attendance", { count: unmarked })
+            : tr("{{count}} sections haven't marked attendance", { count: unmarked }),
+        detail: tr("Today's register is still open."),
         href: "/attendance",
       });
     }
@@ -1018,8 +1031,8 @@ async function alerts(ctx: DashboardContext): Promise<AlertItem[]> {
       items.push({
         id: "staff-leave",
         severity: "info",
-        title: `${academic.staffOnLeaveToday} staff on leave today`,
-        detail: "Check cover for their classes.",
+        title: tr("{{count}} staff on leave today", { count: academic.staffOnLeaveToday }),
+        detail: tr("Check cover for their classes."),
         href: "/staff",
       });
     }

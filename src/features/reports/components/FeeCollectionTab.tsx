@@ -7,24 +7,26 @@ import { CHART_AXIS_TICK, CHART_DANGER, CHART_GRID_COLOR, CHART_PRIMARY, CHART_T
 import { getFeeCollectionReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 export default function FeeCollectionTab() {
+  const { t } = useTranslation("reports");
   const { data, isLoading } = useQuery({ queryKey: ["reports", "fee-collection"], queryFn: getFeeCollectionReport });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatTile label="Collected" value={formatCurrency(data.totalCollected)} icon={Wallet} />
-        <StatTile label="Pending" value={formatCurrency(data.totalPending)} icon={WalletCards} />
-        <StatTile label="Overdue" value={formatCurrency(data.totalOverdue)} icon={AlertTriangle} />
-        <StatTile label="Collection rate" value={`${data.collectionRate}%`} icon={Percent} />
+        <StatTile label={t("Collected")} value={formatCurrency(data.totalCollected)} icon={Wallet} />
+        <StatTile label={t("Pending")} value={formatCurrency(data.totalPending)} icon={WalletCards} />
+        <StatTile label={t("Overdue")} value={formatCurrency(data.totalOverdue)} icon={AlertTriangle} />
+        <StatTile label={t("Collection rate")} value={`${data.collectionRate}%`} icon={Percent} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Fee collection</CardTitle>
-          <CardDescription>Collected (by payment date) vs. pending (by due date) over the last 6 months.</CardDescription>
+          <CardTitle>{t("Fee collection")}</CardTitle>
+          <CardDescription>{t("Collected (by payment date) vs. pending (by due date) over the last 6 months.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-72 w-full">
@@ -41,8 +43,8 @@ export default function FeeCollectionTab() {
                 />
                 <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => formatCurrency(Number(value))} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="pending" name="Pending" fill={CHART_DANGER} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="collected" name="Collected" fill={CHART_PRIMARY} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="pending" name={t("Pending")} fill={CHART_DANGER} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="collected" name={t("Collected")} fill={CHART_PRIMARY} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

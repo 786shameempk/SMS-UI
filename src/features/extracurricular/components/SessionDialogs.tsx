@@ -12,6 +12,7 @@ import { ATTENDANCE_LABEL, RECURRENCE_LABEL } from "../constants";
 import { SelectField, formatDate, formatTime, options, todayIso } from "../shared";
 import type { Activity, Recurrence, Session, SessionAttendanceStatus, SessionInput } from "../types";
 
+import { useTranslation } from "react-i18next";
 interface FormState {
   activityId: string;
   teamId: string;
@@ -43,6 +44,7 @@ export function SessionFormDialog({
   submitting: boolean;
   onSubmit: (input: SessionInput) => Promise<void>;
 }) {
+  const { t: tr } = useTranslation("extracurricular");
   const [v, setV] = useState<FormState>(blank());
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
@@ -91,8 +93,8 @@ export function SessionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{session ? "Reschedule session" : "New session"}</DialogTitle>
-          <DialogDescription>The venue, the instructor and the team are checked for clashes before anything is saved.</DialogDescription>
+          <DialogTitle>{session ? tr("Reschedule session") : tr("New session")}</DialogTitle>
+          <DialogDescription>{tr("The venue, the instructor and the team are checked for clashes before anything is saved.")}</DialogDescription>
         </DialogHeader>
         <form
           className="space-y-4"
@@ -102,45 +104,45 @@ export function SessionFormDialog({
             void submit();
           }}
         >
-          <FormField label="Activity" htmlFor="ses-activity" required error={errors.activityId}>
-            <SelectField id="ses-activity" value={v.activityId || undefined} onChange={(x) => { set("activityId", x ?? ""); set("teamId", ""); }} items={activities.map((a) => ({ value: a.id, label: a.name }))} placeholder="Choose an activity" disabled={Boolean(session)} />
+          <FormField label={tr("Activity")} htmlFor="ses-activity" required error={errors.activityId}>
+            <SelectField id="ses-activity" value={v.activityId || undefined} onChange={(x) => { set("activityId", x ?? ""); set("teamId", ""); }} items={activities.map((a) => ({ value: a.id, label: a.name }))} placeholder={tr("Choose an activity")} disabled={Boolean(session)} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Title" htmlFor="ses-title" required error={errors.title}>
+            <FormField label={tr("Title")} htmlFor="ses-title" required error={errors.title}>
               <Input id="ses-title" value={v.title} onChange={(e) => set("title", e.target.value)} aria-invalid={errors.title ? true : undefined} />
             </FormField>
-            <FormField label="Team" htmlFor="ses-team" optional hint="Leave empty for the whole activity">
+            <FormField label={tr("Team")} htmlFor="ses-team" optional hint={tr("Leave empty for the whole activity")}>
               <SelectField id="ses-team" value={v.teamId || undefined} onChange={(x) => set("teamId", x ?? "")} allLabel="Whole activity" items={(teams.data ?? []).map((t) => ({ value: t.id, label: t.name }))} />
             </FormField>
-            <FormField label="Date" htmlFor="ses-date" required error={errors.date}>
+            <FormField label={tr("Date")} htmlFor="ses-date" required error={errors.date}>
               <Input id="ses-date" type="date" value={v.date} onChange={(e) => set("date", e.target.value)} />
             </FormField>
             <div className="grid grid-cols-2 gap-3">
-              <FormField label="Starts" htmlFor="ses-start" required error={errors.startTime}>
+              <FormField label={tr("Starts")} htmlFor="ses-start" required error={errors.startTime}>
                 <Input id="ses-start" type="time" value={v.startTime} onChange={(e) => set("startTime", e.target.value)} />
               </FormField>
-              <FormField label="Ends" htmlFor="ses-end" required error={errors.endTime}>
+              <FormField label={tr("Ends")} htmlFor="ses-end" required error={errors.endTime}>
                 <Input id="ses-end" type="time" value={v.endTime} onChange={(e) => set("endTime", e.target.value)} aria-invalid={errors.endTime ? true : undefined} />
               </FormField>
             </div>
-            <FormField label="Venue" htmlFor="ses-venue" optional>
+            <FormField label={tr("Venue")} htmlFor="ses-venue" optional>
               <Input id="ses-venue" value={v.venue} onChange={(e) => set("venue", e.target.value)} />
             </FormField>
-            <FormField label="Instructor" htmlFor="ses-instructor" optional>
+            <FormField label={tr("Instructor")} htmlFor="ses-instructor" optional>
               <Input id="ses-instructor" value={v.instructorName} onChange={(e) => set("instructorName", e.target.value)} />
             </FormField>
           </div>
           {!session && (
             <div className="grid gap-4 rounded-lg border border-border p-3 sm:grid-cols-3">
-              <FormField label="Repeats" htmlFor="ses-repeat">
+              <FormField label={tr("Repeats")} htmlFor="ses-repeat">
                 <SelectField id="ses-repeat" value={v.recurrence} onChange={(x) => x && set("recurrence", x)} items={options(RECURRENCE_LABEL)} />
               </FormField>
               {v.recurrence !== "None" && (
                 <>
-                  <FormField label="Until" htmlFor="ses-until" optional error={errors.repeatUntil}>
+                  <FormField label={tr("Until")} htmlFor="ses-until" optional error={errors.repeatUntil}>
                     <Input id="ses-until" type="date" value={v.repeatUntil} onChange={(e) => set("repeatUntil", e.target.value)} />
                   </FormField>
-                  <FormField label="Or number of sessions" htmlFor="ses-count" optional error={errors.repeatCount}>
+                  <FormField label={tr("Or number of sessions")} htmlFor="ses-count" optional error={errors.repeatCount}>
                     <Input id="ses-count" inputMode="numeric" value={v.repeatCount} onChange={(e) => set("repeatCount", e.target.value)} />
                   </FormField>
                 </>
@@ -149,10 +151,10 @@ export function SessionFormDialog({
           )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {session ? "Save" : v.recurrence === "None" ? "Create session" : "Create series"}
+              {session ? tr("Save") : v.recurrence === "None" ? tr("Create session") : tr("Create series")}
             </Button>
           </DialogFooter>
         </form>
@@ -172,6 +174,7 @@ export function CancelSessionDialog({
   submitting: boolean;
   onSubmit: (reason: string) => Promise<void>;
 }) {
+  const { t } = useTranslation("extracurricular");
   const [reason, setReason] = useState("");
   const [touched, setTouched] = useState(false);
   useEffect(() => {
@@ -182,9 +185,9 @@ export function CancelSessionDialog({
     <Dialog open={Boolean(session)} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Cancel session</DialogTitle>
+          <DialogTitle>{t("Cancel session")}</DialogTitle>
           <DialogDescription>
-            {session?.title} on {formatDate(session?.date)}
+            {session?.title} {t("on")} {formatDate(session?.date)}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -196,15 +199,15 @@ export function CancelSessionDialog({
             if (reason.trim()) void onSubmit(reason.trim());
           }}
         >
-          <FormField label="Reason" htmlFor="cancel-reason" required error={touched && !reason.trim() ? "Say why the session is cancelled" : undefined}>
+          <FormField label={t("Reason")} htmlFor="cancel-reason" required error={touched && !reason.trim() ? "Say why the session is cancelled" : undefined}>
             <Textarea id="cancel-reason" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
           </FormField>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Keep session
+              {t("Keep session")}
             </Button>
             <Button type="submit" variant="destructive" loading={submitting}>
-              Cancel session
+              {t("Cancel session")}
             </Button>
           </DialogFooter>
         </form>
@@ -228,6 +231,7 @@ export function AttendanceDialog({
   readOnly: boolean;
   onSubmit: (marks: { studentId: string; status: SessionAttendanceStatus }[]) => Promise<void>;
 }) {
+  const { t } = useTranslation("extracurricular");
   const register = useQuery({ queryKey: ["extracurricular", "register", session?.id], queryFn: () => getSessionAttendance(session!.id), enabled: Boolean(session), staleTime: 0 });
   const [marks, setMarks] = useState<Record<string, SessionAttendanceStatus | undefined>>({});
 
@@ -243,23 +247,21 @@ export function AttendanceDialog({
     <Dialog open={Boolean(session)} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Attendance</DialogTitle>
+          <DialogTitle>{t("Attendance")}</DialogTitle>
           <DialogDescription>
             {session?.title} · {formatDate(session?.date)} · {formatTime(session?.startTime)}–{formatTime(session?.endTime)}
           </DialogDescription>
         </DialogHeader>
         {register.isLoading && <Skeleton className="h-40 w-full" />}
         {register.isError && <ErrorState onRetry={() => register.refetch()} retrying={register.isFetching} />}
-        {register.data && rows.length === 0 && <EmptyState size="sm" bare title="Nobody to mark" description="Approved students of this activity (or the team's members) appear here." />}
+        {register.data && rows.length === 0 && <EmptyState size="sm" bare title={t("Nobody to mark")} description={t("Approved students of this activity (or the team's members) appear here.")} />}
         {rows.length > 0 && (
           <div className="space-y-3">
             {!readOnly && (
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-muted-foreground">
-                  {marked} of {rows.length} marked
-                </p>
+                <p className="text-sm text-muted-foreground">{t("{{marked}} of {{length}} marked", { marked, length: rows.length })}</p>
                 <Button type="button" size="sm" variant="outline" onClick={() => markAll("Present")}>
-                  Mark everyone present
+                  {t("Mark everyone present")}
                 </Button>
               </div>
             )}
@@ -267,7 +269,7 @@ export function AttendanceDialog({
               {rows.map((r) => (
                 <li key={r.studentId} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                   <span className="text-sm font-medium">{r.studentName}</span>
-                  <div role="radiogroup" aria-label={`Attendance for ${r.studentName}`} className="flex gap-1">
+                  <div role="radiogroup" aria-label={t("Attendance for {{studentName}}", { studentName: r.studentName })} className="flex gap-1">
                     {ORDER.map((status) => (
                       <button
                         key={status}
@@ -293,7 +295,7 @@ export function AttendanceDialog({
         )}
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            {readOnly ? "Close" : "Cancel"}
+            {readOnly ? t("Close") : t("Cancel")}
           </Button>
           {!readOnly && (
             <Button
@@ -302,7 +304,7 @@ export function AttendanceDialog({
               disabled={marked === 0}
               onClick={() => void onSubmit(rows.filter((r) => marks[r.studentId]).map((r) => ({ studentId: r.studentId, status: marks[r.studentId]! })))}
             >
-              Save attendance
+              {t("Save attendance")}
             </Button>
           )}
         </DialogFooter>

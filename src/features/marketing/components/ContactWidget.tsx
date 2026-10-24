@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, ChevronDown, GraduationCap, Loader2, MessageCircle, Send, X } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ function BrandAvatar({ className }: { className?: string }) {
 export default function ContactWidget({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation("marketing");
 
   const {
     register,
@@ -101,12 +103,12 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div className="fixed bottom-4 end-4 z-[60] flex flex-col items-end gap-3 sm:bottom-6 sm:end-6">
       <AnimatePresence>
         {open && (
           <motion.div
             role="dialog"
-            aria-label="Contact us"
+            aria-label={t("Contact us")}
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -122,17 +124,17 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
               />
               <BrandAvatar className="relative h-10 w-10" />
               <div className="relative min-w-0 flex-1">
-                <p className="text-[15px] font-bold leading-tight">Have a question?</p>
+                <p className="text-[15px] font-bold leading-tight">{t("Have a question?")}</p>
                 <p className="flex items-center gap-1.5 text-xs text-white/85">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-300" />
-                  School Sphere team &middot; usually replies within a day
+                  {t("School Sphere team · usually replies within a day")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
                 className="relative flex h-8 w-8 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/15"
-                aria-label="Minimise"
+                aria-label={t("Minimise")}
               >
                 <ChevronDown className="h-5 w-5" />
               </button>
@@ -144,12 +146,12 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-600">
                     <CheckCircle2 className="h-7 w-7" />
                   </div>
-                  <p className="mt-4 text-base font-bold text-foreground">Thanks — message received!</p>
+                  <p className="mt-4 text-base font-bold text-foreground">{t("Thanks — message received!")}</p>
                   <p className="mt-1.5 text-sm text-muted-foreground">
-                    A member of our team will get back to you shortly using the details you shared.
+                    {t("A member of our team will get back to you shortly using the details you shared.")}
                   </p>
                   <Button variant="outline" size="sm" className="mt-5" onClick={startOver}>
-                    Send another message
+                    {t("Send another message")}
                   </Button>
                 </div>
               ) : (
@@ -157,16 +159,16 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                   {/* Greeting bubble */}
                   <div className="flex items-start gap-2.5">
                     <BrandAvatar className="h-8 w-8 ring-0" />
-                    <div className="rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
-                      Enter your question below and a representative will get right back to you.
+                    <div className="rounded-2xl rounded-ss-sm bg-secondary px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
+                      {t("Enter your question below and a representative will get right back to you.")}
                     </div>
                   </div>
 
                   <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-3" noValidate>
                     <div className="space-y-3 rounded-xl border border-border p-3">
                       <div>
-                        <Input placeholder="Name *" autoComplete="name" aria-label="Name" {...register("name")} />
-                        {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+                        <Input placeholder={t("Name *")} autoComplete="name" aria-label={t("Name")} {...register("name")} />
+                        {errors.name && <p className="mt-1 text-xs text-red-600">{t(errors.name.message ?? "")}</p>}
                       </div>
 
                       <div>
@@ -177,8 +179,8 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                             render={({ field }) => (
                               <select
                                 {...field}
-                                aria-label="Country code"
-                                className="cursor-pointer border-r border-input bg-secondary/60 pl-2 pr-1 text-sm text-foreground outline-none"
+                                aria-label={t("Country code")}
+                                className="cursor-pointer border-e border-input bg-secondary/60 ps-2 pe-1 text-sm text-foreground outline-none"
                               >
                                 {COUNTRY_CODES.map((c) => (
                                   <option key={c.code} value={c.dial}>
@@ -192,15 +194,15 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                             type="tel"
                             inputMode="tel"
                             autoComplete="tel-national"
-                            placeholder="Phone"
-                            aria-label="Phone"
+                            placeholder={t("Phone")}
+                            aria-label={t("Phone")}
                             className="min-w-0 flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
                             {...register("phone")}
                           />
                         </div>
                         {/* The "phone or email" error is shown once, under email, rather than on both fields. */}
                         {errors.phone && errors.phone.message !== REACH_ME_MESSAGE && (
-                          <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>
+                          <p className="mt-1 text-xs text-red-600">{t(errors.phone.message ?? "")}</p>
                         )}
                       </div>
 
@@ -208,22 +210,22 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                         <Input
                           type="email"
                           inputMode="email"
-                          placeholder="Email"
+                          placeholder={t("Email")}
                           autoComplete="email"
-                          aria-label="Email"
+                          aria-label={t("Email")}
                           aria-invalid={Boolean(errors.email)}
                           {...register("email")}
                         />
                         {errors.email ? (
-                          <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                          <p className="mt-1 text-xs text-red-600">{t(errors.email.message ?? "")}</p>
                         ) : (
-                          <p className="mt-1 text-[11px] text-muted-foreground">Phone or email — at least one is required.</p>
+                          <p className="mt-1 text-[11px] text-muted-foreground">{t("Phone or email — at least one is required.")}</p>
                         )}
                       </div>
 
                       <div>
-                        <Textarea rows={3} aria-label="Message" className="resize-none" {...register("message")} />
-                        {errors.message && <p className="mt-1 text-xs text-red-600">{errors.message.message}</p>}
+                        <Textarea rows={3} aria-label={t("Message")} className="resize-none" {...register("message")} />
+                        {errors.message && <p className="mt-1 text-xs text-red-600">{t(errors.message.message ?? "")}</p>}
                       </div>
                     </div>
 
@@ -238,18 +240,18 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                             className="mt-0.5"
                           />
                           <span className="text-xs leading-relaxed text-muted-foreground">
-                            By submitting you agree to receive SMS or e-mails for the provided channel. Rates may be applied.
+                            {t("By submitting you agree to receive SMS or e-mails for the provided channel. Rates may be applied.")}
                           </span>
                         </label>
                       )}
                     />
-                    {errors.consent && <p className="-mt-1 text-xs text-red-600">{errors.consent.message}</p>}
-                    {error && <p className="text-xs text-red-600">{error}</p>}
+                    {errors.consent && <p className="-mt-1 text-xs text-red-600">{t(errors.consent.message ?? "")}</p>}
+                    {error && <p className="text-xs text-red-600">{t(error)}</p>}
 
                     <div className="flex justify-center pt-1">
                       <Button type="submit" size="lg" disabled={isSubmitting} className="min-w-36">
                         {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                        Send
+                        {t("Send")}
                         {!isSubmitting && <Send className="h-4 w-4" />}
                       </Button>
                     </div>
@@ -259,7 +261,7 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
             </div>
 
             <div className="border-t border-border py-2 text-center text-[11px] text-muted-foreground">
-              Powered by <span className="font-semibold text-brand-600">School Sphere</span>
+              <Trans t={t} i18nKey="Powered by <b>School Sphere</b>" components={{ b: <span className="font-semibold text-brand-600" /> }} />
             </div>
           </motion.div>
         )}
@@ -273,7 +275,7 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
         whileTap={{ scale: 0.95 }}
         className="relative flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg shadow-brand-700/30 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-200"
         style={{ background: BRAND_GRADIENT }}
-        aria-label={open ? "Close chat" : "Contact us"}
+        aria-label={open ? t("Close chat") : t("Contact us")}
         aria-expanded={open}
       >
         {!open && <span className="absolute inset-0 animate-ping rounded-full bg-brand-400 opacity-20" />}

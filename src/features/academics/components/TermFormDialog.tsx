@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TERM_STATUSES } from "../constants";
 import type { AcademicYear, Term, TermFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const termFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   academicYearId: z.string().min(1, "Select an academic year"),
@@ -36,6 +37,7 @@ export default function TermFormDialog({
   onSubmit: (values: TermFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("academics");
   const isEdit = Boolean(term);
   const {
     register,
@@ -59,25 +61,25 @@ export default function TermFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit term" : "New term"}</DialogTitle>
-          <DialogDescription>Terms/semesters divide an academic year for grading and scheduling.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit term") : t("New term")}</DialogTitle>
+          <DialogDescription>{t("Terms/semesters divide an academic year for grading and scheduling.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Name</Label>
-            <Input id="name" placeholder="e.g. Term 1" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            <Label htmlFor="name" required>{t("Name")}</Label>
+            <Input id="name" placeholder={t("e.g. Term 1")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
             {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="academicYearId" required>Academic year</Label>
+            <Label htmlFor="academicYearId" required>{t("Academic year")}</Label>
             <Controller
               control={control}
               name="academicYearId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="academicYearId">
-                    <SelectValue placeholder="Select an academic year" />
+                    <SelectValue placeholder={t("Select an academic year")} />
                   </SelectTrigger>
                   <SelectContent>
                     {academicYears.map((y) => (
@@ -94,19 +96,19 @@ export default function TermFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="startDate" required>Start date</Label>
+              <Label htmlFor="startDate" required>{t("Start date")}</Label>
               <Input id="startDate" type="date" aria-invalid={errors.startDate ? true : undefined} {...register("startDate")} />
               {errors.startDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endDate" required>End date</Label>
+              <Label htmlFor="endDate" required>{t("End date")}</Label>
               <Input id="endDate" type="date" aria-invalid={errors.endDate ? true : undefined} {...register("endDate")} />
               {errors.endDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endDate.message}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="status" required>Status</Label>
+            <Label htmlFor="status" required>{t("Status")}</Label>
             <Controller
               control={control}
               name="status"
@@ -129,10 +131,10 @@ export default function TermFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create term"}
+              {isEdit ? t("Save changes") : t("Create term")}
             </Button>
           </DialogFooter>
         </form>

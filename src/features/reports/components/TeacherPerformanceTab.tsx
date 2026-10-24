@@ -6,25 +6,27 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, CHART_TOOLTIP_STYLE }
 import { getTeacherPerformanceReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 export default function TeacherPerformanceTab() {
+  const { t: tr } = useTranslation("reports");
   const { data = [], isLoading } = useQuery({ queryKey: ["reports", "teacher-performance"], queryFn: getTeacherPerformanceReport });
 
   const overallAverage = data.length ? Math.round(data.reduce((sum, t) => sum + t.averageScore, 0) / data.length) : 0;
   const top10 = data.slice(0, 10);
 
-  if (isLoading) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground py-10 text-center">{tr("Loading…")}</p>;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatTile label="Teachers with classes" value={String(data.length)} icon={Users} />
-        <StatTile label="School-wide average" value={`${overallAverage}%`} icon={TrendingUp} />
+        <StatTile label={tr("Teachers with classes")} value={String(data.length)} icon={Users} />
+        <StatTile label={tr("School-wide average")} value={`${overallAverage}%`} icon={TrendingUp} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Average class performance by teacher</CardTitle>
-          <CardDescription>Each teacher's average across the classes/subjects they teach (top 10).</CardDescription>
+          <CardTitle>{tr("Average class performance by teacher")}</CardTitle>
+          <CardDescription>{tr("Each teacher's average across the classes/subjects they teach (top 10).")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-80 w-full">

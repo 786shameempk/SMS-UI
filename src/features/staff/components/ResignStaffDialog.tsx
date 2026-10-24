@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +29,7 @@ export default function ResignStaffDialog({
   onSubmit: (values: ResignStaffFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("staff");
   const {
     register,
     handleSubmit,
@@ -46,28 +48,28 @@ export default function ResignStaffDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Record resignation</DialogTitle>
+          <DialogTitle>{t("Record resignation")}</DialogTitle>
           <DialogDescription>
-            {staff ? `Mark ${staff.firstName} ${staff.lastName} as resigned.` : ""}
+            {staff ? t("Mark {{name}} as resigned.", { name: `${staff.firstName} ${staff.lastName}` }) : ""}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="lastWorkingDate" required>Last working date</Label>
+            <Label htmlFor="lastWorkingDate" required>{t("Last working date")}</Label>
             <Input id="lastWorkingDate" type="date" aria-invalid={errors.lastWorkingDate ? true : undefined} {...register("lastWorkingDate")} />
-            {errors.lastWorkingDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.lastWorkingDate.message}</p>}
+            {errors.lastWorkingDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.lastWorkingDate.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="reason" required>Reason</Label>
+            <Label htmlFor="reason" required>{t("Reason")}</Label>
             <Textarea id="reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
-            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.reason.message ?? "")}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" variant="destructive" loading={submitting}>
-              Confirm resignation
+              {t("Confirm resignation")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router-dom";
 import { LifeBuoy, LogIn } from "lucide-react";
 import AppLayout from "@/layouts/AppLayout";
@@ -9,6 +10,7 @@ import { useViewer } from "../useViewer";
 
 /** Help for people who are not signed in: the same pages, in a bare shell with a way to sign in. */
 function PublicShell() {
+  const { t } = useTranslation("help");
   return (
     <div className="min-h-dvh bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur">
@@ -17,13 +19,13 @@ function PublicShell() {
             <BrandMark />
             <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
               <LifeBuoy className="h-4 w-4 text-primary-text" aria-hidden="true" />
-              Help Center
+              {t("Help Center")}
             </span>
           </Link>
           <Button asChild size="sm">
             <Link to="/login">
               <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
-              Sign in
+              {t("Sign in")}
             </Link>
           </Button>
         </div>

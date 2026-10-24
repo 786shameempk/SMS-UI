@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -29,6 +30,7 @@ export default function AdmissionRegistrationDialog({
   submitting: boolean;
   onSubmit: (values: AdmissionRegistrationFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("students");
   const {
     register,
     handleSubmit,
@@ -46,9 +48,11 @@ export default function AdmissionRegistrationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Register application</DialogTitle>
+          <DialogTitle>{t("Register application")}</DialogTitle>
           <DialogDescription>
-            Formalize {application.applicantFirstName} {application.applicantLastName}'s inquiry into a registered application.
+            {t("Formalize {{name}}'s inquiry into a registered application.", {
+              name: `${application.applicantFirstName} ${application.applicantLastName}`,
+            })}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -56,20 +60,20 @@ export default function AdmissionRegistrationDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="reg-address" required>Address</Label>
+            <Label htmlFor="reg-address" required>{t("Address")}</Label>
             <Input id="reg-address" aria-invalid={errors.address ? true : undefined} {...register("address")} />
-            {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.address.message}</p>}
+            {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.address.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="reg-previousSchool" optional>Previous school</Label>
+            <Label htmlFor="reg-previousSchool" optional>{t("Previous school")}</Label>
             <Input id="reg-previousSchool" {...register("previousSchool")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Register application
+              {t("Register application")}
             </Button>
           </DialogFooter>
         </form>

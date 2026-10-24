@@ -6,23 +6,25 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, CHART_TOOLTIP_STYLE }
 import { getStudentPerformanceReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 export default function StudentPerformanceTab() {
+  const { t } = useTranslation("reports");
   const { data, isLoading } = useQuery({ queryKey: ["reports", "student-performance"], queryFn: getStudentPerformanceReport });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatTile label="Overall average" value={`${data.overallAverage}%`} icon={TrendingUp} />
-        <StatTile label="Exams tracked" value={String(data.examTrend.length)} icon={ListChecks} />
-        <StatTile label="Latest exam" value={data.latestExamName ?? "—"} icon={GraduationCap} />
+        <StatTile label={t("Overall average")} value={`${data.overallAverage}%`} icon={TrendingUp} />
+        <StatTile label={t("Exams tracked")} value={String(data.examTrend.length)} icon={ListChecks} />
+        <StatTile label={t("Latest exam")} value={data.latestExamName ?? "—"} icon={GraduationCap} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Average score by exam</CardTitle>
-          <CardDescription>School-wide average percentage across every exam, in date order.</CardDescription>
+          <CardTitle>{t("Average score by exam")}</CardTitle>
+          <CardDescription>{t("School-wide average percentage across every exam, in date order.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-64 w-full">
@@ -41,8 +43,8 @@ export default function StudentPerformanceTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Average by class</CardTitle>
-          <CardDescription>{data.latestExamName ? `Class averages for "${data.latestExamName}".` : "No exams recorded yet."}</CardDescription>
+          <CardTitle>{t("Average by class")}</CardTitle>
+          <CardDescription>{data.latestExamName ? t("Class averages for \"{{latestExamName}}\".", { latestExamName: data.latestExamName }) : t("No exams recorded yet.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-64 w-full">

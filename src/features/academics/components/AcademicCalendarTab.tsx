@@ -16,6 +16,7 @@ import CalendarEventFormDialog from "./CalendarEventFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 import { useIsTeacher } from "@/lib/roleAccess";
 
+import { useTranslation } from "react-i18next";
 const TYPE_VARIANT: Record<CalendarEventType, "info" | "warning" | "danger" | "neutral"> = {
   term_start: "info",
   term_end: "info",
@@ -29,6 +30,7 @@ function typeLabel(type: CalendarEventType): string {
 }
 
 export default function AcademicCalendarTab() {
+  const { t: tr } = useTranslation("academics");
   const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: events = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "calendar-events"], queryFn: listCalendarEvents });
@@ -45,7 +47,7 @@ export default function AcademicCalendarTab() {
     mutationFn: createCalendarEvent,
     onSuccess: () => {
       invalidate();
-      toast.success("Event added");
+      toast.success(tr("Event added"));
       setFormOpen(false);
     },
   });
@@ -54,7 +56,7 @@ export default function AcademicCalendarTab() {
     mutationFn: ({ id, values }: { id: string; values: CalendarEventFormValues }) => updateCalendarEvent(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Event updated");
+      toast.success(tr("Event updated"));
       setFormOpen(false);
       setEditing(null);
     },
@@ -64,7 +66,7 @@ export default function AcademicCalendarTab() {
     mutationFn: deleteCalendarEvent,
     onSuccess: () => {
       invalidate();
-      toast.success("Event deleted");
+      toast.success(tr("Event deleted"));
       setDeleteTarget(null);
     },
   });
@@ -80,7 +82,7 @@ export default function AcademicCalendarTab() {
   const columns: ColumnDef<CalendarEvent, unknown>[] = [
     {
       accessorKey: "title",
-      header: "Event",
+      header: tr("Event"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.title}</p>
@@ -90,12 +92,12 @@ export default function AcademicCalendarTab() {
     },
     {
       accessorKey: "type",
-      header: "Type",
+      header: tr("Type"),
       cell: ({ row }) => <Badge variant={TYPE_VARIANT[row.original.type]}>{typeLabel(row.original.type)}</Badge>,
     },
     {
       id: "dates",
-      header: "Dates",
+      header: tr("Dates"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.startDate}
@@ -105,7 +107,7 @@ export default function AcademicCalendarTab() {
     },
     {
       id: "academicYear",
-      header: "Academic year",
+      header: tr("Academic year"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {academicYears.find((y) => y.id === row.original.academicYearId)?.name ?? "—"}
@@ -126,11 +128,11 @@ export default function AcademicCalendarTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {tr("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(event)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {tr("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -143,13 +145,13 @@ export default function AcademicCalendarTab() {
       <DataTableToolbar>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="Filter by type" />
+            <SelectValue placeholder={tr("Filter by type")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All event types</SelectItem>
+            <SelectItem value="all">{tr("All event types")}</SelectItem>
             {CALENDAR_EVENT_TYPES.map((t) => (
               <SelectItem key={t.value} value={t.value}>
-                {t.label}
+                {tr(t.label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -162,12 +164,12 @@ export default function AcademicCalendarTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          Add event
+          {tr("Add event")}
         </Button>
         )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No calendar events yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={tr("No calendar events yet.")} />
 
       <CalendarEventFormDialog
         open={formOpen}
@@ -187,9 +189,9 @@ export default function AcademicCalendarTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete calendar event"
-        description={`This will permanently delete "${deleteTarget?.title}".`}
-        confirmLabel="Delete"
+        title={tr("Delete calendar event")}
+        description={tr("This will permanently delete \"{{title}}\".", { title: deleteTarget?.title })}
+        confirmLabel={tr("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

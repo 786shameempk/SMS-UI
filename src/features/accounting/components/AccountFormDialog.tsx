@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ export default function AccountFormDialog({
   submitting: boolean;
   onSubmit: (values: AccountFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("accounting");
   const isEdit = Boolean(account);
   const {
     register,
@@ -54,8 +56,8 @@ export default function AccountFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit account" : "New account"}</DialogTitle>
-          <DialogDescription>Accounts are the categories every journal entry posts against.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit account") : t("New account")}</DialogTitle>
+          <DialogDescription>{t("Accounts are the categories every journal entry posts against.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) => onSubmit({ ...values, description: values.description?.trim() || undefined }))}
@@ -63,12 +65,12 @@ export default function AccountFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="acc-code" required>Code</Label>
-              <Input id="acc-code" placeholder="e.g. 5060" aria-invalid={errors.code ? true : undefined} {...register("code")} />
-              {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
+              <Label htmlFor="acc-code" required>{t("Code")}</Label>
+              <Input id="acc-code" placeholder={t("e.g. 5060")} aria-invalid={errors.code ? true : undefined} {...register("code")} />
+              {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.code.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="acc-type" required>Type</Label>
+              <Label htmlFor="acc-type" required>{t("Type")}</Label>
               <Controller
                 control={control}
                 name="type"
@@ -80,7 +82,7 @@ export default function AccountFormDialog({
                     <SelectContent>
                       {ACCOUNT_TYPE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -91,22 +93,22 @@ export default function AccountFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="acc-name" required>Name</Label>
-            <Input id="acc-name" placeholder="e.g. Sports Equipment Expense" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="acc-name" required>{t("Name")}</Label>
+            <Input id="acc-name" placeholder={t("e.g. Sports Equipment Expense")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="acc-description" optional>Description</Label>
+            <Label htmlFor="acc-description" optional>{t("Description")}</Label>
             <Textarea id="acc-description" rows={2} {...register("description")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create account"}
+              {isEdit ? t("Save changes") : t("Create account")}
             </Button>
           </DialogFooter>
         </form>

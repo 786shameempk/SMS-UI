@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, Plus, X } from "lucide-react";
@@ -19,6 +20,7 @@ const STATUS_CONFIG: Record<LeaveStatus, { label: string; variant: "success" | "
 };
 
 export default function LeaveRequestsTab() {
+  const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const { data: allRequests = [], isLoading, isError, refetch } = useQuery({ queryKey: ["staff", "leave"], queryFn: listLeaveRequests });
   const { data: staffList = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
@@ -35,7 +37,7 @@ export default function LeaveRequestsTab() {
     mutationFn: createLeaveRequest,
     onSuccess: () => {
       invalidate();
-      toast.success("Leave request created");
+      toast.success(t("Leave request created"));
       setFormOpen(false);
     },
   });
@@ -45,7 +47,13 @@ export default function LeaveRequestsTab() {
     onSuccess: (req) => {
       invalidate();
       const name = staffOf(req.staffId);
-      toast.success(`${name} — leave ${req.status}`);
+      toast.success(
+        req.status === "approved"
+          ? t("{{name}} — leave approved", { name })
+          : req.status === "rejected"
+            ? t("{{name}} — leave rejected", { name })
+            : t("{{name}} — leave pending", { name }),
+      );
     },
   });
 
@@ -57,19 +65,19 @@ export default function LeaveRequestsTab() {
   const columns: ColumnDef<StaffLeaveRequest, unknown>[] = [
     {
       id: "staff",
-      header: "Staff member",
+      header: t("Staff member"),
       cell: ({ row }) => <span className="text-sm font-medium text-foreground">{staffOf(row.original.staffId)}</span>,
     },
     {
       accessorKey: "leaveType",
-      header: "Type",
+      header: t("Type"),
       cell: ({ row }) => (
-        <span className="text-sm text-secondary-foreground">{LEAVE_TYPES.find((t) => t.value === row.original.leaveType)?.label}</span>
+        <span className="text-sm text-secondary-foreground">{t(LEAVE_TYPES.find((type) => type.value === row.original.leaveType)?.label ?? "")}</span>
       ),
     },
     {
       id: "dates",
-      header: "Dates",
+      header: t("Dates"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {new Date(row.original.fromDate).toLocaleDateString()} - {new Date(row.original.toDate).toLocaleDateString()}
@@ -78,15 +86,15 @@ export default function LeaveRequestsTab() {
     },
     {
       accessorKey: "reason",
-      header: "Reason",
+      header: t("Reason"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground truncate block max-w-[220px]">{row.original.reason}</span>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -104,7 +112,7 @@ export default function LeaveRequestsTab() {
               onClick={() => statusMutation.mutate({ id: req.id, status: "approved" })}
             >
               <Check className="w-3.5 h-3.5" />
-              Approve
+              {t("Approve")}
             </Button>
             <Button
               size="sm"
@@ -113,7 +121,7 @@ export default function LeaveRequestsTab() {
               onClick={() => statusMutation.mutate({ id: req.id, status: "rejected" })}
             >
               <X className="w-3.5 h-3.5" />
-              Reject
+              {t("Reject")}
             </Button>
           </div>
         );
@@ -124,14 +132,14 @@ export default function LeaveRequestsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">{canManage ? "Review and record leave across all staff." : "Request leave for yourself and follow its status."}</p>
+        <p className="text-sm text-muted-foreground">{canManage ? t("Review and record leave across all staff.") : t("Request leave for yourself and follow its status.")}</p>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          {canManage ? "New leave request" : "Request leave"}
+          {canManage ? t("New leave request") : t("Request leave")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={requests} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No leave requests." />
+      <DataTable searchable columns={columns} data={requests} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No leave requests.")} />
 
       <LeaveRequestFormDialog
         open={formOpen}

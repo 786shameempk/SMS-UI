@@ -3,6 +3,7 @@ import { PageContainer, PageHeader } from "@/components/ui/page";
 import { cn } from "@/utils/cn";
 import { useExtracurricularAccess } from "../shared";
 
+import { useTranslation } from "react-i18next";
 interface Section {
   to: string;
   label: string;
@@ -28,6 +29,7 @@ const SECTIONS: Section[] = [
 
 /** The module's frame: a title and a tab bar whose entries depend on who is looking (families see a smaller set). */
 export default function ExtracurricularLayout() {
+  const { t } = useTranslation("extracurricular");
   const access = useExtracurricularAccess();
   const { pathname } = useLocation();
   const sections = SECTIONS.filter((s) => (!s.staffOnly || !access.isFamily) && (!s.manage || access.canManage));
@@ -38,14 +40,14 @@ export default function ExtracurricularLayout() {
   return (
     <PageContainer>
       <PageHeader
-        title="Extra-Curricular"
+        title={t("Extra-Curricular")}
         description={
           access.isFamily
-            ? "Browse activities, ask to join, and follow your child's sessions, events and achievements."
-            : "Activities, houses and teams, schedules and attendance, events, achievements and green campus programs."
+            ? t("Browse activities, ask to join, and follow your child's sessions, events and achievements.")
+            : t("Activities, houses and teams, schedules and attendance, events, achievements and green campus programs.")
         }
       />
-      <nav aria-label="Extra-Curricular sections" className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px">
+      <nav aria-label={t("Extra-Curricular sections")} className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px">
         {sections.map((s) => (
           <NavLink
             key={s.to}
@@ -58,7 +60,7 @@ export default function ExtracurricularLayout() {
               )
             }
           >
-            {s.label}
+            {t(s.label)}
           </NavLink>
         ))}
       </nav>

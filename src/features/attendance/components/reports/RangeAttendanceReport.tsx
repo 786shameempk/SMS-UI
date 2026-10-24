@@ -11,6 +11,7 @@ import { getSectionRoster, listAttendanceRecords } from "../../api";
 import { todayDateKey } from "../../constants";
 import type { AttendanceRecord } from "../../types";
 
+import { useTranslation } from "react-i18next";
 const ALL = "__all__";
 
 interface Tally {
@@ -88,6 +89,7 @@ function daysAgoKey(days: number): string {
 }
 
 export default function RangeAttendanceReport() {
+  const { t } = useTranslation("attendance");
   const [dateFrom, setDateFrom] = useState(daysAgoKey(29));
   const [dateTo, setDateTo] = useState(todayDateKey());
   const [classId, setClassId] = useState(ALL);
@@ -138,18 +140,18 @@ export default function RangeAttendanceReport() {
   return (
     <Card>
       <CardHeader className="flex-row flex-wrap items-end justify-between gap-3">
-        <CardTitle>Attendance by date range</CardTitle>
+        <CardTitle>{t("Attendance by date range")}</CardTitle>
         <div className="flex flex-wrap items-end gap-2">
           <div className="space-y-1.5">
-            <Label htmlFor="range-from">From</Label>
+            <Label htmlFor="range-from">{t("From")}</Label>
             <Input id="range-from" type="date" value={dateFrom} max={dateTo || todayDateKey()} onChange={(e) => setDateFrom(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="range-to">To</Label>
+            <Label htmlFor="range-to">{t("To")}</Label>
             <Input id="range-to" type="date" value={dateTo} min={dateFrom} max={todayDateKey()} onChange={(e) => setDateTo(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>Class</Label>
+            <Label>{t("Class")}</Label>
             <Select
               value={classId}
               onValueChange={(v) => {
@@ -161,7 +163,7 @@ export default function RangeAttendanceReport() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All classes</SelectItem>
+                <SelectItem value={ALL}>{t("All classes")}</SelectItem>
                 {[...classes]
                   .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
                   .map((c) => (
@@ -173,13 +175,13 @@ export default function RangeAttendanceReport() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Section</Label>
+            <Label>{t("Section")}</Label>
             <Select value={sectionId} onValueChange={setSectionId} disabled={classId === ALL}>
               <SelectTrigger className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All sections</SelectItem>
+                <SelectItem value={ALL}>{t("All sections")}</SelectItem>
                 {sectionsOfClass.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.name}
@@ -192,7 +194,7 @@ export default function RangeAttendanceReport() {
       </CardHeader>
       <CardContent>
         {!rangeValid ? (
-          <p className="text-sm text-muted-foreground">Pick a start date that is on or before the end date.</p>
+          <p className="text-sm text-muted-foreground">{t("Pick a start date that is on or before the end date.")}</p>
         ) : (
           <DataTable
             searchable
@@ -202,7 +204,7 @@ export default function RangeAttendanceReport() {
             isError={isError}
             onRetry={() => refetch()}
             exportFileName={`attendance-${dateFrom}-to-${dateTo}`}
-            emptyMessage="No attendance was marked in this date range."
+            emptyMessage={t("No attendance was marked in this date range.")}
           />
         )}
       </CardContent>

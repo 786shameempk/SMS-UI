@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ChevronRight, SearchX } from "lucide-react";
 import { HELP_ROLES, ROLE_LABELS, type HelpRole } from "@/app/routeRegistry";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { useViewer } from "../useViewer";
 export default function HelpRolePage() {
   const { role = "" } = useParams();
   const viewer = useViewer();
+  const { t } = useTranslation("help");
   const valid = (HELP_ROLES as readonly string[]).includes(role);
   const articles = useMemo(() => (valid ? articlesForRole(visibleArticles(helpCatalog.articles, viewer), role as HelpRole) : []), [valid, role, viewer]);
   const byModule = useMemo(() => {
@@ -27,10 +29,10 @@ export default function HelpRolePage() {
       <PageContainer>
         <EmptyState
           icon={SearchX}
-          title="That role is not in the guide"
+          title={t("That role is not in the guide")}
           action={
             <Button asChild variant="outline">
-              <Link to={helpHome}>Back to the Help Center</Link>
+              <Link to={helpHome}>{t("Back to the Help Center")}</Link>
             </Button>
           }
         />
@@ -40,20 +42,20 @@ export default function HelpRolePage() {
 
   return (
     <PageContainer>
-      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+      <nav aria-label={t("Breadcrumb")} className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
         <Link to={helpHome} className="hover:text-foreground">
-          Help Center
+          {t("Help Center")}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         <span aria-current="page" className="font-medium text-foreground">
-          {ROLE_LABELS[role as HelpRole]}
+          {t(ROLE_LABELS[role as HelpRole])}
         </span>
       </nav>
       <header className="space-y-2">
-        <h1 className="text-page-title">Guides for the {ROLE_LABELS[role as HelpRole].toLowerCase()}</h1>
-        <p className="max-w-3xl text-muted-foreground">The articles written for this role. Schools can change what each role can open, so a screen described here may not be on for you.</p>
+        <h1 className="text-page-title">{t("Guides for the {{role}}", { role: t(ROLE_LABELS[role as HelpRole]).toLowerCase() })}</h1>
+        <p className="max-w-3xl text-muted-foreground">{t("The articles written for this role. Schools can change what each role can open, so a screen described here may not be on for you.")}</p>
       </header>
-      {byModule.length === 0 && <p className="text-sm text-muted-foreground">There are no articles for this role yet.</p>}
+      {byModule.length === 0 && <p className="text-sm text-muted-foreground">{t("There are no articles for this role yet.")}</p>}
       {byModule.map(({ id, list }) => (
         <section key={id} className="space-y-2">
           <h2 className="text-base font-semibold text-foreground">

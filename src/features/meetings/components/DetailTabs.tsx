@@ -25,6 +25,7 @@ import { formatBytes, formatDayLabel, formatDuration, formatTime, initials } fro
 import AudiencePicker, { type PickedAudience } from "./AudiencePicker";
 import { AttendanceBadge } from "./Badges";
 
+import { useTranslation } from "react-i18next";
 function EmptyState({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border px-6 py-10 text-center">
@@ -46,6 +47,7 @@ function ListSkeleton() {
 // ─────────────────────────────────────────────────────────────── Participants
 
 export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
+  const { t } = useTranslation("meetings");
   const queryClient = useQueryClient();
   const id = meeting.summary.id;
   const [adding, setAdding] = useState(false);
@@ -57,8 +59,8 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
     mutationFn: () => addParticipants(id, picked.map(({ type, targetId }) => ({ type, targetId }))),
     onSuccess: (r) => {
       void queryClient.invalidateQueries({ queryKey: meetingKeys.detail(id) });
-      toast.success(r.added ? `${r.added} invited` : "Everyone picked was already invited");
-      if (r.unlinkedCount) toast(`${r.unlinkedCount} without a login couldn't be invited.`);
+      toast.success(r.added ? t("{{added}} invited", { added: r.added }) : t("Everyone picked was already invited"));
+      if (r.unlinkedCount) toast(t("{{unlinkedCount}} without a login couldn't be invited.", { unlinkedCount: r.unlinkedCount }));
       setAdding(false);
       setPicked([]);
     },
@@ -87,7 +89,7 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
         </div>
         {meeting.can.manageParticipants && (
           <Button size="sm" variant="outline" onClick={() => setAdding(true)}>
-            <UserPlus className="h-4 w-4" /> Invite more
+            <UserPlus className="h-4 w-4" /> {t("Invite more")}
           </Button>
         )}
       </div>
@@ -102,9 +104,9 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
               <span className="block truncate text-sm font-medium text-foreground">{p.displayName}</span>
               <span className="block truncate text-xs text-muted-foreground">{p.detail ?? p.personType}</span>
             </span>
-            {p.role !== "Attendee" && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-accent-foreground dark:bg-brand-900/40 dark:text-brand-200">Host</span>}
+            {p.role !== "Attendee" && <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-accent-foreground dark:bg-brand-900/40 dark:text-brand-200">{t("Host")}</span>}
             {meeting.can.manageParticipants && p.role === "Attendee" && (
-              <Button size="icon" variant="ghost" aria-label={`Remove ${p.displayName}`} onClick={() => setRemoving({ userId: p.userId, name: p.displayName })}>
+              <Button size="icon" variant="ghost" aria-label={t("Remove {{displayName}}", { displayName: p.displayName })} onClick={() => setRemoving({ userId: p.userId, name: p.displayName })}>
                 <UserMinus className="h-4 w-4" />
               </Button>
             )}
@@ -115,8 +117,8 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Invite more people</DialogTitle>
-            <DialogDescription>They'll get a notification straight away.</DialogDescription>
+            <DialogTitle>{t("Invite more people")}</DialogTitle>
+            <DialogDescription>{t("They'll get a notification straight away.")}</DialogDescription>
           </DialogHeader>
           <AudiencePicker
             meetingType={meeting.summary.meetingType}
@@ -126,9 +128,9 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
             onChange={setPicked}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAdding(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setAdding(false)}>{t("Close")}</Button>
             <Button onClick={() => add.mutate()} disabled={picked.length === 0 || add.isPending}>
-              {add.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Invite
+              {add.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t("Invite")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -137,9 +139,9 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
       <ConfirmDialog
         open={!!removing}
         onOpenChange={(o) => !o && setRemoving(null)}
-        title={`Remove ${removing?.name ?? ""}?`}
-        description="They won't be able to join, even if their class is invited."
-        confirmLabel="Remove"
+        title={t("Remove {{v1}}?", { v1: removing?.name ?? "" })}
+        description={t("They won't be able to join, even if their class is invited.")}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {
@@ -153,6 +155,7 @@ export function ParticipantsTab({ meeting }: { meeting: MeetingDetail }) {
 // ─────────────────────────────────────────────────────────────── Attendance
 
 export function AttendanceTab({ meeting }: { meeting: MeetingDetail }) {
+  const { t } = useTranslation("meetings");
   const id = meeting.summary.id;
   const live = meeting.summary.status === "Live";
   const { data, isLoading } = useQuery({
@@ -163,7 +166,7 @@ export function AttendanceTab({ meeting }: { meeting: MeetingDetail }) {
   const [editing, setEditing] = useState<AttendanceRow | null>(null);
 
   if (isLoading || !data) return <ListSkeleton />;
-  if (data.rows.length === 0) return <EmptyState icon={ClipboardList} title="No one to take attendance for">Invite a class or people first.</EmptyState>;
+  if (data.rows.length === 0) return <EmptyState icon={ClipboardList} title={t("No one to take attendance for")}>{t("Invite a class or people first.")}</EmptyState>;
 
   const upcoming = meeting.summary.status === "Scheduled" || meeting.summary.status === "Draft";
   const summary: Array<[string, number, AttendanceStatus]> = [["Present", data.present, "Present"], ["Late", data.late, "Late"], ["Partial", data.partial, "Partial"], ["Absent", data.absent, "Absent"]];
@@ -181,18 +184,18 @@ export function AttendanceTab({ meeting }: { meeting: MeetingDetail }) {
         </div>
       )}
       <p className="text-xs text-muted-foreground">
-        {upcoming ? "Attendance is taken automatically once the class starts. " : live ? "Updating live. " : data.isFinalized ? "Final. " : ""}
-        Late = joined more than {data.lateAfterMinutes} min after the start; Partial = stayed less than {data.presentMinPercent}% of the time.
+        {upcoming ? t("Attendance is taken automatically once the class starts. ") : live ? t("Updating live. ") : data.isFinalized ? t("Final. ") : ""}
+        {t("Late = joined more than {{minutes}} min after the start; Partial = stayed less than {{percent}}% of the time.", { minutes: data.lateAfterMinutes, percent: data.presentMinPercent })}
       </p>
       <Table stickyHeader containerClassName="rounded-xl border border-border bg-card">
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead>Left</TableHead>
-            <TableHead>Time in class</TableHead>
-            <TableHead>Status</TableHead>
-            {meeting.can.editAttendance && <TableHead className="px-2"><span className="sr-only">Correct</span></TableHead>}
+            <TableHead>{t("Name")}</TableHead>
+            <TableHead>{t("Joined")}</TableHead>
+            <TableHead>{t("Left")}</TableHead>
+            <TableHead>{t("Time in class")}</TableHead>
+            <TableHead>{t("Status")}</TableHead>
+            {meeting.can.editAttendance && <TableHead className="px-2"><span className="sr-only">{t("Correct")}</span></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -203,15 +206,15 @@ export function AttendanceTab({ meeting }: { meeting: MeetingDetail }) {
                 <span className="block text-xs text-muted-foreground">{r.detail}</span>
               </TableCell>
               <TableCell className="tabular-nums">{r.firstJoinUtc ? formatTime(r.firstJoinUtc) : "—"}</TableCell>
-              <TableCell className="tabular-nums">{r.inRoomNow ? <span className="font-medium text-success-strong">In class</span> : r.lastLeaveUtc ? formatTime(r.lastLeaveUtc) : "—"}</TableCell>
+              <TableCell className="tabular-nums">{r.inRoomNow ? <span className="font-medium text-success-strong">{t("In class")}</span> : r.lastLeaveUtc ? formatTime(r.lastLeaveUtc) : "—"}</TableCell>
               <TableCell className="tabular-nums">{formatDuration(r.durationMinutes)}</TableCell>
               <TableCell>
-                {upcoming ? <span className="text-xs text-muted-foreground">Not started</span> : <AttendanceBadge status={r.status} overridden={r.isOverridden} />}
+                {upcoming ? <span className="text-xs text-muted-foreground">{t("Not started")}</span> : <AttendanceBadge status={r.status} overridden={r.isOverridden} />}
                 {r.isOverridden && r.overrideReason && <span className="mt-0.5 block text-[11px] text-muted-foreground">{r.overrideReason}</span>}
               </TableCell>
               {meeting.can.editAttendance && (
-                <TableCell className="px-2 text-right">
-                  <Button size="icon" variant="ghost" aria-label={`Correct attendance for ${r.name}`} onClick={() => setEditing(r)}>
+                <TableCell className="px-2 text-end">
+                  <Button size="icon" variant="ghost" aria-label={t("Correct attendance for {{name}}", { name: r.name })} onClick={() => setEditing(r)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </TableCell>
@@ -226,6 +229,7 @@ export function AttendanceTab({ meeting }: { meeting: MeetingDetail }) {
 }
 
 function CorrectAttendanceDialog({ meetingId, row, onClose }: { meetingId: string; row: AttendanceRow | null; onClose: () => void }) {
+  const { t } = useTranslation("meetings");
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AttendanceStatus>("Present");
   const [reason, setReason] = useState("");
@@ -239,7 +243,7 @@ function CorrectAttendanceDialog({ meetingId, row, onClose }: { meetingId: strin
     mutationFn: () => overrideAttendance(meetingId, row!.userId, status, reason.trim()),
     onSuccess: (sheet) => {
       queryClient.setQueryData(meetingKeys.part(meetingId, "attendance"), sheet);
-      toast.success("Attendance corrected");
+      toast.success(t("Attendance corrected"));
       onClose();
     },
     onError: (err: Error) => toast.error(err.message),
@@ -248,8 +252,8 @@ function CorrectAttendanceDialog({ meetingId, row, onClose }: { meetingId: strin
     <Dialog open={!!row} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Correct attendance</DialogTitle>
-          <DialogDescription>{row?.name}: recorded as {row?.computedStatus}. The change is logged with your reason.</DialogDescription>
+          <DialogTitle>{t("Correct attendance")}</DialogTitle>
+          <DialogDescription>{t("{{name}}: recorded as {{status}}. The change is logged with your reason.", { name: row?.name, status: row?.computedStatus })}</DialogDescription>
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="gap-4">
           <div className="grid grid-cols-2 gap-2">
@@ -261,13 +265,13 @@ function CorrectAttendanceDialog({ meetingId, row, onClose }: { meetingId: strin
             ))}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="attendance-reason">Reason</Label>
-            <Input id="attendance-reason" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Network dropped, was present" />
+            <Label htmlFor="attendance-reason">{t("Reason")}</Label>
+            <Input id="attendance-reason" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} placeholder={t("e.g. Network dropped, was present")} />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={onClose}>{t("Cancel")}</Button>
             <Button type="submit" disabled={!reason.trim() || mutation.isPending}>
-              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save
+              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t("Save")}
             </Button>
           </DialogFooter>
         </form>
@@ -281,6 +285,7 @@ function CorrectAttendanceDialog({ meetingId, row, onClose }: { meetingId: strin
 const MATERIAL_ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.gif,.webp,.mp4,.webm,.mp3";
 
 export function MaterialsTab({ meeting }: { meeting: MeetingDetail }) {
+  const { t } = useTranslation("meetings");
   const queryClient = useQueryClient();
   const id = meeting.summary.id;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -293,7 +298,7 @@ export function MaterialsTab({ meeting }: { meeting: MeetingDetail }) {
 
   const upload = useMutation({
     mutationFn: (file: File) => uploadMaterial(id, file),
-    onSuccess: () => { refresh(); toast.success("Uploaded"); },
+    onSuccess: () => { refresh(); toast.success(t("Uploaded")); },
     onError: (err: Error) => toast.error(err.message),
   });
   const remove = useMutation({ mutationFn: (materialId: string) => deleteMaterial(id, materialId), onSuccess: refresh, onError: (err: Error) => toast.error(err.message) });
@@ -311,22 +316,22 @@ export function MaterialsTab({ meeting }: { meeting: MeetingDetail }) {
               const file = e.target.files?.[0];
               e.target.value = "";
               if (!file) return;
-              if (file.size > 50 * 1024 * 1024) { toast.error("Files can be up to 50 MB."); return; }
+              if (file.size > 50 * 1024 * 1024) { toast.error(t("Files can be up to 50 MB.")); return; }
               upload.mutate(file);
             }}
           />
           <Button size="sm" onClick={() => fileInput.current?.click()} disabled={upload.isPending}>
-            {upload.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Upload file
+            {upload.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {t("Upload file")}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setLinkOpen(true)}>
-            <Plus className="h-4 w-4" /> Link or assignment
+            <Plus className="h-4 w-4" /> {t("Link or assignment")}
           </Button>
         </div>
       )}
 
       {isLoading ? <ListSkeleton /> : data.length === 0 ? (
-        <EmptyState icon={FileText} title="No materials yet">
-          {meeting.can.manageMaterials ? "Share slides, worksheets, links or an assignment with the class." : "Your teacher hasn't shared anything for this class yet."}
+        <EmptyState icon={FileText} title={t("No materials yet")}>
+          {meeting.can.manageMaterials ? t("Share slides, worksheets, links or an assignment with the class.") : t("Your teacher hasn't shared anything for this class yet.")}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
@@ -339,19 +344,19 @@ export function MaterialsTab({ meeting }: { meeting: MeetingDetail }) {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-foreground">{m.title}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {m.kind === "Assignment" ? (m.dueDate ? `Assignment · due ${new Date(m.dueDate).toLocaleDateString()}` : "Assignment") : m.kind === "Link" ? m.url : `${m.fileName} · ${formatBytes(m.sizeBytes)}`}
+                    {m.kind === "Assignment" ? (m.dueDate ? t("Assignment · due {{v1}}", { v1: new Date(m.dueDate).toLocaleDateString() }) : t("Assignment")) : m.kind === "Link" ? m.url : `${m.fileName} · ${formatBytes(m.sizeBytes)}`}
                   </span>
                 </span>
                 {href && (
                   <Button asChild size="sm" variant="outline">
                     <a href={href} target="_blank" rel="noopener noreferrer">
                       {m.kind === "File" ? <Download className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
-                      <span className="hidden sm:inline">{m.kind === "File" ? "Open" : "Visit"}</span>
+                      <span className="hidden sm:inline">{m.kind === "File" ? t("Open") : t("Visit")}</span>
                     </a>
                   </Button>
                 )}
                 {meeting.can.manageMaterials && (
-                  <Button size="icon" variant="ghost" aria-label={`Remove ${m.title}`} onClick={() => remove.mutate(m.id)}>
+                  <Button size="icon" variant="ghost" aria-label={t("Remove {{title}}", { title: m.title })} onClick={() => remove.mutate(m.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -366,6 +371,7 @@ export function MaterialsTab({ meeting }: { meeting: MeetingDetail }) {
 }
 
 function AddLinkDialog({ meetingId, open, onOpenChange, onAdded }: { meetingId: string; open: boolean; onOpenChange: (o: boolean) => void; onAdded: () => void }) {
+  const { t } = useTranslation("meetings");
   const [kind, setKind] = useState<"Link" | "Assignment">("Link");
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
@@ -373,15 +379,15 @@ function AddLinkDialog({ meetingId, open, onOpenChange, onAdded }: { meetingId: 
   useEffect(() => { if (open) { setKind("Link"); setTitle(""); setUrl(""); setDue(""); } }, [open]);
   const mutation = useMutation({
     mutationFn: () => addMaterialLink(meetingId, { kind, title: title.trim(), url: url.trim() || undefined, dueDate: due || null }),
-    onSuccess: () => { onAdded(); onOpenChange(false); toast.success(kind === "Link" ? "Link added" : "Assignment added"); },
+    onSuccess: () => { onAdded(); onOpenChange(false); toast.success(kind === "Link" ? t("Link added") : t("Assignment added")); },
     onError: (err: Error) => toast.error(err.message),
   });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add a link or assignment</DialogTitle>
-          <DialogDescription>Students see it on the class page.</DialogDescription>
+          <DialogTitle>{t("Add a link or assignment")}</DialogTitle>
+          <DialogDescription>{t("Students see it on the class page.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="gap-4">
           <div className="grid grid-cols-2 gap-2">
@@ -393,23 +399,23 @@ function AddLinkDialog({ meetingId, open, onOpenChange, onAdded }: { meetingId: 
             ))}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="material-title">Title</Label>
-            <Input id="material-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === "Link" ? "e.g. Fractions video" : "e.g. Exercise 4.2, questions 1–10"} />
+            <Label htmlFor="material-title">{t("Title")}</Label>
+            <Input id="material-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === "Link" ? t("e.g. Fractions video") : t("e.g. Exercise 4.2, questions 1–10")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="material-url">Link {kind === "Assignment" && <span className="font-normal text-muted-foreground">(optional)</span>}</Label>
-            <Input id="material-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
+            <Label htmlFor="material-url">{t("Link")} {kind === "Assignment" && <span className="font-normal text-muted-foreground">{t("(optional)")}</span>}</Label>
+            <Input id="material-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t("https://…")} />
           </div>
           {kind === "Assignment" && (
             <div className="space-y-1.5">
-              <Label htmlFor="material-due">Due date <span className="font-normal text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="material-due">{t("Due date")} <span className="font-normal text-muted-foreground">{t("(optional)")}</span></Label>
               <Input id="material-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
             </div>
           )}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("Cancel")}</Button>
             <Button type="submit" disabled={!title.trim() || (kind === "Link" && !url.trim()) || mutation.isPending}>
-              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Add
+              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t("Add")}
             </Button>
           </DialogFooter>
         </form>
@@ -429,6 +435,7 @@ const NOTE_FIELDS: Array<{ key: keyof Omit<MeetingNotes, "isVisibleToStudents" |
 ];
 
 export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
+  const { t } = useTranslation("meetings");
   const queryClient = useQueryClient();
   const id = meeting.summary.id;
   const { data: notes, isLoading } = useQuery({ queryKey: meetingKeys.part(id, "notes"), queryFn: () => getNotes(id) });
@@ -445,7 +452,7 @@ export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
       queryClient.setQueryData(meetingKeys.part(id, "notes"), saved);
       void queryClient.invalidateQueries({ queryKey: meetingKeys.detail(id) });
       setEditing(false);
-      toast.success("Notes saved");
+      toast.success(t("Notes saved"));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -457,7 +464,7 @@ export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
       <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-4 rounded-xl border border-border bg-card p-4">
         {NOTE_FIELDS.map((f) => (
           <div key={f.key} className="space-y-1.5">
-            <Label htmlFor={`notes-${f.key}`}>{f.label}</Label>
+            <Label htmlFor={`notes-${f.key}`}>{t(f.label)}</Label>
             {f.key === "topicsDiscussed" ? (
               <Input id={`notes-${f.key}`} value={draft[f.key] ?? ""} placeholder={f.placeholder} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
             ) : (
@@ -466,12 +473,12 @@ export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
           </div>
         ))}
         <label className="flex items-center justify-between gap-3 text-sm">
-          <span>Students and parents can read these notes</span>
+          <span>{t("Students and parents can read these notes")}</span>
           <Switch id="notes-visible" checked={draft.isVisibleToStudents} onCheckedChange={(v) => setDraft({ ...draft, isVisibleToStudents: v })} />
         </label>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
-          <Button type="submit" loading={save.isPending}>Save notes</Button>
+          <Button type="button" variant="outline" onClick={() => setEditing(false)}>{t("Cancel")}</Button>
+          <Button type="submit" loading={save.isPending}>{t("Save notes")}</Button>
         </div>
       </form>
     );
@@ -479,10 +486,10 @@ export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
 
   if (!notes) {
     return (
-      <EmptyState icon={ClipboardList} title="No notes yet">
+      <EmptyState icon={ClipboardList} title={t("No notes yet")}>
         {meeting.can.editNotes ? (
-          <Button size="sm" className="mt-2" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /> Write notes</Button>
-        ) : "Notes from your teacher will appear here after the class."}
+          <Button size="sm" className="mt-2" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /> {t("Write notes")}</Button>
+        ) : t("Notes from your teacher will appear here after the class.")}
       </EmptyState>
     );
   }
@@ -491,18 +498,18 @@ export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
     <div className="space-y-4 rounded-xl border border-border bg-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          {notes.topicsDiscussed && <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Topic</p>}
-          <h3 className="text-lg font-semibold text-foreground">{notes.topicsDiscussed ?? "Class notes"}</h3>
+          {notes.topicsDiscussed && <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("Topic")}</p>}
+          <h3 className="text-lg font-semibold text-foreground">{notes.topicsDiscussed ?? t("Class notes")}</h3>
         </div>
-        {meeting.can.editNotes && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /> Edit</Button>}
+        {meeting.can.editNotes && <Button size="sm" variant="outline" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /> {t("Edit")}</Button>}
       </div>
       {NOTE_FIELDS.filter((f) => f.key !== "topicsDiscussed" && notes[f.key]).map((f) => (
         <div key={f.key}>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{f.label}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(f.label)}</p>
           <p className="mt-0.5 whitespace-pre-line text-sm text-foreground">{notes[f.key]}</p>
         </div>
       ))}
-      {!notes.isVisibleToStudents && <p className="text-xs text-muted-foreground">Only staff can see these notes.</p>}
+      {!notes.isVisibleToStudents && <p className="text-xs text-muted-foreground">{t("Only staff can see these notes.")}</p>}
     </div>
   );
 }
@@ -512,6 +519,7 @@ export function NotesTab({ meeting }: { meeting: MeetingDetail }) {
 const VISIBILITY_LABEL: Record<RecordingVisibility, string> = { Staff: "Staff only", Students: "Students", StudentsAndParents: "Students & parents" };
 
 export function RecordingsTab({ meeting }: { meeting: MeetingDetail }) {
+  const { t } = useTranslation("meetings");
   const queryClient = useQueryClient();
   const id = meeting.summary.id;
   const { data = [], isLoading } = useQuery({ queryKey: meetingKeys.part(id, "recordings"), queryFn: () => listRecordings(id), refetchInterval: (q) => (q.state.data?.some((r) => !r.isReady) ? 10_000 : false) });
@@ -536,8 +544,8 @@ export function RecordingsTab({ meeting }: { meeting: MeetingDetail }) {
   if (isLoading) return <ListSkeleton />;
   if (data.length === 0) {
     return (
-      <EmptyState icon={Film} title="No recordings">
-        {meeting.recordingEnabled ? "When the host records the class, the recording appears here once it's processed." : "Recording wasn't turned on for this class."}
+      <EmptyState icon={Film} title={t("No recordings")}>
+        {meeting.recordingEnabled ? t("When the host records the class, the recording appears here once it's processed.") : t("Recording wasn't turned on for this class.")}
       </EmptyState>
     );
   }
@@ -553,11 +561,11 @@ export function RecordingsTab({ meeting }: { meeting: MeetingDetail }) {
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground"><Film className="h-4 w-4" aria-hidden /></span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-medium text-foreground">{formatDayLabel(r.recordedAt)} · {formatTime(r.recordedAt)}</span>
-              <span className="block text-xs text-muted-foreground">{r.isReady ? `${formatDuration(Math.max(1, Math.round(r.durationSeconds / 60)))} · ${formatBytes(r.sizeBytes)}` : "Processing…"}</span>
+              <span className="block text-xs text-muted-foreground">{r.isReady ? `${formatDuration(Math.max(1, Math.round(r.durationSeconds / 60)))} · ${formatBytes(r.sizeBytes)}` : t("Processing…")}</span>
             </span>
             {r.canDelete && (
               <Select value={r.visibility} onValueChange={(v) => setVisibility.mutate({ recordingId: r.id, visibility: v as RecordingVisibility })}>
-                <SelectTrigger className="h-8 w-40 text-xs" aria-label="Who can watch"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-8 w-40 text-xs" aria-label={t("Who can watch")}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(Object.keys(VISIBILITY_LABEL) as RecordingVisibility[]).map((v) => <SelectItem key={v} value={v}>{VISIBILITY_LABEL[v]}</SelectItem>)}
                 </SelectContent>
@@ -565,11 +573,11 @@ export function RecordingsTab({ meeting }: { meeting: MeetingDetail }) {
             )}
             {r.isReady && (
               <Button size="sm" variant="outline" onClick={() => play.mutate(r.id)} disabled={play.isPending}>
-                <Play className="h-4 w-4" /> Watch
+                <Play className="h-4 w-4" /> {t("Watch")}
               </Button>
             )}
             {r.canDelete && (
-              <Button size="icon" variant="ghost" aria-label="Delete recording" onClick={() => remove.mutate(r.id)}>
+              <Button size="icon" variant="ghost" aria-label={t("Delete recording")} onClick={() => remove.mutate(r.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
@@ -603,19 +611,20 @@ function describeActivity(data: string | null): string | null {
 }
 
 export function ActivityTab({ meeting }: { meeting: MeetingDetail }) {
+  const { t } = useTranslation("meetings");
   const id = meeting.summary.id;
   const { data = [], isLoading } = useQuery({ queryKey: meetingKeys.part(id, "activity"), queryFn: () => getActivity(id) });
   if (isLoading) return <ListSkeleton />;
-  if (data.length === 0) return <EmptyState icon={History} title="No activity yet" />;
+  if (data.length === 0) return <EmptyState icon={History} title={t("No activity yet")} />;
   return (
-    <ol className="relative space-y-4 border-l border-border pl-5">
+    <ol className="relative space-y-4 border-s border-border ps-5">
       {data.map((e) => {
         const detail = describeActivity(e.additionalData);
         return (
           <li key={e.id} className="relative">
-            <span className="absolute -left-[1.6rem] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-brand-500" aria-hidden />
+            <span className="absolute -start-[1.6rem] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-brand-500" aria-hidden />
             <p className="text-sm font-medium text-foreground">
-              {e.action} <span className="font-normal text-muted-foreground">by {e.actorName ?? "a staff member"}</span>
+              {e.action} <span className="font-normal text-muted-foreground">{t("by")} {e.actorName ?? t("a staff member")}</span>
             </p>
             <p className="text-xs text-muted-foreground">
               {formatDayLabel(e.timestamp)} · {formatTime(e.timestamp)}

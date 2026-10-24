@@ -7,6 +7,7 @@ import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { getLearningProgress } from "../api";
 import type { LearningProgressRow } from "../types";
 
+import { useTranslation } from "react-i18next";
 const ALL_CLASSES = "__all__";
 
 function pctVariant(pct: number): "success" | "warning" | "danger" {
@@ -16,6 +17,7 @@ function pctVariant(pct: number): "success" | "warning" | "danger" {
 }
 
 export default function ProgressOverviewTab() {
+  const { t } = useTranslation("homework");
   const { data: rows = [], isLoading, isError, refetch } = useQuery({ queryKey: ["homework", "progress"], queryFn: getLearningProgress });
   const [classFilter, setClassFilter] = useState(ALL_CLASSES);
 
@@ -27,12 +29,12 @@ export default function ProgressOverviewTab() {
   }, [rows, classFilter]);
 
   const columns: ColumnDef<LearningProgressRow, unknown>[] = [
-    { accessorKey: "className", header: "Class" },
-    { accessorKey: "section", header: "Section" },
-    { accessorKey: "studentName", header: "Student" },
+    { accessorKey: "className", header: t("Class") },
+    { accessorKey: "section", header: t("Section") },
+    { accessorKey: "studentName", header: t("Student") },
     {
       id: "homework",
-      header: "Homework submitted on time",
+      header: t("Homework submitted on time"),
       cell: ({ row }) => {
         const r = row.original;
         return (
@@ -47,7 +49,7 @@ export default function ProgressOverviewTab() {
     },
     {
       id: "resources",
-      header: "Resources viewed",
+      header: t("Resources viewed"),
       cell: ({ row }) => {
         const r = row.original;
         return (
@@ -65,14 +67,14 @@ export default function ProgressOverviewTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Illustrative view of homework and resource engagement, per student.</p>
+        <p className="text-sm text-muted-foreground">{t("Illustrative view of homework and resource engagement, per student.")}</p>
         <div className="w-52">
           <Select value={classFilter} onValueChange={setClassFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="All classes" />
+              <SelectValue placeholder={t("All classes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_CLASSES}>All classes</SelectItem>
+              <SelectItem value={ALL_CLASSES}>{t("All classes")}</SelectItem>
               {classNames.map((name) => (
                 <SelectItem key={name} value={name}>
                   {name}
@@ -83,7 +85,7 @@ export default function ProgressOverviewTab() {
         </div>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No active students found." pageSize={15} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No active students found.")} pageSize={15} />
     </div>
   );
 }

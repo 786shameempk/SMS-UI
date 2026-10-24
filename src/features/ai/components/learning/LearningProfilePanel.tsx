@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
@@ -12,11 +13,12 @@ import { useAiCapabilities } from "../../capabilities";
  * themselves, staff the students they may see; the server enforces all of it.
  */
 export default function LearningProfilePanel({ studentId }: { studentId?: string }) {
+  const { t } = useTranslation("ai");
   const { can } = useAiCapabilities();
   const profile = useQuery({ queryKey: ["ai", "learning-profile", studentId ?? "me"], queryFn: () => getLearningProfile(studentId) });
   const interpret = useMutation({ mutationFn: () => interpretLearningProfile(studentId) });
 
-  if (profile.isLoading) return <p className="text-sm text-muted-foreground">Loading learning profile…</p>;
+  if (profile.isLoading) return <p className="text-sm text-muted-foreground">{t("Loading learning profile…")}</p>;
   if (profile.isError)
     return (
       <p role="alert" className="text-sm text-destructive">
@@ -30,32 +32,32 @@ export default function LearningProfilePanel({ studentId }: { studentId?: string
 
   return (
     <div className="space-y-4">
-      <section aria-label="What the records show" className="space-y-3">
+      <section aria-label={t("What the records show")} className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">What the records show</h3>
-          <p className="text-xs text-muted-foreground">Computed by the school system from attendance, exams and homework. No AI.</p>
+          <h3 className="text-sm font-semibold text-foreground">{t("What the records show")}</h3>
+          <p className="text-xs text-muted-foreground">{t("Computed by the school system from attendance, exams and homework. No AI.")}</p>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatCard label={`Attendance (${p.attendanceWindowDays} days)`} value={p.attendancePercent === null ? "—" : `${p.attendancePercent}%`} />
-          <StatCard label="Latest exam" value={latest ? `${latest.percentage}%` : "—"} />
-          <StatCard label="Change across exams" value={p.resultsChange === null ? "—" : `${p.resultsChange > 0 ? "+" : ""}${p.resultsChange} pts`} />
-          <StatCard label="Homework submitted" value={p.homeworkAssigned ? `${p.homeworkSubmitted}/${p.homeworkAssigned}` : "—"} />
+          <StatCard label={t("Attendance ({{days}} days)", { days: p.attendanceWindowDays })} value={p.attendancePercent === null ? "—" : `${p.attendancePercent}%`} />
+          <StatCard label={t("Latest exam")} value={latest ? `${latest.percentage}%` : "—"} />
+          <StatCard label={t("Change across exams")} value={p.resultsChange === null ? "—" : t("{{change}} pts", { change: `${p.resultsChange > 0 ? "+" : ""}${p.resultsChange}` })} />
+          <StatCard label={t("Homework submitted")} value={p.homeworkAssigned ? `${p.homeworkSubmitted}/${p.homeworkAssigned}` : "—"} />
         </div>
         {p.observations.length > 0 ? (
           <ul className="space-y-1.5">
             {p.observations.map((o) => (
               <li key={o.text} className="flex items-start gap-2 text-sm text-secondary-foreground">
                 {o.kind === "positive" ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-label="Going well" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-label={t("Going well")} />
                 ) : (
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-label="Needs attention" />
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-label={t("Needs attention")} />
                 )}
                 {o.text}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">Nothing stands out in the records yet.</p>
+          <p className="text-sm text-muted-foreground">{t("Nothing stands out in the records yet.")}</p>
         )}
       </section>
 
@@ -63,23 +65,23 @@ export default function LearningProfilePanel({ studentId }: { studentId?: string
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-1.5 text-base">
-              <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" /> AI study suggestions
+              <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" /> {t("AI study suggestions")}
             </CardTitle>
-            <CardDescription>The school&apos;s AI reads the figures above and suggests what to focus on. It can make mistakes.</CardDescription>
+            <CardDescription>{t("The school's AI reads the figures above and suggests what to focus on. It can make mistakes.")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {!ai ? (
               <Button variant="outline" onClick={() => interpret.mutate()} disabled={interpret.isPending}>
                 {interpret.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {interpret.isPending ? "Thinking…" : "Get AI study suggestions"}
+                {interpret.isPending ? t("Thinking…") : t("Get AI study suggestions")}
               </Button>
             ) : (
               <>
                 <p className="text-foreground">{ai.summary}</p>
                 {ai.strengths.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Strengths</h4>
-                    <ul className="mt-1 list-disc space-y-0.5 pl-5 text-secondary-foreground">
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("Strengths")}</h4>
+                    <ul className="mt-1 list-disc space-y-0.5 ps-5 text-secondary-foreground">
                       {ai.strengths.map((s) => (
                         <li key={s}>{s}</li>
                       ))}
@@ -88,7 +90,7 @@ export default function LearningProfilePanel({ studentId }: { studentId?: string
                 )}
                 {ai.focusAreas.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Focus areas</h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("Focus areas")}</h4>
                     <ul className="mt-1 space-y-1">
                       {ai.focusAreas.map((f) => (
                         <li key={f.area}>
@@ -99,10 +101,10 @@ export default function LearningProfilePanel({ studentId }: { studentId?: string
                   </div>
                 )}
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Study tips</h4>
-                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-secondary-foreground">
-                    {ai.studyTips.map((t) => (
-                      <li key={t}>{t}</li>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("Study tips")}</h4>
+                  <ul className="mt-1 list-disc space-y-0.5 ps-5 text-secondary-foreground">
+                    {ai.studyTips.map((tip) => (
+                      <li key={tip}>{tip}</li>
                     ))}
                   </ul>
                 </div>

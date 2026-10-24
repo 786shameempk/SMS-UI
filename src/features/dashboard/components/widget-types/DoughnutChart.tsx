@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { CHART_TOOLTIP_STYLE } from "../../chartTheme";
 import type { StatusSlice } from "../../types";
@@ -18,7 +19,9 @@ export default function DoughnutChart({
   centerValue: string;
   label: string;
 }) {
+  const { t } = useTranslation("dashboard");
   const total = slices.reduce((n, s) => n + s.value, 0);
+  const shown = slices.map((s) => ({ ...s, label: t(s.label) }));
   return (
     // Laid out by the card's own width (container query), not the screen's: side by side only when the card is wide.
     <div className="@container">
@@ -26,7 +29,7 @@ export default function DoughnutChart({
         <div className="relative h-36 w-36 shrink-0" aria-hidden="true">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={slices} dataKey="value" nameKey="label" innerRadius="68%" outerRadius="100%" paddingAngle={slices.length > 1 ? 2 : 0} stroke="none" isAnimationActive={false}>
+              <Pie data={shown} dataKey="value" nameKey="label" innerRadius="68%" outerRadius="100%" paddingAngle={slices.length > 1 ? 2 : 0} stroke="none" isAnimationActive={false}>
                 {slices.map((s) => (
                   <Cell key={s.id} fill={TONE[s.tone].fill} />
                 ))}
@@ -44,7 +47,7 @@ export default function DoughnutChart({
             <li key={s.id} className="flex items-start gap-2.5 text-sm">
               <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: TONE[s.tone].fill }} aria-hidden="true" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-foreground">{s.label}</span>
+                <span className="block truncate text-foreground">{t(s.label)}</span>
                 <span className="block truncate text-xs tabular-nums text-muted-foreground">{s.detail}</span>
               </span>
               {total > 0 && <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">{Math.round((s.value / total) * 100)}%</span>}

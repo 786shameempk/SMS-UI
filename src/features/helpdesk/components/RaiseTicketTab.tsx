@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,6 +51,7 @@ const emptyValues: FormValues = {
 };
 
 export default function RaiseTicketTab() {
+  const { t } = useTranslation("helpdesk");
   const queryClient = useQueryClient();
   const [lastTicketNumber, setLastTicketNumber] = useState<string | null>(null);
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -70,24 +72,24 @@ export default function RaiseTicketTab() {
     mutationFn: raiseTicket,
     onSuccess: (ticket) => {
       queryClient.invalidateQueries({ queryKey: ["helpdesk"] });
-      toast.success(`Ticket ${ticket.ticketNumber} raised`);
+      toast.success(t("Ticket {{number}} raised", { number: ticket.ticketNumber }));
       setLastTicketNumber(ticket.ticketNumber);
       reset(emptyValues);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not raise ticket"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not raise ticket")),
   });
 
   return (
     <div className="max-w-2xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Raise a ticket</CardTitle>
-          <CardDescription>Log a complaint or support request and route it to the right person.</CardDescription>
+          <CardTitle>{t("Raise a ticket")}</CardTitle>
+          <CardDescription>{t("Log a complaint or support request and route it to the right person.")}</CardDescription>
         </CardHeader>
         <CardContent>
           {lastTicketNumber && (
             <p className="text-xs rounded-md border border-success/30 bg-success-soft text-success-strong px-2.5 py-2 mb-4">
-              Ticket <strong>{lastTicketNumber}</strong> was raised successfully.
+              <Trans t={t} i18nKey="Ticket <strong>{{number}}</strong> was raised successfully." values={{ number: lastTicketNumber }} components={{ strong: <strong /> }} />
             </p>
           )}
           <form
@@ -104,7 +106,7 @@ export default function RaiseTicketTab() {
           >
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="hd-category">Category</Label>
+                <Label htmlFor="hd-category">{t("Category")}</Label>
                 <Controller
                   control={control}
                   name="category"
@@ -116,7 +118,7 @@ export default function RaiseTicketTab() {
                       <SelectContent>
                         {CATEGORY_OPTIONS.map((o) => (
                           <SelectItem key={o.value} value={o.value}>
-                            {o.label}
+                            {t(o.label)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -125,7 +127,7 @@ export default function RaiseTicketTab() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="hd-priority">Priority</Label>
+                <Label htmlFor="hd-priority">{t("Priority")}</Label>
                 <Controller
                   control={control}
                   name="priority"
@@ -137,7 +139,7 @@ export default function RaiseTicketTab() {
                       <SelectContent>
                         {PRIORITY_OPTIONS.map((o) => (
                           <SelectItem key={o.value} value={o.value}>
-                            {o.label}
+                            {t(o.label)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -148,19 +150,19 @@ export default function RaiseTicketTab() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="hd-subject">Subject</Label>
-              <Input id="hd-subject" placeholder="Short summary of the issue" aria-invalid={errors.subject ? true : undefined} {...register("subject")} />
-              {errors.subject && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subject.message}</p>}
+              <Label htmlFor="hd-subject">{t("Subject")}</Label>
+              <Input id="hd-subject" placeholder={t("Short summary of the issue")} aria-invalid={errors.subject ? true : undefined} {...register("subject")} />
+              {errors.subject && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.subject.message ?? "")}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="hd-description">Description</Label>
-              <Textarea id="hd-description" rows={4} placeholder="What happened, and any relevant details" aria-invalid={errors.description ? true : undefined} {...register("description")} />
-              {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
+              <Label htmlFor="hd-description">{t("Description")}</Label>
+              <Textarea id="hd-description" rows={4} placeholder={t("What happened, and any relevant details")} aria-invalid={errors.description ? true : undefined} {...register("description")} />
+              {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.description.message ?? "")}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="hd-raisedByType">Raised by</Label>
+              <Label htmlFor="hd-raisedByType">{t("Raised by")}</Label>
               <Controller
                 control={control}
                 name="raisedByType"
@@ -172,7 +174,7 @@ export default function RaiseTicketTab() {
                     <SelectContent>
                       {RAISED_BY_TYPE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -183,14 +185,14 @@ export default function RaiseTicketTab() {
 
             {raisedByType === "student" && (
               <div className="space-y-1.5">
-                <Label htmlFor="hd-studentId">Student</Label>
+                <Label htmlFor="hd-studentId">{t("Student")}</Label>
                 <Controller
                   control={control}
                   name="raisedByStudentId"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="hd-studentId">
-                        <SelectValue placeholder="Select a student" />
+                        <SelectValue placeholder={t("Select a student")} />
                       </SelectTrigger>
                       <SelectContent>
                         {students.map((s) => (
@@ -202,20 +204,20 @@ export default function RaiseTicketTab() {
                     </Select>
                   )}
                 />
-                {errors.raisedByStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.raisedByStudentId.message}</p>}
+                {errors.raisedByStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.raisedByStudentId.message ?? "")}</p>}
               </div>
             )}
 
             {raisedByType === "staff" && (
               <div className="space-y-1.5">
-                <Label htmlFor="hd-staffId">Staff member</Label>
+                <Label htmlFor="hd-staffId">{t("Staff member")}</Label>
                 <Controller
                   control={control}
                   name="raisedByStaffId"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="hd-staffId">
-                        <SelectValue placeholder="Select a staff member" />
+                        <SelectValue placeholder={t("Select a staff member")} />
                       </SelectTrigger>
                       <SelectContent>
                         {staff.map((s) => (
@@ -227,27 +229,27 @@ export default function RaiseTicketTab() {
                     </Select>
                   )}
                 />
-                {errors.raisedByStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.raisedByStaffId.message}</p>}
+                {errors.raisedByStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.raisedByStaffId.message ?? "")}</p>}
               </div>
             )}
 
             {raisedByType === "parent" && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="hd-parentName">Parent/guardian name</Label>
+                  <Label htmlFor="hd-parentName">{t("Parent/guardian name")}</Label>
                   <Input id="hd-parentName" aria-invalid={errors.raisedByName ? true : undefined} {...register("raisedByName")} />
-                  {errors.raisedByName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.raisedByName.message}</p>}
+                  {errors.raisedByName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.raisedByName.message ?? "")}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="hd-parentContact" optional>Contact</Label>
-                  <Input id="hd-parentContact" placeholder="Phone or email" {...register("raisedByContact")} />
+                  <Label htmlFor="hd-parentContact" optional>{t("Contact")}</Label>
+                  <Input id="hd-parentContact" placeholder={t("Phone or email")} {...register("raisedByContact")} />
                 </div>
               </div>
             )}
 
             <Button type="submit" loading={mutation.isPending}>
               <LifeBuoy className="w-4 h-4" />
-              Raise ticket
+              {t("Raise ticket")}
             </Button>
           </form>
         </CardContent>

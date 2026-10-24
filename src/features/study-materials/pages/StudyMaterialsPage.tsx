@@ -32,6 +32,7 @@ import MaterialFormDialog, { type MaterialSubmit } from "../components/MaterialF
 import { CATEGORY_OPTIONS } from "../constants";
 import type { StudyMaterial, StudyMaterialCategory, StudyMaterialStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 const ALL = "__all__";
 type View = "browse" | "mine";
 type Source = "all" | "school" | "platform";
@@ -51,6 +52,7 @@ function FilterSelect({
   allLabel: string;
   className?: string;
 }) {
+  const { t } = useTranslation("study-materials");
   return (
     <Select value={value || ALL} onValueChange={(v) => onChange(v === ALL ? "" : v)}>
       <SelectTrigger className={cn("w-full sm:w-44", className)} aria-label={label}>
@@ -60,7 +62,7 @@ function FilterSelect({
         <SelectItem value={ALL}>{allLabel}</SelectItem>
         {options.map((o) => (
           <SelectItem key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </SelectItem>
         ))}
       </SelectContent>
@@ -69,8 +71,9 @@ function FilterSelect({
 }
 
 function GridSkeleton() {
+  const { t } = useTranslation("study-materials");
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3" role="status" aria-label="Loading materials">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3" role="status" aria-label={t("Loading materials")}>
       {Array.from({ length: 6 }).map((_, i) => (
         <Card key={i} className="space-y-3 p-4">
           <div className="flex gap-3">
@@ -87,6 +90,7 @@ function GridSkeleton() {
 }
 
 export default function StudyMaterialsPage() {
+  const { t } = useTranslation("study-materials");
   const queryClient = useQueryClient();
   const role = useAuthStore((s) => s.user?.role);
   const isSuperAdmin = role === "superAdmin";
@@ -148,9 +152,9 @@ export default function StudyMaterialsPage() {
         // Best effort: the material itself is saved either way; the AI index can be rebuilt from its detail view.
         indexMaterial(m.id, Boolean(editing))
           .then(() => queryClient.invalidateQueries({ queryKey: ["ai", "material-index", m.id] }))
-          .catch(() => toast.error("Saved, but it couldn't be prepared for AI questions. Try again from the material."));
+          .catch(() => toast.error(t("Saved, but it couldn't be prepared for AI questions. Try again from the material.")));
       }
-      toast.success(editing ? "Changes saved" : publish ? "Material published" : "Saved as draft");
+      toast.success(editing ? t("Changes saved") : publish ? t("Material published") : t("Saved as draft"));
       setFormOpen(false);
       setEditing(null);
       if (!editing) {
@@ -158,7 +162,7 @@ export default function StudyMaterialsPage() {
         setStatus(m.status);
       }
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Couldn't save this material"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Couldn't save this material")),
   });
 
   const act = useMutation({
@@ -174,10 +178,10 @@ export default function StudyMaterialsPage() {
       toast.success(
         { publish: "Published", archive: "Archived", restore: "Restored as a draft", pin: "Pinned to the top", unpin: "Unpinned", delete: "Deleted" }[
           action as "publish"
-        ] ?? "Done",
+        ] ?? t("Done"),
       );
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Something went wrong"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Something went wrong")),
   });
 
   const handleAction = (action: MaterialAction, material: StudyMaterial) => {
@@ -210,7 +214,7 @@ export default function StudyMaterialsPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Study materials"
+        title={t("Study materials")}
         description={description}
         actions={
           canUpload ? (
@@ -220,7 +224,7 @@ export default function StudyMaterialsPage() {
                 setFormOpen(true);
               }}
             >
-              <Plus className="h-4 w-4" /> Add material
+              <Plus className="h-4 w-4" /> {t("Add material")}
             </Button>
           ) : undefined
         }
@@ -229,9 +233,9 @@ export default function StudyMaterialsPage() {
       {canUpload && (
         <Tabs value={view} onValueChange={(v) => setView(v as View)}>
           <TabsList variant="line">
-            <TabsTrigger value="browse">Browse</TabsTrigger>
+            <TabsTrigger value="browse">{t("Browse")}</TabsTrigger>
             <TabsTrigger value="mine">
-              {isSuperAdmin ? "Platform library" : "My materials"}
+              {isSuperAdmin ? t("Platform library") : t("My materials")}
               {counts.data && <span className="rounded bg-secondary px-1.5 text-xs tabular-nums">{counts.data.drafts + counts.data.published + counts.data.archived}</span>}
             </TabsTrigger>
           </TabsList>
@@ -240,41 +244,41 @@ export default function StudyMaterialsPage() {
 
       {view === "mine" && (
         <SegmentedControl<StudyMaterialStatus>
-          aria-label="Status"
+          aria-label={t("Status")}
           value={status}
           onValueChange={setStatus}
           options={[
-            { value: "published", label: "Published", count: counts.data?.published },
-            { value: "draft", label: "Drafts", count: counts.data?.drafts },
-            { value: "archived", label: "Archived", count: counts.data?.archived },
+            { value: "published", label: t("Published"), count: counts.data?.published },
+            { value: "draft", label: t("Drafts"), count: counts.data?.drafts },
+            { value: "archived", label: t("Archived"), count: counts.data?.archived },
           ]}
         />
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <SearchInput value={search} onValueChange={setSearch} placeholder="Search title, topic, subject…" containerClassName="sm:w-80" />
-        <FilterSelect label="Material type" value={category} onChange={setCategory} allLabel="All types" options={CATEGORY_OPTIONS} />
+        <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search title, topic, subject…")} containerClassName="sm:w-80" />
+        <FilterSelect label={t("Material type")} value={category} onChange={setCategory} allLabel="All types" options={CATEGORY_OPTIONS} />
         {!isSuperAdmin && (subjects.data?.length ?? 0) > 0 && (
-          <FilterSelect label="Subject" value={subjectId} onChange={setSubjectId} allLabel="All subjects" options={(subjects.data ?? []).map((s) => ({ value: s.id, label: s.name }))} />
+          <FilterSelect label={t("Subject")} value={subjectId} onChange={setSubjectId} allLabel="All subjects" options={(subjects.data ?? []).map((s) => ({ value: s.id, label: s.name }))} />
         )}
         {isStaff && !isSuperAdmin && (classes.data?.length ?? 0) > 0 && (
-          <FilterSelect label="Class" value={classId} onChange={setClassId} allLabel="All classes" options={(classes.data ?? []).map((c) => ({ value: c.id, label: c.name }))} />
+          <FilterSelect label={t("Class")} value={classId} onChange={setClassId} allLabel="All classes" options={(classes.data ?? []).map((c) => ({ value: c.id, label: c.name }))} />
         )}
         {view === "browse" && (
           <FilterSelect
-            label="Source"
+            label={t("Source")}
             value={source === "all" ? "" : source}
             onChange={(v) => setSource((v || "all") as Source)}
             allLabel="All sources"
             options={[
-              { value: "school", label: "My school" },
-              { value: "platform", label: "School Sphere library" },
+              { value: "school", label: t("My school") },
+              { value: "platform", label: t("School Sphere library") },
             ]}
           />
         )}
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Clear filters
+            {t("Clear filters")}
           </Button>
         )}
       </div>
@@ -285,16 +289,16 @@ export default function StudyMaterialsPage() {
         <ErrorState onRetry={() => void materials.refetch()} retrying={materials.isRefetching} />
       ) : items.length === 0 ? (
         hasFilters ? (
-          <EmptyState icon={BookOpenText} title="No materials match" description="Try a different search or clear the filters." action={<Button variant="outline" size="sm" onClick={clearFilters}>Clear filters</Button>} />
+          <EmptyState icon={BookOpenText} title={t("No materials match")} description={t("Try a different search or clear the filters.")} action={<Button variant="outline" size="sm" onClick={clearFilters}>{t("Clear filters")}</Button>} />
         ) : view === "mine" ? (
           <EmptyState
             icon={BookOpenText}
-            title={status === "draft" ? "No drafts" : status === "archived" ? "Nothing archived" : "Nothing published yet"}
-            description={status === "published" ? "Materials you publish appear here with their view and download counts." : undefined}
+            title={status === "draft" ? t("No drafts") : status === "archived" ? t("Nothing archived") : t("Nothing published yet")}
+            description={status === "published" ? t("Materials you publish appear here with their view and download counts.") : undefined}
             action={
               status !== "archived" ? (
                 <Button size="sm" onClick={() => setFormOpen(true)}>
-                  <Plus className="h-4 w-4" /> Add material
+                  <Plus className="h-4 w-4" /> {t("Add material")}
                 </Button>
               ) : undefined
             }
@@ -302,14 +306,14 @@ export default function StudyMaterialsPage() {
         ) : (
           <EmptyState
             icon={isSuperAdmin ? Globe2 : BookOpenText}
-            title="No study materials yet"
-            description={isLearner ? "When your teachers share notes, papers or videos, they'll appear here." : "Published materials from your school and School Sphere appear here."}
+            title={t("No study materials yet")}
+            description={isLearner ? t("When your teachers share notes, papers or videos, they'll appear here.") : t("Published materials from your school and School Sphere appear here.")}
           />
         )
       ) : (
         <>
           <p className="text-sm text-muted-foreground" aria-live="polite">
-            {items.length} {items.length === 1 ? "material" : "materials"}
+            {items.length} {items.length === 1 ? t("material") : t("materials")}
           </p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {items.map((m) => (
@@ -339,9 +343,9 @@ export default function StudyMaterialsPage() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete material"
-        description={`Delete "${deleteTarget?.title}" and its file permanently? This can't be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete material")}
+        description={t("Delete \"{{title}}\" and its file permanently? This can't be undone.", { title: deleteTarget?.title })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={act.isPending}
         onConfirm={() => {

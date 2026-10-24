@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -15,6 +16,7 @@ import DiscountFormDialog from "./DiscountFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function DiscountsTab() {
+  const { t } = useTranslation("fees");
   const queryClient = useQueryClient();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -30,38 +32,38 @@ export default function DiscountsTab() {
     mutationFn: createDiscount,
     onSuccess: () => {
       invalidate();
-      toast.success("Discount created");
+      toast.success(t("Discount created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create discount"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create discount")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: FeeDiscountFormValues }) => updateDiscount(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Discount updated");
+      toast.success(t("Discount updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update discount"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update discount")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteDiscount,
     onSuccess: () => {
       invalidate();
-      toast.success("Discount deleted");
+      toast.success(t("Discount deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete discount"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete discount")),
   });
 
   const columns: ColumnDef<FeeDiscount, unknown>[] = [
-    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "name", header: t("Name"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "value",
-      header: "Value",
+      header: t("Value"),
       cell: ({ row }) => (
         <span className="text-sm text-foreground tabular-nums">
           {row.original.type === "percentage" ? `${row.original.value}%` : `₹${row.original.value.toLocaleString("en-IN")}`}
@@ -70,16 +72,16 @@ export default function DiscountsTab() {
     },
     {
       id: "appliesTo",
-      header: "Applies to",
+      header: t("Applies to"),
       cell: ({ row }) => (
         <Badge variant={row.original.appliesTo === "all" ? "info" : "default"}>
-          {row.original.appliesTo === "all" ? "All students" : `${row.original.studentIds.length} student(s)`}
+          {row.original.appliesTo === "all" ? t("All students") : t("{{count}} student(s)", { count: row.original.studentIds.length })}
         </Badge>
       ),
     },
     {
       accessorKey: "description",
-      header: "Description",
+      header: t("Description"),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.description ?? "—"}</span>,
     },
     {
@@ -96,11 +98,11 @@ export default function DiscountsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(discount)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -111,7 +113,7 @@ export default function DiscountsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Manage discounts and scholarships that reduce invoice amounts.</p>
+        <p className="text-sm text-muted-foreground">{t("Manage discounts and scholarships that reduce invoice amounts.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -119,11 +121,11 @@ export default function DiscountsTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New discount
+          {t("New discount")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={discounts} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No discounts configured yet." />
+      <DataTable searchable columns={columns} data={discounts} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No discounts configured yet.")} />
 
       <DiscountFormDialog
         open={formOpen}
@@ -143,9 +145,9 @@ export default function DiscountsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete discount"
-        description={`Delete "${deleteTarget?.name}"? Invoices that already applied it keep their discounted amount.`}
-        confirmLabel="Delete"
+        title={t("Delete discount")}
+        description={t('Delete "{{name}}"? Invoices that already applied it keep their discounted amount.', { name: String(deleteTarget?.name) })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

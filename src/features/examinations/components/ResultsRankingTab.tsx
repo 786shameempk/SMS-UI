@@ -14,7 +14,9 @@ import { gradeBadgeVariant } from "../constants";
 import { getExamClassResults, listExams } from "../api";
 import type { StudentExamSummary } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function ResultsRankingTab() {
+  const { t } = useTranslation("examinations");
   const { data: exams = [] } = useQuery({ queryKey: ["examinations", "exams"], queryFn: listExams });
   const [examId, setExamId] = useState<string | undefined>();
   const activeExamId = examId ?? exams[0]?.id;
@@ -34,15 +36,15 @@ export default function ResultsRankingTab() {
   const columns: ColumnDef<StudentExamSummary, unknown>[] = [
     {
       accessorKey: "rank",
-      header: "Rank",
+      header: t("Rank"),
       cell: ({ row }) => <span className="text-sm font-semibold text-foreground tabular-nums">#{row.original.rank}</span>,
     },
-    { accessorKey: "admissionNumber", header: "Admission No.", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.admissionNumber}</span> },
-    { accessorKey: "studentName", header: "Student", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.studentName}</span> },
-    { accessorKey: "section", header: "Section", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.section}</span> },
+    { accessorKey: "admissionNumber", header: t("Admission No."), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.admissionNumber}</span> },
+    { accessorKey: "studentName", header: t("Student"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.studentName}</span> },
+    { accessorKey: "section", header: t("Section"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.section}</span> },
     {
       id: "total",
-      header: "Total",
+      header: t("Total"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.totalObtained} / {row.original.totalMax}
@@ -51,17 +53,17 @@ export default function ResultsRankingTab() {
     },
     {
       accessorKey: "percentage",
-      header: "Percentage",
+      header: t("Percentage"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.percentage}%</span>,
     },
     {
       accessorKey: "grade",
-      header: "Grade",
+      header: t("Grade"),
       cell: ({ row }) => <Badge variant={gradeBadgeVariant(row.original.grade)}>{row.original.grade}</Badge>,
     },
     {
       accessorKey: "gpa",
-      header: "GPA",
+      header: t("GPA"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.gpa.toFixed(2)}</span>,
     },
   ];
@@ -71,21 +73,21 @@ export default function ResultsRankingTab() {
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3">
           <div>
-            <CardTitle>Results &amp; ranking</CardTitle>
+            <CardTitle>{t("Results & ranking")}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Ranked by total marks (ties broken alphabetically). See the Report Cards tab for a per-student, per-subject breakdown.
+              {t("Ranked by total marks (ties broken alphabetically). See the Report Cards tab for a per-student, per-subject breakdown.")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {canUseAi && results.length > 0 && (
               <Button variant="outline" onClick={() => setRemarksOpen(true)}>
                 <Sparkles className="h-4 w-4" />
-                Draft remarks with AI
+                {t("Draft remarks with AI")}
               </Button>
             )}
             <Select value={activeExamId} onValueChange={setExamId}>
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select an exam" />
+                <SelectValue placeholder={t("Select an exam")} />
               </SelectTrigger>
               <SelectContent>
                 {exams.map((e) => (
@@ -104,7 +106,7 @@ export default function ResultsRankingTab() {
             isLoading={isLoading}
             isError={isError}
             onRetry={() => refetch()}
-            emptyMessage="No marks entered for this exam yet — use Marks Entry first."
+            emptyMessage={t("No marks entered for this exam yet — use Marks Entry first.")}
           />
         </CardContent>
       </Card>

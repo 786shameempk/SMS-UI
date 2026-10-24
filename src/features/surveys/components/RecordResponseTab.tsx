@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send, Star } from "lucide-react";
@@ -16,6 +17,7 @@ import { listSurveys, recordResponse } from "../api";
 import type { RespondentType, Survey } from "../types";
 
 export default function RecordResponseTab() {
+  const { t } = useTranslation("surveys");
   const queryClient = useQueryClient();
   const { data: surveys = [] } = useQuery({ queryKey: ["surveys", "published"], queryFn: () => listSurveys("published") });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -41,13 +43,13 @@ export default function RecordResponseTab() {
     mutationFn: recordResponse,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      toast.success("Response recorded");
+      toast.success(t("Response recorded"));
       setAnswers({});
       setRespondentStudentId("");
       setRespondentStaffId("");
       setRespondentName("");
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not record response"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not record response")),
   });
 
   const canSubmit =
@@ -61,15 +63,15 @@ export default function RecordResponseTab() {
     <div className="max-w-2xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Record a response</CardTitle>
-          <CardDescription>Log a response on behalf of a respondent for a published survey.</CardDescription>
+          <CardTitle>{t("Record a response")}</CardTitle>
+          <CardDescription>{t("Log a response on behalf of a respondent for a published survey.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="resp-survey">Survey</Label>
+            <Label htmlFor="resp-survey">{t("Survey")}</Label>
             <Select value={surveyId} onValueChange={setSurveyId}>
               <SelectTrigger id="resp-survey">
-                <SelectValue placeholder="Select a published survey" />
+                <SelectValue placeholder={t("Select a published survey")} />
               </SelectTrigger>
               <SelectContent>
                 {surveys.map((s) => (
@@ -79,13 +81,13 @@ export default function RecordResponseTab() {
                 ))}
               </SelectContent>
             </Select>
-            {surveys.length === 0 && <p className="text-xs text-muted-foreground">No published surveys are open for responses right now.</p>}
+            {surveys.length === 0 && <p className="text-xs text-muted-foreground">{t("No published surveys are open for responses right now.")}</p>}
           </div>
 
           {survey && (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="resp-type">Respondent</Label>
+                <Label htmlFor="resp-type">{t("Respondent")}</Label>
                 <Select value={respondentType} onValueChange={(v) => setRespondentType(v as RespondentType)}>
                   <SelectTrigger id="resp-type">
                     <SelectValue />
@@ -93,7 +95,7 @@ export default function RecordResponseTab() {
                   <SelectContent>
                     {RESPONDENT_TYPE_OPTIONS.filter((o) => o.value !== "anonymous" || survey.anonymousAllowed).map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -102,10 +104,10 @@ export default function RecordResponseTab() {
 
               {respondentType === "student" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="resp-student">Student</Label>
+                  <Label htmlFor="resp-student">{t("Student")}</Label>
                   <Select value={respondentStudentId} onValueChange={setRespondentStudentId}>
                     <SelectTrigger id="resp-student">
-                      <SelectValue placeholder="Select a student" />
+                      <SelectValue placeholder={t("Select a student")} />
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
@@ -120,10 +122,10 @@ export default function RecordResponseTab() {
 
               {respondentType === "staff" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="resp-staff">Staff member</Label>
+                  <Label htmlFor="resp-staff">{t("Staff member")}</Label>
                   <Select value={respondentStaffId} onValueChange={setRespondentStaffId}>
                     <SelectTrigger id="resp-staff">
-                      <SelectValue placeholder="Select a staff member" />
+                      <SelectValue placeholder={t("Select a staff member")} />
                     </SelectTrigger>
                     <SelectContent>
                       {staff.map((s) => (
@@ -139,14 +141,14 @@ export default function RecordResponseTab() {
               {respondentType === "parent" && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="resp-parentName">Parent/guardian name</Label>
+                    <Label htmlFor="resp-parentName">{t("Parent/guardian name")}</Label>
                     <Input id="resp-parentName" value={respondentName} onChange={(e) => setRespondentName(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="resp-parentChild" optional>Child</Label>
+                    <Label htmlFor="resp-parentChild" optional>{t("Child")}</Label>
                     <Select value={respondentStudentId} onValueChange={setRespondentStudentId}>
                       <SelectTrigger id="resp-parentChild">
-                        <SelectValue placeholder="Select a student" />
+                        <SelectValue placeholder={t("Select a student")} />
                       </SelectTrigger>
                       <SelectContent>
                         {students.map((s) => (
@@ -165,7 +167,7 @@ export default function RecordResponseTab() {
                   <div key={question.id} className="space-y-1.5">
                     <Label>
                       {question.text}
-                      {question.required && <span className="text-destructive-strong ml-0.5">*</span>}
+                      {question.required && <span className="text-destructive-strong ms-0.5">*</span>}
                     </Label>
 
                     {question.type === "rating" && (
@@ -189,7 +191,7 @@ export default function RecordResponseTab() {
                     {question.type === "multiple_choice" && (
                       <Select value={answers[question.id] ?? ""} onValueChange={(v) => setAnswers((prev) => ({ ...prev, [question.id]: v }))}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select an option" />
+                          <SelectValue placeholder={t("Select an option")} />
                         </SelectTrigger>
                         <SelectContent>
                           {(question.options ?? []).map((o) => (
@@ -211,7 +213,7 @@ export default function RecordResponseTab() {
                             variant={answers[question.id] === v ? "default" : "outline"}
                             onClick={() => setAnswers((prev) => ({ ...prev, [question.id]: v }))}
                           >
-                            {v === "yes" ? "Yes" : "No"}
+                            {v === "yes" ? t("Yes") : t("No")}
                           </Button>
                         ))}
                       </div>
@@ -239,7 +241,7 @@ export default function RecordResponseTab() {
               >
                 {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 <Send className="w-4 h-4" />
-                Submit response
+                {t("Submit response")}
               </Button>
             </>
           )}

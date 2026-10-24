@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CircleCheck } from "lucide-react";
@@ -20,6 +21,7 @@ interface FineRow {
 }
 
 export default function FinesTab() {
+  const { t } = useTranslation("library");
   const queryClient = useQueryClient();
 
   const { data: loans = [], isLoading, isError, refetch } = useQuery({ queryKey: ["library", "loans"], queryFn: listLoans });
@@ -35,7 +37,7 @@ export default function FinesTab() {
 
   const memberLabel = (member: LibraryMember): string => {
     const person = member.personType === "student" ? studentById.get(member.personId) : staffById.get(member.personId);
-    const name = person ? `${person.firstName} ${person.lastName}` : "Unknown";
+    const name = person ? `${person.firstName} ${person.lastName}` : t("Unknown");
     return `${name} (${member.membershipId})`;
   };
 
@@ -45,9 +47,9 @@ export default function FinesTab() {
     mutationFn: markFinePaid,
     onSuccess: () => {
       invalidate();
-      toast.success("Fine marked as paid");
+      toast.success(t("Fine marked as paid"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update fine"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update fine")),
   });
 
   const rows: FineRow[] = useMemo(() => {
@@ -66,42 +68,42 @@ export default function FinesTab() {
   }, [loans]);
 
   const columns: ColumnDef<FineRow, unknown>[] = [
-    { id: "book", header: "Book", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.loan.bookId)?.title ?? "—"}</span> },
+    { id: "book", header: t("Book"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{bookById.get(row.original.loan.bookId)?.title ?? "—"}</span> },
     {
       id: "member",
-      header: "Member",
+      header: t("Member"),
       cell: ({ row }) => {
         const member = memberById.get(row.original.loan.memberId);
         return <span className="text-sm text-foreground">{member ? memberLabel(member) : "—"}</span>;
       },
     },
-    { id: "dueDate", header: "Due date", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.loan.dueDate).toLocaleDateString()}</span> },
+    { id: "dueDate", header: t("Due date"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.loan.dueDate).toLocaleDateString()}</span> },
     {
       id: "returnedOn",
-      header: "Returned",
+      header: t("Returned"),
       cell: ({ row }) =>
         row.original.loan.returnedOn ? (
           <span className="text-sm text-secondary-foreground">{new Date(row.original.loan.returnedOn).toLocaleDateString()}</span>
         ) : (
-          <Badge variant="danger">Not yet returned</Badge>
+          <Badge variant="danger">{t("Not yet returned")}</Badge>
         ),
     },
     {
       id: "fineAmount",
-      header: "Fine",
+      header: t("Fine"),
       cell: ({ row }) => (
         <span className="text-sm text-foreground tabular-nums">
           {formatCurrency(row.original.fineAmount)}
-          {!row.original.finalized && <span className="text-xs text-muted-foreground"> (running)</span>}
+          {!row.original.finalized && <span className="text-xs text-muted-foreground"> {t("(running)")}</span>}
         </span>
       ),
     },
     {
       id: "paid",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
-        if (!row.original.finalized) return <Badge variant="warning">Awaiting return</Badge>;
-        return row.original.loan.finePaid ? <Badge variant="success">Paid</Badge> : <Badge variant="danger">Unpaid</Badge>;
+        if (!row.original.finalized) return <Badge variant="warning">{t("Awaiting return")}</Badge>;
+        return row.original.loan.finePaid ? <Badge variant="success">{t("Paid")}</Badge> : <Badge variant="danger">{t("Unpaid")}</Badge>;
       },
     },
     {
@@ -112,7 +114,7 @@ export default function FinesTab() {
         return (
           <Button variant="outline" size="sm" onClick={() => markPaidMutation.mutate(row.original.loan.id)} disabled={markPaidMutation.isPending}>
             <CircleCheck className="w-3.5 h-3.5" />
-            Mark paid
+            {t("Mark paid")}
           </Button>
         );
       },
@@ -123,11 +125,11 @@ export default function FinesTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">
-          Fines accrue at {formatCurrency(FINE_PER_DAY)}/day past the due date. Overdue loans show a running estimate until returned.
+          {t("Fines accrue at {{amount}}/day past the due date. Overdue loans show a running estimate until returned.", { amount: formatCurrency(FINE_PER_DAY) })}
         </p>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No fines to show." />
+      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No fines to show.")} />
     </div>
   );
 }

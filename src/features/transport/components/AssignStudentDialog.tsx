@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,6 +47,7 @@ export default function AssignStudentDialog({
   submitting: boolean;
   onSubmit: (values: StudentTransportAssignmentFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("transport");
   const isEdit = Boolean(assignment);
   const {
     register,
@@ -82,8 +84,8 @@ export default function AssignStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit transport assignment" : "Assign student to transport"}</DialogTitle>
-          <DialogDescription>Pick a student, then a route and one of its stops.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit transport assignment") : t("Assign student to transport")}</DialogTitle>
+          <DialogDescription>{t("Pick a student, then a route and one of its stops.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -92,14 +94,14 @@ export default function AssignStudentDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="ta-studentId" required>Student</Label>
+            <Label htmlFor="ta-studentId" required>{t("Student")}</Label>
             <Controller
               control={control}
               name="studentId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange} disabled={isEdit}>
                   <SelectTrigger id="ta-studentId">
-                    <SelectValue placeholder="Select a student" />
+                    <SelectValue placeholder={t("Select a student")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableStudents.map((s) => (
@@ -111,11 +113,11 @@ export default function AssignStudentDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ta-routeId" required>Route</Label>
+            <Label htmlFor="ta-routeId" required>{t("Route")}</Label>
             <Controller
               control={control}
               name="routeId"
@@ -127,7 +129,7 @@ export default function AssignStudentDialog({
                   }}
                 >
                   <SelectTrigger id="ta-routeId">
-                    <SelectValue placeholder="Select a route" />
+                    <SelectValue placeholder={t("Select a route")} />
                   </SelectTrigger>
                   <SelectContent>
                     {activeRoutes.map((r) => (
@@ -139,18 +141,18 @@ export default function AssignStudentDialog({
                 </Select>
               )}
             />
-            {errors.routeId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.routeId.message}</p>}
+            {errors.routeId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.routeId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ta-stopId" required>Pickup stop</Label>
+            <Label htmlFor="ta-stopId" required>{t("Pickup stop")}</Label>
             <Controller
               control={control}
               name="stopId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange} disabled={!routeId}>
                   <SelectTrigger id="ta-stopId">
-                    <SelectValue placeholder={routeId ? "Select a stop" : "Select a route first"} />
+                    <SelectValue placeholder={routeId ? t("Select a stop") : t("Select a route first")} />
                   </SelectTrigger>
                   <SelectContent>
                     {routeStops.map((s) => (
@@ -162,20 +164,20 @@ export default function AssignStudentDialog({
                 </Select>
               )}
             />
-            {errors.stopId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.stopId.message}</p>}
+            {errors.stopId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.stopId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="ta-monthlyFee" optional>Monthly fee</Label>
-            <Input id="ta-monthlyFee" type="number" min="0" step="1" placeholder="e.g. 1200" {...register("monthlyFee")} />
+            <Label htmlFor="ta-monthlyFee" optional>{t("Monthly fee")}</Label>
+            <Input id="ta-monthlyFee" type="number" min="0" step="1" placeholder={t("e.g. 1200")} {...register("monthlyFee")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Assign"}
+              {isEdit ? t("Save changes") : t("Assign")}
             </Button>
           </DialogFooter>
         </form>

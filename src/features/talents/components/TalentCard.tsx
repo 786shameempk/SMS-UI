@@ -9,6 +9,7 @@ import { CardSkeleton, CreatorLine, FeaturedRibbon, SectionHeader, StatusBadge, 
 import MediaCover from "./MediaCover";
 import { ReactionSummary } from "./ReactionBar";
 
+import { useTranslation } from "react-i18next";
 interface TalentCardProps {
   talent: TalentCardData;
   variant?: "grid" | "feature" | "compact";
@@ -20,6 +21,7 @@ interface TalentCardProps {
 }
 
 export default function TalentCard({ talent, variant = "grid", showStatus = false, to, className, footer }: TalentCardProps) {
+  const { t } = useTranslation("talents");
   const navigate = useNavigate();
   const href = to ?? `/talents/${talent.id}`;
   const category = CATEGORY_CONFIG[talent.category];
@@ -33,13 +35,13 @@ export default function TalentCard({ talent, variant = "grid", showStatus = fals
       >
         <MediaCover talent={talent} className="absolute inset-0" showTypeBadge={false} overlay />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--cc-navy)]/95 via-[var(--cc-navy)]/35 to-transparent" />
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+        <div className="absolute top-3 start-3 end-3 flex items-center justify-between gap-2">
           {talent.isFeatured ? <FeaturedRibbon /> : <span />}
           <VisibilityBadge visibility={talent.visibility} onDark />
         </div>
         <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 space-y-2.5">
           <span className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-md px-2.5 py-0.5 text-[11px] font-medium text-white">
-            {category.emoji} {category.label}
+            {category.emoji} {t(category.label)}
           </span>
           <Link to={href} onClick={(e) => e.stopPropagation()} className="block">
             <h3 className="cc-display text-xl sm:text-2xl font-bold text-white leading-tight line-clamp-2">{talent.title}</h3>
@@ -67,10 +69,10 @@ export default function TalentCard({ talent, variant = "grid", showStatus = fals
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <MediaCover talent={talent} className="absolute inset-0" />
-        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
+        <div className="absolute top-2 start-2 end-2 flex items-start justify-between gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-black/40 backdrop-blur-md px-2 py-0.5 text-[11px] font-medium text-white">
             <span aria-hidden="true">{category.emoji}</span>
-            <span className="truncate max-w-[110px]">{category.label}</span>
+            <span className="truncate max-w-[110px]">{t(category.label)}</span>
           </span>
           {talent.isFeatured && !showStatus ? <FeaturedRibbon /> : <VisibilityBadge visibility={talent.visibility} onDark />}
         </div>
@@ -84,8 +86,8 @@ export default function TalentCard({ talent, variant = "grid", showStatus = fals
           {showStatus ? (
             <>
               {talent.isHidden ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/12 px-2.5 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-300" title="Hidden by school moderators after a report">
-                  🛡️ Hidden
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/12 px-2.5 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-300" title={t("Hidden by school moderators after a report")}>
+                  {t("🛡️ Hidden")}
                 </span>
               ) : (
                 <StatusBadge status={talent.status} />
@@ -124,6 +126,7 @@ export function TalentRail({
   loading?: boolean;
   action?: React.ReactNode;
 }) {
+  const { t: tr } = useTranslation("talents");
   const rail = useRef<HTMLDivElement>(null);
   const scroll = (dir: 1 | -1) => rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.85, behavior: "smooth" });
 
@@ -138,10 +141,10 @@ export function TalentRail({
         action={
           <div className="flex items-center gap-1.5 shrink-0">
             {action}
-            <button type="button" onClick={() => scroll(-1)} className="hidden sm:flex w-8 h-8 rounded-full border border-border bg-card items-center justify-center hover:bg-secondary cursor-pointer" aria-label="Scroll left">
+            <button type="button" onClick={() => scroll(-1)} className="hidden sm:flex w-8 h-8 rounded-full border border-border bg-card items-center justify-center hover:bg-secondary cursor-pointer" aria-label={tr("Scroll left")}>
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <button type="button" onClick={() => scroll(1)} className="hidden sm:flex w-8 h-8 rounded-full border border-border bg-card items-center justify-center hover:bg-secondary cursor-pointer" aria-label="Scroll right">
+            <button type="button" onClick={() => scroll(1)} className="hidden sm:flex w-8 h-8 rounded-full border border-border bg-card items-center justify-center hover:bg-secondary cursor-pointer" aria-label={tr("Scroll right")}>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>

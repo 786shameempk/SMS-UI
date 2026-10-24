@@ -6,10 +6,13 @@ import type { StaffMember } from "@/features/staff/types";
 import type {
   AchievementCertificateFormValues,
   BonafideFormValues,
+  CertificateStatus,
   CertificateType,
+  CertificateVerification,
   CharacterCertificateFormValues,
   IssuedCertificate,
   RecipientType,
+  ReissueCertificateValues,
   StaffServiceCertificateFormValues,
   StudyCertificateFormValues,
   TransferCertificateFormValues,
@@ -36,6 +39,8 @@ const TYPE_FROM_API: Record<string, CertificateType> = {
   StaffService: "staff_service",
 };
 
+const STATUS_FROM_API: Record<string, CertificateStatus> = { Valid: "valid", Revoked: "revoked", Superseded: "superseded" };
+
 const RECIPIENT_TO_API: Record<RecipientType, string> = { student: "Student", staff: "Staff" };
 const RECIPIENT_FROM_API: Record<string, RecipientType> = { Student: "student", Staff: "staff" };
 
@@ -52,6 +57,27 @@ interface ApiIssuedCertificate {
   issuedOn: string;
   bodyLines: string[];
   meta: Array<{ label: string; value: string }>;
+  verificationToken?: string;
+  status?: string;
+  schoolName?: string | null;
+  revokedAt?: string | null;
+  revokedReason?: string | null;
+  replacedById?: string | null;
+  replacesId?: string | null;
+  verificationCount?: number;
+  lastVerifiedAt?: string | null;
+}
+
+interface ApiCertificateVerification {
+  status: string;
+  type: string;
+  certificateNumber: string;
+  recipientName: string;
+  issuedOn: string;
+  schoolName?: string | null;
+  revokedAt?: string | null;
+  replacementNumber?: string | null;
+  replacementToken?: string | null;
 }
 
 function mapCertificate(dto: ApiIssuedCertificate): IssuedCertificate {
@@ -68,7 +94,22 @@ function mapCertificate(dto: ApiIssuedCertificate): IssuedCertificate {
     issuedOn: dto.issuedOn,
     bodyLines: dto.bodyLines,
     meta: dto.meta,
+    verificationToken: dto.verificationToken ?? "",
+    status: STATUS_FROM_API[dto.status ?? "Valid"] ?? "valid",
+    schoolName: dto.schoolName ?? undefined,
+    revokedAt: dto.revokedAt ?? undefined,
+    revokedReason: dto.revokedReason ?? undefined,
+    replacedById: dto.replacedById ?? undefined,
+    replacesId: dto.replacesId ?? undefined,
+    verificationCount: dto.verificationCount ?? 0,
+    lastVerifiedAt: dto.lastVerifiedAt ?? undefined,
   };
+}
+
+/** The school's name goes onto the certificate record so the public verification page can say who issued it. Set by the page that generates. */
+let issuingSchoolName: string | undefined;
+export function setIssuingSchoolName(name: string | undefined) {
+  issuingSchoolName = name?.trim() || undefined;
 }
 
 async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
@@ -117,6 +158,7 @@ async function issue(snapshot: CertificateSnapshot): Promise<IssuedCertificate> 
       type: TYPE_TO_API[snapshot.type],
       recipientType: RECIPIENT_TO_API[snapshot.recipientType],
       certificateNumberOverride: snapshot.certificateNumberOverride || null,
+      schoolName: issuingSchoolName ?? null,
     }),
   );
   return mapCertificate(dto);
@@ -141,6 +183,41 @@ export async function listIssuedCertificates(): Promise<IssuedCertificate[]> {
 export async function getIssuedCertificate(id: string): Promise<IssuedCertificate> {
   const dto = await unwrap(campusHttpClient.get<ApiIssuedCertificate>(`/api/issuedcertificates/${id}`));
   return mapCertificate(dto);
+}
+
+export async function revokeCertificate(id: string, reason: string): Promise<IssuedCertificate> {
+  return mapCertificate(await unwrap(campusHttpClient.post<ApiIssuedCertificate>(`/api/issuedcertificates/${id}/revoke`, { reason })));
+}
+
+/** Issues a corrected certificate (new number, new QR code) and marks this one as replaced. Anything left out is copied from the original. */
+export async function reissueCertificate(id: string, values: ReissueCertificateValues): Promise<IssuedCertificate> {
+  return mapCertificate(
+    await unwrap(campusHttpClient.post<ApiIssuedCertificate>(`/api/issuedcertificates/${id}/reissue`, { ...values, schoolName: issuingSchoolName ?? null })),
+  );
+}
+
+/**
+ * Anonymous: used by the public page a certificate's QR code opens. A 404 (unknown or mistyped code) is the expected "not ours" answer,
+ * so no error toast; the caller shows it.
+ */
+export async function verifyCertificate(token: string): Promise<CertificateVerification | null> {
+  try {
+    const { data } = await campusHttpClient.get<ApiCertificateVerification>(`/api/public/certificates/${encodeURIComponent(token.trim())}`, { silentErrors: true });
+    return {
+      status: STATUS_FROM_API[data.status] ?? "revoked",
+      type: TYPE_FROM_API[data.type] ?? "bonafide",
+      certificateNumber: data.certificateNumber,
+      recipientName: data.recipientName,
+      issuedOn: data.issuedOn,
+      schoolName: data.schoolName ?? undefined,
+      revokedAt: data.revokedAt ?? undefined,
+      replacementNumber: data.replacementNumber ?? undefined,
+      replacementToken: data.replacementToken ?? undefined,
+    };
+  } catch (err) {
+    if ((err as { response?: { status?: number } }).response?.status === 404) return null;
+    throw new Error(extractApiErrorMessage(err));
+  }
 }
 
 export async function deleteIssuedCertificate(id: string): Promise<void> {

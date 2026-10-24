@@ -7,6 +7,7 @@ import { searchDirectory } from "../api";
 import type { AudienceRule, AudienceType, DirectoryPerson, MeetingType } from "../types";
 import { audienceKey } from "../utils";
 
+import { useTranslation } from "react-i18next";
 export interface PickedAudience extends AudienceRule {
   key: string;
   label: string;
@@ -81,6 +82,7 @@ interface AudiencePickerProps {
 }
 
 export default function AudiencePicker({ meetingType, sectionId, sectionLabel, value, onChange }: AudiencePickerProps) {
+  const { t } = useTranslation("meetings");
   const [search, setSearch] = useState("");
   const debounced = useDebounced(search.trim(), 250);
   const selected = new Set(value.map((v) => v.key));
@@ -114,33 +116,33 @@ export default function AudiencePicker({ meetingType, sectionId, sectionLabel, v
               key={option.type}
               disabled={disabled}
               onClick={() => toggle(item)}
-              title={disabled ? "Pick a class first" : option.hint}
+              title={disabled ? t("Pick a class first") : option.hint}
               pressed={on}
               size="lg"
             >
               {on && <Check aria-hidden />}
-              {option.label}
+              {t(option.label)}
             </ToggleChip>
           );
         })}
       </div>
 
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <Input
           id="meeting-people-search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Add a student, parent or staff member…"
-          className="pl-9"
+          placeholder={t("Add a student, parent or staff member…")}
+          className="ps-9"
           autoComplete="off"
         />
         {debounced.length >= 2 && (
-          <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
-            {isFetching && <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>}
-            {isError && <p className="px-3 py-2 text-sm text-destructive-strong">The school directory isn't available right now.</p>}
+          <div className="absolute start-0 end-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
+            {isFetching && <p className="px-3 py-2 text-sm text-muted-foreground">{t("Searching…")}</p>}
+            {isError && <p className="px-3 py-2 text-sm text-destructive-strong">{t("The school directory isn't available right now.")}</p>}
             {!isFetching && !isError && results.length === 0 && (
-              <p className="px-3 py-2 text-sm text-muted-foreground">No one with a login matches “{debounced}”.</p>
+              <p className="px-3 py-2 text-sm text-muted-foreground">{t("No one with a login matches “{{debounced}}”.", { debounced })}</p>
             )}
             {results.map((person) => {
               const rule = ruleFor(person);
@@ -154,7 +156,7 @@ export default function AudiencePicker({ meetingType, sectionId, sectionLabel, v
                     toggle(rule);
                     setSearch("");
                   }}
-                  className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-secondary cursor-pointer"
+                  className="flex w-full items-center gap-3 px-3 py-2 text-start text-sm hover:bg-secondary cursor-pointer"
                 >
                   <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 flex-1">
@@ -170,15 +172,15 @@ export default function AudiencePicker({ meetingType, sectionId, sectionLabel, v
       </div>
 
       {value.length > 0 && (
-        <ul className="flex flex-wrap gap-1.5" aria-label="Invited">
+        <ul className="flex flex-wrap gap-1.5" aria-label={t("Invited")}>
           {value.map((v) => (
-            <li key={v.key} className="inline-flex items-center gap-1 rounded-full bg-brand-100 py-1 pl-3 pr-1 text-xs font-semibold text-accent-foreground dark:bg-brand-900/40 dark:text-brand-200">
-              {v.label}
+            <li key={v.key} className="inline-flex items-center gap-1 rounded-full bg-brand-100 py-1 ps-3 pe-1 text-xs font-semibold text-accent-foreground dark:bg-brand-900/40 dark:text-brand-200">
+              {t(v.label)}
               <button
                 type="button"
                 onClick={() => onChange(value.filter((x) => x.key !== v.key))}
                 className="rounded-full p-0.5 hover:bg-brand-200 dark:hover:bg-brand-800 cursor-pointer"
-                aria-label={`Remove ${v.label}`}
+                aria-label={t("Remove {{label}}", { label: v.label })}
               >
                 <X className="h-3 w-3" />
               </button>

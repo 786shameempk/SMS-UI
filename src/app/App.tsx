@@ -15,6 +15,13 @@ import { router } from "./router";
 import { GoogleAnalytics } from "./GoogleAnalytics";
 import { OverflowTooltip } from "@/components/common/OverflowTooltip";
 import { TenantProvider } from "@/features/tenant/TenantProvider";
+import { useLanguageSync } from "@/i18n/preferences";
+
+/** The signed-in account's interface language (their choice, else the school default). */
+function LanguageSync() {
+  useLanguageSync();
+  return null;
+}
 
 // Runs once at module load, before first paint, so no saved appearance setting ever flashes its
 // default. Theme mode must apply first: applyBrandPreset reads document.documentElement's
@@ -30,6 +37,7 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <TenantProvider>
         <GoogleAnalytics router={router} />
+        <LanguageSync />
         <Suspense fallback={<div className="min-h-dvh bg-background" />}>
           <RouterProvider router={router} />
         </Suspense>

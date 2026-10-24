@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { Check, Users, FlaskConical, Layers, LayoutGrid, Move, Pencil, Plus, RotateCcw, RotateCw, SplitSquareHorizontal, Wifi, WifiOff } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
@@ -55,6 +57,7 @@ function Segmented<T extends string>({
   onChange: (v: T) => void;
   options: Array<{ value: T; label: string; icon: typeof Layers }>;
 }) {
+  const { t } = useTranslation("dashboard");
   return (
     <div role="radiogroup" aria-label={label} className="inline-flex h-9 items-center gap-0.5 rounded-lg bg-secondary p-0.5">
       {options.map(({ value: v, label: optionLabel, icon: Icon }) => (
@@ -70,7 +73,7 @@ function Segmented<T extends string>({
           )}
         >
           <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-          {optionLabel}
+          {t(optionLabel)}
         </button>
       ))}
     </div>
@@ -88,12 +91,12 @@ const SOURCE_OPTIONS: Array<{ value: DashboardDataSource; label: string; icon: t
 ];
 
 
-function timeAgo(ms: number, now: number): string {
+function updatedLabel(ms: number, now: number, t: TFunction): string {
   const s = Math.max(0, Math.round((now - ms) / 1000));
-  if (s < 45) return "just now";
+  if (s < 45) return t("Updated just now");
   const m = Math.round(s / 60);
-  if (m < 60) return `${m} min ago`;
-  return `${Math.round(m / 60)} h ago`;
+  if (m < 60) return t("Updated {{minutes}} min ago", { minutes: m });
+  return t("Updated {{hours}} h ago", { hours: Math.round(m / 60) });
 }
 
 /**
@@ -102,6 +105,7 @@ function timeAgo(ms: number, now: number): string {
  * them show, in what order and size (layout.ts); each widget then loads and fails on its own.
  */
 export default function DashboardPage() {
+  const { t } = useTranslation("dashboard");
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const role = user?.role ?? "admin";
@@ -150,21 +154,21 @@ export default function DashboardPage() {
   const canCustomize = available.some((w) => w.configurable);
   const startEditing = () => {
     setDraft(layout.items);
-    setAnnouncement("Editing your dashboard. Drag widgets or use the arrow buttons to move them.");
+    setAnnouncement(t("Editing your dashboard. Drag widgets or use the arrow buttons to move them."));
   };
   const saveDraft = () => {
     if (draft) layout.save(draft);
     setDraft(null);
-    setAnnouncement("Dashboard layout saved.");
+    setAnnouncement(t("Dashboard layout saved."));
   };
   const cancelEditing = () => {
     setDraft(null);
-    setAnnouncement("Changes discarded.");
+    setAnnouncement(t("Changes discarded."));
   };
   const resetToDefault = () => {
     layout.reset();
     setDraft(null);
-    setAnnouncement("Dashboard reset to the default layout.");
+    setAnnouncement(t("Dashboard reset to the default layout."));
   };
   const byId = new Map(available.map((w) => [w.id, w]));
   const setHidden = (ids: DashboardWidgetId[]) => layout.save(layout.items.map((i) => ({ ...i, visible: !ids.includes(i.id) })));
@@ -176,7 +180,8 @@ export default function DashboardPage() {
   const focusedChild = children.find((c) => c.studentId === childId);
   const viewIdentity = identity.data && focusedChild ? { ...identity.data, learners: [focusedChild] } : identity.data;
   const ctx = buildContext(user, viewIdentity, dateRange);
-  const rangeLabel = describeDateRange(dateRange);
+  // Preset labels are English constants (dateRange.ts); a custom range is already a formatted date span.
+  const rangeLabel = dateRange.preset === "custom" ? describeDateRange(dateRange) : t(describeDateRange(dateRange));
   const env: WidgetEnv = { source, dateRange, rangeLabel, quickActions };
 
   // "Updated … ago": the oldest figure on screen, re-rendered every 30 s.
@@ -184,8 +189,8 @@ export default function DashboardPage() {
   const updatedAt = useDashboardUpdatedAt(source);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const t = window.setInterval(() => setNow(Date.now()), 30_000);
-    return () => window.clearInterval(t);
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
   }, []);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["dashboard", source] });
 
@@ -193,11 +198,11 @@ export default function DashboardPage() {
     return (
       <PageContainer width="wide">
         <ErrorState
-          title="Your dashboard couldn't load"
+          title={t("Your dashboard couldn't load")}
           description={
             online
-              ? "We couldn't reach the server to fetch today's figures. Check your connection and try again."
-              : "You're offline. Reconnect to load your dashboard."
+              ? t("We couldn't reach the server to fetch today's figures. Check your connection and try again.")
+              : t("You're offline. Reconnect to load your dashboard.")
           }
           onRetry={() => identity.refetch()}
           retrying={identity.isRefetching}
@@ -213,20 +218,20 @@ export default function DashboardPage() {
   return (
     <PageContainer width="wide">
       <WelcomeHero
-        eyebrow={`${ROLE_LABEL[role] ?? role} dashboard`}
-        title={`${timeOfDayGreeting()}, ${user?.name.split(" ")[0] ?? "there"}`}
-        subtitle={ROLE_TAGLINE[role]}
+        eyebrow={t("{{role}} dashboard", { role: ROLE_LABEL[role] ? t(ROLE_LABEL[role]) : role })}
+        title={t("{{greeting}}, {{name}}", { greeting: t(timeOfDayGreeting()), name: user?.name.split(" ")[0] ?? t("there") })}
+        subtitle={ROLE_TAGLINE[role] ? t(ROLE_TAGLINE[role]) : undefined}
         aside={
           <div className="flex flex-wrap items-center gap-2">
-            {canSwitch && <Segmented label="Data source" value={source} onChange={setSource} options={SOURCE_OPTIONS} />}
+            {canSwitch && <Segmented label={t("Data source")} value={source} onChange={setSource} options={SOURCE_OPTIONS} />}
             {onOverview && children.length > 1 && (
               <Select value={focusedChild ? childId : "all"} onValueChange={setChildId}>
-                <SelectTrigger className="h-9 w-48" aria-label="Show the dashboard for">
+                <SelectTrigger className="h-9 w-48" aria-label={t("Show the dashboard for")}>
                   <Users className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All children</SelectItem>
+                  <SelectItem value="all">{t("All children")}</SelectItem>
                   {children.map((c) => (
                     <SelectItem key={c.studentId} value={c.studentId}>
                       {c.name.split(" ")[0]} · {c.classLabel}
@@ -235,18 +240,18 @@ export default function DashboardPage() {
                 </SelectContent>
               </Select>
             )}
-            {onOverview && allBranches && scopeShown && <Segmented label="Dashboard view" value={scopeView} onChange={setScopeView} options={SCOPE_VIEW_OPTIONS} />}
+            {onOverview && allBranches && scopeShown && <Segmented label={t("Dashboard view")} value={scopeView} onChange={setScopeView} options={SCOPE_VIEW_OPTIONS} />}
             <DateRangePicker value={dateRange} onChange={setDateRange} />
-            <Button variant="outline" size="sm" className="h-9 gap-2" onClick={refresh} disabled={fetching || !online} aria-label="Refresh dashboard">
+            <Button variant="outline" size="sm" className="h-9 gap-2" onClick={refresh} disabled={fetching || !online} aria-label={t("Refresh dashboard")}>
               <RotateCw className={cn("h-3.5 w-3.5", fetching && "animate-spin")} aria-hidden="true" />
               <span className="text-xs text-muted-foreground" aria-live="polite">
-                {fetching ? "Refreshing…" : updatedAt ? `Updated ${timeAgo(updatedAt, now)}` : "Refresh"}
+                {fetching ? t("Refreshing…") : updatedAt ? updatedLabel(updatedAt, now, t) : t("Refresh")}
               </span>
             </Button>
             {onOverview && canCustomize && !editing && (
               <Button variant="outline" size="sm" className="h-9 gap-2" onClick={startEditing}>
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                Customize
+                {t("Customize")}
               </Button>
             )}
             {onOverview && canCustomize && !editing && (
@@ -264,18 +269,18 @@ export default function DashboardPage() {
       />
 
       {tabs.length > 1 && (
-        <nav aria-label="Dashboard sections" className="space-y-2">
+        <nav aria-label={t("Dashboard sections")} className="space-y-2">
           <Tabs value={activeTab} onValueChange={selectTab}>
-            <TabsList variant="line" aria-label="Dashboard sections">
-              {tabs.map((t) => (
-                <TabsTrigger key={t.id} value={t.id}>
-                  <t.icon aria-hidden="true" />
-                  {t.label}
+            <TabsList variant="line" aria-label={t("Dashboard sections")}>
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab.id} value={tab.id}>
+                  <tab.icon aria-hidden="true" />
+                  {t(tab.label)}
                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
-          {!onOverview && <p className="text-sm text-muted-foreground">{DASHBOARD_TABS_BY_ID.get(activeTab)?.description}</p>}
+          {!onOverview && <p className="text-sm text-muted-foreground">{t(DASHBOARD_TABS_BY_ID.get(activeTab)?.description ?? "")}</p>}
         </nav>
       )}
 
@@ -286,32 +291,32 @@ export default function DashboardPage() {
       {onOverview && editing && (
         <div
           role="region"
-          aria-label="Customize dashboard"
+          aria-label={t("Customize dashboard")}
           className="sticky top-0 z-20 space-y-3 rounded-xl border border-primary/30 bg-card/95 p-3 shadow-md backdrop-blur supports-[backdrop-filter]:bg-card/85"
         >
           <div className="flex flex-wrap items-center gap-2">
             <Move className="h-4 w-4 text-primary-text" aria-hidden="true" />
             <p className="min-w-0 flex-1 text-sm text-foreground">
-              <span className="font-semibold">Customizing your dashboard.</span>{" "}
-              <span className="text-muted-foreground">Drag a card onto another to swap places, or use the arrows. Resize or hide from each card&apos;s toolbar.</span>
+              <span className="font-semibold">{t("Customizing your dashboard.")}</span>{" "}
+              <span className="text-muted-foreground">{t("Drag a card onto another to swap places, or use the arrows. Resize or hide from each card's toolbar.")}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               <Button variant="ghost" size="sm" onClick={resetToDefault} disabled={!layout.isCustomized}>
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                Reset to default
+                {t("Reset to default")}
               </Button>
               <Button variant="outline" size="sm" onClick={cancelEditing}>
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button size="sm" onClick={saveDraft}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                Save layout
+                {t("Save layout")}
               </Button>
             </div>
           </div>
           {draft!.some((i) => !i.visible && byId.get(i.id)?.configurable) && (
             <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
-              <span className="mr-1 text-xs font-medium text-muted-foreground">Hidden widgets:</span>
+              <span className="me-1 text-xs font-medium text-muted-foreground">{t("Hidden widgets:")}</span>
               {draft!
                 .filter((i) => !i.visible && byId.get(i.id)?.configurable)
                 .map((i) => (
@@ -320,12 +325,12 @@ export default function DashboardPage() {
                     pressed={false}
                     onClick={() => {
                       setDraft(updateItem(draft!, i.id, { visible: true }));
-                      setAnnouncement(`${byId.get(i.id)!.name} added back.`);
+                      setAnnouncement(t("{{name}} added back.", { name: t(byId.get(i.id)!.name) }));
                     }}
-                    aria-label={`Show ${byId.get(i.id)!.name}`}
+                    aria-label={t("Show {{name}}", { name: t(byId.get(i.id)!.name) })}
                   >
                     <Plus aria-hidden="true" />
-                    {byId.get(i.id)!.name}
+                    {t(byId.get(i.id)!.name)}
                   </ToggleChip>
                 ))}
             </div>
@@ -336,26 +341,26 @@ export default function DashboardPage() {
       {!online && (
         <div role="status" className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-muted-foreground">
           <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" />
-          You&apos;re offline. Figures below are from your last visit and will refresh when you reconnect.
+          {t("You're offline. Figures below are from your last visit and will refresh when you reconnect.")}
         </div>
       )}
 
       {onOverview && layout.isOffline && online && (
         <div role="status" className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-muted-foreground">
           <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden="true" />
-          We couldn&apos;t load your saved layout, so this is the copy on this device. Changes will save here until the server is back.
+          {t("We couldn't load your saved layout, so this is the copy on this device. Changes will save here until the server is back.")}
         </div>
       )}
 
       {isDemo && (
         <div role="status" className="flex flex-wrap items-center gap-2 rounded-lg border border-warning/30 bg-warning-soft px-3.5 py-2.5 text-sm text-warning-strong">
           <Badge variant="warning" dot>
-            Demo data
+            {t("Demo data")}
           </Badge>
-          <span>These figures are sample values, not your school&apos;s records.</span>
+          <span>{t("These figures are sample values, not your school's records.")}</span>
           {canSwitch && (
             <button type="button" onClick={() => setSource("live")} className="font-medium underline underline-offset-4 cursor-pointer">
-              Switch to live data
+              {t("Switch to live data")}
             </button>
           )}
         </div>
@@ -366,17 +371,17 @@ export default function DashboardPage() {
       ) : available.length === 0 ? (
         <EmptyState
           icon={LayoutGrid}
-          title="No dashboard widgets for your role"
-          description="Your role doesn't have access to any dashboard information yet. Ask your school administrator if you think this is wrong."
+          title={t("No dashboard widgets for your role")}
+          description={t("Your role doesn't have access to any dashboard information yet. Ask your school administrator if you think this is wrong.")}
         />
       ) : visible.length === 0 && !editing ? (
         <EmptyState
           icon={LayoutGrid}
-          title="Your dashboard is empty"
-          description="All widgets are hidden. Use Manage widgets above to add cards back, or reset to the default dashboard."
+          title={t("Your dashboard is empty")}
+          description={t("All widgets are hidden. Use Manage widgets above to add cards back, or reset to the default dashboard.")}
           action={
             <Button variant="outline" size="sm" onClick={layout.reset}>
-              Reset to default
+              {t("Reset to default")}
             </Button>
           }
         />

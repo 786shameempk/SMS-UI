@@ -14,7 +14,9 @@ import type { MessageTemplate, MessageTemplateFormValues } from "../types";
 import TemplateFormDialog from "./TemplateFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
+import { useTranslation } from "react-i18next";
 export default function TemplatesTab() {
+  const { t } = useTranslation("communication");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<MessageTemplate | null>(null);
@@ -28,37 +30,37 @@ export default function TemplatesTab() {
     mutationFn: createTemplate,
     onSuccess: () => {
       invalidate();
-      toast.success("Template created");
+      toast.success(t("Template created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create template"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create template")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: MessageTemplateFormValues }) => updateTemplate(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Template updated");
+      toast.success(t("Template updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update template"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update template")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteTemplate,
     onSuccess: () => {
       invalidate();
-      toast.success("Template deleted");
+      toast.success(t("Template deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete template"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete template")),
   });
 
   const columns: ColumnDef<MessageTemplate, unknown>[] = [
     {
       accessorKey: "name",
-      header: "Template",
+      header: t("Template"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.name}</p>
@@ -68,12 +70,12 @@ export default function TemplatesTab() {
     },
     {
       id: "category",
-      header: "Category",
+      header: t("Category"),
       cell: ({ row }) => (row.original.category ? <Badge variant="info">{row.original.category}</Badge> : <span className="text-sm text-muted-foreground">—</span>),
     },
     {
       id: "channels",
-      header: "Default channels",
+      header: t("Default channels"),
       cell: ({ row }) => (
         <div className="flex flex-wrap gap-1">
           {row.original.channels.map((c) => (
@@ -98,11 +100,11 @@ export default function TemplatesTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(template)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -113,7 +115,7 @@ export default function TemplatesTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Reusable message content for composing broadcasts quickly.</p>
+        <p className="text-sm text-muted-foreground">{t("Reusable message content for composing broadcasts quickly.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -121,11 +123,11 @@ export default function TemplatesTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New template
+          {t("New template")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={templates} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No templates yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={templates} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No templates yet.")} pageSize={8} />
 
       <TemplateFormDialog
         open={formOpen}
@@ -144,9 +146,9 @@ export default function TemplatesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete template"
-        description={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete template")}
+        description={t("Delete \"{{name}}\"? This cannot be undone.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

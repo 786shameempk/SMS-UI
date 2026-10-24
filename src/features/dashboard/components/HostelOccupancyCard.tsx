@@ -1,14 +1,16 @@
 import { BedDouble } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import type { HostelOccupancySummary } from "../types";
 
 export default function HostelOccupancyCard({ hostel }: { hostel: HostelOccupancySummary }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
-        <CardTitle>Hostel occupancy</CardTitle>
-        <CardDescription>{hostel.mine ? "Your child's boarding details." : "Beds occupied vs. capacity."}</CardDescription>
+        <CardTitle>{t("Hostel occupancy")}</CardTitle>
+        <CardDescription>{hostel.mine ? t("Your child's boarding details.") : t("Beds occupied vs. capacity.")}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-2">
         {hostel.mine ? (
@@ -17,12 +19,12 @@ export default function HostelOccupancyCard({ hostel }: { hostel: HostelOccupanc
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{hostel.mine.hostelName}</p>
               <p className="text-xs text-muted-foreground truncate">
-                Room {hostel.mine.roomNumber} &middot; Bed {hostel.mine.bedNumber}
+                {t("Room {{room}} · Bed {{bed}}", { room: hostel.mine.roomNumber, bed: hostel.mine.bedNumber })}
               </p>
             </div>
           </div>
         ) : hostel.hostels.length === 0 ? (
-          <EmptyState bare size="sm" icon={BedDouble} title="No active hostels" description="Hostel occupancy appears once rooms are set up." className="h-full py-6" />
+          <EmptyState bare size="sm" icon={BedDouble} title={t("No active hostels")} description={t("Hostel occupancy appears once rooms are set up.")} className="h-full py-6" />
         ) : (
           hostel.hostels.map((h) => {
             const pct = h.bedCount ? Math.round((h.occupiedCount / h.bedCount) * 100) : 0;

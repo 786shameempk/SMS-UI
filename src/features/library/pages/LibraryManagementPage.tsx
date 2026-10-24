@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthorsPublishersCategoriesTab from "../components/AuthorsPublishersCategoriesTab";
 import BooksTab from "../components/BooksTab";
@@ -8,21 +9,22 @@ import ReservationsTab from "../components/ReservationsTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function LibraryManagementPage() {
+  const { t } = useTranslation("library");
   return (
     <PageContainer>
       <PageHeader
-        title="Library management"
-        description="Maintain the book catalog, manage members, issue and return books, track fines, and handle reservations."
+        title={t("Library management")}
+        description={t("Maintain the book catalog, manage members, issue and return books, track fines, and handle reservations.")}
       />
 
       <Tabs defaultValue="books">
         <TabsList variant="line">
-          <TabsTrigger value="books">Books</TabsTrigger>
-          <TabsTrigger value="catalog">Authors & Publishers & Categories</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="issue-return">Issue / Return</TabsTrigger>
-          <TabsTrigger value="fines">Fines</TabsTrigger>
-          <TabsTrigger value="reservations">Reservations</TabsTrigger>
+          <TabsTrigger value="books">{t("Books")}</TabsTrigger>
+          <TabsTrigger value="catalog">{t("Authors & Publishers & Categories")}</TabsTrigger>
+          <TabsTrigger value="members">{t("Members")}</TabsTrigger>
+          <TabsTrigger value="issue-return">{t("Issue / Return")}</TabsTrigger>
+          <TabsTrigger value="fines">{t("Fines")}</TabsTrigger>
+          <TabsTrigger value="reservations">{t("Reservations")}</TabsTrigger>
         </TabsList>
         <TabsContent value="books">
           <BooksTab />

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Save } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ export default function LocalizationTab() {
   const { data: localization, isLoading } = useQuery({ queryKey: ["settings", "localization"], queryFn: getLocalization });
 
   const [form, setForm] = useState<LocalizationSettings | null>(null);
+  const { t } = useTranslation("settings");
 
   useEffect(() => {
     if (localization) setForm(localization);
@@ -25,12 +27,12 @@ export default function LocalizationTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", "localization"] });
       queryClient.invalidateQueries({ queryKey: ["settings", "audit-log"] });
-      toast.success("Localization settings saved");
+      toast.success(t("Localization settings saved"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not save settings"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not save settings")),
   });
 
-  if (isLoading || !form) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !form) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   let preview = "";
   try {
@@ -42,10 +44,11 @@ export default function LocalizationTab() {
   return (
     <Card className="max-w-xl">
       <CardHeader>
-        <CardTitle>Localization</CardTitle>
+        <CardTitle>{t("Localization")}</CardTitle>
         <CardDescription>
-          Saved as the school's preferred settings. Existing screens keep displaying INR (₹) as today — this captures the
-          preference for a future rollout rather than silently reformatting every currency value already on screen.
+          {t(
+            "Saved as the school's preferred settings. The language is the default interface language for everyone who hasn't chosen their own. Existing screens keep displaying INR (₹) as today — the currency is captured for a future rollout rather than silently reformatting every amount already on screen.",
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -58,7 +61,7 @@ export default function LocalizationTab() {
         >
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Language</Label>
+              <Label>{t("Language")}</Label>
               <Select value={form.language} onValueChange={(v) => setForm({ ...form, language: v })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -66,14 +69,14 @@ export default function LocalizationTab() {
                 <SelectContent>
                   {LANGUAGE_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
-                      {o.label}
+                      {t(o.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Timezone</Label>
+              <Label>{t("Timezone")}</Label>
               <Select value={form.timezone} onValueChange={(v) => setForm({ ...form, timezone: v })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -81,7 +84,7 @@ export default function LocalizationTab() {
                 <SelectContent>
                   {TIMEZONE_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
-                      {o.label}
+                      {t(o.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -91,7 +94,7 @@ export default function LocalizationTab() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Currency</Label>
+              <Label>{t("Currency")}</Label>
               <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -99,14 +102,14 @@ export default function LocalizationTab() {
                 <SelectContent>
                   {CURRENCY_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
-                      {o.label}
+                      {t(o.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Date format</Label>
+              <Label>{t("Date format")}</Label>
               <Select value={form.dateFormat} onValueChange={(v) => setForm({ ...form, dateFormat: v })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -123,12 +126,12 @@ export default function LocalizationTab() {
           </div>
 
           <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-foreground">
-            Preview: <span className="font-semibold">{preview}</span>
+            {t("Preview:")} <span className="font-semibold">{preview}</span>
           </div>
 
           <Button type="submit" disabled={saveMutation.isPending}>
             {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save settings
+            {t("Save settings")}
           </Button>
         </form>
       </CardContent>

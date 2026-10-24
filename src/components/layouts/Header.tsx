@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/utils/cn";
-import { BookOpenText, ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, Search, ShieldCheck, Sun } from "lucide-react";
+import { BookOpenText, ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, QrCode, Search, ShieldCheck, Sun } from "lucide-react";
+import { LanguageMenu } from "@/i18n/LanguageMenu";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { hasAllBranchAccess } from "@/types/auth";
@@ -19,6 +22,8 @@ import { useMobileNav } from "@/components/layouts/mobileNav";
 import { findNavEntry } from "@/constants/nav";
 import { BranchSwitcher, TenantSwitcher } from "./ScopeSwitchers";
 import CommandMenu, { openCommandMenu } from "./CommandMenu";
+import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
+import { useAttendanceQueue } from "@/features/attendance/offline/hooks";
 
 const THEME_MODE_SEQUENCE: ThemeMode[] = ["light", "dark", "system"];
 const THEME_MODE_ICON: Record<ThemeMode, typeof Sun> = { light: Sun, dark: Moon, system: Monitor };
@@ -28,6 +33,7 @@ function ThemeModeToggle() {
   const themeMode = useUiStore((s) => s.themeMode);
   const setThemeMode = useUiStore((s) => s.setThemeMode);
   const Icon = THEME_MODE_ICON[themeMode];
+  const { t } = useTranslation("common");
 
   const cycle = () => {
     const next = THEME_MODE_SEQUENCE[(THEME_MODE_SEQUENCE.indexOf(themeMode) + 1) % THEME_MODE_SEQUENCE.length];
@@ -41,13 +47,13 @@ function ThemeModeToggle() {
           <button
             type="button"
             onClick={cycle}
-            aria-label={`Theme: ${THEME_MODE_LABEL[themeMode]} (click to change)`}
+            aria-label={t("Theme: {{mode}} (click to change)", { mode: t(THEME_MODE_LABEL[themeMode]) })}
             className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Icon className="w-4 h-4" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom">{THEME_MODE_LABEL[themeMode]}</TooltipContent>
+        <TooltipContent side="bottom">{t(THEME_MODE_LABEL[themeMode])}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
@@ -58,13 +64,14 @@ function ThemeModeMenuItem() {
   const setThemeMode = useUiStore((s) => s.setThemeMode);
   const Icon = THEME_MODE_ICON[themeMode];
   const next = THEME_MODE_SEQUENCE[(THEME_MODE_SEQUENCE.indexOf(themeMode) + 1) % THEME_MODE_SEQUENCE.length];
+  const { t } = useTranslation("common");
 
   return (
     // Keep the menu open so the new theme is visible straight away.
     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setThemeMode(next); }}>
       <Icon />
-      Theme
-      <span className="ml-auto text-xs text-muted-foreground">{THEME_MODE_LABEL[themeMode]}</span>
+      {t("Theme")}
+      <span className="ms-auto text-xs text-muted-foreground">{t(THEME_MODE_LABEL[themeMode])}</span>
     </DropdownMenuItem>
   );
 }
@@ -73,6 +80,7 @@ function HelpMenu() {
   const navigate = useNavigate();
   const canUseHelpdesk = useAuthStore((s) => s.modulePermissions?.helpdesk ?? false);
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+  const { t } = useTranslation("common");
 
   return (
     <DropdownMenu>
@@ -82,36 +90,36 @@ function HelpMenu() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="Help and support"
+                aria-label={t("Help and support")}
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <CircleHelp className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Help</TooltipContent>
+          <TooltipContent side="bottom">{t("Help")}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem onClick={openCommandMenu}>
           <Search />
-          Search pages
-          <kbd className="ml-auto rounded border border-border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground">
+          {t("Search pages")}
+          <kbd className="ms-auto rounded border border-border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground">
             {isMac ? "⌘" : "Ctrl"} K
           </kbd>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate("/help")}>
           <BookOpenText />
-          Help Center
+          {t("Help Center")}
         </DropdownMenuItem>
         {canUseHelpdesk && (
           <DropdownMenuItem onClick={() => navigate("/helpdesk")}>
             <LifeBuoy />
-            Help desk
+            {t("Help desk")}
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <p className="px-2.5 py-2 text-xs leading-5 text-muted-foreground">Something not working? Your school administrator can help with access and accounts.</p>
+        <p className="px-2.5 py-2 text-xs leading-5 text-muted-foreground">{t("Something not working? Your school administrator can help with access and accounts.")}</p>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -130,16 +138,18 @@ function initialsOf(name: string | undefined | null) {
 /** "Section › Page" for where the user is, plus a trailing crumb on detail routes (e.g. a student profile). */
 function Breadcrumbs() {
   const { pathname } = useLocation();
+  const { t } = useTranslation("nav");
+  const { t: tc } = useTranslation("common");
   const entry = findNavEntry(pathname);
   if (!entry) return null;
   const isDetail = pathname !== entry.item.to && !pathname.startsWith("/talents");
   const crumbs: Array<{ label: string; to?: string }> = [];
-  if (entry.section) crumbs.push({ label: entry.section.title });
-  crumbs.push({ label: entry.item.label, to: isDetail ? entry.item.to : undefined });
-  if (isDetail) crumbs.push({ label: "Details" });
+  if (entry.section) crumbs.push({ label: t(entry.section.title) });
+  crumbs.push({ label: t(entry.item.label), to: isDetail ? entry.item.to : undefined });
+  if (isDetail) crumbs.push({ label: t("Details") });
 
   return (
-    <nav aria-label="Breadcrumb" className="min-w-0">
+    <nav aria-label={tc("Breadcrumb")} className="min-w-0">
       <ol className="flex min-w-0 items-center gap-1.5 text-sm">
         {crumbs.map((c, i) => {
           const last = i === crumbs.length - 1;
@@ -182,19 +192,25 @@ export default function Header() {
   const openMobileNav = useMobileNav((s) => s.setOpen);
   const isSuperAdmin = user?.role === "superAdmin";
   const canSwitchBranch = isSuperAdmin || hasAllBranchAccess(user);
+  const { t } = useTranslation("common");
 
-  const handleLogout = () => {
+  // Registers saved on this device while offline are deleted when someone signs out on purpose, so ask first.
+  const unsentRegisters = useAttendanceQueue().open.length;
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
+
+  const signOut = () => {
     clearAuth();
-    toast.success("Logged out");
+    toast.success(t("Logged out"));
     navigate("/login", { replace: true });
   };
+  const handleLogout = () => (unsentRegisters > 0 ? setConfirmingLogout(true) : signOut());
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-card/75 sm:gap-3 sm:px-5">
       <button
         type="button"
         onClick={() => openMobileNav(true)}
-        aria-label="Open menu"
+        aria-label={t("Open menu")}
         className="md:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"
       >
         <Menu className="h-5 w-5" />
@@ -226,15 +242,15 @@ export default function Header() {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label="Account menu"
-            className="flex shrink-0 items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 2xl:pr-2.5"
+            aria-label={t("Account menu")}
+            className="flex shrink-0 items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 2xl:pe-2.5"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary bg-brand-gradient text-[11px] font-semibold text-primary-foreground ring-2 ring-card shadow-xs">
               {initialsOf(user?.name)}
             </div>
-            <div className="hidden text-left 2xl:block">
-              <p className="max-w-[140px] truncate text-[13px] font-medium leading-tight text-foreground">{user?.name ?? "User"}</p>
-              <p className="text-[11px] leading-tight text-muted-foreground">{ROLE_LABEL[user?.role ?? ""] ?? user?.role}</p>
+            <div className="hidden text-start 2xl:block">
+              <p className="max-w-[140px] truncate text-[13px] font-medium leading-tight text-foreground">{user?.name ?? t("User")}</p>
+              <p className="text-[11px] leading-tight text-muted-foreground">{ROLE_LABEL[user?.role ?? ""] ? t(ROLE_LABEL[user?.role ?? ""]) : user?.role}</p>
             </div>
           </button>
         </DropdownMenuTrigger>
@@ -244,7 +260,7 @@ export default function Header() {
               {initialsOf(user?.name)}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">{user?.name ?? "User"}</p>
+              <p className="truncate text-sm font-semibold text-foreground">{user?.name ?? t("User")}</p>
               <p className="truncate text-xs text-muted-foreground">{user?.email ?? ""}</p>
             </div>
           </div>
@@ -254,17 +270,33 @@ export default function Header() {
             <ThemeModeMenuItem />
             <DropdownMenuSeparator />
           </div>
+          <LanguageMenu />
+          {user?.role !== "parent" && user?.role !== "superAdmin" && (
+            <DropdownMenuItem onClick={() => navigate("/account/attendance-pass")}>
+              <QrCode />
+              {t("My attendance pass")}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => navigate("/account/security")}>
             <ShieldCheck />
-            Security settings
+            {t("Security settings")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut />
-            Log out
+            {t("Log out")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <ConfirmDialog
+        open={confirmingLogout}
+        onOpenChange={setConfirmingLogout}
+        title={t("Attendance not sent yet")}
+        description={t("Attendance saved on this device hasn't reached the school yet ({{count}} waiting). Signing out deletes it. Go online and wait for it to be sent first.", { count: unsentRegisters })}
+        confirmLabel={t("Sign out anyway")}
+        confirmVariant="destructive"
+        onConfirm={signOut}
+      />
     </header>
   );
 }

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Camera, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -13,6 +14,7 @@ function initialsOf(first: string, last: string) {
 }
 
 export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -22,7 +24,7 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       queryClient.invalidateQueries({ queryKey: ["staff", staff.id] });
-      toast.success("Photo updated");
+      toast.success(t("Photo updated"));
     },
   });
 
@@ -30,7 +32,7 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file");
+      toast.error(t("Please choose an image file"));
       return;
     }
     setUploading(true);
@@ -43,7 +45,7 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
       });
       await photoMutation.mutateAsync(dataUrl);
     } catch {
-      toast.error("Could not read that image");
+      toast.error(t("Could not read that image"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -64,8 +66,8 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-sm hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-60"
-                aria-label="Change staff photo"
+                className="absolute -bottom-1 -end-1 w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-sm hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-60"
+                aria-label={t("Change staff photo")}
               >
                 {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
               </button>
@@ -76,42 +78,44 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
                 {staff.firstName} {staff.lastName}
               </p>
               <p className="text-sm text-muted-foreground">
-                {staff.designation} &middot; {staff.department}
+                {t(staff.designation)} &middot; {staff.department}
               </p>
             </div>
           </div>
 
           <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-4 text-sm">
             <div>
-              <dt className="text-xs text-muted-foreground">Employee ID</dt>
+              <dt className="text-xs text-muted-foreground">{t("Employee ID")}</dt>
               <dd className="text-foreground font-medium">{staff.employeeId}</dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Joining date</dt>
+              <dt className="text-xs text-muted-foreground">{t("Joining date")}</dt>
               <dd className="text-foreground font-medium">{new Date(staff.joiningDate).toLocaleDateString()}</dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Date of birth</dt>
+              <dt className="text-xs text-muted-foreground">{t("Date of birth")}</dt>
               <dd className="text-foreground font-medium">{new Date(staff.dateOfBirth).toLocaleDateString()}</dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Phone</dt>
+              <dt className="text-xs text-muted-foreground">{t("Phone")}</dt>
               <dd className="text-foreground font-medium">{staff.phone}</dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Email</dt>
+              <dt className="text-xs text-muted-foreground">{t("Email")}</dt>
               <dd className="text-foreground font-medium">{staff.email}</dd>
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <dt className="text-xs text-muted-foreground">Address</dt>
+              <dt className="text-xs text-muted-foreground">{t("Address")}</dt>
               <dd className="text-foreground font-medium">{staff.address || "—"}</dd>
             </div>
           </dl>
 
           {staff.resignation && (
             <div className="rounded-lg bg-destructive-soft border border-red-100 p-3 text-sm text-destructive-strong">
-              Resigned on {new Date(staff.resignation.resignedAt).toLocaleDateString()} &middot; last working day{" "}
-              {new Date(staff.resignation.lastWorkingDate).toLocaleDateString()}
+              {t("Resigned on {{resignedOn}} · last working day {{lastDay}}", {
+                resignedOn: new Date(staff.resignation.resignedAt).toLocaleDateString(),
+                lastDay: new Date(staff.resignation.lastWorkingDate).toLocaleDateString(),
+              })}
               <p className="text-destructive-strong mt-1">{staff.resignation.reason}</p>
             </div>
           )}
@@ -120,16 +124,16 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Promotion history</CardTitle>
+          <CardTitle>{t("Promotion history")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {staff.promotions.length === 0 && <p className="text-sm text-muted-foreground">No promotions on record.</p>}
+          {staff.promotions.length === 0 && <p className="text-sm text-muted-foreground">{t("No promotions on record.")}</p>}
           {staff.promotions.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
                 <p className="text-sm text-foreground">
-                  <span className="text-muted-foreground">{p.fromDesignation}</span> &rarr;{" "}
-                  <span className="font-medium">{p.toDesignation}</span>
+                  <span className="text-muted-foreground">{t(p.fromDesignation)}</span> &rarr;{" "}
+                  <span className="font-medium">{t(p.toDesignation)}</span>
                 </p>
                 {p.remarks && <p className="text-xs text-muted-foreground mt-0.5">{p.remarks}</p>}
               </div>

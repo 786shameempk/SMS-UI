@@ -4,21 +4,23 @@ import StockTransactionsTab from "../components/StockTransactionsTab";
 import VendorsCategoriesTab from "../components/VendorsCategoriesTab";
 import ReportsTab from "../components/ReportsTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
+import { useTranslation } from "react-i18next";
 
 export default function InventoryManagementPage() {
+  const { t } = useTranslation("inventory");
   return (
     <PageContainer>
       <PageHeader
-        title="Inventory management"
-        description="Track items and stock levels, record purchases and issues, and manage vendors and categories."
+        title={t("Inventory management")}
+        description={t("Track items and stock levels, record purchases and issues, and manage vendors and categories.")}
       />
 
       <Tabs defaultValue="items">
         <TabsList variant="line">
-          <TabsTrigger value="items">Items</TabsTrigger>
-          <TabsTrigger value="transactions">Stock Transactions</TabsTrigger>
-          <TabsTrigger value="vendors">Vendors & Categories</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="items">{t("Items")}</TabsTrigger>
+          <TabsTrigger value="transactions">{t("Stock Transactions")}</TabsTrigger>
+          <TabsTrigger value="vendors">{t("Vendors & Categories")}</TabsTrigger>
+          <TabsTrigger value="reports">{t("Reports")}</TabsTrigger>
         </TabsList>
         <TabsContent value="items">
           <ItemsTab />

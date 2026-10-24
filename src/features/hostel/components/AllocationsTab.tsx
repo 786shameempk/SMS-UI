@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -17,6 +18,7 @@ import AllocateStudentDialog from "./AllocateStudentDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function AllocationsTab() {
+  const { t } = useTranslation("hostel");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<HostelAllocationRow | null>(null);
@@ -32,35 +34,35 @@ export default function AllocationsTab() {
     mutationFn: allocateStudent,
     onSuccess: () => {
       invalidate();
-      toast.success("Student allocated");
+      toast.success(t("Student allocated"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not allocate student"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not allocate student")),
   });
 
   const vacateMutation = useMutation({
     mutationFn: vacateAllocation,
     onSuccess: () => {
       invalidate();
-      toast.success("Allocation vacated");
+      toast.success(t("Allocation vacated"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not vacate allocation"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not vacate allocation")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteAllocation,
     onSuccess: () => {
       invalidate();
-      toast.success("Allocation removed");
+      toast.success(t("Allocation removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove allocation"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not remove allocation")),
   });
 
   const columns: ColumnDef<HostelAllocationRow, unknown>[] = [
     {
       id: "student",
-      header: "Student",
+      header: t("Student"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -74,12 +76,12 @@ export default function AllocationsTab() {
     },
     {
       id: "hostel",
-      header: "Hostel",
+      header: t("Hostel"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.hostel.name}</span>,
     },
     {
       id: "room",
-      header: "Room / Bed",
+      header: t("Room / Bed"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.room.roomNumber} · Bed {row.original.bedNumber}
@@ -88,15 +90,15 @@ export default function AllocationsTab() {
     },
     {
       id: "fee",
-      header: "Monthly fee",
+      header: t("Monthly fee"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.monthlyFee != null ? formatCurrency(row.original.monthlyFee) : "—"}</span>,
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = ALLOCATION_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -109,12 +111,12 @@ export default function AllocationsTab() {
             {allocation.status === "active" && (
               <DropdownMenuItem onClick={() => vacateMutation.mutate(allocation.id)}>
                 <LogOut className="w-3.5 h-3.5" />
-                Vacate
+                {t("Vacate")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => setDeleteTarget(allocation)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Remove
+              {t("Remove")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -125,14 +127,14 @@ export default function AllocationsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Allocate students to a hostel room and bed.</p>
+        <p className="text-sm text-muted-foreground">{t("Allocate students to a hostel room and bed.")}</p>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          Allocate student
+          {t("Allocate student")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={allocations} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No students allocated yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={allocations} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No students allocated yet.")} pageSize={10} />
 
       <AllocateStudentDialog
         open={formOpen}
@@ -150,9 +152,9 @@ export default function AllocationsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove allocation"
-        description={`Remove "${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}" from "${deleteTarget?.room.roomNumber}"? This cannot be undone.`}
-        confirmLabel="Remove"
+        title={t("Remove allocation")}
+        description={t("Remove \"{{name}}\" from \"{{room}}\"? This cannot be undone.", { name: `${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}`, room: deleteTarget?.room.roomNumber })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

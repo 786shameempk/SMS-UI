@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +33,7 @@ export default function RouteStopsDialog({
   onOpenChange: (open: boolean) => void;
   route: TransportRoute | null;
 }) {
+  const { t } = useTranslation("transport");
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<RouteStop | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -61,37 +63,37 @@ export default function RouteStopsDialog({
     mutationFn: (values: RouteStopFormValues) => addStop(route!.id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Stop added");
+      toast.success(t("Stop added"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add stop"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add stop")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: RouteStopFormValues }) => updateStop(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Stop updated");
+      toast.success(t("Stop updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update stop"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update stop")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteStop,
     onSuccess: () => {
       invalidate();
-      toast.success("Stop removed");
+      toast.success(t("Stop removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove stop"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not remove stop")),
   });
 
   const moveMutation = useMutation({
     mutationFn: ({ id, direction }: { id: string; direction: "up" | "down" }) => moveStop(id, direction),
     onSuccess: () => invalidate(),
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not reorder stop"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not reorder stop")),
   });
 
   return (
@@ -108,8 +110,8 @@ export default function RouteStopsDialog({
       >
         <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
           <DialogHeader>
-            <DialogTitle>Stops — {route?.name}</DialogTitle>
-            <DialogDescription>Stops are visited in order from first to last on the way to school.</DialogDescription>
+            <DialogTitle>{t("Stops — {{route}}", { route: route?.name ?? "" })}</DialogTitle>
+            <DialogDescription>{t("Stops are visited in order from first to last on the way to school.")}</DialogDescription>
           </DialogHeader>
 
           {!formOpen && (
@@ -122,11 +124,11 @@ export default function RouteStopsDialog({
                 }}
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add stop
+                {t("Add stop")}
               </Button>
 
-              {isLoading && <p className="text-sm text-muted-foreground">Loading stops…</p>}
-              {!isLoading && stops.length === 0 && <p className="text-sm text-muted-foreground">No stops on this route yet.</p>}
+              {isLoading && <p className="text-sm text-muted-foreground">{t("Loading stops…")}</p>}
+              {!isLoading && stops.length === 0 && <p className="text-sm text-muted-foreground">{t("No stops on this route yet.")}</p>}
 
               <ul className="space-y-2">
                 {stops.map((stop, index) => (
@@ -191,18 +193,18 @@ export default function RouteStopsDialog({
               className="space-y-4"
             >
               <div className="space-y-1.5">
-                <Label htmlFor="stop-name" required>Stop name</Label>
-                <Input id="stop-name" placeholder="e.g. Jayanagar 4th Block" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-                {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+                <Label htmlFor="stop-name" required>{t("Stop name")}</Label>
+                <Input id="stop-name" placeholder={t("e.g. Jayanagar 4th Block")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+                {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="stop-arrivalTime" required>Arrival time</Label>
+                <Label htmlFor="stop-arrivalTime" required>{t("Arrival time")}</Label>
                 <Input id="stop-arrivalTime" type="time" aria-invalid={errors.arrivalTime ? true : undefined} {...register("arrivalTime")} />
-                {errors.arrivalTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.arrivalTime.message}</p>}
+                {errors.arrivalTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.arrivalTime.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="stop-landmark" optional>Landmark</Label>
-                <Input id="stop-landmark" placeholder="e.g. Near BDA Complex" {...register("landmark")} />
+                <Label htmlFor="stop-landmark" optional>{t("Landmark")}</Label>
+                <Input id="stop-landmark" placeholder={t("e.g. Near BDA Complex")} {...register("landmark")} />
               </div>
               <div className="flex justify-end gap-2">
                 <Button
@@ -213,11 +215,11 @@ export default function RouteStopsDialog({
                     setEditing(null);
                   }}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </Button>
                 <Button type="submit" disabled={addMutation.isPending || updateMutation.isPending}>
                   {(addMutation.isPending || updateMutation.isPending) && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {editing ? "Save changes" : "Add stop"}
+                  {editing ? t("Save changes") : t("Add stop")}
                 </Button>
               </div>
             </form>
@@ -228,9 +230,9 @@ export default function RouteStopsDialog({
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove stop"
-        description={`Remove "${deleteTarget?.name}" from this route? This cannot be undone.`}
-        confirmLabel="Remove"
+        title={t("Remove stop")}
+        description={t('Remove "{{name}}" from this route? This cannot be undone.', { name: deleteTarget?.name })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

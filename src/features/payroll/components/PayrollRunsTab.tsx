@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Plus, Trash2, Users, Wallet, WalletCards } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
@@ -21,6 +22,7 @@ function StatBlock({ label, value, icon }: { label: string; value: string; icon:
 }
 
 export default function PayrollRunsTab() {
+  const { t } = useTranslation("payroll");
   const queryClient = useQueryClient();
   const { data: runs = [], isLoading, isError, refetch } = useQuery({ queryKey: ["payroll", "runs"], queryFn: listPayrollRuns });
 
@@ -35,29 +37,37 @@ export default function PayrollRunsTab() {
     mutationFn: generatePayrollRun,
     onSuccess: ({ createdCount, skippedCount }) => {
       invalidate();
-      toast.success(`Generated ${createdCount} payslip${createdCount === 1 ? "" : "s"}${skippedCount ? ` (${skippedCount} already paid, skipped)` : ""}`);
+      toast.success(
+        skippedCount
+          ? createdCount === 1
+            ? t("Generated {{created}} payslip ({{skipped}} already paid, skipped)", { created: createdCount, skipped: skippedCount })
+            : t("Generated {{created}} payslips ({{skipped}} already paid, skipped)", { created: createdCount, skipped: skippedCount })
+          : createdCount === 1
+            ? t("Generated {{created}} payslip", { created: createdCount })
+            : t("Generated {{created}} payslips", { created: createdCount }),
+      );
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not generate payroll"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not generate payroll")),
   });
 
   const finalizeMutation = useMutation({
     mutationFn: finalizePayrollRun,
     onSuccess: (run) => {
       invalidate();
-      toast.success(`${monthLabel(run.month)} payroll finalized`);
+      toast.success(t("{{month}} payroll finalized", { month: monthLabel(run.month) }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not finalize run"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not finalize run")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deletePayrollRun,
     onSuccess: () => {
       invalidate();
-      toast.success("Draft run removed");
+      toast.success(t("Draft run removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete run"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete run")),
   });
 
   const latest = runs[0];
@@ -66,22 +76,22 @@ export default function PayrollRunsTab() {
   const columns: ColumnDef<PayrollRunSummary, unknown>[] = [
     {
       accessorKey: "month",
-      header: "Month",
+      header: t("Month"),
       cell: ({ row }) => <span className="text-sm font-medium text-foreground">{monthLabel(row.original.month)}</span>,
     },
     {
       accessorKey: "staffCount",
-      header: "Staff",
+      header: t("Staff"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.staffCount}</span>,
     },
     {
       accessorKey: "totalNetPay",
-      header: "Total net pay",
+      header: t("Total net pay"),
       cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.totalNetPay)}</span>,
     },
     {
       id: "paid",
-      header: "Paid",
+      header: t("Paid"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.paidCount}/{row.original.staffCount}
@@ -90,10 +100,10 @@ export default function PayrollRunsTab() {
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = PAYROLL_RUN_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -106,11 +116,11 @@ export default function PayrollRunsTab() {
           <RowActions>
             <DropdownMenuItem onClick={() => finalizeMutation.mutate(run.id)}>
               <CheckCircle2 className="w-3.5 h-3.5" />
-              Finalize
+              {t("Finalize")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(run)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -121,20 +131,20 @@ export default function PayrollRunsTab() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatBlock label={latest ? `Payroll for ${monthLabel(latest.month)}` : "Latest payroll"} value={latest ? formatCurrency(latest.totalNetPay) : "—"} icon={Wallet} />
-        <StatBlock label="Staff on latest run" value={latest ? String(latest.staffCount) : "—"} icon={Users} />
-        <StatBlock label="Pending payslips (all runs)" value={String(pendingAcrossAll)} icon={WalletCards} />
+        <StatBlock label={latest ? t("Payroll for {{month}}", { month: monthLabel(latest.month) }) : t("Latest payroll")} value={latest ? formatCurrency(latest.totalNetPay) : "—"} icon={Wallet} />
+        <StatBlock label={t("Staff on latest run")} value={latest ? String(latest.staffCount) : "—"} icon={Users} />
+        <StatBlock label={t("Pending payslips (all runs)")} value={String(pendingAcrossAll)} icon={WalletCards} />
       </div>
 
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">One run per month, generated from each staff member's current salary structure.</p>
+        <p className="text-sm text-muted-foreground">{t("One run per month, generated from each staff member's current salary structure.")}</p>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          Generate payroll
+          {t("Generate payroll")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={runs} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No payroll runs yet." />
+      <DataTable searchable columns={columns} data={runs} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No payroll runs yet.")} />
 
       <GeneratePayrollDialog
         open={formOpen}
@@ -148,9 +158,12 @@ export default function PayrollRunsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete draft payroll run"
-        description={`Delete the draft payroll run for ${deleteTarget ? monthLabel(deleteTarget.month) : ""}? Its ${deleteTarget?.staffCount ?? 0} payslip(s) will be removed. This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete draft payroll run")}
+        description={t("Delete the draft payroll run for {{month}}? Its {{n}} payslip(s) will be removed. This cannot be undone.", {
+          month: deleteTarget ? monthLabel(deleteTarget.month) : "",
+          n: deleteTarget?.staffCount ?? 0,
+        })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

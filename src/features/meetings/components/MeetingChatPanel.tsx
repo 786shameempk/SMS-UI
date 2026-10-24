@@ -11,6 +11,7 @@ import { deleteChat, listChat, pinChat, postChat, toggleChat } from "../api";
 import type { ChatMessage } from "../types";
 import { formatTime } from "../utils";
 
+import { useTranslation } from "react-i18next";
 interface MeetingChatPanelProps {
   meetingId: string;
   isHost: boolean;
@@ -23,6 +24,7 @@ interface MeetingChatPanelProps {
  * SignalR hub, which only lets people who pass the meeting's access check into its group.
  */
 export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCanChat, onClose }: MeetingChatPanelProps) {
+  const { t } = useTranslation("meetings");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
   const [announce, setAnnounce] = useState(false);
@@ -51,7 +53,7 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
     hub
       .start()
       .then(() => hub.invoke("JoinMeeting", meetingId))
-      .catch(() => !disposed && toast.error("Live chat couldn't connect. Messages will still send."));
+      .catch(() => !disposed && toast.error(t("Live chat couldn't connect. Messages will still send.")));
     connection.current = hub;
     return () => {
       disposed = true;
@@ -82,13 +84,13 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
   const pinned = messages.filter((m) => m.isPinned);
 
   return (
-    <aside className="flex h-full w-full flex-col bg-card text-foreground" aria-label="Chat">
+    <aside className="flex h-full w-full flex-col bg-card text-foreground" aria-label={t("Chat")}>
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">Chat</h2>
+        <h2 className="text-sm font-semibold">{t("Chat")}</h2>
         <div className="flex items-center gap-2">
           {isHost && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              Students can chat
+              {t("Students can chat")}
               <Switch
                 id="chat-enabled"
                 checked={chatOn}
@@ -99,7 +101,7 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
               />
             </label>
           )}
-          <Button size="icon" variant="ghost" onClick={onClose} aria-label="Close chat"><X className="h-4 w-4" /></Button>
+          <Button size="icon" variant="ghost" onClick={onClose} aria-label={t("Close chat")}><X className="h-4 w-4" /></Button>
         </div>
       </div>
 
@@ -115,10 +117,10 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
       )}
 
       <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3" aria-live="polite">
-        {messages.length === 0 && <p className="pt-8 text-center text-sm text-muted-foreground">No messages yet. Say hello!</p>}
+        {messages.length === 0 && <p className="pt-8 text-center text-sm text-muted-foreground">{t("No messages yet. Say hello!")}</p>}
         {messages.map((m) => (
           <div key={m.id} className={cn("group flex flex-col", m.isMine ? "items-end" : "items-start")}>
-            <span className="mb-0.5 text-[11px] text-muted-foreground">{m.isMine ? "You" : m.senderName} · {formatTime(m.sentAt)}</span>
+            <span className="mb-0.5 text-[11px] text-muted-foreground">{m.isMine ? t("You") : m.senderName} · {formatTime(m.sentAt)}</span>
             <div
               className={cn(
                 "max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words",
@@ -127,16 +129,16 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
                   : m.isMine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
               )}
             >
-              {m.kind === "Announcement" && <Megaphone className="mr-1 inline h-3.5 w-3.5" aria-label="Announcement" />}
+              {m.kind === "Announcement" && <Megaphone className="me-1 inline h-3.5 w-3.5" aria-label={t("Announcement")} />}
               {m.body}
             </div>
             {isHost && (
               <div className="mt-0.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                <button type="button" className="rounded p-1 text-muted-foreground hover:bg-secondary cursor-pointer" aria-label={m.isPinned ? "Unpin" : "Pin"}
+                <button type="button" className="rounded p-1 text-muted-foreground hover:bg-secondary cursor-pointer" aria-label={m.isPinned ? t("Unpin") : t("Pin")}
                   onClick={() => pinChat(meetingId, m.id, !m.isPinned).catch((err: Error) => toast.error(err.message))}>
                   {m.isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
                 </button>
-                <button type="button" className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-destructive-strong cursor-pointer" aria-label="Delete message"
+                <button type="button" className="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-destructive-strong cursor-pointer" aria-label={t("Delete message")}
                   onClick={() => deleteChat(meetingId, m.id).catch((err: Error) => toast.error(err.message))}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -157,7 +159,7 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
           {isHost && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
               <input type="checkbox" checked={announce} onChange={(e) => setAnnounce(e.target.checked)} className="accent-[var(--color-primary)]" />
-              Send as announcement (pinned for everyone)
+              {t("Send as announcement (pinned for everyone)")}
             </label>
           )}
           <div className="flex gap-2">
@@ -166,16 +168,16 @@ export default function MeetingChatPanel({ meetingId, isHost, canChat: initialCa
               value={text}
               onChange={(e) => setText(e.target.value)}
               maxLength={2000}
-              placeholder="Type a message"
+              placeholder={t("Type a message")}
               autoComplete="off"
               className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
-            <Button type="submit" size="icon" disabled={sending || !text.trim()} aria-label="Send"><SendHorizontal className="h-4 w-4" /></Button>
+            <Button type="submit" size="icon" disabled={sending || !text.trim()} aria-label={t("Send")}><SendHorizontal className="h-4 w-4" /></Button>
           </div>
         </form>
       ) : (
         <p className="flex items-center justify-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
-          <MessageSquareOff className="h-4 w-4" aria-hidden /> The host has turned chat off.
+          <MessageSquareOff className="h-4 w-4" aria-hidden /> {t("The host has turned chat off.")}
         </p>
       )}
     </aside>

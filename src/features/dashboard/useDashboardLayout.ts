@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { extractApiErrorMessage } from "@/lib/httpClient";
 import { useAuthStore } from "@/store/authStore";
 import { useUiStore } from "@/store/useUiStore";
@@ -18,6 +19,7 @@ import type { DashboardWidgetConfig } from "./widgets";
  * layout on this device only, so it works without a backend.
  */
 export function useDashboardLayout(clientAvailable: readonly DashboardWidgetConfig[], source: DashboardDataSource) {
+  const { t } = useTranslation("dashboard");
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.user?.id ?? "anon");
   const tenantId = useAuthStore((s) => s.activeTenantId);
@@ -67,14 +69,14 @@ export function useDashboardLayout(clientAvailable: readonly DashboardWidgetConf
     onSuccess: (layout) => setServerLayout(layout),
     onError: (err, _next, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(queryKey, ctx.previous);
-      toast.error(extractApiErrorMessage(err, "Couldn't save your dashboard layout."));
+      toast.error(extractApiErrorMessage(err, t("Couldn't save your dashboard layout.")));
     },
   });
 
   const reset = useMutation({
     mutationFn: resetDashboardLayout,
     onSuccess: (layout) => setServerLayout(layout),
-    onError: (err) => toast.error(extractApiErrorMessage(err, "Couldn't reset your dashboard.")),
+    onError: (err) => toast.error(extractApiErrorMessage(err, t("Couldn't reset your dashboard."))),
   });
 
   return {

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, Wallet } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +16,7 @@ import PayslipView from "./PayslipView";
 
 /** `mine`: a staff member's own payslips - read-only, with no payroll-run controls. */
 export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
+  const { t } = useTranslation("payroll");
   const queryClient = useQueryClient();
   const { data: runs = [] } = useQuery({ queryKey: ["payroll", "runs"], queryFn: listPayrollRuns, enabled: !mine });
   const { data: payslips = [], isLoading, isError, refetch } = useQuery({ queryKey: ["payroll", "payslips"], queryFn: () => listPayslips() });
@@ -29,9 +31,13 @@ export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       const row = payslips.find((p) => p.id === id);
-      toast.success(row ? `Paid ${row.staff.firstName} ${row.staff.lastName} for ${monthLabel(row.month)}` : "Payslip paid");
+      toast.success(
+        row
+          ? t("Paid {{name}} for {{month}}", { name: `${row.staff.firstName} ${row.staff.lastName}`, month: monthLabel(row.month) })
+          : t("Payslip paid"),
+      );
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not mark as paid"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not mark as paid")),
   });
 
   const filtered = useMemo(() => {
@@ -50,7 +56,7 @@ export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
   const columns: ColumnDef<PayslipRow, unknown>[] = [
     {
       id: "staff",
-      header: "Staff",
+      header: t("Staff"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -64,18 +70,18 @@ export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
     },
     {
       accessorKey: "month",
-      header: "Month",
+      header: t("Month"),
       cell: ({ row }) => <span className="text-sm text-foreground">{monthLabel(row.original.month)}</span>,
     },
     {
       accessorKey: "netPay",
-      header: "Net pay",
+      header: t("Net pay"),
       cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.netPay)}</span>,
     },
     {
       accessorKey: "paid",
-      header: "Status",
-      cell: ({ row }) => <Badge variant={row.original.paid ? "success" : "warning"}>{row.original.paid ? "Paid" : "Pending"}</Badge>,
+      header: t("Status"),
+      cell: ({ row }) => <Badge variant={row.original.paid ? "success" : "warning"}>{row.original.paid ? t("Paid") : t("Pending")}</Badge>,
     },
     {
       id: "actions",
@@ -90,7 +96,7 @@ export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
             {!slip.paid && !mine && (
               <Button size="sm" variant="outline" onClick={() => payMutation.mutate(slip.id)} disabled={payMutation.isPending}>
                 <Wallet className="w-3.5 h-3.5" />
-                Mark paid
+                {t("Mark paid")}
               </Button>
             )}
           </div>
@@ -105,10 +111,10 @@ export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
         <div className="flex items-center gap-2">
           <Select value={monthFilter} onValueChange={setMonthFilter}>
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="Month" />
+              <SelectValue placeholder={t("Month")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All months</SelectItem>
+              <SelectItem value="all">{t("All months")}</SelectItem>
               {months.map((m) => (
                 <SelectItem key={m} value={m}>
                   {monthLabel(m)}
@@ -118,18 +124,18 @@ export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("Status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="all">{t("All statuses")}</SelectItem>
+              <SelectItem value="paid">{t("Paid")}</SelectItem>
+              <SelectItem value="pending">{t("Pending")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={mine ? "No payslips have been issued to you yet." : "No payslips match your filters."} pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={mine ? t("No payslips have been issued to you yet.") : t("No payslips match your filters.")} pageSize={10} />
 
       <PayslipView open={Boolean(viewing)} onOpenChange={(v) => !v && setViewing(null)} payslip={viewing} />
     </div>

@@ -6,7 +6,9 @@ import { cn } from "@/utils/cn";
 import { formatRelativeDay } from "@/utils/format";
 import { listNotifications, markNotificationRead } from "../api";
 
+import { useTranslation } from "react-i18next";
 export default function NotificationsTab() {
+  const { t } = useTranslation("parent-portal");
   const queryClient = useQueryClient();
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["parent-portal", "notifications"],
@@ -25,12 +27,12 @@ export default function NotificationsTab() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
-          Notifications
+          {t("Notifications")}
         </CardTitle>
-        <CardDescription>{unreadCount} unread</CardDescription>
+        <CardDescription>{t("{{unreadCount}} unread", { unreadCount })}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-1">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading notifications…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading notifications…")}</p>}
         {notifications.map((n) => (
           <div key={n.id} className={cn("flex items-start justify-between gap-3 rounded-lg p-3", !n.read && "bg-accent/50")}>
             <div className="min-w-0">
@@ -40,7 +42,7 @@ export default function NotificationsTab() {
             </div>
             {!n.read && (
               <Button variant="ghost" size="sm" onClick={() => readMutation.mutate(n.id)} className="shrink-0">
-                Mark read
+                {t("Mark read")}
               </Button>
             )}
           </div>

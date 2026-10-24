@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +42,7 @@ export default function AdmissionFormDialog({
   onSubmit: (values: AdmissionFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("students");
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
 
   const {
@@ -97,20 +99,20 @@ export default function AdmissionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>New admission application</DialogTitle>
-          <DialogDescription>Submit a prospective student for review before enrollment.</DialogDescription>
+          <DialogTitle>{t("New admission application")}</DialogTitle>
+          <DialogDescription>{t("Submit a prospective student for review before enrollment.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, guardianEmail: values.guardianEmail?.trim() || undefined }))} className="space-y-6">
-          <FormSection title="School">
+          <FormSection title={t("School")}>
             <div className="space-y-1.5">
-              <Label htmlFor="branchId" required>Branch</Label>
+              <Label htmlFor="branchId" required>{t("Branch")}</Label>
               <Controller
                 control={control}
                 name="branchId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="branchId">
-                      <SelectValue placeholder="Select branch" />
+                      <SelectValue placeholder={t("Select branch")} />
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map((b) => (
@@ -122,32 +124,32 @@ export default function AdmissionFormDialog({
                   </Select>
                 )}
               />
-              {errors.branchId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.branchId.message}</p>}
+              {errors.branchId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.branchId.message ?? "")}</p>}
             </div>
           </FormSection>
 
-          <FormSection title="Applicant">
+          <FormSection title={t("Applicant")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="applicantFirstName" required>First name</Label>
+                <Label htmlFor="applicantFirstName" required>{t("First name")}</Label>
                 <Input id="applicantFirstName" aria-invalid={errors.applicantFirstName ? true : undefined} {...register("applicantFirstName")} />
-                {errors.applicantFirstName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.applicantFirstName.message}</p>}
+                {errors.applicantFirstName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.applicantFirstName.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="applicantLastName" required>Last name</Label>
+                <Label htmlFor="applicantLastName" required>{t("Last name")}</Label>
                 <Input id="applicantLastName" aria-invalid={errors.applicantLastName ? true : undefined} {...register("applicantLastName")} />
-                {errors.applicantLastName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.applicantLastName.message}</p>}
+                {errors.applicantLastName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.applicantLastName.message ?? "")}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="dateOfBirth" required>Date of birth</Label>
+                <Label htmlFor="dateOfBirth" required>{t("Date of birth")}</Label>
                 <Input id="dateOfBirth" type="date" aria-invalid={errors.dateOfBirth ? true : undefined} {...register("dateOfBirth")} />
-                {errors.dateOfBirth && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dateOfBirth.message}</p>}
+                {errors.dateOfBirth && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.dateOfBirth.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="gender" required>Gender</Label>
+                <Label htmlFor="gender" required>{t("Gender")}</Label>
                 <Controller
                   control={control}
                   name="gender"
@@ -157,9 +159,9 @@ export default function AdmissionFormDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="male">{t("Male")}</SelectItem>
+                        <SelectItem value="female">{t("Female")}</SelectItem>
+                        <SelectItem value="other">{t("Other")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -168,14 +170,14 @@ export default function AdmissionFormDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="appliedClass" required>Applying for class</Label>
+              <Label htmlFor="appliedClass" required>{t("Applying for class")}</Label>
               <Controller
                 control={control}
                 name="appliedClass"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="appliedClass">
-                      <SelectValue placeholder={classesLoading ? "Loading…" : classNames.length ? "Select a class" : "No classes in this branch"} />
+                      <SelectValue placeholder={classesLoading ? t("Loading…") : classNames.length ? t("Select a class") : t("No classes in this branch")} />
                     </SelectTrigger>
                     <SelectContent>
                       {classNames.map((c) => (
@@ -187,49 +189,49 @@ export default function AdmissionFormDialog({
                   </Select>
                 )}
               />
-              {errors.appliedClass && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.appliedClass.message}</p>}
+              {errors.appliedClass && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.appliedClass.message ?? "")}</p>}
               {seats && (
                 <p className={`text-xs ${seats.availableSeats > 0 ? "text-muted-foreground" : "text-warning-strong"}`}>
                   {seats.availableSeats > 0
-                    ? `${seats.availableSeats} of ${seats.capacity} seats currently available in ${seats.className}.`
-                    : `${seats.className} has no seats currently available — the applicant may need to be waitlisted.`}
+                    ? t("{{available}} of {{capacity}} seats currently available in {{className}}.", { available: seats.availableSeats, capacity: seats.capacity, className: seats.className })
+                    : t("{{className}} has no seats currently available — the applicant may need to be waitlisted.", { className: seats.className })}
                 </p>
               )}
             </div>
           </FormSection>
 
-          <FormSection title="Guardian">
+          <FormSection title={t("Guardian")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="guardianName" required>Guardian name</Label>
+                <Label htmlFor="guardianName" required>{t("Guardian name")}</Label>
                 <Input id="guardianName" aria-invalid={errors.guardianName ? true : undefined} {...register("guardianName")} />
-                {errors.guardianName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.guardianName.message}</p>}
+                {errors.guardianName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.guardianName.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="guardianPhone" required>Guardian phone</Label>
+                <Label htmlFor="guardianPhone" required>{t("Guardian phone")}</Label>
                 <Input id="guardianPhone" aria-invalid={errors.guardianPhone ? true : undefined} {...register("guardianPhone")} />
-                {errors.guardianPhone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.guardianPhone.message}</p>}
+                {errors.guardianPhone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.guardianPhone.message ?? "")}</p>}
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="guardianEmail" optional>Guardian email</Label>
+              <Label htmlFor="guardianEmail" optional>{t("Guardian email")}</Label>
               <Input id="guardianEmail" type="email" aria-invalid={errors.guardianEmail ? true : undefined} {...register("guardianEmail")} />
-              {errors.guardianEmail && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.guardianEmail.message}</p>}
+              {errors.guardianEmail && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.guardianEmail.message ?? "")}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="notes" optional>Notes</Label>
+              <Label htmlFor="notes" optional>{t("Notes")}</Label>
               <Textarea id="notes" rows={2} {...register("notes")} />
             </div>
           </FormSection>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Submit application
+              {t("Submit application")}
             </Button>
           </DialogFooter>
         </form>

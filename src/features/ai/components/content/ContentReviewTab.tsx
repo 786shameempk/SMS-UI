@@ -4,6 +4,7 @@ import {
   BookOpenText, Check, CheckCircle2, ClipboardCheck, ClipboardList, ListChecks, Loader2, Megaphone, MessageSquare, NotebookPen, Pencil, ShieldCheck,
   Sparkles, Trash2, Undo2, type LucideIcon,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,14 @@ const ACTION: Record<ContentAction, { label: string; icon: LucideIcon; variant: 
   Publish: { label: "Publish", icon: Megaphone, variant: "default" },
 };
 
+/** The confirm button for an action that asks first (whole phrases, so word order can change per language). */
+const CONFIRM_LABEL: Record<ContentAction, string> = {
+  MarkReviewed: "Confirm mark reviewed",
+  Approve: "Confirm approve",
+  SendBack: "Confirm send back",
+  Publish: "Confirm publish",
+};
+
 const HISTORY_LABEL: Record<string, string> = {
   Created: "Created",
   Edited: "Edited",
@@ -67,12 +76,12 @@ const FILTERS: { value: Filter; label: string; params: Parameters<typeof listCon
 
 const audienceLabel = (a: string | null) => AUDIENCE_OPTIONS.find((o) => o.value === a)?.label ?? a ?? "";
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, justNow: string) {
   const diff = new Date(iso).getTime() - Date.now();
   const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
   const units: [Intl.RelativeTimeFormatUnit, number][] = [["day", 86_400_000], ["hour", 3_600_000], ["minute", 60_000]];
   for (const [unit, ms] of units) if (Math.abs(diff) >= ms) return rtf.format(Math.round(diff / ms), unit);
-  return "just now";
+  return justNow;
 }
 
 /** What this person can do with an item right now, in words (the server decides; this only labels it). */
@@ -85,9 +94,10 @@ function nextStep(item: ContentSummary): string | null {
 
 /** Draft → Awaiting approval → Approved → Published. With a status it marks progress; without one it just shows the path. */
 function Stepper({ status, className }: { status?: ContentStatus; className?: string }) {
+  const { t } = useTranslation("ai");
   const current = status ? STEPS.indexOf(status) : -1;
   return (
-    <ol aria-label="Review steps" className={cn("flex items-center gap-1.5 text-xs", className)}>
+    <ol aria-label={t("Review steps")} className={cn("flex items-center gap-1.5 text-xs", className)}>
       {STEPS.map((step, i) => {
         const done = i < current || status === "Published";
         const active = i === current && status !== "Published";
@@ -105,7 +115,7 @@ function Stepper({ status, className }: { status?: ContentStatus; className?: st
               {done ? <Check className="h-3 w-3" /> : i + 1}
             </span>
             <span className={cn("truncate font-medium", active ? "text-foreground" : done ? "text-secondary-foreground" : "text-muted-foreground")}>
-              {STATUS_BADGE[step].label}
+              {t(STATUS_BADGE[step].label)}
             </span>
             {i < STEPS.length - 1 && <span aria-hidden="true" className={cn("h-px w-4 shrink-0 sm:w-8", i < current ? "bg-success" : "bg-border")} />}
           </li>
@@ -120,6 +130,7 @@ function Stepper({ status, className }: { status?: ContentStatus; className?: st
  * actions the server says this user may take now; the server checks them again (and the version) on every click.
  */
 export default function ContentReviewTab() {
+  const { t } = useTranslation("ai");
   const [filter, setFilter] = useState<Filter>("queue");
   const [openId, setOpenId] = useState<string | null>(null);
   const current = FILTERS.find((f) => f.value === filter)!;
@@ -140,32 +151,31 @@ export default function ContentReviewTab() {
             <ShieldCheck className="h-[18px] w-[18px]" aria-hidden="true" />
           </div>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            Drafts are checked by their author, approved by an administrator, then published. Nothing reaches parents or students before it is approved, and every
-            step is recorded.
+            {t("Drafts are checked by their author, approved by an administrator, then published. Nothing reaches parents or students before it is approved, and every step is recorded.")}
           </p>
         </div>
-        <Stepper className="flex-wrap pl-12" />
+        <Stepper className="flex-wrap ps-12" />
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <TabsList>
           {FILTERS.map((f) => (
             <TabsTrigger key={f.value} value={f.value} count={count(f.value)}>
-              {f.label}
+              {t(f.label)}
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
 
       {list.isLoading && (
-        <div className="space-y-2" role="status" aria-label="Loading">
+        <div className="space-y-2" role="status" aria-label={t("Loading")}>
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-[68px] w-full rounded-xl" />
           ))}
         </div>
       )}
-      {list.isError && <ErrorState size="sm" title="We couldn't load this list" onRetry={() => void list.refetch()} retrying={list.isFetching} />}
-      {list.data?.length === 0 && <EmptyState icon={KIND.Notice.icon} title={current.empty.title} description={current.empty.description} />}
+      {list.isError && <ErrorState size="sm" title={t("We couldn't load this list")} onRetry={() => void list.refetch()} retrying={list.isFetching} />}
+      {list.data?.length === 0 && <EmptyState icon={KIND.Notice.icon} title={t(current.empty.title)} description={t(current.empty.description)} />}
 
       <div className="space-y-2">
         {list.data?.map((item: ContentSummary) => {
@@ -181,22 +191,22 @@ export default function ContentReviewTab() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-foreground">{item.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {kindLabel} · {item.isMine ? "you" : item.createdByRole} · <time dateTime={item.updatedAt} title={new Date(item.updatedAt).toLocaleString()}>{timeAgo(item.updatedAt)}</time>
+                      {t(kindLabel)} · {item.isMine ? t("you") : item.createdByRole} · <time dateTime={item.updatedAt} title={new Date(item.updatedAt).toLocaleString()}>{timeAgo(item.updatedAt, t("just now"))}</time>
                     </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2 md:justify-end">
-                  {next && <span className="text-xs font-medium text-primary-text">{next}</span>}
+                  {next && <span className="text-xs font-medium text-primary-text">{t(next)}</span>}
                   {item.aiGenerated && (
                     <Badge variant="neutral">
                       <Sparkles className="h-3 w-3" /> AI
                     </Badge>
                   )}
                   <Badge variant={STATUS_BADGE[item.status].variant} dot>
-                    {STATUS_BADGE[item.status].label}
+                    {t(STATUS_BADGE[item.status].label)}
                   </Badge>
                   <Button size="sm" variant={next ? "default" : "outline"} onClick={() => setOpenId(item.id)}>
-                    Open
+                    {t("Open")}
                   </Button>
                 </div>
               </CardContent>
@@ -211,6 +221,7 @@ export default function ContentReviewTab() {
 }
 
 function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
+  const { t } = useTranslation("ai");
   const queryClient = useQueryClient();
   const detail = useQuery({ queryKey: [...CONTENT_KEY, "item", id], queryFn: () => getContent(id) });
   const [edit, setEdit] = useState<{ title: string; body: string } | null>(null);
@@ -227,7 +238,7 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
     onSuccess: (item) => {
       setEdit(null);
       refresh(item);
-      toast.success("Saved");
+      toast.success(t("Saved"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -238,7 +249,7 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
       setPending(null);
       setComment("");
       refresh(item);
-      toast.success(action === "Publish" ? "Published" : `${ACTION[action].label}: done`);
+      toast.success(action === "Publish" ? t("Published") : t("{{action}}: done", { action: t(ACTION[action].label) }));
     },
     // A stale version (409) means someone else acted: reload so the user sees the current state.
     onError: (e: Error) => {
@@ -251,7 +262,7 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
     mutationFn: () => deleteContent(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CONTENT_KEY });
-      toast.success("Draft deleted");
+      toast.success(t("Draft deleted"));
       onClose();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -272,35 +283,37 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground ring-1 ring-inset ring-primary/20">
               <KindIcon className="h-5 w-5" aria-hidden="true" />
             </div>
-            <div className="min-w-0 space-y-1 text-left">
-              <DialogTitle className="truncate">{item?.title ?? "Content"}</DialogTitle>
+            <div className="min-w-0 space-y-1 text-start">
+              <DialogTitle className="truncate">{item?.title ?? t("Content")}</DialogTitle>
               <DialogDescription>
                 {item ? (
                   <>
-                    {KIND[item.kind].label}
-                    {item.audience ? ` for ${audienceLabel(item.audience)}` : ""} · {STATUS_BADGE[item.status].label}
-                    {item.aiGenerated ? " · first drafted by AI" : ""}
+                    {item.audience
+                      ? t("{{kind}} for {{audience}}", { kind: t(KIND[item.kind].label), audience: t(audienceLabel(item.audience)) })
+                      : t(KIND[item.kind].label)}{" "}
+                    · {t(STATUS_BADGE[item.status].label)}
+                    {item.aiGenerated ? ` · ${t("first drafted by AI")}` : ""}
                   </>
                 ) : (
-                  "Loading…"
+                  t("Loading…")
                 )}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        {detail.isError && <ErrorState size="sm" bare title="We couldn't open this item" onRetry={() => void detail.refetch()} retrying={detail.isFetching} />}
+        {detail.isError && <ErrorState size="sm" bare title={t("We couldn't open this item")} onRetry={() => void detail.refetch()} retrying={detail.isFetching} />}
         {detail.isLoading && <Skeleton className="h-40 w-full rounded-lg" />}
 
         {item && (
-          <div className="max-h-[60vh] space-y-5 overflow-y-auto pr-1">
+          <div className="max-h-[60vh] space-y-5 overflow-y-auto pe-1">
             <Stepper status={item.status} className="flex-wrap" />
 
             {changesRequested && (
               <div role="note" className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning-soft px-3.5 py-3 text-sm text-warning-strong">
                 <Undo2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <div>
-                  <p className="font-semibold">Changes requested</p>
+                  <p className="font-semibold">{t("Changes requested")}</p>
                   <p>{changesRequested}</p>
                 </div>
               </div>
@@ -308,18 +321,18 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
 
             {edit ? (
               <div className="space-y-3">
-                <FormField label="Title" htmlFor="content-title">
+                <FormField label={t("Title")} htmlFor="content-title">
                   <Input id="content-title" value={edit.title} maxLength={200} onChange={(e) => setEdit({ ...edit, title: e.target.value })} />
                 </FormField>
-                <FormField label="Content" htmlFor="content-body">
+                <FormField label={t("Content")} htmlFor="content-body">
                   <Textarea id="content-body" rows={10} value={edit.body} onChange={(e) => setEdit({ ...edit, body: e.target.value })} />
                 </FormField>
                 <div className="flex gap-2">
                   <Button onClick={() => save.mutate(item)} disabled={save.isPending || !edit.title.trim() || !edit.body.trim()}>
-                    {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save
+                    {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t("Save")}
                   </Button>
                   <Button variant="outline" onClick={() => setEdit(null)} disabled={save.isPending}>
-                    Cancel
+                    {t("Cancel")}
                   </Button>
                 </div>
               </div>
@@ -332,34 +345,34 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 {pending === "Publish" ? (
                   <p className="text-sm">
                     {item.kind === "Notice"
-                      ? `This posts the notice to ${audienceLabel(item.audience)} now, including a push notification on their phones.`
+                      ? t("This posts the notice to {{audience}} now, including a push notification on their phones.", { audience: t(audienceLabel(item.audience)) })
                       : item.kind === "LessonPlan"
-                        ? "This files it as a published plan in the Lesson Plans module, under the teacher who wrote it."
-                        : "This publishes it to the school's content library."}
+                        ? t("This files it as a published plan in the Lesson Plans module, under the teacher who wrote it.")
+                        : t("This publishes it to the school's content library.")}
                   </p>
                 ) : (
-                  <FormField label="What needs to change?" htmlFor="content-comment">
+                  <FormField label={t("What needs to change?")} htmlFor="content-comment">
                     <Textarea id="content-comment" rows={2} maxLength={500} value={comment} onChange={(e) => setComment(e.target.value)} />
                   </FormField>
                 )}
                 <div className="flex gap-2">
                   <Button onClick={() => act.mutate({ item, action: pending })} disabled={act.isPending || (pending === "SendBack" && !comment.trim())}>
-                    {act.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Confirm {ACTION[pending].label.toLowerCase()}
+                    {act.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t(CONFIRM_LABEL[pending])}
                   </Button>
                   <Button variant="outline" onClick={() => setPending(null)} disabled={act.isPending}>
-                    Cancel
+                    {t("Cancel")}
                   </Button>
                 </div>
               </div>
             )}
 
-            <section aria-label="History">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">History</h4>
-              <ol className="mt-2 ml-1.5 space-y-3 border-l border-border pl-4">
+            <section aria-label={t("History")}>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("History")}</h4>
+              <ol className="mt-2 ms-1.5 space-y-3 border-s border-border ps-4">
                 {item.history.map((h, i) => (
                   <li key={i} className="relative text-sm text-secondary-foreground">
-                    <span aria-hidden="true" className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-card" />
-                    <span className="font-medium text-foreground">{HISTORY_LABEL[h.action] ?? h.action}</span> by {h.actorRole} ·{" "}
+                    <span aria-hidden="true" className="absolute -start-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-card" />
+                    <span className="font-medium text-foreground">{t(HISTORY_LABEL[h.action] ?? h.action)}</span> {t("by {{role}}", { role: h.actorRole })} ·{" "}
                     <time dateTime={h.at} className="text-muted-foreground">{new Date(h.at).toLocaleString()}</time>
                     {h.comment && <span className="mt-0.5 block rounded-md bg-secondary/50 px-2.5 py-1.5 text-muted-foreground">“{h.comment}”</span>}
                   </li>
@@ -374,12 +387,12 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
             <div className="flex gap-2">
               {item.canEdit && (
                 <Button variant="outline" onClick={() => setEdit({ title: item.title, body: item.body })}>
-                  <Pencil className="h-4 w-4" /> Edit
+                  <Pencil className="h-4 w-4" /> {t("Edit")}
                 </Button>
               )}
               {item.canEdit && (
                 <Button variant="ghost" className="text-destructive-strong hover:text-destructive-strong" onClick={() => remove.mutate()} disabled={remove.isPending}>
-                  <Trash2 className="h-4 w-4" /> Delete
+                  <Trash2 className="h-4 w-4" /> {t("Delete")}
                 </Button>
               )}
             </div>
@@ -390,7 +403,7 @@ function ContentDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 return (
                   <Button key={a} variant={variant} disabled={act.isPending} onClick={() => (direct ? act.mutate({ item, action: a }) : setPending(a))}>
                     {act.isPending && act.variables?.action === a ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
-                    {label}
+                    {t(label)}
                   </Button>
                 );
               })}

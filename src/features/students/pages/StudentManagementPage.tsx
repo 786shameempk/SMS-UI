@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, Pencil, Plus, Upload, SendToBack, UserCog, Users } from "lucide-react";
@@ -41,6 +42,7 @@ const STATUS_OPTIONS: { value: StudentStatus; label: string }[] = [
 ];
 
 function StudentsTab() {
+  const { t } = useTranslation("students");
   const isTeacher = useIsTeacher();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -56,8 +58,8 @@ function StudentsTab() {
 
   // Debounce typing so each keystroke doesn't hit the API.
   useEffect(() => {
-    const t = window.setTimeout(() => setSearch(searchDraft.trim()), 350);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setSearch(searchDraft.trim()), 350);
+    return () => window.clearTimeout(timer);
   }, [searchDraft]);
 
   // Filtering and paging happen in AcademicService; only the visible page is downloaded.
@@ -98,11 +100,12 @@ function StudentsTab() {
     setStatusFilter("all");
   };
   const activeFilters: ActiveFilter[] = [];
-  if (search) activeFilters.push({ id: "search", label: "Search", value: search, onRemove: clearSearch });
-  if (classFilter !== "all") activeFilters.push({ id: "class", label: "Class", value: classFilter, onRemove: () => setClassFilter("all") });
+  if (search) activeFilters.push({ id: "search", label: t("Search"), value: search, onRemove: clearSearch });
+  if (classFilter !== "all") activeFilters.push({ id: "class", label: t("Class"), value: classFilter, onRemove: () => setClassFilter("all") });
   if (statusFilter !== "all") {
-    const label = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? statusFilter;
-    activeFilters.push({ id: "status", label: "Status", value: label, onRemove: () => setStatusFilter("all") });
+    const option = STATUS_OPTIONS.find((o) => o.value === statusFilter);
+    const label = option ? t(option.label) : statusFilter;
+    activeFilters.push({ id: "status", label: t("Status"), value: label, onRemove: () => setStatusFilter("all") });
   }
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["students"] });
@@ -111,37 +114,37 @@ function StudentsTab() {
     mutationFn: createStudent,
     onSuccess: () => {
       invalidate();
-      toast.success("Student registered");
+      toast.success(t("Student registered"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not register student"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not register student")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: StudentFormValues }) => updateStudent(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Student updated");
+      toast.success(t("Student updated"));
       setFormOpen(false);
       setEditingStudent(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update student"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update student")),
   });
 
   const transferMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: TransferFormValues }) => transferStudent(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success(`${transferTarget?.firstName} marked as transferred`);
+      toast.success(t("{{name}} marked as transferred", { name: transferTarget?.firstName }));
       setTransferTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not transfer student"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not transfer student")),
   });
 
   const columns: ColumnDef<Student, unknown>[] = [
     {
       accessorKey: "firstName",
-      header: "Student",
+      header: t("Student"),
       meta: { exportValue: (s) => `${s.firstName} ${s.lastName}` },
       cell: ({ row }) => {
         const s = row.original;
@@ -152,7 +155,7 @@ function StudentsTab() {
               e.stopPropagation();
               setQuickView(s);
             }}
-            className="flex items-center gap-3 rounded-md text-left cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex items-center gap-3 rounded-md text-start cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Avatar className="w-8 h-8">
               {s.photoUrl && <AvatarImage src={s.photoUrl} alt={s.firstName} />}
@@ -170,23 +173,23 @@ function StudentsTab() {
     },
     {
       id: "class",
-      header: "Class",
+      header: t("Class"),
       meta: { exportValue: classLabel },
       cell: ({ row }) => <span className="text-sm text-foreground whitespace-nowrap">{classLabel(row.original) || "—"}</span>,
     },
     {
       accessorKey: "rollNumber",
-      header: "Roll no.",
+      header: t("Roll no."),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.rollNumber || "—"}</span>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => <StudentStatusBadge status={row.original.status} />,
     },
     {
       id: "guardian",
-      header: "Guardian",
+      header: t("Guardian"),
       meta: { exportValue: (s) => (s.guardians[0] ? `${s.guardians[0].name} (${s.guardians[0].phone})` : "") },
       cell: ({ row }) => {
         const g = row.original.guardians[0];
@@ -203,25 +206,25 @@ function StudentsTab() {
       cell: ({ row }) => {
         const s = row.original;
         return (
-          <RowActions label={`Actions for ${s.firstName} ${s.lastName}`}>
+          <RowActions label={t("Actions for {{name}}", { name: `${s.firstName} ${s.lastName}` })}>
             <DropdownMenuItem onClick={() => setQuickView(s)}>
               <Eye className="w-3.5 h-3.5" />
-              Quick view
+              {t("Quick view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate(`/students/${s.id}`)}>
               <UserCog className="w-3.5 h-3.5" />
-              View profile
+              {t("View profile")}
             </DropdownMenuItem>
             {!isTeacher && (
               <DropdownMenuItem onClick={() => openEdit(s)}>
                 <Pencil className="w-3.5 h-3.5" />
-                Edit details
+                {t("Edit details")}
               </DropdownMenuItem>
             )}
             {!isTeacher && s.status === "active" && (
               <DropdownMenuItem onClick={() => setTransferTarget(s)} className="text-warning-strong focus:bg-warning-soft focus:text-warning-strong">
                 <SendToBack className="w-3.5 h-3.5" />
-                Transfer student
+                {t("Transfer student")}
               </DropdownMenuItem>
             )}
           </RowActions>
@@ -242,23 +245,23 @@ function StudentsTab() {
         getRowId={(s) => s.id}
         empty={{
           icon: Users,
-          title: "No students yet",
-          description: "Register your first student to start managing student records.",
+          title: t("No students yet"),
+          description: t("Register your first student to start managing student records."),
         }}
         filters={
           <>
             <SearchInput
               value={searchDraft}
               onValueChange={setSearchDraft}
-              placeholder="Search by name or admission no."
+              placeholder={t("Search by name or admission no.")}
               containerClassName="sm:w-72"
             />
             <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="sm:w-36" aria-label="Filter by class">
-                <SelectValue placeholder="Class" />
+              <SelectTrigger className="sm:w-36" aria-label={t("Filter by class")}>
+                <SelectValue placeholder={t("Class")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All classes</SelectItem>
+                <SelectItem value="all">{t("All classes")}</SelectItem>
                 {classNames.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
@@ -267,14 +270,14 @@ function StudentsTab() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="sm:w-36" aria-label="Filter by status">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="sm:w-36" aria-label={t("Filter by status")}>
+                <SelectValue placeholder={t("Status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">{t("All statuses")}</SelectItem>
                 {STATUS_OPTIONS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
-                    {o.label}
+                    {t(o.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -288,7 +291,7 @@ function StudentsTab() {
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="w-4 h-4" />
-              Import
+              {t("Import")}
             </Button>
             <Button
               onClick={() => {
@@ -297,7 +300,7 @@ function StudentsTab() {
               }}
             >
               <Plus className="w-4 h-4" />
-              Register student
+              {t("Register student")}
             </Button>
           </>
           )
@@ -347,19 +350,20 @@ function StudentsTab() {
 }
 
 export default function StudentManagementPage() {
+  const { t } = useTranslation("students");
   const isTeacher = useIsTeacher();
   return (
     <PageContainer>
       <PageHeader
-        title="Student management"
-        description={isTeacher ? "The students of the classes you teach." : "Registration, admissions, and the student directory."}
+        title={t("Student management")}
+        description={isTeacher ? t("The students of the classes you teach.") : t("Registration, admissions, and the student directory.")}
       />
 
       <Tabs defaultValue="students">
         <TabsList variant="line">
-          <TabsTrigger value="students">Students</TabsTrigger>
-          {!isTeacher && <TabsTrigger value="admissions">Admissions</TabsTrigger>}
-          {!isTeacher && <TabsTrigger value="promotion">Promotion &amp; Graduation</TabsTrigger>}
+          <TabsTrigger value="students">{t("Students")}</TabsTrigger>
+          {!isTeacher && <TabsTrigger value="admissions">{t("Admissions")}</TabsTrigger>}
+          {!isTeacher && <TabsTrigger value="promotion">{t("Promotion & Graduation")}</TabsTrigger>}
         </TabsList>
         <TabsContent value="students">
           <StudentsTab />

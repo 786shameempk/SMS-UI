@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,6 +45,7 @@ export default function IssueBookDialog({
   submitting: boolean;
   onSubmit: (values: IssueBookFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("library");
   const {
     register,
     handleSubmit,
@@ -66,42 +68,42 @@ export default function IssueBookDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Issue book</DialogTitle>
-          <DialogDescription>Pick an available book and an active member, then set a due date.</DialogDescription>
+          <DialogTitle>{t("Issue book")}</DialogTitle>
+          <DialogDescription>{t("Pick an available book and an active member, then set a due date.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="issue-bookId" required>Book</Label>
+            <Label htmlFor="issue-bookId" required>{t("Book")}</Label>
             <Controller
               control={control}
               name="bookId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="issue-bookId">
-                    <SelectValue placeholder="Select a book" />
+                    <SelectValue placeholder={t("Select a book")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableBooks.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
-                        {b.title} ({b.availableCopies} available)
+                        {t("{{title}} ({{count}} available)", { title: b.title, count: b.availableCopies })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.bookId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.bookId.message}</p>}
+            {errors.bookId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.bookId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="issue-memberId" required>Member</Label>
+            <Label htmlFor="issue-memberId" required>{t("Member")}</Label>
             <Controller
               control={control}
               name="memberId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="issue-memberId">
-                    <SelectValue placeholder="Select a member" />
+                    <SelectValue placeholder={t("Select a member")} />
                   </SelectTrigger>
                   <SelectContent>
                     {activeMembers.map((m) => (
@@ -113,21 +115,21 @@ export default function IssueBookDialog({
                 </Select>
               )}
             />
-            {errors.memberId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.memberId.message}</p>}
+            {errors.memberId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.memberId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="issue-dueDate" required>Due date</Label>
+            <Label htmlFor="issue-dueDate" required>{t("Due date")}</Label>
             <Input id="issue-dueDate" type="date" aria-invalid={errors.dueDate ? true : undefined} {...register("dueDate")} />
-            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dueDate.message}</p>}
+            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.dueDate.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Issue book
+              {t("Issue book")}
             </Button>
           </DialogFooter>
         </form>

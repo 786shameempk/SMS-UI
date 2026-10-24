@@ -10,10 +10,12 @@ import { CategoryChip, EmptyState } from "../components/Bits";
 import { TalentGrid } from "../components/TalentCard";
 import type { TalentCategory, TalentCreatorType, TalentSort, TalentVisibility } from "../types";
 
+import { useTranslation } from "react-i18next";
 const PAGE_SIZE = 24;
 
 /** Search & categories. Every filter lives in the URL, so results are shareable and back-button friendly. */
 export default function ExplorePage() {
+  const { t: tr } = useTranslation("talents");
   const [params, setParams] = useSearchParams();
   const q = params.get("q") ?? "";
   const category = (params.get("category") as TalentCategory | null) ?? undefined;
@@ -60,9 +62,9 @@ export default function ExplorePage() {
       <header className="space-y-4">
         <div>
           <h1 className="cc-display text-3xl sm:text-4xl font-extrabold text-foreground">
-            Explore <span className="cc-gradient-text-strong">talents</span>
+            {tr("Explore")} <span className="cc-gradient-text-strong">{tr("talents")}</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Search by title, creator or school - then narrow it down.</p>
+          <p className="text-muted-foreground mt-1">{tr("Search by title, creator or school - then narrow it down.")}</p>
         </div>
 
         <label className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-brand-400">
@@ -70,12 +72,12 @@ export default function ExplorePage() {
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Try “guitar”, “robotics”, a name or a school…"
+            placeholder={tr("Try “guitar”, “robotics”, a name or a school…")}
             className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
-            aria-label="Search talents"
+            aria-label={tr("Search talents")}
           />
           {draft && (
-            <button type="button" onClick={() => setDraft("")} className="p-1 rounded-full hover:bg-secondary cursor-pointer" aria-label="Clear search">
+            <button type="button" onClick={() => setDraft("")} className="p-1 rounded-full hover:bg-secondary cursor-pointer" aria-label={tr("Clear search")}>
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           )}
@@ -88,7 +90,7 @@ export default function ExplorePage() {
             onClick={() => update({ category: null, page: null })}
             className={cn("rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap cursor-pointer", !category ? "cc-gradient-bg text-white shadow-md" : "bg-secondary text-secondary-foreground hover:bg-muted")}
           >
-            ✨ All talents
+            {tr("✨ All talents")}
           </button>
           {CATEGORY_ORDER.map((c) => (
             <CategoryChip key={c} category={c} active={category === c} onClick={() => update({ category: category === c ? null : c, page: null })} />
@@ -97,51 +99,51 @@ export default function ExplorePage() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground mr-1">
-            <SlidersHorizontal className="w-4 h-4" /> Filters{activeCount > 0 && ` (${activeCount})`}
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground me-1">
+            <SlidersHorizontal className="w-4 h-4" /> {tr("Filters")}{activeCount > 0 && ` (${activeCount})`}
           </span>
           <SegmentedControl
-            aria-label="Scope"
+            aria-label={tr("Scope")}
             size="sm"
             value={scope}
             onValueChange={(v) => update({ scope: v === "all" ? null : v, page: null })}
             options={[
-              { value: "all", label: "All schools", icon: Globe2 },
-              { value: "school", label: "My school", icon: School },
+              { value: "all", label: tr("All schools"), icon: Globe2 },
+              { value: "school", label: tr("My school"), icon: School },
             ]}
           />
           <SegmentedControl
-            aria-label="Creator"
+            aria-label={tr("Creator")}
             size="sm"
             value={creatorType ?? "any"}
             onValueChange={(v) => update({ creator: v === "any" ? null : v, page: null })}
             options={[
-              { value: "any", label: "Everyone" },
-              { value: "student", label: "Students" },
-              { value: "teacher", label: "Teachers" },
-              { value: "parent", label: "Parents" },
+              { value: "any", label: tr("Everyone") },
+              { value: "student", label: tr("Students") },
+              { value: "teacher", label: tr("Teachers") },
+              { value: "parent", label: tr("Parents") },
             ]}
           />
           <SegmentedControl
-            aria-label="Visibility"
+            aria-label={tr("Visibility")}
             size="sm"
             value={visibility ?? "any"}
             onValueChange={(v) => update({ visibility: v === "any" ? null : v, page: null })}
             options={[
-              { value: "any", label: "Any visibility" },
-              { value: "school_only", label: "School only" },
-              { value: "public", label: "Public" },
+              { value: "any", label: tr("Any visibility") },
+              { value: "school_only", label: tr("School only") },
+              { value: "public", label: tr("Public") },
             ]}
           />
           <select
             value={sort}
             onChange={(e) => update({ sort: e.target.value, page: null })}
-            className="ml-auto h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground cursor-pointer"
-            aria-label="Sort by"
+            className="ms-auto h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground cursor-pointer"
+            aria-label={tr("Sort by")}
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.label}
+                {tr(o.label)}
               </option>
             ))}
           </select>
@@ -149,12 +151,12 @@ export default function ExplorePage() {
       </header>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>{data ? `${data.total.toLocaleString()} showcase${data.total === 1 ? "" : "s"}` : "Searching…"}</span>
-        {isFetching && !isLoading && <span className="animate-pulse">Updating…</span>}
+        <span>{data ? (data.total === 1 ? tr("{{n}} showcase", { n: data.total.toLocaleString() }) : tr("{{n}} showcases", { n: data.total.toLocaleString() })) : tr("Searching…")}</span>
+        {isFetching && !isLoading && <span className="animate-pulse">{tr("Updating…")}</span>}
       </div>
 
       {data && data.total === 0 ? (
-        <EmptyState emoji="🔭" title="No talents match yet" body="Try another category or clear a filter - new work is published every day." />
+        <EmptyState emoji="🔭" title={tr("No talents match yet")} body="Try another category or clear a filter - new work is published every day." />
       ) : (
         <TalentGrid talents={data?.items} loading={isLoading} />
       )}
@@ -162,13 +164,11 @@ export default function ExplorePage() {
       {data && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-2">
           <button type="button" disabled={page <= 1} onClick={() => update({ page: String(page - 1) })} className="rounded-full border border-border bg-card px-4 py-2 text-sm disabled:opacity-40 cursor-pointer">
-            Previous
+            {tr("Previous")}
           </button>
-          <span className="text-sm text-muted-foreground tabular-nums">
-            Page {page} of {totalPages}
-          </span>
+          <span className="text-sm text-muted-foreground tabular-nums">{tr("Page {{page}} of {{totalPages}}", { page, totalPages })}</span>
           <button type="button" disabled={page >= totalPages} onClick={() => update({ page: String(page + 1) })} className="rounded-full border border-border bg-card px-4 py-2 text-sm disabled:opacity-40 cursor-pointer">
-            Next
+            {tr("Next")}
           </button>
         </div>
       )}

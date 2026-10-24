@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 
 /**
@@ -50,9 +51,11 @@ export function StatusBadge({
   variant?: BadgeVariant;
   className?: string;
 }) {
+  const { t } = useTranslation("common");
   return (
     <Badge variant={variant ?? statusTone(status)} dot className={className}>
-      {label ?? humanizeStatus(status)}
+      {/* Known status words are in the common namespace; anything else shows as-is. */}
+      {label ?? t(humanizeStatus(status))}
     </Badge>
   );
 }

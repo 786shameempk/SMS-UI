@@ -6,7 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getYearlyTrend, listRosterSections } from "../../api";
 
+import { useTranslation } from "react-i18next";
 export default function YearlyAttendanceReport() {
+  const { t } = useTranslation("attendance");
   const { data: classes = [] } = useQuery({ queryKey: ["attendance", "classes"], queryFn: listClasses });
   const { data: sections = [] } = useQuery({ queryKey: ["attendance", "sections"], queryFn: listSections });
   const { data: rosterSections = [] } = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: listRosterSections });
@@ -30,15 +32,15 @@ export default function YearlyAttendanceReport() {
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-3 flex-wrap">
         <div>
-          <CardTitle>Yearly attendance trend</CardTitle>
-          <CardDescription>Percentage present by month, across the recorded attendance history.</CardDescription>
+          <CardTitle>{t("Yearly attendance trend")}</CardTitle>
+          <CardDescription>{t("Percentage present by month, across the recorded attendance history.")}</CardDescription>
         </div>
         <Select value={sectionId} onValueChange={setSectionId}>
           <SelectTrigger className="w-56">
-            <SelectValue placeholder="Section" />
+            <SelectValue placeholder={t("Section")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All sections</SelectItem>
+            <SelectItem value="all">{t("All sections")}</SelectItem>
             {rosterSectionIds.map((id) => (
               <SelectItem key={id} value={id}>
                 {sectionLabel(id)}
@@ -50,7 +52,7 @@ export default function YearlyAttendanceReport() {
       <CardContent>
         <div className="h-72 w-full">
           {!isLoading && !trend.length ? (
-            <p className="text-sm text-muted-foreground py-10 text-center">No historical attendance data yet.</p>
+            <p className="text-sm text-muted-foreground py-10 text-center">{t("No historical attendance data yet.")}</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trend} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Check, Eye, LayoutGrid, Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,15 +14,16 @@ type Filter = "all" | "shown" | "hidden";
 const CATEGORY_ORDER: WidgetCategory[] = ["overview", "academics", "finance", "campus", "calendar", "communication"];
 
 function WidgetTile({ widget, isShown, onToggle }: { widget: DashboardWidgetConfig; isShown: boolean; onToggle: () => void }) {
+  const { t } = useTranslation("dashboard");
   return (
     <li>
       <button
         type="button"
         onClick={onToggle}
         aria-pressed={isShown}
-        aria-label={`${widget.name}: ${isShown ? "on your dashboard, click to remove" : "hidden, click to add"}`}
+        aria-label={isShown ? t("{{name}}: on your dashboard, click to remove", { name: t(widget.name) }) : t("{{name}}: hidden, click to add", { name: t(widget.name) })}
         className={cn(
-          "group relative flex h-full w-full flex-col overflow-hidden rounded-xl border bg-card text-left transition-[border-color,box-shadow,transform] duration-200 cursor-pointer",
+          "group relative flex h-full w-full flex-col overflow-hidden rounded-xl border bg-card text-start transition-[border-color,box-shadow,transform] duration-200 cursor-pointer",
           "hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
           isShown ? "border-primary/60 shadow-xs ring-1 ring-primary/25" : "border-border hover:border-input",
         )}
@@ -39,7 +41,7 @@ function WidgetTile({ widget, isShown, onToggle }: { widget: DashboardWidgetConf
           />
           <span
             className={cn(
-              "absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full shadow-xs transition-all duration-200",
+              "absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-full shadow-xs transition-all duration-200",
               isShown
                 ? "bg-primary text-primary-foreground scale-100"
                 : "border border-border bg-card text-muted-foreground group-hover:border-primary/50 group-hover:text-primary-text",
@@ -52,17 +54,17 @@ function WidgetTile({ widget, isShown, onToggle }: { widget: DashboardWidgetConf
 
         <div className="flex flex-1 flex-col gap-0.5 px-3.5 py-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-sm font-semibold text-foreground">{widget.name}</p>
+            <p className="truncate text-sm font-semibold text-foreground">{t(widget.name)}</p>
             <span
               className={cn(
                 "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
                 isShown ? "bg-success-soft text-success-strong" : "bg-secondary text-muted-foreground",
               )}
             >
-              {isShown ? "Shown" : "Hidden"}
+              {isShown ? t("Shown") : t("Hidden")}
             </span>
           </div>
-          <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{widget.description}</p>
+          <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{t(widget.description)}</p>
         </div>
       </button>
     </li>
@@ -87,6 +89,7 @@ export default function ManageWidgetsDialog({
   /** Saved on the server (follows the user to any device) rather than on this device only. */
   savedToAccount?: boolean;
 }) {
+  const { t } = useTranslation("dashboard");
   const [filter, setFilter] = useState<Filter>("all");
   const hiddenSet = new Set(hidden);
   const shownCount = available.filter((w) => !hiddenSet.has(w.id)).length;
@@ -97,14 +100,14 @@ export default function ManageWidgetsDialog({
   const matchesFilter = (w: DashboardWidgetConfig) =>
     filter === "all" || (filter === "shown" ? !hiddenSet.has(w.id) : hiddenSet.has(w.id));
 
-  const grouped = CATEGORY_ORDER.map((c) => ({ title: WIDGET_CATEGORY_LABEL[c], widgets: available.filter((w) => w.category === c) }))
+  const grouped = CATEGORY_ORDER.map((c) => ({ title: t(WIDGET_CATEGORY_LABEL[c]), widgets: available.filter((w) => w.category === c) }))
     .map((g) => ({ ...g, widgets: g.widgets.filter(matchesFilter) }))
     .filter((g) => g.widgets.length > 0);
 
   const FILTERS: Array<{ value: Filter; label: string; count: number }> = [
-    { value: "all", label: "All", count: available.length },
-    { value: "shown", label: "On dashboard", count: shownCount },
-    { value: "hidden", label: "Hidden", count: hiddenCount },
+    { value: "all", label: t("All"), count: available.length },
+    { value: "shown", label: t("On dashboard"), count: shownCount },
+    { value: "hidden", label: t("Hidden"), count: hiddenCount },
   ];
 
   return (
@@ -112,13 +115,17 @@ export default function ManageWidgetsDialog({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="h-9 gap-2">
           <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground" />
-          Manage widgets
+          {t("Manage widgets")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Customize your dashboard</DialogTitle>
-          <DialogDescription>Tap a card to show or hide it. Changes apply instantly and are saved {savedToAccount ? "to your account" : "on this device"}.</DialogDescription>
+          <DialogTitle>{t("Customize your dashboard")}</DialogTitle>
+          <DialogDescription>
+            {savedToAccount
+              ? t("Tap a card to show or hide it. Changes apply instantly and are saved to your account.")
+              : t("Tap a card to show or hide it. Changes apply instantly and are saved on this device.")}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Summary + filters */}
@@ -127,25 +134,30 @@ export default function ManageWidgetsDialog({
             <div className="flex-1">
               <div className="mb-1.5 flex items-baseline justify-between text-xs">
                 <span className="font-medium text-foreground">
-                  <span className="tabular-nums">{shownCount}</span> of <span className="tabular-nums">{available.length}</span> widgets on your dashboard
+                  <Trans
+                    t={t}
+                    i18nKey="<0>{{shown}}</0> of <1>{{total}}</1> widgets on your dashboard"
+                    values={{ shown: shownCount, total: available.length }}
+                    components={[<span className="tabular-nums" />, <span className="tabular-nums" />]}
+                  />
                 </span>
                 <span className="tabular-nums text-muted-foreground">{Math.round((shownCount / Math.max(1, available.length)) * 100)}%</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuemin={0} aria-valuemax={available.length} aria-valuenow={shownCount} aria-label="Widgets shown">
+              <div className="h-1.5 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuemin={0} aria-valuemax={available.length} aria-valuenow={shownCount} aria-label={t("Widgets shown")}>
                 <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${(shownCount / Math.max(1, available.length)) * 100}%` }} />
               </div>
             </div>
           </div>
 
-          <SegmentedControl aria-label="Filter widgets" size="sm" value={filter} onValueChange={setFilter} options={FILTERS} />
+          <SegmentedControl aria-label={t("Filter widgets")} size="sm" value={filter} onValueChange={setFilter} options={FILTERS} />
         </div>
 
         {grouped.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border px-6 py-10 text-center">
             <Eye className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            <p className="text-sm font-medium text-foreground">{filter === "hidden" ? "Nothing hidden" : "No widgets shown"}</p>
+            <p className="text-sm font-medium text-foreground">{filter === "hidden" ? t("Nothing hidden") : t("No widgets shown")}</p>
             <p className="text-xs text-muted-foreground">
-              {filter === "hidden" ? "Every widget is already on your dashboard." : "Switch to All and tap a card to add it."}
+              {filter === "hidden" ? t("Every widget is already on your dashboard.") : t("Switch to All and tap a card to add it.")}
             </p>
           </div>
         ) : (
@@ -165,15 +177,15 @@ export default function ManageWidgetsDialog({
 
         <DialogFooter className="sm:justify-between">
           <Button variant="ghost" size="sm" onClick={() => onChange(available.map((w) => w.id))} disabled={shownCount === 0}>
-            Hide all
+            {t("Hide all")}
           </Button>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => onChange([])} disabled={hiddenCount === 0}>
-              Show all
+              {t("Show all")}
             </Button>
             <Button variant="outline" size="sm" onClick={onReset} disabled={!isCustomized}>
               <RotateCcw className="h-3.5 w-3.5" />
-              Reset to default
+              {t("Reset to default")}
             </Button>
           </div>
         </DialogFooter>

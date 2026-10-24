@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CalendarRange, Check, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ export default function DateRangePicker({
   value: DashboardDateRange;
   onChange: (range: DashboardDateRange) => void;
 }) {
+  const { t } = useTranslation("dashboard");
   const [open, setOpen] = useState(false);
   const [showCustom, setShowCustom] = useState(value.preset === "custom");
   const resolved = resolveDateRange(value);
@@ -37,7 +39,7 @@ export default function DateRangePicker({
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-9 gap-2">
           <CalendarRange className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="max-w-[220px] truncate">{describeDateRange(value)}</span>
+          <span className="max-w-[220px] truncate">{value.preset === "custom" ? describeDateRange(value) : t(describeDateRange(value))}</span>
           <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
@@ -55,7 +57,7 @@ export default function DateRangePicker({
                   active ? "bg-accent text-accent-foreground font-medium" : "text-foreground hover:bg-secondary",
                 )}
               >
-                {option.label}
+                {t(option.label)}
                 {active && <Check className="w-3.5 h-3.5" />}
               </button>
             );
@@ -66,15 +68,15 @@ export default function DateRangePicker({
           <div className="mt-2 pt-3 border-t border-border space-y-3 px-1 pb-1">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label htmlFor="range-from" className="text-xs">From</Label>
+                <Label htmlFor="range-from" className="text-xs">{t("From")}</Label>
                 <Input id="range-from" type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="range-to" className="text-xs">To</Label>
+                <Label htmlFor="range-to" className="text-xs">{t("To")}</Label>
                 <Input id="range-to" type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className="h-8 text-xs" />
               </div>
             </div>
-            {customInvalid && <p className="text-xs text-destructive">Pick a start date on or before the end date.</p>}
+            {customInvalid && <p className="text-xs text-destructive">{t("Pick a start date on or before the end date.")}</p>}
             <Button
               size="sm"
               className="w-full"
@@ -84,7 +86,7 @@ export default function DateRangePicker({
                 setOpen(false);
               }}
             >
-              Apply range
+              {t("Apply range")}
             </Button>
           </div>
         )}

@@ -79,7 +79,7 @@ export default function SubscriptionDetailPage() {
         {s.trialEndsOn && <span>Trial ends {day(s.trialEndsOn)}</span>}
         <span className="text-muted-foreground">Renews at {money(s.renewalAmount, s.currency)}{s.autoRenew ? " (auto)" : ""} · grace {s.graceDays} days</span>
         {s.suspendedReason && <span className="text-destructive-strong">Suspended: {s.suspendedReason}</span>}
-        <Link className="ml-auto text-primary hover:underline" to={`/office/schools/${s.schoolId}`}>Open school</Link>
+        <Link className="ms-auto text-primary hover:underline" to={`/office/schools/${s.schoolId}`}>Open school</Link>
       </div>
       <FormErrorBanner message={mode === "view" ? error : null} />
 
@@ -102,7 +102,7 @@ export default function SubscriptionDetailPage() {
                   <Link className="font-medium text-primary hover:underline" to={`/office/invoices?id=${i.id}`}>{i.number}</Link>
                   <span className="text-muted-foreground">{i.kind} · due {day(i.dueDate)}</span>
                   {i.overdue && <StatusBadge status="Failed">{i.daysOverdue} days late</StatusBadge>}
-                  <span className="ml-auto tabular-nums">{money(i.outstanding, i.currency)}</span>
+                  <span className="ms-auto tabular-nums">{money(i.outstanding, i.currency)}</span>
                 </li>
               ))}
             </ul>
@@ -192,7 +192,7 @@ function EntitlementsPanel({ s, canEntitle, onAdd, onChanged }: { s: Subscriptio
               <span className="font-medium">{o.kind}{o.key ? `: ${o.key}` : ""}</span>
               <span>{o.value != null ? `set to ${o.value}` : o.granted ? "granted" : "removed"}</span>
               <span className="text-muted-foreground">{day(o.effectiveFrom)}{o.effectiveTo ? ` → ${day(o.effectiveTo)}` : ""} · {o.reason}</span>
-              {canEntitle && <Button size="sm" variant="ghost" className="ml-auto" aria-label={`Remove override ${o.kind} ${o.key}`} onClick={() => remove.mutate(o.id)}><Trash2 className="h-4 w-4" aria-hidden="true" /></Button>}
+              {canEntitle && <Button size="sm" variant="ghost" className="ms-auto" aria-label={`Remove override ${o.kind} ${o.key}`} onClick={() => remove.mutate(o.id)}><Trash2 className="h-4 w-4" aria-hidden="true" /></Button>}
             </li>
           ))}
         </ul>
@@ -213,7 +213,7 @@ function ScheduledList({ s, canManage, onChanged }: { s: Subscription; canManage
           <span>on {day(c.effectiveOn)}</span>
           {c.reason && <span className="text-muted-foreground">{c.reason}</span>}
           {c.failureMessage && <span className="text-destructive-strong">{c.failureMessage}</span>}
-          {canManage && c.status === "Pending" && <Button size="sm" variant="ghost" className="ml-auto" onClick={() => cancel.mutate(c.id)}>Cancel</Button>}
+          {canManage && c.status === "Pending" && <Button size="sm" variant="ghost" className="ms-auto" onClick={() => cancel.mutate(c.id)}>Cancel</Button>}
         </li>
       ))}
     </ul>

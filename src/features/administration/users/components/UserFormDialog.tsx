@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,6 +34,7 @@ interface UserFormDialogProps {
 }
 
 export default function UserFormDialog({ open, onOpenChange, user, roles, onSubmit, submitting }: UserFormDialogProps) {
+  const { t } = useTranslation("administration");
   const isEdit = Boolean(user);
   const {
     register,
@@ -82,45 +84,45 @@ export default function UserFormDialog({ open, onOpenChange, user, roles, onSubm
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit user" : "Add user"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("Edit user") : t("Add user")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "Update this user's account details." : "Create a new user account for staff or administration."}
+            {isEdit ? t("Update this user's account details.") : t("Create a new user account for staff or administration.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(submit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Full name</Label>
+            <Label htmlFor="name" required>{t("Full name")}</Label>
             <Input id="name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="email" required>Email</Label>
+            <Label htmlFor="email" required>{t("Email")}</Label>
             <Input id="email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
-            {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.email.message}</p>}
+            {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.email.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("Phone")}</Label>
               <Input id="phone" {...register("phone")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="department">Department</Label>
+              <Label htmlFor="department">{t("Department")}</Label>
               <Input id="department" {...register("department")} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="roleId" required>Role</Label>
+            <Label htmlFor="roleId" required>{t("Role")}</Label>
             <Controller
               control={control}
               name="roleId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="roleId">
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder={t("Select a role")} />
                   </SelectTrigger>
                   <SelectContent>
                     {roles.map((role) => (
@@ -132,19 +134,19 @@ export default function UserFormDialog({ open, onOpenChange, user, roles, onSubm
                 </Select>
               )}
             />
-            {errors.roleId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.roleId.message}</p>}
+            {errors.roleId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.roleId.message ?? "")}</p>}
           </div>
 
           {needsBranch && (
             <div className="space-y-1.5">
-              <Label htmlFor="branchId">Branch</Label>
+              <Label htmlFor="branchId">{t("Branch")}</Label>
               <Controller
                 control={control}
                 name="branchId"
                 render={({ field }) => (
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <SelectTrigger id="branchId">
-                      <SelectValue placeholder="Select branch" />
+                      <SelectValue placeholder={t("Select branch")} />
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map((b) => (
@@ -156,16 +158,16 @@ export default function UserFormDialog({ open, onOpenChange, user, roles, onSubm
                   </Select>
                 )}
               />
-              {errors.branchId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.branchId.message}</p>}
+              {errors.branchId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.branchId.message ?? "")}</p>}
             </div>
           )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create user"}
+              {isEdit ? t("Save changes") : t("Create user")}
             </Button>
           </DialogFooter>
         </form>

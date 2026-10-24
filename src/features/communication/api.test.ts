@@ -29,8 +29,11 @@ describe("communication api", () => {
 
     expect(rows[0]).toMatchObject({ channels: ["sms", "in-app"], category: undefined, subject: undefined });
     expect(rows[1]).toMatchObject({ category: "Fees", subject: "Due" });
-    expect(calls[1].body).toEqual({ name: "Fee reminder", category: null, subject: null, body: "Pay", channels: ["Sms", "InApp"] });
-    expect(calls[2].body).toEqual({ name: "N", category: "Fees", subject: "New", body: "B", channels: ["WhatsApp"] });
+    expect(calls[1].body).toEqual({
+      name: "Fee reminder", category: null, subject: null, body: "Pay", channels: ["Sms", "InApp"],
+      language: "en", smsTemplateId: null, whatsAppTemplateName: null, whatsAppTemplateLanguage: null,
+    });
+    expect(calls[2].body).toMatchObject({ name: "N", category: "Fees", subject: "New", body: "B", channels: ["WhatsApp"] });
   });
 
   it("contact groups", async () => {
@@ -70,7 +73,7 @@ describe("communication api", () => {
     await comms.composeMessage({ subject: "", body: "Now", channels: ["sms"], groupIds: [], studentIds: [], staffIds: [], scheduledAt: "" } as never);
     expect((await comms.sendScheduledNow("m2")).status).toBe("sent");
     expect((await comms.cancelScheduledMessage("m2")).status).toBe("cancelled");
-    expect(await comms.getDeliverySummary("m1")).toEqual([{ channel: "sms", delivered: 28, failed: 2 }]);
+    expect(await comms.getDeliverySummary("m1")).toEqual([{ channel: "sms", delivered: 28, failed: 2, queued: 0, sent: 0, skipped: 0 }]);
 
     expect(calls[0].body).toEqual({ groupIds: ["g1"], studentIds: ["st1"], staffIds: [] });
     expect(rows[0]).toMatchObject({ channels: ["email", "whatsapp", "push"], status: "sent", subject: undefined, scheduledAt: undefined });
@@ -78,6 +81,7 @@ describe("communication api", () => {
     expect(composed.status).toBe("scheduled");
     expect(calls[2].body).toEqual({
       subject: "PTM", body: "Hi", channels: ["Email", "Push"], groupIds: ["g1"], studentIds: [], staffIds: ["sf1"], scheduledAt: new Date(scheduledAt).toISOString(),
+      templateId: null, idempotencyKey: null,
     });
     expect(calls[3].body).toMatchObject({ subject: null, scheduledAt: null });
   });

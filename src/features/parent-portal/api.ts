@@ -6,7 +6,8 @@ import { listAssignedHomework } from "@/features/homework/api";
 import { getStudent, listStudents } from "@/features/students/api";
 import type { Student } from "@/features/students/types";
 import { listInvoicesForStudent } from "@/features/fees/api";
-import { payInvoiceWithRazorpay } from "./razorpayCheckout";
+import type { PayerDetails } from "@/features/fees/api";
+import { startOnlinePayment } from "./onlineCheckout";
 import type { FeeInvoice as FeesInvoice } from "@/features/fees/types";
 import { listMyNotifications, markRead } from "@/features/notifications/api";
 import type { Notification } from "@/features/notifications/types";
@@ -203,11 +204,20 @@ export async function listFeeInvoices(studentId: string): Promise<FeeInvoice[]> 
   return invoices.map(toParentFeeInvoice);
 }
 
-/** Opens Razorpay's checkout; resolves once FinanceService has verified the payment and marked the invoice paid. */
-export async function payFeeInvoice(studentId: string, invoiceId: string, prefill: { name?: string; email?: string } = {}): Promise<FeeInvoice> {
+/**
+ * Opens the chosen gateway's checkout. Razorpay finishes in a popup: resolves once FinanceService has verified the payment and
+ * marked the invoice paid. The other gateways take the page over and bring the payer back (see completeReturnedPayment), so they
+ * resolve as "redirecting".
+ */
+export async function payFeeInvoice(
+  studentId: string,
+  invoiceId: string,
+  provider: string,
+  payer: PayerDetails = {},
+): Promise<{ kind: "paid"; invoice: FeeInvoice } | { kind: "redirecting" }> {
   void studentId;
-  const { invoice } = await payInvoiceWithRazorpay(invoiceId, prefill);
-  return toParentFeeInvoice(invoice);
+  const outcome = await startOnlinePayment(invoiceId, provider, payer);
+  return outcome.kind === "paid" ? { kind: "paid", invoice: toParentFeeInvoice(outcome.invoice) } : outcome;
 }
 
 /**

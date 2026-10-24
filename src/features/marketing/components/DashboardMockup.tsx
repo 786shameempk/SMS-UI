@@ -17,6 +17,7 @@ import {
   Video,
   Wallet,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
 
 /**
@@ -100,9 +101,10 @@ export default function DashboardMockup() {
   const W = 320;
   const H = 88;
   const line = linePath(ATTENDANCE, W, H, 80, 100);
+  const { t } = useTranslation("marketing");
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-[0_30px_80px_-20px_rgb(15_23_42/0.25)] ring-1 ring-slate-900/5">
+    <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-start shadow-[0_30px_80px_-20px_rgb(15_23_42/0.25)] ring-1 ring-slate-900/5">
       {/* Window chrome */}
       <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-2.5">
         <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
@@ -115,7 +117,7 @@ export default function DashboardMockup() {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="hidden w-44 shrink-0 flex-col border-r border-slate-100 bg-slate-50/50 p-3 lg:flex">
+        <aside className="hidden w-44 shrink-0 flex-col border-e border-slate-100 bg-slate-50/50 p-3 lg:flex">
           <div className="mb-4 flex items-center gap-2 px-1">
             <div className="bg-brand-gradient flex h-6 w-6 items-center justify-center rounded-md">
               <GraduationCap className="h-3.5 w-3.5 text-white" />
@@ -132,13 +134,13 @@ export default function DashboardMockup() {
                 )}
               >
                 <item.icon className={cn("h-3.5 w-3.5", item.active ? "text-brand-600" : "text-slate-400")} />
-                {item.label}
+                {t(item.label)}
               </div>
             ))}
           </nav>
           <div className="mt-auto flex items-center gap-2 rounded-md px-2 py-1.5 text-[11px] font-medium text-slate-500">
             <Settings className="h-3.5 w-3.5 text-slate-400" />
-            Settings
+            {t("Settings")}
           </div>
         </aside>
 
@@ -148,15 +150,15 @@ export default function DashboardMockup() {
           <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-2.5">
             <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-400 sm:max-w-xs">
               <Search className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Search students, classes, invoices…</span>
-              <kbd className="ml-auto hidden rounded border border-slate-200 bg-white px-1 text-[9px] font-medium text-slate-400 sm:inline">⌘K</kbd>
+              <span className="truncate">{t("Search students, classes, invoices…")}</span>
+              <kbd className="ms-auto hidden rounded border border-slate-200 bg-white px-1 text-[9px] font-medium text-slate-400 sm:inline">⌘K</kbd>
             </div>
-            <div className="ml-auto hidden items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-[11px] font-medium text-slate-600 md:flex">
-              Main Campus <ChevronDown className="h-3 w-3" />
+            <div className="ms-auto hidden items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-[11px] font-medium text-slate-600 md:flex">
+              {t("Main Campus")} <ChevronDown className="h-3 w-3" />
             </div>
             <div className="relative">
               <Bell className="h-4 w-4 text-slate-500" />
-              <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-brand-500 ring-2 ring-white" />
+              <span className="absolute -end-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-brand-500 ring-2 ring-white" />
             </div>
             <div className="bg-brand-gradient flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold text-white">AW</div>
           </div>
@@ -170,11 +172,11 @@ export default function DashboardMockup() {
               className="flex flex-wrap items-end justify-between gap-2"
             >
               <div>
-                <p className="text-[13px] font-bold text-slate-900 sm:text-sm">Good morning, Ava</p>
-                <p className="text-[10px] text-slate-500 sm:text-[11px]">Here's what's happening at Greenfield Public School today.</p>
+                <p className="text-[13px] font-bold text-slate-900 sm:text-sm">{t("Good morning, Ava")}</p>
+                <p className="text-[10px] text-slate-500 sm:text-[11px]">{t("Here's what's happening at Greenfield Public School today.")}</p>
               </div>
               <span className="flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-medium text-slate-600">
-                <CalendarDays className="h-3 w-3" /> Tue, 14 Oct
+                <CalendarDays className="h-3 w-3" /> {t("Tue, 14 Oct")}
               </span>
             </motion.div>
 
@@ -186,10 +188,10 @@ export default function DashboardMockup() {
                     <div className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-50">
                       <kpi.icon className="h-3 w-3 text-brand-700" />
                     </div>
-                    <p className="truncate text-[10px] font-medium text-slate-500">{kpi.label}</p>
+                    <p className="truncate text-[10px] font-medium text-slate-500">{t(kpi.label)}</p>
                   </div>
                   <p className="mt-2 text-base font-bold tabular-nums tracking-tight text-slate-900">{kpi.value}</p>
-                  <p className="truncate text-[9.5px] font-medium text-emerald-600">{kpi.note}</p>
+                  <p className="truncate text-[9.5px] font-medium text-emerald-600">{t(kpi.note)}</p>
                 </Panel>
               ))}
             </div>
@@ -197,7 +199,7 @@ export default function DashboardMockup() {
             {/* Chart + upcoming classes */}
             <div className="grid gap-2.5 md:grid-cols-5">
               <Panel index={4} className="md:col-span-3">
-                <PanelTitle action="Last 12 weeks">Attendance trend</PanelTitle>
+                <PanelTitle action={t("Last 12 weeks")}>{t("Attendance trend")}</PanelTitle>
                 <svg viewBox={`0 0 ${W} ${H + 4}`} className="h-24 w-full" preserveAspectRatio="none" aria-hidden="true">
                   <defs>
                     <linearGradient id="mock-area" x1="0" y1="0" x2="0" y2="1">
@@ -222,26 +224,26 @@ export default function DashboardMockup() {
                   />
                 </svg>
                 <div className="mt-1 flex justify-between text-[9px] text-slate-400">
-                  <span>Jul</span>
-                  <span>Aug</span>
-                  <span>Sep</span>
-                  <span>Oct</span>
+                  <span>{t("Jul")}</span>
+                  <span>{t("Aug")}</span>
+                  <span>{t("Sep")}</span>
+                  <span>{t("Oct")}</span>
                 </div>
               </Panel>
 
               <Panel index={5} className="md:col-span-2">
-                <PanelTitle action="View all">Upcoming classes</PanelTitle>
+                <PanelTitle action={t("View all")}>{t("Upcoming classes")}</PanelTitle>
                 <ul className="space-y-2">
                   {CLASSES.map((c) => (
                     <li key={c.subject} className="flex items-center gap-2.5">
                       <span className="w-8 shrink-0 text-[10px] font-semibold tabular-nums text-slate-500">{c.time}</span>
                       <div className="min-w-0 flex-1 rounded-lg border border-slate-100 bg-slate-50/70 px-2 py-1.5">
-                        <p className="truncate text-[10.5px] font-semibold text-slate-800">{c.subject}</p>
-                        <p className="text-[9.5px] text-slate-500">{c.group}</p>
+                        <p className="truncate text-[10.5px] font-semibold text-slate-800">{t(c.subject)}</p>
+                        <p className="text-[9.5px] text-slate-500">{t(c.group)}</p>
                       </div>
                       {c.live && (
                         <span className="flex items-center gap-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-600">
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" /> LIVE
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" /> {t("LIVE")}
                         </span>
                       )}
                     </li>
@@ -253,12 +255,12 @@ export default function DashboardMockup() {
             {/* Secondary row: hidden on phones */}
             <div className="hidden gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-4">
               <Panel index={6} className="lg:col-span-1">
-                <PanelTitle>Assignments</PanelTitle>
+                <PanelTitle>{t("Assignments")}</PanelTitle>
                 <ul className="space-y-2">
                   {ASSIGNMENTS.map((a) => (
                     <li key={a.title}>
                       <div className="flex items-baseline justify-between gap-2">
-                        <p className="truncate text-[10.5px] font-medium text-slate-700">{a.title}</p>
+                        <p className="truncate text-[10.5px] font-medium text-slate-700">{t(a.title)}</p>
                         <span className="shrink-0 text-[9.5px] tabular-nums text-slate-400">
                           {a.done}/{a.total}
                         </span>
@@ -272,7 +274,7 @@ export default function DashboardMockup() {
               </Panel>
 
               <Panel index={7}>
-                <PanelTitle>Performance</PanelTitle>
+                <PanelTitle>{t("Performance")}</PanelTitle>
                 <div className="flex items-center gap-3">
                   <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90" aria-hidden="true">
                     <circle cx="18" cy="18" r="15" fill="none" stroke="#f1f5f9" strokeWidth="4" />
@@ -281,23 +283,23 @@ export default function DashboardMockup() {
                   <div className="space-y-1.5">
                     <div>
                       <p className="text-sm font-bold tabular-nums text-slate-900">78%</p>
-                      <p className="text-[9.5px] text-slate-500">Average score</p>
+                      <p className="text-[9.5px] text-slate-500">{t("Average score")}</p>
                     </div>
                     <div>
                       <p className="text-sm font-bold tabular-nums text-slate-900">94%</p>
-                      <p className="text-[9.5px] text-slate-500">Pass rate, term 1</p>
+                      <p className="text-[9.5px] text-slate-500">{t("Pass rate, term 1")}</p>
                     </div>
                   </div>
                 </div>
               </Panel>
 
               <Panel index={8}>
-                <PanelTitle>Notifications</PanelTitle>
+                <PanelTitle>{t("Notifications")}</PanelTitle>
                 <ul className="space-y-2">
                   {NOTIFICATIONS.map((n) => (
                     <li key={n.text} className="flex gap-2">
                       <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
-                      <p className="min-w-0 flex-1 text-[10px] leading-snug text-slate-600">{n.text}</p>
+                      <p className="min-w-0 flex-1 text-[10px] leading-snug text-slate-600">{t(n.text)}</p>
                       <span className="text-[9px] tabular-nums text-slate-400">{n.time}</span>
                     </li>
                   ))}
@@ -305,12 +307,12 @@ export default function DashboardMockup() {
               </Panel>
 
               <Panel index={9}>
-                <PanelTitle>Recent activity</PanelTitle>
+                <PanelTitle>{t("Recent activity")}</PanelTitle>
                 <ul className="space-y-2">
                   {ACTIVITY.map((a) => (
                     <li key={a.text} className="flex items-center gap-2">
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[8px] font-bold text-slate-600">{a.who}</span>
-                      <p className="min-w-0 flex-1 truncate text-[10px] text-slate-600">{a.text}</p>
+                      <p className="min-w-0 flex-1 truncate text-[10px] text-slate-600">{t(a.text)}</p>
                       <span className="text-[9px] text-slate-400">{a.time}</span>
                     </li>
                   ))}

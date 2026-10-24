@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,6 +45,7 @@ export default function RouteFormDialog({
   submitting: boolean;
   onSubmit: (values: TransportRouteFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("transport");
   const isEdit = Boolean(route);
   const {
     register,
@@ -88,8 +90,8 @@ export default function RouteFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit route" : "New route"}</DialogTitle>
-          <DialogDescription>Bus and driver lists only show vehicles/staff not already tied to another active route.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit route") : t("New route")}</DialogTitle>
+          <DialogDescription>{t("Bus and driver lists only show vehicles/staff not already tied to another active route.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -102,27 +104,27 @@ export default function RouteFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="rt-name" required>Route name</Label>
-            <Input id="rt-name" placeholder="e.g. Route 1 — Jayanagar / JP Nagar" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="rt-name" required>{t("Route name")}</Label>
+            <Input id="rt-name" placeholder={t("e.g. Route 1 — Jayanagar / JP Nagar")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="rt-busId">Bus</Label>
+              <Label htmlFor="rt-busId">{t("Bus")}</Label>
               <Controller
                 control={control}
                 name="busId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="rt-busId">
-                      <SelectValue placeholder="Unassigned" />
+                      <SelectValue placeholder={t("Unassigned")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE}>Unassigned</SelectItem>
+                      <SelectItem value={NONE}>{t("Unassigned")}</SelectItem>
                       {availableBuses.map((b) => (
                         <SelectItem key={b.id} value={b.id}>
-                          {b.regNumber} ({b.capacity} seats)
+                          {b.regNumber} ({t("{{seats}} seats", { seats: b.capacity })})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -131,17 +133,17 @@ export default function RouteFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="rt-driverId">Driver</Label>
+              <Label htmlFor="rt-driverId">{t("Driver")}</Label>
               <Controller
                 control={control}
                 name="driverId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="rt-driverId">
-                      <SelectValue placeholder="Unassigned" />
+                      <SelectValue placeholder={t("Unassigned")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE}>Unassigned</SelectItem>
+                      <SelectItem value={NONE}>{t("Unassigned")}</SelectItem>
                       {availableDrivers.map((d) => (
                         <SelectItem key={d.id} value={d.id}>
                           {d.staff.firstName} {d.staff.lastName}
@@ -156,19 +158,19 @@ export default function RouteFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="rt-startTime" required>Start time</Label>
+              <Label htmlFor="rt-startTime" required>{t("Start time")}</Label>
               <Input id="rt-startTime" type="time" aria-invalid={errors.startTime ? true : undefined} {...register("startTime")} />
-              {errors.startTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startTime.message}</p>}
+              {errors.startTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.startTime.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="rt-endTime" required>End time</Label>
+              <Label htmlFor="rt-endTime" required>{t("End time")}</Label>
               <Input id="rt-endTime" type="time" aria-invalid={errors.endTime ? true : undefined} {...register("endTime")} />
-              {errors.endTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endTime.message}</p>}
+              {errors.endTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.endTime.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="rt-status" required>Status</Label>
+            <Label htmlFor="rt-status" required>{t("Status")}</Label>
             <Controller
               control={control}
               name="status"
@@ -178,8 +180,8 @@ export default function RouteFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="active">{t("Active")}</SelectItem>
+                    <SelectItem value="inactive">{t("Inactive")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -188,10 +190,10 @@ export default function RouteFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create route"}
+              {isEdit ? t("Save changes") : t("Create route")}
             </Button>
           </DialogFooter>
         </form>

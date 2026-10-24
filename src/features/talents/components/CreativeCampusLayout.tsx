@@ -12,8 +12,10 @@ import { EmptyState } from "./Bits";
 import { LoadingState } from "@/components/ui/states";
 import "../talents.css";
 
+import { useTranslation } from "react-i18next";
 /** Wraps every /talents route: module identity, sub-navigation, and the create entry point. */
 export default function CreativeCampusLayout() {
+  const { t } = useTranslation("talents");
   const { canCreate, isReviewer } = useTalentRole();
   const tenantId = useAuthStore((s) => s.activeTenantId);
   // Roles & Permissions grants this as the "module.talents" permission; the API enforces it too.
@@ -32,17 +34,17 @@ export default function CreativeCampusLayout() {
   });
 
   const items = [
-    { to: "/talents", label: "Discover", icon: Compass, end: true },
-    { to: "/talents/explore", label: "Explore", icon: Search },
-    { to: `/talents/schools/${encodeURIComponent(tenantId)}`, label: "My School", icon: School },
-    ...(canCreate ? [{ to: "/talents/mine", label: "My Talents", icon: UserRound }] : []),
-    ...(isReviewer ? [{ to: "/talents/review", label: "Review", icon: ClipboardCheck, badge: queue?.pending }] : []),
+    { to: "/talents", label: t("Discover"), icon: Compass, end: true },
+    { to: "/talents/explore", label: t("Explore"), icon: Search },
+    { to: `/talents/schools/${encodeURIComponent(tenantId)}`, label: t("My School"), icon: School },
+    ...(canCreate ? [{ to: "/talents/mine", label: t("My Talents"), icon: UserRound }] : []),
+    ...(isReviewer ? [{ to: "/talents/review", label: t("Review"), icon: ClipboardCheck, badge: queue?.pending }] : []),
   ];
 
   if (!moduleEnabled) {
     return (
       <div className="cc-root max-w-[900px] mx-auto px-4 pt-10">
-        <EmptyState emoji="🔒" title="Talent Showcase isn't enabled for your role" body="Ask your school admin to grant it in Roles & Permissions, then sign in again." />
+        <EmptyState emoji="🔒" title={t("Talent Showcase isn't enabled for your role")} body="Ask your school admin to grant it in Roles & Permissions, then sign in again." />
       </div>
     );
   }
@@ -58,7 +60,7 @@ export default function CreativeCampusLayout() {
             </span>
             <span className="cc-display font-bold text-foreground hidden sm:inline">{MODULE_NAME}</span>
           </NavLink>
-          <nav className="hidden lg:flex items-center gap-1 ml-4" aria-label="Talent Showcase">
+          <nav className="hidden lg:flex items-center gap-1 ms-4" aria-label={t("Talent Showcase")}>
             {items.map((item) => (
               <NavLink
                 key={item.to}
@@ -75,16 +77,16 @@ export default function CreativeCampusLayout() {
                   <>
                     {isActive && <motion.span layoutId="cc-nav-pill" className="absolute inset-0 rounded-full cc-gradient-bg shadow-md" transition={{ type: "spring", stiffness: 380, damping: 30 }} />}
                     <item.icon className="relative w-4 h-4" />
-                    <span className="relative">{item.label}</span>
+                    <span className="relative">{t(item.label)}</span>
                     {!!item.badge && (
-                      <span className="relative ml-0.5 min-w-5 h-5 px-1 rounded-full bg-amber-400 text-[11px] font-bold text-amber-950 flex items-center justify-center">{item.badge}</span>
+                      <span className="relative ms-0.5 min-w-5 h-5 px-1 rounded-full bg-amber-400 text-[11px] font-bold text-amber-950 flex items-center justify-center">{item.badge}</span>
                     )}
                   </>
                 )}
               </NavLink>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-2">
             {canCreate && !inComposer && (
               <button
                 type="button"
@@ -92,7 +94,7 @@ export default function CreativeCampusLayout() {
                 className="hidden sm:inline-flex items-center gap-1.5 rounded-full cc-gradient-bg px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-900/25 hover:shadow-brand-900/40 hover:-translate-y-px transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                Share your talent
+                {t("Share your talent")}
               </button>
             )}
           </div>
@@ -105,17 +107,17 @@ export default function CreativeCampusLayout() {
       </Suspense>
 
       {/* Mobile bottom bar */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]" aria-label="Talent Showcase">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]" aria-label={t("Talent Showcase")}>
         <div className="flex items-stretch justify-around h-16">
           {items.slice(0, 2).map((item) => (
             <MobileTab key={item.to} {...item} />
           ))}
           {canCreate ? (
-            <button type="button" onClick={() => navigate("/talents/new")} className="relative -mt-5 flex flex-col items-center cursor-pointer" aria-label="Share your talent">
+            <button type="button" onClick={() => navigate("/talents/new")} className="relative -mt-5 flex flex-col items-center cursor-pointer" aria-label={t("Share your talent")}>
               <span className="w-14 h-14 rounded-2xl cc-gradient-bg flex items-center justify-center shadow-xl shadow-brand-900/40 rotate-3">
                 <Plus className="w-7 h-7 text-white -rotate-3" />
               </span>
-              <span className="text-[10px] font-medium text-muted-foreground mt-0.5">Share</span>
+              <span className="text-[10px] font-medium text-muted-foreground mt-0.5">{t("Share")}</span>
             </button>
           ) : null}
           {items.slice(2).map((item) => (
@@ -132,7 +134,7 @@ function MobileTab({ to, label, icon: Icon, end, badge }: { to: string; label: s
     <NavLink to={to} end={end} className={({ isActive }) => cn("relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium", isActive ? "text-brand-600 dark:text-brand-300" : "text-muted-foreground")}>
       <span className="relative">
         <Icon className="w-5 h-5" />
-        {!!badge && <span className="absolute -top-1.5 -right-2.5 min-w-4 h-4 px-1 rounded-full bg-amber-400 text-[9px] font-bold text-amber-950 flex items-center justify-center">{badge}</span>}
+        {!!badge && <span className="absolute -top-1.5 -end-2.5 min-w-4 h-4 px-1 rounded-full bg-amber-400 text-[9px] font-bold text-amber-950 flex items-center justify-center">{badge}</span>}
       </span>
       {label}
     </NavLink>

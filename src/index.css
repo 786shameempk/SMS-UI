@@ -347,3 +347,19 @@
     background: #fff;
   }
 }
+
+/* ── Interface languages ─────────────────────────────────────────────────────
+   Script fonts load on demand (src/i18n/index.ts); Inter stays first for Latin text and digits. */
+:root[lang="ml"] { --font-sans: "Inter", "Noto Sans Malayalam", ui-sans-serif, system-ui, sans-serif; }
+:root[lang="hi"] { --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif; }
+:root[lang="ta"] { --font-sans: "Inter", "Noto Sans Tamil", ui-sans-serif, system-ui, sans-serif; }
+:root[lang="ar"] { --font-sans: "Noto Sans Arabic", "Inter", ui-sans-serif, system-ui, sans-serif; }
+/* Indic scripts need taller lines than Latin to keep vowel signs from clipping. */
+:root[lang="ml"] body, :root[lang="ta"] body, :root[lang="hi"] body { line-height: 1.65; }
+
+/* Right-to-left: arrows and chevrons that mean "next/back" point the other way. */
+[dir="rtl"] .lucide-chevron-left, [dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-arrow-left, [dir="rtl"] .lucide-arrow-right,
+[dir="rtl"] .lucide-chevrons-left, [dir="rtl"] .lucide-chevrons-right,
+[dir="rtl"] .lucide-panel-left-close, [dir="rtl"] .lucide-panel-left-open,
+[dir="rtl"] .lucide-log-out, [dir="rtl"] .lucide-send { transform: scaleX(-1); }

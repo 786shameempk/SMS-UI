@@ -53,7 +53,7 @@ export default function ReportsPage() {
                 type="button"
                 aria-current={r.key === selected?.key ? "true" : undefined}
                 onClick={() => setKey(r.key)}
-                className={`block w-full rounded-lg border px-3 py-2 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${r.key === selected?.key ? "border-primary bg-accent" : "border-border bg-card hover:bg-muted"}`}
+                className={`block w-full rounded-lg border px-3 py-2 text-start text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${r.key === selected?.key ? "border-primary bg-accent" : "border-border bg-card hover:bg-muted"}`}
               >
                 <span className="font-medium">{r.title}</span>
                 <span className="block text-xs text-muted-foreground">{r.description}</span>
@@ -68,7 +68,7 @@ export default function ReportsPage() {
                   <label className="space-y-1 text-sm"><span className="font-medium">To</span><Input type="date" className="w-44" value={to} onChange={(e) => setTo(e.target.value)} /></label>
                 </>
               )}
-              <Button variant="outline" className="ml-auto" onClick={() => csv.mutate()} loading={csv.isPending} disabled={!table.data}><Download className="h-4 w-4" aria-hidden="true" />Download CSV</Button>
+              <Button variant="outline" className="ms-auto" onClick={() => csv.mutate()} loading={csv.isPending} disabled={!table.data}><Download className="h-4 w-4" aria-hidden="true" />Download CSV</Button>
             </div>
             {table.isLoading ? (
               <Skeleton className="h-64 rounded-xl" />

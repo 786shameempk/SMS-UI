@@ -27,7 +27,9 @@ import ExamFormDialog from "./ExamFormDialog";
 import ExamScheduleFormDialog from "./ExamScheduleFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
+import { useTranslation } from "react-i18next";
 export default function ExamsTab() {
+  const { t: tr } = useTranslation("examinations");
   const queryClient = useQueryClient();
   const { data: exams = [], isLoading: examsLoading } = useQuery({ queryKey: ["examinations", "exams"], queryFn: listExams });
   const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
@@ -54,7 +56,7 @@ export default function ExamsTab() {
     mutationFn: createExam,
     onSuccess: (exam) => {
       invalidateExams();
-      toast.success("Exam created");
+      toast.success(tr("Exam created"));
       setExamFormOpen(false);
       setScheduleFilter(exam.id);
     },
@@ -63,7 +65,7 @@ export default function ExamsTab() {
     mutationFn: ({ id, values }: { id: string; values: ExamFormValues }) => updateExam(id, values),
     onSuccess: () => {
       invalidateExams();
-      toast.success("Exam updated");
+      toast.success(tr("Exam updated"));
       setExamFormOpen(false);
       setEditingExam(null);
     },
@@ -73,7 +75,7 @@ export default function ExamsTab() {
     onSuccess: () => {
       invalidateExams();
       invalidateSchedules();
-      toast.success("Exam deleted");
+      toast.success(tr("Exam deleted"));
       setDeleteExamTarget(null);
     },
   });
@@ -82,7 +84,7 @@ export default function ExamsTab() {
     mutationFn: ({ examId, values }: { examId: string; values: ExamScheduleFormValues }) => createExamSchedule(examId, values),
     onSuccess: () => {
       invalidateSchedules();
-      toast.success("Subject schedule added");
+      toast.success(tr("Subject schedule added"));
       setScheduleFormOpen(false);
     },
   });
@@ -90,7 +92,7 @@ export default function ExamsTab() {
     mutationFn: ({ id, values }: { id: string; values: ExamScheduleFormValues }) => updateExamSchedule(id, values),
     onSuccess: () => {
       invalidateSchedules();
-      toast.success("Subject schedule updated");
+      toast.success(tr("Subject schedule updated"));
       setScheduleFormOpen(false);
       setEditingSchedule(null);
     },
@@ -99,7 +101,7 @@ export default function ExamsTab() {
     mutationFn: deleteExamSchedule,
     onSuccess: () => {
       invalidateSchedules();
-      toast.success("Subject schedule removed");
+      toast.success(tr("Subject schedule removed"));
       setDeleteScheduleTarget(null);
     },
   });
@@ -115,26 +117,24 @@ export default function ExamsTab() {
   );
 
   const examColumns: ColumnDef<Exam, unknown>[] = [
-    { accessorKey: "name", header: "Exam", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "name", header: tr("Exam"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "type",
-      header: "Type",
+      header: tr("Type"),
       cell: ({ row }) => <Badge variant="info">{EXAM_TYPE_LABELS[row.original.examType]}</Badge>,
     },
-    { id: "class", header: "Class", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{className(row.original.classId)}</span> },
-    { id: "term", header: "Term", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{termName(row.original.termId)}</span> },
+    { id: "class", header: tr("Class"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{className(row.original.classId)}</span> },
+    { id: "term", header: tr("Term"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{termName(row.original.termId)}</span> },
     {
       id: "duration",
-      header: "Duration",
+      header: tr("Duration"),
       cell: ({ row }) => (
-        <span className="text-sm text-secondary-foreground">
-          {row.original.startDate} &rarr; {row.original.endDate}
-        </span>
+        <span className="text-sm text-secondary-foreground">{tr("{{startDate}} → {{endDate}}", { startDate: row.original.startDate, endDate: row.original.endDate })}</span>
       ),
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: tr("Status"),
       cell: ({ row }) => (
         <Badge variant={examStatusBadgeVariant(row.original.status)} className="capitalize">
           {row.original.status}
@@ -150,7 +150,7 @@ export default function ExamsTab() {
           <RowActions>
             <DropdownMenuItem onClick={() => setScheduleFilter(exam.id)}>
               <Plus className="w-3.5 h-3.5" />
-              View schedule
+              {tr("View schedule")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -159,11 +159,11 @@ export default function ExamsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {tr("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteExamTarget(exam)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {tr("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -172,28 +172,26 @@ export default function ExamsTab() {
   ];
 
   const scheduleColumns: ColumnDef<ExamSchedule, unknown>[] = [
-    { id: "subject", header: "Subject", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{subjectName(row.original.subjectId)}</span> },
-    { accessorKey: "date", header: "Date" },
+    { id: "subject", header: tr("Subject"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{subjectName(row.original.subjectId)}</span> },
+    { accessorKey: "date", header: tr("Date") },
     {
       id: "time",
-      header: "Time",
+      header: tr("Time"),
       cell: ({ row }) => (
-        <span className="text-sm text-secondary-foreground tabular-nums">
-          {row.original.startTime} &ndash; {row.original.endTime}
-        </span>
+        <span className="text-sm text-secondary-foreground tabular-nums">{tr("{{startTime}} – {{endTime}}", { startTime: row.original.startTime, endTime: row.original.endTime })}</span>
       ),
     },
     {
       id: "marks",
-      header: "Max / pass marks",
+      header: tr("Max / pass marks"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.maxMarks}
-          {row.original.internalMaxMarks ? ` (internal ${row.original.internalMaxMarks} + actual ${row.original.maxMarks - row.original.internalMaxMarks})` : ""} / {row.original.passMarks}
+          {row.original.internalMaxMarks ? tr(" (internal {{internalMaxMarks}} + actual {{v1}})", { internalMaxMarks: row.original.internalMaxMarks, v1: row.original.maxMarks - row.original.internalMaxMarks }) : ""} / {row.original.passMarks}
         </span>
       ),
     },
-    { id: "room", header: "Room", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.room || "—"}</span> },
+    { id: "room", header: tr("Room"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.room || "—"}</span> },
     {
       id: "actions",
       header: "",
@@ -208,11 +206,11 @@ export default function ExamsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {tr("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteScheduleTarget(schedule)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {tr("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -224,7 +222,7 @@ export default function ExamsTab() {
     <div className="space-y-6">
       <div className="space-y-4">
         <DataTableToolbar>
-          <p className="text-sm text-muted-foreground">Exams are scoped to a class and term; add subject schedules below once created.</p>
+          <p className="text-sm text-muted-foreground">{tr("Exams are scoped to a class and term; add subject schedules below once created.")}</p>
           <Button
             onClick={() => {
               setEditingExam(null);
@@ -232,28 +230,26 @@ export default function ExamsTab() {
             }}
           >
             <Plus className="w-4 h-4" />
-            New exam
+            {tr("New exam")}
           </Button>
         </DataTableToolbar>
-        <DataTable searchable columns={examColumns} data={exams} isLoading={examsLoading} emptyMessage="No exams yet." />
+        <DataTable searchable columns={examColumns} data={exams} isLoading={examsLoading} emptyMessage={tr("No exams yet.")} />
       </div>
 
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3">
           <div>
-            <CardTitle>Subject schedule</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">Per-subject date, time, room, and marks for the selected exam.</p>
+            <CardTitle>{tr("Subject schedule")}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">{tr("Per-subject date, time, room, and marks for the selected exam.")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={activeScheduleExamId} onValueChange={setScheduleFilter}>
               <SelectTrigger className="w-56">
-                <SelectValue placeholder="Select an exam" />
+                <SelectValue placeholder={tr("Select an exam")} />
               </SelectTrigger>
               <SelectContent>
                 {exams.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.name} &middot; {className(e.classId)}
-                  </SelectItem>
+                  <SelectItem key={e.id} value={e.id}>{tr("{{name}} · {{v1}}", { name: e.name, v1: className(e.classId) })}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -265,7 +261,7 @@ export default function ExamsTab() {
               }}
             >
               <Plus className="w-4 h-4" />
-              Add subject
+              {tr("Add subject")}
             </Button>
           </div>
         </CardHeader>
@@ -274,7 +270,7 @@ export default function ExamsTab() {
             columns={scheduleColumns}
             data={filteredSchedules}
             isLoading={schedulesLoading}
-            emptyMessage={exams.length === 0 ? "Create an exam first." : "No subjects scheduled for this exam yet."}
+            emptyMessage={exams.length === 0 ? tr("Create an exam first.") : tr("No subjects scheduled for this exam yet.")}
           />
         </CardContent>
       </Card>
@@ -298,9 +294,9 @@ export default function ExamsTab() {
       <ConfirmDialog
         open={Boolean(deleteExamTarget)}
         onOpenChange={(v) => !v && setDeleteExamTarget(null)}
-        title="Delete exam"
-        description={`This will permanently delete "${deleteExamTarget?.name}" along with its subject schedule and any recorded marks.`}
-        confirmLabel="Delete"
+        title={tr("Delete exam")}
+        description={tr("This will permanently delete \"{{name}}\" along with its subject schedule and any recorded marks.", { name: deleteExamTarget?.name })}
+        confirmLabel={tr("Delete")}
         confirmVariant="destructive"
         submitting={deleteExamMutation.isPending}
         onConfirm={() => {
@@ -326,9 +322,9 @@ export default function ExamsTab() {
       <ConfirmDialog
         open={Boolean(deleteScheduleTarget)}
         onOpenChange={(v) => !v && setDeleteScheduleTarget(null)}
-        title="Delete subject schedule"
-        description={`This will remove "${deleteScheduleTarget ? subjectName(deleteScheduleTarget.subjectId) : ""}" from the exam along with any marks recorded for it.`}
-        confirmLabel="Delete"
+        title={tr("Delete subject schedule")}
+        description={tr("This will remove \"{{v1}}\" from the exam along with any marks recorded for it.", { v1: deleteScheduleTarget ? subjectName(deleteScheduleTarget.subjectId) : "" })}
+        confirmLabel={tr("Delete")}
         confirmVariant="destructive"
         submitting={deleteScheduleMutation.isPending}
         onConfirm={() => {

@@ -113,7 +113,7 @@ export default function SchoolDetailPage() {
         <span className="font-medium">{`${s.stageNumber}. ${s.stage}`}</span>
         <span className="text-sm text-muted-foreground">since {ago(s.stageChangedAt)}</span>
         {s.blocker && <span className="rounded-md bg-destructive-soft px-2 py-0.5 text-sm text-destructive-strong">Blocked: {s.blocker}{s.dueDate ? ` (by ${day(s.dueDate)})` : ""}</span>}
-        <div className="ml-auto flex items-center gap-2 text-sm">
+        <div className="ms-auto flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">Owner</span>
           {canAssign && isOpen ? <OwnerPicker value={s.ownerUserId} name={s.ownerName} onChange={(v) => owner.mutate(v)} /> : <span>{s.ownerName ?? "Unassigned"}</span>}
         </div>
@@ -445,7 +445,7 @@ function SubscriptionTab({ schoolId }: { schoolId: string }) {
         <StatusBadge status={x.status} />
         <span className="font-medium">{x.planName} v{x.planVersion}</span>
         <span className="text-sm text-muted-foreground">{day(x.startDate)} – {day(x.endDate)} · renews at {money(x.renewalAmount, x.currency)}</span>
-        <Button asChild size="sm" variant="outline" className="ml-auto"><Link to={`/office/subscriptions/${x.id}`}>Open subscription</Link></Button>
+        <Button asChild size="sm" variant="outline" className="ms-auto"><Link to={`/office/subscriptions/${x.id}`}>Open subscription</Link></Button>
       </div>
     </div>
   );

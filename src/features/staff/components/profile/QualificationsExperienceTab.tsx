@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,6 +41,7 @@ function QualificationFormDialog({
   onSubmit: (values: QualificationFormValues) => void;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("staff");
   const {
     register,
     handleSubmit,
@@ -60,8 +62,8 @@ function QualificationFormDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add qualification</DialogTitle>
-          <DialogDescription>Educational qualification on file for this staff member.</DialogDescription>
+          <DialogTitle>{t("Add qualification")}</DialogTitle>
+          <DialogDescription>{t("Educational qualification on file for this staff member.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) => {
@@ -71,26 +73,26 @@ function QualificationFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="degree" required>Degree</Label>
+            <Label htmlFor="degree" required>{t("Degree")}</Label>
             <Input id="degree" aria-invalid={errors.degree ? true : undefined} {...register("degree")} />
-            {errors.degree && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.degree.message}</p>}
+            {errors.degree && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.degree.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="institution" required>Institution</Label>
+            <Label htmlFor="institution" required>{t("Institution")}</Label>
             <Input id="institution" aria-invalid={errors.institution ? true : undefined} {...register("institution")} />
-            {errors.institution && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.institution.message}</p>}
+            {errors.institution && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.institution.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="yearCompleted" required>Year completed</Label>
+            <Label htmlFor="yearCompleted" required>{t("Year completed")}</Label>
             <Input id="yearCompleted" type="number" aria-invalid={errors.yearCompleted ? true : undefined} {...register("yearCompleted")} />
-            {errors.yearCompleted && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.yearCompleted.message}</p>}
+            {errors.yearCompleted && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.yearCompleted.message ?? "")}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Add
+              {t("Add")}
             </Button>
           </DialogFooter>
         </form>
@@ -110,6 +112,7 @@ function ExperienceFormDialog({
   onSubmit: (values: ExperienceFormValues) => void;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("staff");
   const {
     register,
     handleSubmit,
@@ -130,8 +133,8 @@ function ExperienceFormDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add experience</DialogTitle>
-          <DialogDescription>Prior work experience on file for this staff member.</DialogDescription>
+          <DialogTitle>{t("Add experience")}</DialogTitle>
+          <DialogDescription>{t("Prior work experience on file for this staff member.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) => {
@@ -141,36 +144,36 @@ function ExperienceFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="organization" required>Organization</Label>
+            <Label htmlFor="organization" required>{t("Organization")}</Label>
             <Input id="organization" aria-invalid={errors.organization ? true : undefined} {...register("organization")} />
-            {errors.organization && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.organization.message}</p>}
+            {errors.organization && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.organization.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="role" required>Role</Label>
+            <Label htmlFor="role" required>{t("Role")}</Label>
             <Input id="role" aria-invalid={errors.role ? true : undefined} {...register("role")} />
-            {errors.role && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.role.message}</p>}
+            {errors.role && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.role.message ?? "")}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fromYear" required>From year</Label>
+              <Label htmlFor="fromYear" required>{t("From year")}</Label>
               <Input id="fromYear" type="number" aria-invalid={errors.fromYear ? true : undefined} {...register("fromYear")} />
-              {errors.fromYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromYear.message}</p>}
+              {errors.fromYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.fromYear.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="toYear" optional>To year</Label>
+              <Label htmlFor="toYear" optional>{t("To year")}</Label>
               <Input id="toYear" type="number" {...register("toYear")} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="description" optional>Description</Label>
+            <Label htmlFor="description" optional>{t("Description")}</Label>
             <Textarea id="description" rows={2} {...register("description")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Add
+              {t("Add")}
             </Button>
           </DialogFooter>
         </form>
@@ -180,6 +183,7 @@ function ExperienceFormDialog({
 }
 
 export default function QualificationsExperienceTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["staff"] });
@@ -195,7 +199,7 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
     mutationFn: (values: QualificationFormValues) => addQualification(staff.id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Qualification added");
+      toast.success(t("Qualification added"));
       setQualFormOpen(false);
     },
   });
@@ -203,7 +207,7 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
     mutationFn: (qualificationId: string) => removeQualification(staff.id, qualificationId),
     onSuccess: () => {
       invalidate();
-      toast.success("Qualification removed");
+      toast.success(t("Qualification removed"));
       setDeleteQualId(null);
     },
   });
@@ -211,7 +215,7 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
     mutationFn: (values: ExperienceFormValues) => addExperience(staff.id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Experience added");
+      toast.success(t("Experience added"));
       setExpFormOpen(false);
     },
   });
@@ -219,7 +223,7 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
     mutationFn: (experienceId: string) => removeExperience(staff.id, experienceId),
     onSuccess: () => {
       invalidate();
-      toast.success("Experience removed");
+      toast.success(t("Experience removed"));
       setDeleteExpId(null);
     },
   });
@@ -230,15 +234,15 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="w-4 h-4 text-muted-foreground" />
-            Qualifications
+            {t("Qualifications")}
           </CardTitle>
           <Button size="sm" onClick={() => setQualFormOpen(true)}>
             <Plus className="w-3.5 h-3.5" />
-            Add
+            {t("Add")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">
-          {staff.qualifications.length === 0 && <p className="text-sm text-muted-foreground">No qualifications on file.</p>}
+          {staff.qualifications.length === 0 && <p className="text-sm text-muted-foreground">{t("No qualifications on file.")}</p>}
           {staff.qualifications.map((q) => (
             <div key={q.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
@@ -259,15 +263,15 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <Briefcase className="w-4 h-4 text-muted-foreground" />
-            Experience
+            {t("Experience")}
           </CardTitle>
           <Button size="sm" onClick={() => setExpFormOpen(true)}>
             <Plus className="w-3.5 h-3.5" />
-            Add
+            {t("Add")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">
-          {staff.experience.length === 0 && <p className="text-sm text-muted-foreground">No prior experience on file.</p>}
+          {staff.experience.length === 0 && <p className="text-sm text-muted-foreground">{t("No prior experience on file.")}</p>}
           {staff.experience.map((e) => (
             <div key={e.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
@@ -275,7 +279,7 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
                   {e.role} &middot; {e.organization}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {e.fromYear} - {e.toYear ?? "Present"}
+                  {e.fromYear} - {e.toYear ?? t("Present", { context: "current" })}
                   {e.description ? ` · ${e.description}` : ""}
                 </p>
               </div>
@@ -302,9 +306,9 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
       <ConfirmDialog
         open={Boolean(deleteQualId)}
         onOpenChange={(v) => !v && setDeleteQualId(null)}
-        title="Remove qualification"
-        description="This will remove the qualification from this staff member's record."
-        confirmLabel="Remove"
+        title={t("Remove qualification")}
+        description={t("This will remove the qualification from this staff member's record.")}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={removeQualMutation.isPending}
         onConfirm={() => {
@@ -314,9 +318,9 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
       <ConfirmDialog
         open={Boolean(deleteExpId)}
         onOpenChange={(v) => !v && setDeleteExpId(null)}
-        title="Remove experience"
-        description="This will remove the experience entry from this staff member's record."
-        confirmLabel="Remove"
+        title={t("Remove experience")}
+        description={t("This will remove the experience entry from this staff member's record.")}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={removeExpMutation.isPending}
         onConfirm={() => {

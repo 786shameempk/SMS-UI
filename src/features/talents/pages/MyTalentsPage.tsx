@@ -13,9 +13,11 @@ import { HeroDecor } from "../components/Decor";
 import { TalentGrid } from "../components/TalentCard";
 import type { TalentCard, TalentStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 type Filter = "all" | "draft" | "pending_approval" | "approved" | "needs_changes" | "archived" | "school_only" | "public";
 
 export default function MyTalentsPage() {
+  const { t: tr } = useTranslation("talents");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, userId } = useTalentRole();
@@ -25,16 +27,16 @@ export default function MyTalentsPage() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["talents"] });
   const onError = (err: Error) => toast.error(err.message);
-  const submit = useMutation({ mutationFn: submitTalent, onSuccess: () => (invalidate(), toast.success("Submitted for approval")), onError });
-  const archive = useMutation({ mutationFn: archiveTalent, onSuccess: () => (invalidate(), toast.success("Archived")), onError });
-  const restore = useMutation({ mutationFn: restoreTalent, onSuccess: () => (invalidate(), toast.success("Restored to drafts")), onError });
+  const submit = useMutation({ mutationFn: submitTalent, onSuccess: () => (invalidate(), toast.success(tr("Submitted for approval"))), onError });
+  const archive = useMutation({ mutationFn: archiveTalent, onSuccess: () => (invalidate(), toast.success(tr("Archived"))), onError });
+  const restore = useMutation({ mutationFn: restoreTalent, onSuccess: () => (invalidate(), toast.success(tr("Restored to drafts"))), onError });
   const remove = useMutation({
     mutationFn: deleteTalent,
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: ["talents", "detail", id] });
       invalidate();
       setToDelete(null);
-      toast.success("Showcase deleted");
+      toast.success(tr("Showcase deleted"));
     },
     onError,
   });
@@ -43,14 +45,14 @@ export default function MyTalentsPage() {
   const needsAttention = data?.items.filter((t) => t.status === "needs_changes" || t.status === "rejected") ?? [];
 
   const tabs: Array<{ value: Filter; label: string; count?: number }> = [
-    { value: "all", label: "All", count: stats?.total },
-    { value: "draft", label: "Drafts", count: stats?.drafts },
-    { value: "pending_approval", label: "Pending", count: stats?.pending },
-    { value: "approved", label: "Published", count: stats?.published },
-    { value: "needs_changes", label: "Needs changes", count: (stats?.needsChanges ?? 0) + (stats?.rejected ?? 0) },
-    { value: "archived", label: "Archived", count: stats?.archived },
-    { value: "school_only", label: "🏫 School only", count: stats?.schoolOnly },
-    { value: "public", label: "🌍 Public", count: stats?.public },
+    { value: "all", label: tr("All"), count: stats?.total },
+    { value: "draft", label: tr("Drafts"), count: stats?.drafts },
+    { value: "pending_approval", label: tr("Pending"), count: stats?.pending },
+    { value: "approved", label: tr("Published"), count: stats?.published },
+    { value: "needs_changes", label: tr("Needs changes"), count: (stats?.needsChanges ?? 0) + (stats?.rejected ?? 0) },
+    { value: "archived", label: tr("Archived"), count: stats?.archived },
+    { value: "school_only", label: tr("🏫 School only"), count: stats?.schoolOnly },
+    { value: "public", label: tr("🌍 Public"), count: stats?.public },
   ];
 
   const matches = (t: TalentCard) => {
@@ -71,30 +73,30 @@ export default function MyTalentsPage() {
         )}
         {editable && (
           <ActionChip onClick={() => navigate(`/talents/${t.id}/edit`)}>
-            <Pencil className="w-3 h-3" /> Edit
+            <Pencil className="w-3 h-3" /> {tr("Edit")}
           </ActionChip>
         )}
         {editable && (
           <ActionChip primary disabled={busy} onClick={() => submit.mutate(t.id)}>
             {submit.isPending && submit.variables === t.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-            {t.status === "draft" ? "Submit" : "Resubmit"}
+            {t.status === "draft" ? tr("Submit") : tr("Resubmit")}
           </ActionChip>
         )}
         {t.status === "archived" && (
           <ActionChip disabled={busy} onClick={() => restore.mutate(t.id)}>
-            <RotateCcw className="w-3 h-3" /> Restore
+            <RotateCcw className="w-3 h-3" /> {tr("Restore")}
           </ActionChip>
         )}
         {(t.status === "approved" || t.status === "pending_approval") && (
           <ActionChip disabled={busy} onClick={() => archive.mutate(t.id)}>
-            <Archive className="w-3 h-3" /> Archive
+            <Archive className="w-3 h-3" /> {tr("Archive")}
           </ActionChip>
         )}
         <ActionChip danger disabled={busy} onClick={() => setToDelete(t)}>
-          <Trash2 className="w-3 h-3" /> Delete
+          <Trash2 className="w-3 h-3" /> {tr("Delete")}
         </ActionChip>
         {t.status === "approved" && (
-          <span className="ml-auto text-xs text-muted-foreground self-center tabular-nums">
+          <span className="ms-auto text-xs text-muted-foreground self-center tabular-nums">
             👁 {formatCount(t.viewCount)} · 💖 {formatCount(t.reactionCount)}
           </span>
         )}
@@ -109,18 +111,18 @@ export default function MyTalentsPage() {
         <div className="relative flex flex-wrap items-center gap-5">
           {user && <CreatorAvatar creator={{ name: user.name, avatarUrl: user.avatarUrl ?? undefined }} size={72} ring />}
           <div className="flex-1 min-w-[15rem]">
-            <p className="text-xs uppercase tracking-widest text-white/60">My Talents</p>
-            <h1 className="cc-display text-2xl sm:text-3xl font-extrabold">Hi {user?.name.split(" ")[0] ?? "there"} - your creative space ✨</h1>
-            <p className="text-white/70 text-sm mt-1">Drafts, reviews and everything you've published, all in one place.</p>
+            <p className="text-xs uppercase tracking-widest text-white/60">{tr("My Talents")}</p>
+            <h1 className="cc-display text-2xl sm:text-3xl font-extrabold">{tr("Hi")} {user?.name.split(" ")[0] ?? tr("there")} {tr("- your creative space ✨")}</h1>
+            <p className="text-white/70 text-sm mt-1">{tr("Drafts, reviews and everything you've published, all in one place.")}</p>
           </div>
           <div className="flex gap-2">
             {userId && (
               <Link to={`/talents/creators/${userId}`} className="cc-glass rounded-full px-4 py-2 text-sm font-medium">
-                View my profile
+                {tr("View my profile")}
               </Link>
             )}
             <Link to="/talents/new" className="rounded-full bg-white text-[var(--cc-ink)] px-4 py-2 text-sm font-bold inline-flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-brand-600" /> New
+              <Sparkles className="w-4 h-4 text-brand-600" /> {tr("New")}
             </Link>
           </div>
         </div>
@@ -128,11 +130,11 @@ export default function MyTalentsPage() {
 
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatTile label="Showcases" value={stats.total} emoji="🎨" gradient="from-brand-500 to-brand-500" />
-          <StatTile label="Total views" value={stats.totalViews} emoji="👁" gradient="from-brand-500 to-brand-400" />
-          <StatTile label="Appreciations" value={stats.totalReactions} emoji="💖" gradient="from-rose-400 to-amber-400" />
+          <StatTile label={tr("Showcases")} value={stats.total} emoji="🎨" gradient="from-brand-500 to-brand-500" />
+          <StatTile label={tr("Total views")} value={stats.totalViews} emoji="👁" gradient="from-brand-500 to-brand-400" />
+          <StatTile label={tr("Appreciations")} value={stats.totalReactions} emoji="💖" gradient="from-rose-400 to-amber-400" />
           <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-2">Reaction breakdown</p>
+            <p className="text-xs text-muted-foreground mb-2">{tr("Reaction breakdown")}</p>
             <div className="grid grid-cols-5 gap-1 text-center">
               {REACTION_ORDER.map((r) => (
                 <div key={r} title={REACTION_CONFIG[r].label}>
@@ -154,12 +156,12 @@ export default function MyTalentsPage() {
           </span>
           <div className="flex-1">
             <p className="font-semibold text-orange-800 dark:text-orange-200">
-              {needsAttention.length} showcase{needsAttention.length === 1 ? " needs" : "s need"} your attention
+              {needsAttention.length === 1 ? tr("{{n}} showcase needs your attention", { n: needsAttention.length }) : tr("{{n}} showcases need your attention", { n: needsAttention.length })}
             </p>
-            <p className="text-sm text-orange-700/90 dark:text-orange-300/90">A reviewer left feedback. Make a few tweaks and resubmit.</p>
+            <p className="text-sm text-orange-700/90 dark:text-orange-300/90">{tr("A reviewer left feedback. Make a few tweaks and resubmit.")}</p>
           </div>
           <button type="button" onClick={() => setFilter("needs_changes")} className="rounded-full bg-orange-500 text-white px-4 py-2 text-sm font-semibold cursor-pointer">
-            Review feedback
+            {tr("Review feedback")}
           </button>
         </div>
       )}
@@ -175,8 +177,8 @@ export default function MyTalentsPage() {
               filter === t.value ? "cc-gradient-bg text-white shadow-md" : "bg-secondary text-secondary-foreground hover:bg-muted",
             )}
           >
-            {t.label}
-            {t.count !== undefined && <span className={cn("ml-1.5 tabular-nums text-xs", filter === t.value ? "text-white/80" : "opacity-60")}>{t.count}</span>}
+            {tr(t.label)}
+            {t.count !== undefined && <span className={cn("ms-1.5 tabular-nums text-xs", filter === t.value ? "text-white/80" : "opacity-60")}>{t.count}</span>}
           </button>
         ))}
       </div>
@@ -184,16 +186,16 @@ export default function MyTalentsPage() {
       {data && data.items.length === 0 ? (
         <EmptyState
           emoji="🌱"
-          title="Your stage is waiting"
+          title={tr("Your stage is waiting")}
           body="Share a drawing, a song, a science project - anything you're proud of. A teacher reviews it before anyone else sees it."
           action={
             <Link to="/talents/new" className="inline-flex items-center gap-2 rounded-full cc-gradient-bg px-5 py-2.5 text-sm font-semibold text-white shadow-md">
-              <Sparkles className="w-4 h-4" /> Share your first talent
+              <Sparkles className="w-4 h-4" /> {tr("Share your first talent")}
             </Link>
           }
         />
       ) : items && items.length === 0 ? (
-        <EmptyState emoji="🗂️" title="Nothing here" body="No showcases match this filter." />
+        <EmptyState emoji="🗂️" title={tr("Nothing here")} body="No showcases match this filter." />
       ) : (
         <TalentGrid talents={items} loading={isLoading} showStatus renderFooter={actions} />
       )}
@@ -201,9 +203,9 @@ export default function MyTalentsPage() {
       <ConfirmDialog
         open={!!toDelete}
         onOpenChange={(o) => !o && setToDelete(null)}
-        title="Delete this showcase permanently?"
-        description={`"${toDelete?.title ?? ""}" and all its photos, videos and recordings will be removed for good${toDelete?.status === "approved" ? ", along with its views and appreciations" : ""}. This can't be undone - archive it instead if you might want it back.`}
-        confirmLabel="Delete permanently"
+        title={tr("Delete this showcase permanently?")}
+        description={tr("\"{{v1}}\" and all its photos, videos and recordings will be removed for good{{v2}}. This can't be undone - archive it instead if you might want it back.", { v1: toDelete?.title ?? "", v2: toDelete?.status === "approved" ? ", along with its views and appreciations" : "" })}
+        confirmLabel={tr("Delete permanently")}
         confirmVariant="destructive"
         onConfirm={() => {
           if (toDelete) remove.mutate(toDelete.id);

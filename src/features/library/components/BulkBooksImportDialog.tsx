@@ -1,4 +1,6 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import BulkImportDialog, { type ImportColumn, type ParsedRow } from "@/components/dialogs/BulkImportDialog";
 import { createAuthor, createBook, createCategory, createPublisher, listAuthors, listCategories, listPublishers } from "../api";
 
@@ -24,11 +26,12 @@ interface BookRow {
   coverNote?: string;
 }
 
-function parseBookRow(r: Record<string, string>): ParsedRow<BookRow> {
+/** Column names stay in English: they are the CSV headers the file must use. */
+function parseBookRow(r: Record<string, string>, t: TFunction<"library">): ParsedRow<BookRow> {
   const missing = COLUMNS.filter((c) => c.required && !r[c.key]).map((c) => c.label);
-  if (missing.length) return { ok: false, error: `Missing ${missing.join(", ")}` };
+  if (missing.length) return { ok: false, error: t("Missing {{columns}}", { columns: missing.join(", ") }) };
   const totalCopies = Number(r.totalCopies);
-  if (!Number.isInteger(totalCopies) || totalCopies < 1) return { ok: false, error: `Copies "${r.totalCopies}" must be a whole number of 1 or more` };
+  if (!Number.isInteger(totalCopies) || totalCopies < 1) return { ok: false, error: t('Copies "{{value}}" must be a whole number of 1 or more', { value: r.totalCopies }) };
   return {
     ok: true,
     value: {
@@ -55,6 +58,7 @@ interface Props {
 
 /** Authors, publishers and categories are matched by name; any that do not exist yet are created on the way. */
 export default function BulkBooksImportDialog({ open, onOpenChange, onFinished }: Props) {
+  const { t } = useTranslation("library");
   const indexes = useRef<{ author: NameIndex; publisher: NameIndex; category: NameIndex } | null>(null);
   // Rows import one at a time, so a name seen for the first time is created once and reused by later rows.
   const pending = useRef(new Map<string, Promise<string>>());
@@ -95,11 +99,11 @@ export default function BulkBooksImportDialog({ open, onOpenChange, onFinished }
         if (!next) indexes.current = null;
         onOpenChange(next);
       }}
-      title="Import books"
-      description="Add many books from a CSV file. Authors, publishers and categories are matched by name and created if they are new."
+      title={t("Import books")}
+      description={t("Add many books from a CSV file. Authors, publishers and categories are matched by name and created if they are new.")}
       templateFileName="books-import-template"
       columns={COLUMNS}
-      parseRow={parseBookRow}
+      parseRow={(r) => parseBookRow(r, t)}
       importRow={importRow}
       onFinished={onFinished}
     />

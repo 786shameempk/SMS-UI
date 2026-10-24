@@ -1,17 +1,20 @@
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 import { EmptyState } from "@/components/ui/states";
+import { translateMonthLabel } from "../dateRange";
 import { CHART_GRID, CHART_LEGEND_STYLE, CHART_TICK, CHART_TOOLTIP_STYLE } from "../chartTheme";
 import type { PerformanceTrendPoint } from "../types";
 
 export default function PerformanceChart({ data, rangeLabel }: { data: PerformanceTrendPoint[]; rangeLabel: string }) {
+  const { t } = useTranslation("dashboard");
   const hasResults = data.some((d) => d.averageScore !== null);
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Academic performance</CardTitle>
-        <CardDescription>{`Average score and pass rate · ${rangeLabel}`}</CardDescription>
+        <CardTitle>{t("Academic performance")}</CardTitle>
+        <CardDescription>{t("Average score and pass rate · {{range}}", { range: rangeLabel })}</CardDescription>
       </CardHeader>
       <CardContent>
         {!hasResults ? (
@@ -19,8 +22,8 @@ export default function PerformanceChart({ data, rangeLabel }: { data: Performan
             bare
             size="sm"
             icon={BarChart3}
-            title="No exam results in this period"
-            description="The trend appears once marks are entered for exams in the selected range."
+            title={t("No exam results in this period")}
+            description={t("The trend appears once marks are entered for exams in the selected range.")}
             className="h-64"
           />
         ) : (
@@ -34,17 +37,18 @@ export default function PerformanceChart({ data, rangeLabel }: { data: Performan
                   </linearGradient>
                 </defs>
                 <CartesianGrid {...CHART_GRID} />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={CHART_TICK} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={CHART_TICK} tickFormatter={(v: string) => translateMonthLabel(v, t)} />
                 {/* Both series are 0–100, so a fixed domain keeps the lines honest instead of zooming into a narrow band. */}
                 <YAxis tickLine={false} axisLine={false} tick={CHART_TICK} width={32} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
                 <Tooltip
                   contentStyle={CHART_TOOLTIP_STYLE}
+                  labelFormatter={(v) => translateMonthLabel(String(v), t)}
                   formatter={(value, _name, item) => [item.dataKey === "passRate" ? `${value}%` : `${value}`, item.name]}
                 />
                 <Legend iconType="circle" iconSize={8} wrapperStyle={CHART_LEGEND_STYLE} />
                 {/* Months without exams are gaps (null): the line joins the months that have results instead of dipping to 0. */}
-                <Area type="monotone" dataKey="averageScore" name="Average score" stroke="var(--color-brand-500)" strokeWidth={2} fill="url(#scoreGradient)" connectNulls dot={{ r: 3 }} />
-                <Area type="monotone" dataKey="passRate" name="Pass rate" stroke="var(--color-success)" strokeWidth={2} fill="transparent" connectNulls dot={{ r: 3 }} />
+                <Area type="monotone" dataKey="averageScore" name={t("Average score")} stroke="var(--color-brand-500)" strokeWidth={2} fill="url(#scoreGradient)" connectNulls dot={{ r: 3 }} />
+                <Area type="monotone" dataKey="passRate" name={t("Pass rate")} stroke="var(--color-success)" strokeWidth={2} fill="transparent" connectNulls dot={{ r: 3 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer } from "@/components/ui/page";
 
 export default function DashboardSkeleton() {
+  const { t } = useTranslation("dashboard");
   return (
-    <PageContainer width="wide" role="status" aria-label="Loading dashboard">
+    <PageContainer width="wide" role="status" aria-label={t("Loading dashboard")}>
       <div className="space-y-2">
         <Skeleton className="h-3.5 w-48" />
         <Skeleton className="h-7 w-72" />
@@ -18,7 +20,7 @@ export default function DashboardSkeleton() {
         <Skeleton className="h-80 rounded-xl xl:col-span-2" />
         <Skeleton className="h-80 rounded-xl" />
       </div>
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only">{t("Loading…")}</span>
     </PageContainer>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -31,6 +32,7 @@ export default function AdmissionFeePaymentDialog({
   submitting: boolean;
   onSubmit: (values: AdmissionFeePaymentFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("students");
   const {
     register,
     handleSubmit,
@@ -49,20 +51,23 @@ export default function AdmissionFeePaymentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Record admission fee payment</DialogTitle>
+          <DialogTitle>{t("Record admission fee payment")}</DialogTitle>
           <DialogDescription>
-            For {application.applicantFirstName} {application.applicantLastName} ({application.appliedClass}).
+            {t("For {{name}} ({{className}}).", {
+              name: `${application.applicantFirstName} ${application.applicantLastName}`,
+              className: application.appliedClass,
+            })}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="fee-amount" required>Amount</Label>
+            <Label htmlFor="fee-amount" required>{t("Amount")}</Label>
             <Input id="fee-amount" type="number" min="0" step="1" aria-invalid={errors.amount ? true : undefined} {...register("amount")} />
-            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.amount.message}</p>}
+            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.amount.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="fee-mode">Payment mode</Label>
+            <Label htmlFor="fee-mode">{t("Payment mode")}</Label>
             <Controller
               control={control}
               name="paymentMode"
@@ -74,22 +79,22 @@ export default function AdmissionFeePaymentDialog({
                   <SelectContent>
                     {PAYMENT_MODE_OPTIONS.map((mode) => (
                       <SelectItem key={mode} value={mode}>
-                        {mode}
+                        {t(mode)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.paymentMode && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.paymentMode.message}</p>}
+            {errors.paymentMode && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.paymentMode.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Record payment
+              {t("Record payment")}
             </Button>
           </DialogFooter>
         </form>

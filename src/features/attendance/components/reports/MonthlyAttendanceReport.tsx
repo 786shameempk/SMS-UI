@@ -10,11 +10,13 @@ import { cn } from "@/utils/cn";
 import { getMonthlyStudentSummary, listRosterSections } from "../../api";
 import { statusToggleActiveClass } from "../../constants";
 
+import { useTranslation } from "react-i18next";
 function daysInMonth(year: number, monthIndex: number): number {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
 export default function MonthlyAttendanceReport() {
+  const { t } = useTranslation("attendance");
   const { data: classes = [] } = useQuery({ queryKey: ["attendance", "classes"], queryFn: listClasses });
   const { data: sections = [] } = useQuery({ queryKey: ["attendance", "sections"], queryFn: listSections });
   const { data: rosterSections = [] } = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: listRosterSections });
@@ -61,13 +63,13 @@ export default function MonthlyAttendanceReport() {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-3 flex-wrap">
-        <CardTitle>Monthly attendance</CardTitle>
+        <CardTitle>{t("Monthly attendance")}</CardTitle>
         <div className="flex items-end gap-2 flex-wrap">
           <div className="space-y-1.5">
-            <Label>Class</Label>
+            <Label>{t("Class")}</Label>
             <Select value={classId} onValueChange={setClassId}>
               <SelectTrigger className="w-36">
-                <SelectValue placeholder="Class" />
+                <SelectValue placeholder={t("Class")} />
               </SelectTrigger>
               <SelectContent>
                 {availableClasses.map((c) => (
@@ -79,10 +81,10 @@ export default function MonthlyAttendanceReport() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Section</Label>
+            <Label>{t("Section")}</Label>
             <Select value={sectionId} onValueChange={setSectionId} disabled={!availableSections.length}>
               <SelectTrigger className="w-28">
-                <SelectValue placeholder="Section" />
+                <SelectValue placeholder={t("Section")} />
               </SelectTrigger>
               <SelectContent>
                 {availableSections.map((s) => (
@@ -94,7 +96,7 @@ export default function MonthlyAttendanceReport() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="monthly-report-month">Month</Label>
+            <Label htmlFor="monthly-report-month">{t("Month")}</Label>
             <Input
               id="monthly-report-month"
               type="month"
@@ -109,28 +111,28 @@ export default function MonthlyAttendanceReport() {
         <Table stickyHeader containerClassName="rounded-xl border border-border">
           <TableHeader>
             <TableRow hover={false}>
-              <TableHead className="sticky left-0 bg-muted">Student</TableHead>
+              <TableHead className="sticky start-0 bg-muted">{t("Student")}</TableHead>
               {days.map((d) => (
                 <TableHead key={d} className="px-1.5 text-center w-7">
                   {d}
                 </TableHead>
               ))}
-              <TableHead className="text-right">% Present</TableHead>
+              <TableHead className="text-end">{t("% Present")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {!isLoading && !rows.length && (
               <TableRow hover={false}>
                 <TableCell colSpan={days.length + 2} className="py-8 text-center text-muted-foreground">
-                  No records for this section / month.
+                  {t("No records for this section / month.")}
                 </TableCell>
               </TableRow>
             )}
             {rows.map((row) => (
               <TableRow key={row.studentId}>
-                <TableCell className="whitespace-nowrap sticky left-0 bg-card">
+                <TableCell className="whitespace-nowrap sticky start-0 bg-card">
                   <p className="text-sm font-medium text-foreground">{row.name}</p>
-                  <p className="text-xs text-muted-foreground">Roll {row.rollNumber}</p>
+                  <p className="text-xs text-muted-foreground">{t("Roll {{rollNumber}}", { rollNumber: row.rollNumber })}</p>
                 </TableCell>
                 {days.map((d) => {
                   const status = row.statusByDay[d];
@@ -144,7 +146,7 @@ export default function MonthlyAttendanceReport() {
                     </TableCell>
                   );
                 })}
-                <TableCell className="text-right font-semibold tabular-nums">{row.percentPresent}%</TableCell>
+                <TableCell className="text-end font-semibold tabular-nums">{row.percentPresent}%</TableCell>
               </TableRow>
             ))}
           </TableBody>

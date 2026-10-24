@@ -7,6 +7,7 @@ import { listBranches } from "@/features/administration/branches/api";
 import { getBrandPreset, getDensityPreset, getRadiusPreset } from "@/features/settings/api";
 import { applyBrandPreset, applyDensityPreset, applyRadiusPreset } from "@/features/settings/theme";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 /**
  * Wipes every cached result and refetches whatever is on screen, after the active tenant/branch changed.
@@ -24,6 +25,7 @@ export function TenantSwitcher({ className }: { className?: string }) {
   const activeTenantId = useAuthStore((s) => s.activeTenantId);
   const setActiveTenantId = useAuthStore((s) => s.setActiveTenantId);
   const { data: tenants = [] } = useQuery({ queryKey: ["platform", "tenants"], queryFn: listTenants });
+  const { t } = useTranslation("common");
 
   return (
     <Select
@@ -49,14 +51,14 @@ export function TenantSwitcher({ className }: { className?: string }) {
         applyDensityPreset(density);
       }}
     >
-      <SelectTrigger className={cn("w-64", className)} aria-label="School">
+      <SelectTrigger className={cn("w-64", className)} aria-label={t("School")}>
         <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-        <SelectValue placeholder="Select a tenant" />
+        <SelectValue placeholder={t("Select a tenant")} />
       </SelectTrigger>
       <SelectContent>
-        {tenants.map((t) => (
-          <SelectItem key={t.id} value={t.id}>
-            {t.schoolName}
+        {tenants.map((tenant) => (
+          <SelectItem key={tenant.id} value={tenant.id}>
+            {tenant.schoolName}
           </SelectItem>
         ))}
       </SelectContent>
@@ -70,6 +72,7 @@ export function BranchSwitcher({ className }: { className?: string }) {
   const activeBranchId = useAuthStore((s) => s.activeBranchId);
   const setActiveBranchId = useAuthStore((s) => s.setActiveBranchId);
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches", activeTenantId], queryFn: listBranches });
+  const { t } = useTranslation("common");
 
   return (
     <Select
@@ -81,9 +84,9 @@ export function BranchSwitcher({ className }: { className?: string }) {
         void resetForScopeChange(queryClient);
       }}
     >
-      <SelectTrigger className={cn("w-48", className)} aria-label="Branch">
+      <SelectTrigger className={cn("w-48", className)} aria-label={t("Branch")}>
         <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-        <SelectValue placeholder="Select a branch" />
+        <SelectValue placeholder={t("Select a branch")} />
       </SelectTrigger>
       <SelectContent>
         {branches.map((b) => (

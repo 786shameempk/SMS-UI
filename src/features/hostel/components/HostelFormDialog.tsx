@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +42,7 @@ export default function HostelFormDialog({
   submitting: boolean;
   onSubmit: (values: HostelFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("hostel");
   const isEdit = Boolean(hostel);
   const {
     register,
@@ -69,8 +71,8 @@ export default function HostelFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit hostel" : "New hostel"}</DialogTitle>
-          <DialogDescription>The warden list only shows staff with designation "Warden" not already assigned elsewhere.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit hostel") : t("New hostel")}</DialogTitle>
+          <DialogDescription>{t("The warden list only shows staff with designation \"Warden\" not already assigned elsewhere.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -83,14 +85,14 @@ export default function HostelFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="hst-name" required>Hostel name</Label>
-            <Input id="hst-name" placeholder="e.g. Sunrise Boys Hostel" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="hst-name" required>{t("Hostel name")}</Label>
+            <Input id="hst-name" placeholder={t("e.g. Sunrise Boys Hostel")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="hst-type" required>Type</Label>
+              <Label htmlFor="hst-type" required>{t("Type")}</Label>
               <Controller
                 control={control}
                 name="type"
@@ -102,7 +104,7 @@ export default function HostelFormDialog({
                     <SelectContent>
                       {HOSTEL_TYPE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -111,7 +113,7 @@ export default function HostelFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="hst-status" required>Status</Label>
+              <Label htmlFor="hst-status" required>{t("Status")}</Label>
               <Controller
                 control={control}
                 name="status"
@@ -121,8 +123,8 @@ export default function HostelFormDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="active">{t("Active")}</SelectItem>
+                      <SelectItem value="inactive">{t("Inactive")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -131,17 +133,17 @@ export default function HostelFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hst-wardenStaffId">Warden</Label>
+            <Label htmlFor="hst-wardenStaffId">{t("Warden")}</Label>
             <Controller
               control={control}
               name="wardenStaffId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="hst-wardenStaffId">
-                    <SelectValue placeholder="Unassigned" />
+                    <SelectValue placeholder={t("Unassigned")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>Unassigned</SelectItem>
+                    <SelectItem value={NONE}>{t("Unassigned")}</SelectItem>
                     {eligibleWardens.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.firstName} {s.lastName}
@@ -154,16 +156,16 @@ export default function HostelFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hst-address" optional>Address</Label>
-            <Input id="hst-address" placeholder="e.g. Block A, School Campus" {...register("address")} />
+            <Label htmlFor="hst-address" optional>{t("Address")}</Label>
+            <Input id="hst-address" placeholder={t("e.g. Block A, School Campus")} {...register("address")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create hostel"}
+              {isEdit ? t("Save changes") : t("Create hostel")}
             </Button>
           </DialogFooter>
         </form>

@@ -30,7 +30,7 @@ export default function AzureSettingsPage() {
       </AzureCard>
 
       <AzureCard title="How it connects" description="No Azure secret is stored anywhere in SchoolSphere">
-        <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
+        <ul className="list-disc space-y-1.5 ps-5 text-sm text-muted-foreground">
           <li>The AuthService backend signs in to Azure with <strong className="text-foreground">DefaultAzureCredential</strong> - the VM&apos;s system-assigned managed identity in production, <code>az login</code> locally.</li>
           <li>This page only talks to SchoolSphere&apos;s own API. Azure tokens and raw Azure responses never reach the browser.</li>
           <li>Everything is read-only: nothing here can start, stop, resize or delete a resource.</li>

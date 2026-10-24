@@ -8,6 +8,7 @@ import { getMyStaffId, listLeaveRequests } from "@/features/staff/api";
 import { LEAVE_TYPES } from "@/features/staff/constants";
 import type { LeaveStatus, StaffLeaveRequest } from "@/features/staff/types";
 
+import { useTranslation } from "react-i18next";
 const STATUS: Record<LeaveStatus, { label: string; variant: "success" | "warning" | "danger" }> = {
   pending: { label: "Pending", variant: "warning" },
   approved: { label: "Approved", variant: "success" },
@@ -27,6 +28,7 @@ const typeLabel = (r: StaffLeaveRequest) => LEAVE_TYPES.find((t) => t.value === 
  * taken this year and when each leave was. Requesting leave stays under Staff management.
  */
 export default function MyLeaveSummaryTab() {
+  const { t } = useTranslation("attendance");
   const { data: myStaffId = null, isLoading: idLoading } = useQuery({ queryKey: ["staff", "me"], queryFn: getMyStaffId });
   const { data: all = [], isLoading, isError, refetch } = useQuery({ queryKey: ["staff", "leave"], queryFn: listLeaveRequests });
 
@@ -42,30 +44,30 @@ export default function MyLeaveSummaryTab() {
   const pendingCount = mine.filter((r) => r.status === "pending").length;
 
   const columns: ColumnDef<StaffLeaveRequest, unknown>[] = [
-    { id: "type", header: "Leave type", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{typeLabel(row.original)}</span> },
+    { id: "type", header: t("Leave type"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{typeLabel(row.original)}</span> },
     {
       id: "dates",
-      header: "Dates",
+      header: t("Dates"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.fromDate === row.original.toDate ? row.original.fromDate : `${row.original.fromDate} → ${row.original.toDate}`}
         </span>
       ),
     },
-    { id: "days", header: "Days", cell: ({ row }) => <span className="text-sm tabular-nums">{leaveDays(row.original)}</span> },
+    { id: "days", header: t("Days"), cell: ({ row }) => <span className="text-sm tabular-nums">{leaveDays(row.original)}</span> },
     {
       id: "status",
-      header: "Status",
-      cell: ({ row }) => <Badge variant={STATUS[row.original.status].variant}>{STATUS[row.original.status].label}</Badge>,
+      header: t("Status"),
+      cell: ({ row }) => <Badge variant={STATUS[row.original.status].variant}>{t(STATUS[row.original.status].label)}</Badge>,
     },
   ];
 
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label={`Leave days taken in ${year}`} value={takenThisYear} />
-        <Stat label="Approved leaves" value={approvedCount} />
-        <Stat label="Waiting for approval" value={pendingCount} />
+        <Stat label={t("Leave days taken in {{year}}", { year })} value={takenThisYear} />
+        <Stat label={t("Approved leaves")} value={approvedCount} />
+        <Stat label={t("Waiting for approval")} value={pendingCount} />
       </div>
       <DataTable
         columns={columns}
@@ -73,7 +75,7 @@ export default function MyLeaveSummaryTab() {
         isLoading={isLoading || idLoading}
         isError={isError}
         onRetry={() => refetch()}
-        emptyMessage="You haven't taken any leave."
+        emptyMessage={t("You haven't taken any leave.")}
       />
     </div>
   );

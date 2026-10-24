@@ -26,6 +26,10 @@ export interface MessageTemplate {
   subject?: string;
   body: string;
   channels: Channel[];
+  language: string;
+  smsTemplateId?: string;
+  whatsAppTemplateName?: string;
+  whatsAppTemplateLanguage?: string;
 }
 
 export interface MessageTemplateFormValues {
@@ -34,6 +38,10 @@ export interface MessageTemplateFormValues {
   subject?: string;
   body: string;
   channels: Channel[];
+  language?: string;
+  smsTemplateId?: string;
+  whatsAppTemplateName?: string;
+  whatsAppTemplateLanguage?: string;
 }
 
 export type MessageStatus = "scheduled" | "sent" | "cancelled";
@@ -52,6 +60,7 @@ export interface BroadcastMessage {
   sentAt?: string;
   status: MessageStatus;
   createdAt: string;
+  templateId?: string;
 }
 
 export interface ComposeMessageFormValues {
@@ -62,10 +71,15 @@ export interface ComposeMessageFormValues {
   studentIds: string[];
   staffIds: string[];
   scheduledAt?: string;
+  /** Template the text came from: SMS (DLT) and WhatsApp need its approved provider template. */
+  templateId?: string;
+  /** Same key on a retried submit returns the first message instead of sending twice. */
+  idempotencyKey?: string;
 }
 
 export type RecipientKind = "student" | "staff" | "parent";
-export type DeliveryStatus = "delivered" | "failed";
+/** Real statuses: queued until the worker sends, sent when the provider accepted, delivered/read/failed/bounced from receipts, skipped when never attempted. */
+export type DeliveryStatus = "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "bounced" | "skipped";
 
 export interface DeliveryLogEntry {
   id: string;
@@ -81,4 +95,7 @@ export interface MessageDeliverySummary {
   channel: Channel;
   delivered: number;
   failed: number;
+  queued: number;
+  sent: number;
+  skipped: number;
 }

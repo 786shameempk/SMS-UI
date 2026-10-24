@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { hasAllBranchAccess } from "@/types/auth";
 import type { NavItem, NavSection } from "@/constants/nav";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 import { useVisibleNav } from "./useVisibleNav";
 import { isNavItemActive } from "./navMatch";
 import { BranchSwitcher, TenantSwitcher } from "./ScopeSwitchers";
@@ -39,7 +40,7 @@ function NavItemLink({ item, isCollapsed, active }: { item: NavItem; isCollapsed
       {isActive && !isCollapsed && (
         <motion.span
           layoutId={reduceMotion ? undefined : "nav-accent-bar"}
-          className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary"
+          className="absolute start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-e-full bg-primary"
           transition={SPRING}
         />
       )}
@@ -52,7 +53,7 @@ function NavItemLink({ item, isCollapsed, active }: { item: NavItem; isCollapsed
       />
       {!isCollapsed && <span className="truncate">{item.label}</span>}
       {!isCollapsed && item.badge && (
-        <span className="ml-auto shrink-0 rounded-full bg-sidebar-foreground/15 px-1.5 py-px text-[10px] font-bold leading-4 tracking-wide text-sidebar-foreground">{item.badge}</span>
+        <span className="ms-auto shrink-0 rounded-full bg-sidebar-foreground/15 px-1.5 py-px text-[10px] font-bold leading-4 tracking-wide text-sidebar-foreground">{item.badge}</span>
       )}
     </NavLink>
   );
@@ -85,6 +86,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
   const canSwitchBranch = isSuperAdmin || hasAllBranchAccess(user);
   const { coreItems, sections } = useVisibleNav();
   const branding = useTenantBranding();
+  const { t } = useTranslation("common");
 
   return (
     <TooltipProvider>
@@ -92,22 +94,22 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
         initial={false}
         animate={{ width: isSidebarCollapsed ? W_COLLAPSED : W_EXPANDED }}
         transition={SPRING}
-        aria-label="Main navigation"
-        className="flex h-full shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar"
+        aria-label={t("Main navigation")}
+        className="flex h-full shrink-0 flex-col overflow-hidden border-e border-sidebar-border bg-sidebar"
       >
         <div className={cn("flex h-14 shrink-0 items-center border-b border-sidebar-border", isSidebarCollapsed ? "justify-center" : "gap-2.5 px-4")}>
           <BrandLogo />
           {!isSidebarCollapsed && (
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-bold leading-none tracking-tight text-sidebar-title">{branding.name}</p>
-              <p className="mt-1 truncate text-[11px] leading-none text-sidebar-muted">{branding.isTenant ? "Powered by School Sphere" : "School management"}</p>
+              <p className="mt-1 truncate text-[11px] leading-none text-sidebar-muted">{branding.isTenant ? t("Powered by School Sphere") : t("School management")}</p>
             </div>
           )}
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close menu"
+              aria-label={t("Close menu")}
               className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-hover-foreground cursor-pointer"
             >
               <X className="h-4 w-4" />
@@ -137,7 +139,7 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
         </nav>
 
         {!isSidebarCollapsed && (branding.email || branding.contactNumber) && (
-          <div className="shrink-0 space-y-1 border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-muted" aria-label="School contact">
+          <div className="shrink-0 space-y-1 border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-muted" aria-label={t("School contact")}>
             {branding.email && (
               <a href={`mailto:${branding.email}`} className="flex items-center gap-2 truncate hover:text-sidebar-hover-foreground">
                 <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -160,13 +162,13 @@ export default function Sidebar({ forceExpanded = false, onClose }: { forceExpan
                 <button
                   type="button"
                   onClick={toggleSidebar}
-                  aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                  aria-label={isSidebarCollapsed ? t("Expand sidebar") : t("Collapse sidebar")}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-hover-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {isSidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">{isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}</TooltipContent>
+              <TooltipContent side="right">{isSidebarCollapsed ? t("Expand sidebar") : t("Collapse sidebar")}</TooltipContent>
             </Tooltip>
           </div>
         )}

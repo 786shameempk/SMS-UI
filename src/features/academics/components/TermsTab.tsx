@@ -15,7 +15,9 @@ import TermFormDialog from "./TermFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 import { useIsTeacher } from "@/lib/roleAccess";
 
+import { useTranslation } from "react-i18next";
 export default function TermsTab() {
+  const { t } = useTranslation("academics");
   const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: terms = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "terms"], queryFn: listTerms });
@@ -31,7 +33,7 @@ export default function TermsTab() {
     mutationFn: createTerm,
     onSuccess: () => {
       invalidate();
-      toast.success("Term created");
+      toast.success(t("Term created"));
       setFormOpen(false);
     },
   });
@@ -40,7 +42,7 @@ export default function TermsTab() {
     mutationFn: ({ id, values }: { id: string; values: TermFormValues }) => updateTerm(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Term updated");
+      toast.success(t("Term updated"));
       setFormOpen(false);
       setEditing(null);
     },
@@ -50,7 +52,7 @@ export default function TermsTab() {
     mutationFn: deleteTerm,
     onSuccess: () => {
       invalidate();
-      toast.success("Term deleted");
+      toast.success(t("Term deleted"));
       setDeleteTarget(null);
     },
   });
@@ -58,24 +60,22 @@ export default function TermsTab() {
   const yearName = (id: string) => academicYears.find((y) => y.id === id)?.name ?? "—";
 
   const columns: ColumnDef<Term, unknown>[] = [
-    { accessorKey: "name", header: "Term", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "name", header: t("Term"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       id: "academicYear",
-      header: "Academic year",
+      header: t("Academic year"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{yearName(row.original.academicYearId)}</span>,
     },
     {
       id: "duration",
-      header: "Duration",
+      header: t("Duration"),
       cell: ({ row }) => (
-        <span className="text-sm text-secondary-foreground">
-          {row.original.startDate} &rarr; {row.original.endDate}
-        </span>
+        <span className="text-sm text-secondary-foreground">{t("{{startDate}} → {{endDate}}", { startDate: row.original.startDate, endDate: row.original.endDate })}</span>
       ),
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => <Badge variant={statusBadgeVariant(row.original.status)} className="capitalize">{row.original.status}</Badge>,
     },
     {
@@ -92,11 +92,11 @@ export default function TermsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(term)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -107,7 +107,7 @@ export default function TermsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Terms and semesters break an academic year into grading periods.</p>
+        <p className="text-sm text-muted-foreground">{t("Terms and semesters break an academic year into grading periods.")}</p>
         {!readOnly && (
           <Button
           onClick={() => {
@@ -116,12 +116,12 @@ export default function TermsTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New term
+          {t("New term")}
         </Button>
         )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={terms} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No terms yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={terms} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No terms yet.")} />
 
       <TermFormDialog
         open={formOpen}
@@ -141,9 +141,9 @@ export default function TermsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete term"
-        description={`This will permanently delete "${deleteTarget?.name}".`}
-        confirmLabel="Delete"
+        title={t("Delete term")}
+        description={t("This will permanently delete \"{{name}}\".", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

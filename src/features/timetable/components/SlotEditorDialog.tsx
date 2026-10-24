@@ -11,6 +11,7 @@ import { DAY_DEFINITIONS } from "../constants";
 import { useTimetableSetup } from "../useTimetableSetup";
 import type { DayOfWeek, Room, TimetableSlot } from "../types";
 
+import { useTranslation } from "react-i18next";
 const NONE = "none";
 
 export interface SlotEditorContext {
@@ -43,6 +44,7 @@ export default function SlotEditorDialog({
   onSave: (values: { subjectId?: string; staffId?: string; room?: string }) => Promise<void>;
   onClear: () => Promise<void>;
 }) {
+  const { t: tr } = useTranslation("timetable");
   const [subjectId, setSubjectId] = useState(NONE);
   const [staffId, setStaffId] = useState(NONE);
   const [roomId, setRoomId] = useState(NONE);
@@ -69,20 +71,20 @@ export default function SlotEditorDialog({
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            {day?.label} &middot; {period?.label}
+            {tr(day?.label ?? "")} {tr("·")} {tr(period?.label ?? "")}
           </DialogTitle>
-          <DialogDescription>Assign a subject, teacher, and room for this period.</DialogDescription>
+          <DialogDescription>{tr("Assign a subject, teacher, and room for this period.")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Subject</Label>
+            <Label>{tr("Subject")}</Label>
             <Select value={subjectId} onValueChange={(v) => setSubjectId(v)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select subject" />
+                <SelectValue placeholder={tr("Select subject")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NONE}>None</SelectItem>
+                <SelectItem value={NONE}>{tr("None")}</SelectItem>
                 {subjects.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.name}
@@ -93,13 +95,13 @@ export default function SlotEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Teacher</Label>
+            <Label>{tr("Teacher")}</Label>
             <Select value={staffId} onValueChange={(v) => setStaffId(v)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select teacher" />
+                <SelectValue placeholder={tr("Select teacher")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NONE}>None</SelectItem>
+                <SelectItem value={NONE}>{tr("None")}</SelectItem>
                 {teacherOptions.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.firstName} {t.lastName}
@@ -110,13 +112,13 @@ export default function SlotEditorDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Room</Label>
+            <Label>{tr("Room")}</Label>
             <Select value={roomId} onValueChange={(v) => setRoomId(v)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select room" />
+                <SelectValue placeholder={tr("Select room")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NONE}>None</SelectItem>
+                <SelectItem value={NONE}>{tr("None")}</SelectItem>
                 {rooms.map((r) => (
                   <SelectItem key={r.id} value={r.id}>
                     {r.name}
@@ -129,7 +131,7 @@ export default function SlotEditorDialog({
 
         <DialogFooter className="sm:justify-between">
           <Button type="button" variant="outline" onClick={() => onClear()} disabled={submitting}>
-            Clear
+            {tr("Clear")}
           </Button>
           <Button
             type="button"
@@ -143,7 +145,7 @@ export default function SlotEditorDialog({
             }
           >
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-            Save
+            {tr("Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

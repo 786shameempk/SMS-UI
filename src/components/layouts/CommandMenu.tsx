@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { CornerDownLeft, Search } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 import { useVisibleNav } from "./useVisibleNav";
 
 const OPEN_EVENT = "command-menu:open";
@@ -20,13 +21,15 @@ export default function CommandMenu() {
   const navigate = useNavigate();
   const listRef = useRef<HTMLUListElement>(null);
   const { coreItems, sections } = useVisibleNav();
+  const { t } = useTranslation("common");
+  const generalLabel = t("General");
 
   const entries = useMemo(
     () => [
-      ...coreItems.map((item) => ({ item, group: "General" })),
+      ...coreItems.map((item) => ({ item, group: generalLabel })),
       ...sections.flatMap((s) => s.items.map((item) => ({ item, group: s.title }))),
     ],
-    [coreItems, sections],
+    [coreItems, sections, generalLabel],
   );
 
   const results = useMemo(() => {
@@ -83,12 +86,12 @@ export default function CommandMenu() {
         <button
           type="button"
           className="group flex h-9 items-center gap-2 rounded-lg border border-border bg-muted/60 px-2.5 text-sm text-muted-foreground transition-colors hover:border-input hover:bg-card hover:text-foreground cursor-pointer w-9 shrink-0 justify-center whitespace-nowrap xl:w-56 xl:justify-start 2xl:w-64"
-          aria-label="Search pages"
+          aria-label={t("Search pages")}
         >
           <Search className="h-4 w-4 shrink-0" />
           {/* Icon-only until there's room: a super admin's school + branch pickers need the space on laptop widths. */}
-          <span className="hidden xl:inline">Search pages…</span>
-          <kbd className="ml-auto hidden rounded border border-border bg-card px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-foreground xl:inline">
+          <span className="hidden xl:inline">{t("Search pages…")}</span>
+          <kbd className="ms-auto hidden rounded border border-border bg-card px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-foreground xl:inline">
             {isMac ? "⌘" : "Ctrl"} K
           </kbd>
         </button>
@@ -99,15 +102,15 @@ export default function CommandMenu() {
           onKeyDown={onKeyDown}
           className="fixed left-1/2 top-[12vh] z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
         >
-          <DialogPrimitive.Title className="sr-only">Search pages</DialogPrimitive.Title>
-          <DialogPrimitive.Description className="sr-only">Type to filter, use the arrow keys to choose and Enter to open.</DialogPrimitive.Description>
+          <DialogPrimitive.Title className="sr-only">{t("Search pages")}</DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">{t("Type to filter, use the arrow keys to choose and Enter to open.")}</DialogPrimitive.Description>
           <div className="flex items-center gap-2 border-b border-border px-4">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Jump to a page…"
+              placeholder={t("Jump to a page…")}
               role="combobox"
               aria-expanded="true"
               aria-controls="command-menu-list"
@@ -116,7 +119,7 @@ export default function CommandMenu() {
             />
           </div>
           <ul ref={listRef} id="command-menu-list" role="listbox" className="max-h-[min(60vh,420px)] overflow-y-auto p-1.5">
-            {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted-foreground">No pages match “{query}”.</li>}
+            {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted-foreground">{t("No pages match “{{query}}”.", { query })}</li>}
             {results.map(({ item, group }, i) => {
               const showGroup = i === 0 || results[i - 1].group !== group;
               return (

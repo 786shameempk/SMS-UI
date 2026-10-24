@@ -15,6 +15,7 @@ import { listOnlineExams } from "../api";
 import { EXAM_STATUS_LABEL, EXAM_STATUSES, EXAM_TYPE_LABEL, formatDuration, formatExamTime, formatMarks, isExamStaff } from "../constants";
 import type { ExamFilters, OnlineExamListItem, OnlineExamStatus } from "../types";
 import { ExamStatusBadge, useExamActions } from "../components/useExamActions";
+import { useTranslation } from "react-i18next";
 
 const ALL = "__all";
 
@@ -23,6 +24,7 @@ const dayStart = (d: string) => new Date(`${d}T00:00:00`).toISOString();
 const dayEnd = (d: string) => new Date(`${d}T23:59:59`).toISOString();
 
 export default function ExamListPage() {
+  const { t } = useTranslation("online-exams");
   const role = useAuthStore((s) => s.user?.role);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -51,53 +53,53 @@ export default function ExamListPage() {
     () => [
       {
         accessorKey: "name",
-        header: "Exam",
+        header: t("Exam"),
         cell: ({ row }) => (
           <div className="min-w-[12rem]">
             <p className="font-medium text-foreground">{row.original.name}</p>
-            <p className="text-xs text-muted-foreground">{EXAM_TYPE_LABEL[row.original.examType]} · {row.original.questionCount} question{row.original.questionCount === 1 ? "" : "s"}</p>
+            <p className="text-xs text-muted-foreground">{t(EXAM_TYPE_LABEL[row.original.examType])} · {row.original.questionCount === 1 ? t("{{n}} question", { n: row.original.questionCount }) : t("{{n}} questions", { n: row.original.questionCount })}</p>
           </div>
         ),
       },
-      { accessorKey: "subjectName", header: "Subject", cell: ({ row }) => row.original.subjectName ?? "—" },
+      { accessorKey: "subjectName", header: t("Subject"), cell: ({ row }) => row.original.subjectName ?? "—" },
       {
         id: "class",
-        header: "Class",
+        header: t("Class"),
         accessorFn: (e) => `${e.className ?? ""} ${e.sectionName ?? ""}`,
         cell: ({ row }) => (
           <span className="whitespace-nowrap">
             {row.original.className ?? "—"}
-            <span className="text-muted-foreground"> · {row.original.sectionName ?? "All sections"}</span>
+            <span className="text-muted-foreground"> · {row.original.sectionName ?? t("All sections")}</span>
           </span>
         ),
       },
       {
         accessorKey: "startUtc",
-        header: "Starts",
+        header: t("Starts"),
         cell: ({ row }) => <span className="whitespace-nowrap">{formatExamTime(row.original.startUtc, row.original.timeZoneId)}</span>,
       },
       {
         accessorKey: "endUtc",
-        header: "Ends",
+        header: t("Ends"),
         cell: ({ row }) => <span className="whitespace-nowrap">{formatExamTime(row.original.endUtc, row.original.timeZoneId)}</span>,
       },
-      { accessorKey: "durationMinutes", header: "Duration", cell: ({ row }) => formatDuration(row.original.durationMinutes) },
+      { accessorKey: "durationMinutes", header: t("Duration"), cell: ({ row }) => formatDuration(row.original.durationMinutes) },
       {
         accessorKey: "totalMarks",
-        header: "Marks",
+        header: t("Marks"),
         cell: ({ row }) => (
           <span className="tabular-nums">
             {formatMarks(row.original.totalMarks)}
-            <span className="text-xs text-muted-foreground"> · pass {formatMarks(row.original.passingMarks)}</span>
+            <span className="text-xs text-muted-foreground"> · {t("pass {{marks}}", { marks: formatMarks(row.original.passingMarks) })}</span>
           </span>
         ),
       },
-      { accessorKey: "status", header: "Status", cell: ({ row }) => <ExamStatusBadge status={row.original.status} /> },
+      { accessorKey: "status", header: t("Status"), cell: ({ row }) => <ExamStatusBadge status={row.original.status} /> },
       {
         accessorKey: "assignedCount",
-        header: "Students",
+        header: t("Students"),
         cell: ({ row }) => (
-          <span className="tabular-nums" title={`${row.original.submittedCount} submitted of ${row.original.assignedCount} assigned`}>
+          <span className="tabular-nums" title={t("{{submitted}} submitted of {{assigned}} assigned", { submitted: row.original.submittedCount, assigned: row.original.assignedCount })}>
             {row.original.submittedCount}/{row.original.assignedCount}
           </span>
         ),
@@ -108,12 +110,12 @@ export default function ExamListPage() {
         enableSorting: false,
         cell: ({ row }) => (
           <div onClick={(e) => e.stopPropagation()}>
-            <RowActions label={`Actions for ${row.original.name}`}>{actions.menuItems(row.original)}</RowActions>
+            <RowActions label={t("Actions for {{name}}", { name: row.original.name })}>{actions.menuItems(row.original)}</RowActions>
           </div>
         ),
       },
     ],
-    [actions],
+    [actions, t],
   );
 
   if (!isExamStaff(role)) return <Navigate to="/online-exams/my" replace />;
@@ -122,12 +124,12 @@ export default function ExamListPage() {
     <PageContainer>
       <PageHeader
         icon={ListChecks}
-        title="Exams"
-        description="Every online exam you can manage, from drafts to published results."
+        title={t("Exams")}
+        description={t("Every online exam you can manage, from drafts to published results.")}
         actions={
           <Button onClick={() => navigate("/online-exams/exams/new")}>
             <Plus className="h-4 w-4" />
-            Create exam
+            {t("Create exam")}
           </Button>
         }
       />
@@ -139,39 +141,39 @@ export default function ExamListPage() {
         isError={exams.isError}
         onRetry={() => exams.refetch()}
         searchable
-        searchPlaceholder="Search exams…"
+        searchPlaceholder={t("Search exams…")}
         onRowClick={(e) => navigate(`/online-exams/exams/${e.id}`)}
         empty={
           filtered
-            ? { icon: ListChecks, title: "No exams match these filters", action: <Button variant="outline" size="sm" onClick={() => setParams({}, { replace: true })}>Clear filters</Button> }
+            ? { icon: ListChecks, title: t("No exams match these filters"), action: <Button variant="outline" size="sm" onClick={() => setParams({}, { replace: true })}>{t("Clear filters")}</Button> }
             : {
                 icon: ListChecks,
-                title: "No online exams yet",
-                description: "Create an exam, add questions from the bank, and schedule it for a class.",
-                action: <Button size="sm" onClick={() => navigate("/online-exams/exams/new")}>Create exam</Button>,
+                title: t("No online exams yet"),
+                description: t("Create an exam, add questions from the bank, and schedule it for a class."),
+                action: <Button size="sm" onClick={() => navigate("/online-exams/exams/new")}>{t("Create exam")}</Button>,
               }
         }
         toolbar={
           <div className="flex flex-wrap items-center gap-2">
             <Select value={status ?? ALL} onValueChange={(v) => setParam("status", v)}>
-              <SelectTrigger className="w-[9.5rem]" aria-label="Status">
+              <SelectTrigger className="w-[9.5rem]" aria-label={t("Status")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All statuses</SelectItem>
+                <SelectItem value={ALL}>{t("All statuses")}</SelectItem>
                 {EXAM_STATUSES.map((s) => (
                   <SelectItem key={s} value={s}>
-                    {EXAM_STATUS_LABEL[s]}
+                    {t(EXAM_STATUS_LABEL[s])}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={classId ?? ALL} onValueChange={(v) => setParam("classId", v)}>
-              <SelectTrigger className="w-[9rem]" aria-label="Class">
+              <SelectTrigger className="w-[9rem]" aria-label={t("Class")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All classes</SelectItem>
+                <SelectItem value={ALL}>{t("All classes")}</SelectItem>
                 {(classes.data ?? []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -180,11 +182,11 @@ export default function ExamListPage() {
               </SelectContent>
             </Select>
             <Select value={subjectId ?? ALL} onValueChange={(v) => setParam("subjectId", v)}>
-              <SelectTrigger className="w-[10rem]" aria-label="Subject">
+              <SelectTrigger className="w-[10rem]" aria-label={t("Subject")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All subjects</SelectItem>
+                <SelectItem value={ALL}>{t("All subjects")}</SelectItem>
                 {(subjects.data ?? []).map((s) => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.name}
@@ -193,14 +195,14 @@ export default function ExamListPage() {
               </SelectContent>
             </Select>
             <div className="flex items-center gap-1.5">
-              <Input type="date" value={from} onChange={(e) => setParam("from", e.target.value)} className="w-[9.5rem]" aria-label="From date" />
-              <span className="text-xs text-muted-foreground">to</span>
-              <Input type="date" value={to} onChange={(e) => setParam("to", e.target.value)} className="w-[9.5rem]" aria-label="To date" />
+              <Input type="date" value={from} onChange={(e) => setParam("from", e.target.value)} className="w-[9.5rem]" aria-label={t("From date")} />
+              <span className="text-xs text-muted-foreground">{t("to")}</span>
+              <Input type="date" value={to} onChange={(e) => setParam("to", e.target.value)} className="w-[9.5rem]" aria-label={t("To date")} />
             </div>
             {filtered && (
               <Button variant="ghost" size="sm" onClick={() => setParams({}, { replace: true })}>
                 <X className="h-3.5 w-3.5" />
-                Clear
+                {t("Clear")}
               </Button>
             )}
           </div>

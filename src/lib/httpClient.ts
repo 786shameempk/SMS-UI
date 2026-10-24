@@ -106,6 +106,13 @@ function renewAccessToken(): Promise<string | null> {
 
 type RetriableRequest = InternalAxiosRequestConfig & { _retried?: boolean };
 
+let networkFailures = 0;
+/**
+ * How many requests have failed without any response (offline, server down, blocked) since the page loaded. Callers
+ * that rewrap errors compare it before and after a call to tell "couldn't reach the server" from "the server said no".
+ */
+export const networkFailureCount = () => networkFailures;
+
 declare module "axios" {
   interface AxiosRequestConfig {
     /** Set on a request whose 403/404 is expected and handled by the caller: no error toast for it. */
@@ -151,6 +158,7 @@ function createServiceHttpClient(baseURL: string): AxiosInstance {
   // An expired or revoked access token: renew once and replay the request. When renewal is not possible
   // the session ends, and the route guard (routes/ProtectedRoute.tsx) sends the user to the login page.
   client.interceptors.response.use(undefined, async (error: AxiosError) => {
+    if (axios.isAxiosError(error) && !error.response && error.code !== "ERR_CANCELED") networkFailures += 1;
     reportForbiddenOrMissing(error);
     const request = error.config as RetriableRequest | undefined;
     const signedIn = Boolean(useAuthStore.getState().token);

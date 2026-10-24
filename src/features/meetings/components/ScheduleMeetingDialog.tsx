@@ -22,6 +22,7 @@ import type { MeetingType, ScheduleMeetingInput, Weekday } from "../types";
 import { audienceKey, isoDate, nextQuarterHour, toLocalInputValue } from "../utils";
 import AudiencePicker, { type PickedAudience } from "./AudiencePicker";
 
+import { useTranslation } from "react-i18next";
 const NONE = "__none__";
 const CLASS_TYPES: MeetingType[] = ["OnlineClass", "Examination", "ParentTeacherMeeting"];
 
@@ -99,6 +100,7 @@ interface ScheduleMeetingDialogProps {
 }
 
 export default function ScheduleMeetingDialog({ open, onOpenChange, initialType = "OnlineClass" }: ScheduleMeetingDialogProps) {
+  const { t } = useTranslation("meetings");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isManager, user } = useMeetingRole();
@@ -166,7 +168,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
       const what = result.sessionsPlanned > 1 ? `${result.sessionsPlanned} sessions scheduled` : input.saveAsDraft ? "Draft saved" : `${MEETING_TYPES[input.meetingType].label} scheduled`;
       toast.success(what);
       if (result.unlinkedCount > 0) {
-        toast(`${result.unlinkedCount} ${result.unlinkedCount === 1 ? "person has" : "people have"} no login yet, so ${result.unlinkedCount === 1 ? "wasn't" : "weren't"} invited. Link their accounts in Student or Staff profiles.`, { icon: <Info className="h-4 w-4 shrink-0 text-info-strong" />, duration: 7000 });
+        toast(t("{{unlinkedCount}} {{v1}} no login yet, so {{v2}} invited. Link their accounts in Student or Staff profiles.", { unlinkedCount: result.unlinkedCount, v1: result.unlinkedCount === 1 ? "person has" : "people have", v2: result.unlinkedCount === 1 ? "wasn't" : "weren't" }), { icon: <Info className="h-4 w-4 shrink-0 text-info-strong" />, duration: 7000 });
       }
       onOpenChange(false);
       navigate(`/online-classes/${result.firstSession.id}`);
@@ -177,7 +179,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
   const submit = (saveAsDraft: boolean) =>
     handleSubmit((v) => {
       if (!saveAsDraft && audience.length === 0) {
-        toast.error("Invite at least one class, group or person.");
+        toast.error(t("Invite at least one class, group or person."));
         return;
       }
       const start = new Date(`${v.date}T${v.time}`);
@@ -219,14 +221,14 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Schedule {noun === "class" ? "a class" : noun === "exam" ? "an exam" : "a meeting"}</DialogTitle>
-          <DialogDescription>Everyone you invite gets a notification and a reminder before it starts.</DialogDescription>
+          <DialogTitle>{t("Schedule")} {noun === "class" ? t("a class") : noun === "exam" ? t("an exam") : t("a meeting")}</DialogTitle>
+          <DialogDescription>{t("Everyone you invite gets a notification and a reminder before it starts.")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit(false)} className="gap-5">
           {/* What */}
           <fieldset className="space-y-2">
-            <legend className="mb-2 text-sm font-medium text-foreground">What is it?</legend>
+            <legend className="mb-2 text-sm font-medium text-foreground">{t("What is it?")}</legend>
             <Controller
               control={control}
               name="meetingType"
@@ -243,14 +245,14 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                         aria-pressed={on}
                         onClick={() => field.onChange(type)}
                         className={cn(
-                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-start text-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                           on ? "border-primary bg-accent font-semibold text-accent-foreground" : "border-border hover:bg-secondary",
                         )}
                       >
                         <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", config.chip)}>
                           <Icon className="h-3.5 w-3.5" aria-hidden />
                         </span>
-                        <span className="leading-tight">{config.label}</span>
+                        <span className="leading-tight">{t(config.label)}</span>
                       </button>
                     );
                   })}
@@ -262,31 +264,31 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
           {/* Class + subject */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-section">Class {isClassType ? "" : <span className="font-normal text-muted-foreground">(optional)</span>}</Label>
+              <Label htmlFor="meeting-section">{t("Class")} {isClassType ? "" : <span className="font-normal text-muted-foreground">{t("(optional)")}</span>}</Label>
               <Controller
                 control={control}
                 name="sectionId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="meeting-section"><SelectValue placeholder="Pick a class" /></SelectTrigger>
+                    <SelectTrigger id="meeting-section"><SelectValue placeholder={t("Pick a class")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE}>No specific class</SelectItem>
-                      {sections.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+                      <SelectItem value={NONE}>{t("No specific class")}</SelectItem>
+                      {sections.map((s) => <SelectItem key={s.id} value={s.id}>{t(s.label)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 )}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-subject">Subject <span className="font-normal text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="meeting-subject">{t("Subject")} <span className="font-normal text-muted-foreground">{t("(optional)")}</span></Label>
               <Controller
                 control={control}
                 name="subjectId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="meeting-subject"><SelectValue placeholder="Pick a subject" /></SelectTrigger>
+                    <SelectTrigger id="meeting-subject"><SelectValue placeholder={t("Pick a subject")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE}>No subject</SelectItem>
+                      <SelectItem value={NONE}>{t("No subject")}</SelectItem>
                       {availableSubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -296,25 +298,25 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="meeting-title">Title</Label>
-            <Input id="meeting-title" placeholder={meetingType === "OnlineClass" ? "e.g. Mathematics: Fractions" : "e.g. Term planning"} aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            <Label htmlFor="meeting-title">{t("Title")}</Label>
+            <Input id="meeting-title" placeholder={meetingType === "OnlineClass" ? t("e.g. Mathematics: Fractions") : t("e.g. Term planning")} aria-invalid={errors.title ? true : undefined} {...register("title")} />
             {fieldError(errors.title?.message)}
           </div>
 
           {/* When */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-[1.3fr_1fr_1fr]">
             <div className="col-span-2 space-y-1.5 sm:col-span-1">
-              <Label htmlFor="meeting-date">{repeats ? "First class" : "Date"}</Label>
+              <Label htmlFor="meeting-date">{repeats ? t("First class") : t("Date")}</Label>
               <Input id="meeting-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
               {fieldError(errors.date?.message)}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-time">Starts</Label>
+              <Label htmlFor="meeting-time">{t("Starts")}</Label>
               <Input id="meeting-time" type="time" step={300} aria-invalid={errors.time ? true : undefined} {...register("time")} />
               {fieldError(errors.time?.message)}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="meeting-duration">Length</Label>
+              <Label htmlFor="meeting-duration">{t("Length")}</Label>
               <Controller
                 control={control}
                 name="durationMinutes"
@@ -322,7 +324,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                   <Select value={String(field.value)} onValueChange={(v) => field.onChange(Number(v))}>
                     <SelectTrigger id="meeting-duration"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {DURATION_OPTIONS.map((d) => <SelectItem key={d} value={String(d)}>{d < 60 ? `${d} min` : `${d / 60} h`}</SelectItem>)}
+                      {DURATION_OPTIONS.map((d) => <SelectItem key={d} value={String(d)}>{d < 60 ? t("{{d}} min", { d }) : t("{{v1}} h", { v1: d / 60 })}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 )}
@@ -334,7 +336,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
           <div className="space-y-3 rounded-xl border border-border p-3">
             <label className="flex cursor-pointer items-center justify-between gap-3">
               <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <Repeat className="h-4 w-4 text-muted-foreground" aria-hidden /> Repeats every week
+                <Repeat className="h-4 w-4 text-muted-foreground" aria-hidden /> {t("Repeats every week")}
               </span>
               <Controller control={control} name="repeats" render={({ field }) => <Switch id="meeting-repeats" checked={field.value} onCheckedChange={field.onChange} />} />
             </label>
@@ -344,7 +346,7 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                   control={control}
                   name="days"
                   render={({ field }) => (
-                    <div className="flex gap-1.5" role="group" aria-label="Days of the week">
+                    <div className="flex gap-1.5" role="group" aria-label={t("Days of the week")}>
                       {WEEKDAYS.map((d) => {
                         const on = field.value.includes(d.value);
                         return (
@@ -369,9 +371,9 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                 />
                 {fieldError(errors.days?.message)}
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <Label htmlFor="meeting-until" className="font-normal text-muted-foreground">Until</Label>
+                  <Label htmlFor="meeting-until" className="font-normal text-muted-foreground">{t("Until")}</Label>
                   <Input id="meeting-until" type="date" className="w-44" aria-invalid={errors.endDate ? true : undefined} {...register("endDate")} />
-                  {sessions > 0 && <span className="text-muted-foreground">· {sessions} sessions</span>}
+                  {sessions > 0 && <span className="text-muted-foreground">{t("· {{sessions}} sessions", { sessions })}</span>}
                 </div>
                 {fieldError(errors.endDate?.message)}
               </div>
@@ -380,19 +382,19 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
 
           {/* Who */}
           <div className="space-y-2">
-            <Label>Who's invited</Label>
+            <Label>{t("Who's invited")}</Label>
             <AudiencePicker meetingType={meetingType} sectionId={section?.id ?? null} sectionLabel={section?.label ?? null} value={audience} onChange={setAudience} />
           </div>
 
           {/* Reminders */}
           <div className="space-y-2">
-            <Label>Remind everyone</Label>
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Reminders">
+            <Label>{t("Remind everyone")}</Label>
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t("Reminders")}>
               {REMINDER_OPTIONS.map((r) => {
                 const on = reminders.includes(r.value);
                 return (
                   <ToggleChip key={r.value} pressed={on} onClick={() => setReminders(on ? reminders.filter((x) => x !== r.value) : [...reminders, r.value])}>
-                    {r.label}
+                    {t(r.label)}
                   </ToggleChip>
                 );
               })}
@@ -406,11 +408,11 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
               name="provider"
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label>Where</Label>
+                  <Label>{t("Where")}</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {([
-                      { value: "LiveKit", label: "Built-in video room", hint: "Attendance is taken for you", icon: MonitorPlay },
-                      { value: "ExternalLink", label: "Paste a link", hint: "Zoom, Meet or Teams", icon: Link2 },
+                      { value: "LiveKit", label: t("Built-in video room"), hint: "Attendance is taken for you", icon: MonitorPlay },
+                      { value: "ExternalLink", label: t("Paste a link"), hint: "Zoom, Meet or Teams", icon: Link2 },
                     ] as const).map((o) => (
                       <button
                         key={o.value}
@@ -418,13 +420,13 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                         aria-pressed={field.value === o.value}
                         onClick={() => field.onChange(o.value)}
                         className={cn(
-                          "flex items-start gap-2 rounded-lg border p-3 text-left text-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          "flex items-start gap-2 rounded-lg border p-3 text-start text-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                           field.value === o.value ? "border-primary bg-accent" : "border-border hover:bg-secondary",
                         )}
                       >
                         <o.icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                         <span>
-                          <span className="block font-medium text-foreground">{o.label}</span>
+                          <span className="block font-medium text-foreground">{t(o.label)}</span>
                           <span className="block text-xs text-muted-foreground">{o.hint}</span>
                         </span>
                       </button>
@@ -432,9 +434,9 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
                   </div>
                   {provider === "ExternalLink" && (
                     <>
-                      <Input id="meeting-link" placeholder="https://…" aria-invalid={errors.externalJoinUrl ? true : undefined} {...register("externalJoinUrl")} />
+                      <Input id="meeting-link" placeholder={t("https://…")} aria-invalid={errors.externalJoinUrl ? true : undefined} {...register("externalJoinUrl")} />
                       {fieldError(errors.externalJoinUrl?.message)}
-                      <p className="text-xs text-muted-foreground">The link stays hidden until someone joins, and only invited people get it.</p>
+                      <p className="text-xs text-muted-foreground">{t("The link stays hidden until someone joins, and only invited people get it.")}</p>
                     </>
                   )}
                 </div>
@@ -443,28 +445,28 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
           )}
 
           <details className="group rounded-xl border border-border px-3 py-2 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="cursor-pointer select-none text-sm font-medium text-foreground">More options</summary>
+            <summary className="cursor-pointer select-none text-sm font-medium text-foreground">{t("More options")}</summary>
             <div className="mt-3 space-y-3 pb-1">
               <div className="space-y-1.5">
-                <Label htmlFor="meeting-description">Description</Label>
-                <Textarea id="meeting-description" rows={3} placeholder="What will you cover? Anything to prepare?" {...register("description")} />
+                <Label htmlFor="meeting-description">{t("Description")}</Label>
+                <Textarea id="meeting-description" rows={3} placeholder={t("What will you cover? Anything to prepare?")} {...register("description")} />
               </div>
               <label className="flex items-center justify-between gap-3 text-sm">
-                <span>Chat during the {noun}</span>
+                <span>{t("Chat during the {{noun}}", { noun })}</span>
                 <Controller control={control} name="chatEnabled" render={({ field }) => <Switch id="meeting-chat" checked={field.value} onCheckedChange={field.onChange} />} />
               </label>
               <label className={cn("flex items-center justify-between gap-3 text-sm", !settings?.recordingAvailable && "opacity-60")}>
                 <span>
-                  Allow recording
-                  {!settings?.recordingAvailable && <span className="block text-xs text-muted-foreground">Recording isn't set up on this server yet.</span>}
+                  {t("Allow recording")}
+                  {!settings?.recordingAvailable && <span className="block text-xs text-muted-foreground">{t("Recording isn't set up on this server yet.")}</span>}
                 </span>
                 <Controller control={control} name="recordingEnabled" render={({ field }) => <Switch id="meeting-recording" disabled={!settings?.recordingAvailable} checked={field.value} onCheckedChange={field.onChange} />} />
               </label>
               {isManager && !isClassType && (
                 <label className="flex items-center justify-between gap-3 text-sm">
                   <span>
-                    School-wide
-                    <span className="block text-xs text-muted-foreground">Visible across every branch, not just this one.</span>
+                    {t("School-wide")}
+                    <span className="block text-xs text-muted-foreground">{t("Visible across every branch, not just this one.")}</span>
                   </span>
                   <Controller control={control} name="schoolWide" render={({ field }) => <Switch id="meeting-schoolwide" checked={field.value} onCheckedChange={field.onChange} />} />
                 </label>
@@ -474,10 +476,10 @@ export default function ScheduleMeetingDialog({ open, onOpenChange, initialType 
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={submit(true)} disabled={mutation.isPending}>
-              Save as draft
+              {t("Save as draft")}
             </Button>
             <Button type="submit" loading={mutation.isPending}>
-              {repeats && sessions > 1 ? `Schedule ${sessions} sessions` : `Schedule ${noun}`}
+              {repeats && sessions > 1 ? t("Schedule {{sessions}} sessions", { sessions }) : t("Schedule {{noun}}", { noun })}
             </Button>
           </DialogFooter>
         </form>

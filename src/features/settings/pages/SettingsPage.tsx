@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/authStore";
 import AppearanceTab from "../components/AppearanceTab";
@@ -15,6 +16,7 @@ const TABS = ["profile", "subscription", "branding", "dashboard", "localization"
 
 export default function SettingsPage() {
   const activeTenantId = useAuthStore((s) => s.activeTenantId);
+  const { t } = useTranslation("settings");
   // Links such as the subscription banner open a tab directly (?tab=subscription).
   const requested = useSearchParams()[0].get("tab");
   const first = requested && TABS.includes(requested) ? requested : "profile";
@@ -22,20 +24,20 @@ export default function SettingsPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Settings &amp; administration"
-        description="School profile, subscription plan, appearance, dashboard widgets, localization, system templates, backups, and the audit log."
+        title={t("Settings & administration")}
+        description={t("School profile, subscription plan, appearance, dashboard widgets, localization, system templates, backups, and the audit log.")}
       />
 
       <Tabs defaultValue={first}>
         <TabsList variant="line">
-          <TabsTrigger value="profile">School Profile</TabsTrigger>
-          <TabsTrigger value="subscription">Plan &amp; Subscription</TabsTrigger>
-          <TabsTrigger value="branding">Appearance</TabsTrigger>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="localization">Localization</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="backup">Backup &amp; Restore</TabsTrigger>
-          <TabsTrigger value="audit">Audit Log</TabsTrigger>
+          <TabsTrigger value="profile">{t("School Profile")}</TabsTrigger>
+          <TabsTrigger value="subscription">{t("Plan & Subscription")}</TabsTrigger>
+          <TabsTrigger value="branding">{t("Appearance")}</TabsTrigger>
+          <TabsTrigger value="dashboard">{t("Dashboard")}</TabsTrigger>
+          <TabsTrigger value="localization">{t("Localization")}</TabsTrigger>
+          <TabsTrigger value="templates">{t("Templates")}</TabsTrigger>
+          <TabsTrigger value="backup">{t("Backup & Restore")}</TabsTrigger>
+          <TabsTrigger value="audit">{t("Audit Log")}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile">
           <SchoolProfileTab />

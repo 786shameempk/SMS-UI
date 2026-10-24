@@ -23,7 +23,7 @@ export default function CompactTable<T>({ columns, rows, rowKey, label }: { colu
         <thead>
           <tr className={tableClasses.headerRow}>
             {columns.map((c) => (
-              <th key={c.id} scope="col" className={cn(tableClasses.compactHead, c.numeric && "text-right", c.hideOnNarrow && "hidden sm:table-cell")}>
+              <th key={c.id} scope="col" className={cn(tableClasses.compactHead, c.numeric && "text-end", c.hideOnNarrow && "hidden sm:table-cell")}>
                 {c.header}
               </th>
             ))}
@@ -33,7 +33,7 @@ export default function CompactTable<T>({ columns, rows, rowKey, label }: { colu
           {rows.map((row) => (
             <tr key={rowKey(row)} className={tableClasses.row}>
               {columns.map((c) => (
-                <td key={c.id} className={cn(tableClasses.compactCell, c.numeric && "text-right tabular-nums", c.hideOnNarrow && "hidden sm:table-cell")}>
+                <td key={c.id} className={cn(tableClasses.compactCell, c.numeric && "text-end tabular-nums", c.hideOnNarrow && "hidden sm:table-cell")}>
                   {c.cell(row)}
                 </td>
               ))}

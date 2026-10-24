@@ -13,7 +13,9 @@ import { GROUP_KIND_LABEL } from "../constants";
 import { ColorDot, SelectField, options, useAcademicYears, useApiMutation, useExtracurricularAccess } from "../shared";
 import type { Group, GroupKind } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function GroupsPage() {
+  const { t } = useTranslation("extracurricular");
   const access = useExtracurricularAccess();
   const years = useAcademicYears();
   const [year, setYear] = useState<string | undefined>();
@@ -42,22 +44,22 @@ export default function GroupsPage() {
           <SelectField value={academicYear} onChange={setYear} items={years.names.map((n) => ({ value: n, label: n }))} />
         </div>
         <p className="text-sm text-muted-foreground">
-          {list.length} {list.length === 1 ? "group" : "groups"} · {total} students
+          {list.length} {list.length === 1 ? t("group") : t("groups")} · {total} {t("students")}
         </p>
-        <div className="ml-auto flex flex-wrap gap-2">
+        <div className="ms-auto flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setDialog("history")}>
-            <History className="h-4 w-4" /> History
+            <History className="h-4 w-4" /> {t("History")}
           </Button>
           {access.canManage && (
             <>
               <Button variant="outline" disabled={list.length === 0} onClick={() => lock.mutate({ ids: list.map((g) => g.id), locked: !allLocked })}>
-                {allLocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />} {allLocked ? "Unlock all" : "Lock all"}
+                {allLocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />} {allLocked ? t("Unlock all") : t("Lock all")}
               </Button>
               <Button variant="outline" disabled={list.length === 0} onClick={() => setDialog("shuffle")}>
-                <Shuffle className="h-4 w-4" /> Shuffle students
+                <Shuffle className="h-4 w-4" /> {t("Shuffle students")}
               </Button>
               <Button onClick={() => setDialog("create")}>
-                <Plus className="h-4 w-4" /> Create groups
+                <Plus className="h-4 w-4" /> {t("Create groups")}
               </Button>
             </>
           )}
@@ -75,9 +77,9 @@ export default function GroupsPage() {
       {groups.data && list.length === 0 && (
         <EmptyState
           icon={Users}
-          title={`No ${GROUP_KIND_LABEL[kind].toLowerCase()}s for ${academicYear}`}
-          description={access.canManage ? "Create as many as the school needs, then place students by hand or with a shuffle." : "The school has not set these up yet."}
-          action={access.canManage ? <Button onClick={() => setDialog("create")}><Plus className="h-4 w-4" /> Create groups</Button> : undefined}
+          title={t("No {{v1}}s for {{academicYear}}", { v1: GROUP_KIND_LABEL[kind].toLowerCase(), academicYear })}
+          description={access.canManage ? t("Create as many as the school needs, then place students by hand or with a shuffle.") : t("The school has not set these up yet.")}
+          action={access.canManage ? <Button onClick={() => setDialog("create")}><Plus className="h-4 w-4" /> {t("Create groups")}</Button> : undefined}
         />
       )}
 
@@ -94,7 +96,7 @@ export default function GroupsPage() {
                 </div>
                 {g.locked && (
                   <Badge variant="danger">
-                    <Lock className="mr-1 h-3 w-3" /> Locked
+                    <Lock className="me-1 h-3 w-3" /> {t("Locked")}
                   </Badge>
                 )}
               </div>
@@ -106,14 +108,14 @@ export default function GroupsPage() {
               </div>
               <div className="flex items-center justify-between gap-1">
                 <Button size="sm" variant="outline" onClick={() => setViewing(g)}>
-                  <Users className="h-3.5 w-3.5" /> Members
+                  <Users className="h-3.5 w-3.5" /> {t("Members")}
                 </Button>
                 {access.canManage && (
                   <div className="flex">
-                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={g.locked ? `Unlock ${g.name}` : `Lock ${g.name}`} onClick={() => lock.mutate({ ids: [g.id], locked: !g.locked })}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={g.locked ? t("Unlock {{name}}", { name: g.name }) : t("Lock {{name}}", { name: g.name })} onClick={() => lock.mutate({ ids: [g.id], locked: !g.locked })}>
                       {g.locked ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Delete ${g.name}`} onClick={() => setRemoving(g)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Delete {{name}}", { name: g.name })} onClick={() => setRemoving(g)}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive-strong" />
                     </Button>
                   </div>
@@ -137,9 +139,9 @@ export default function GroupsPage() {
       <ConfirmDialog
         open={Boolean(removing)}
         onOpenChange={(v) => !v && setRemoving(null)}
-        title="Delete group"
-        description={`Delete "${removing?.name}"? A group that still has members can't be deleted.`}
-        confirmLabel="Delete"
+        title={t("Delete group")}
+        description={t("Delete \"{{name}}\"? A group that still has members can't be deleted.", { name: removing?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {

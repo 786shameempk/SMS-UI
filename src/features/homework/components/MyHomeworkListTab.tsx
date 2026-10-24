@@ -10,7 +10,9 @@ import { SUBMISSION_STATUS_CONFIG } from "../constants";
 import type { AssignedHomeworkRow } from "../types";
 import SubmitHomeworkDialog from "./SubmitHomeworkDialog";
 
+import { useTranslation } from "react-i18next";
 export default function MyHomeworkListTab({ studentId }: { studentId: string }) {
+  const { t } = useTranslation("homework");
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["homework", "assigned", studentId],
     queryFn: () => listAssignedHomework(studentId),
@@ -31,8 +33,8 @@ export default function MyHomeworkListTab({ studentId }: { studentId: string }) 
 
   return (
     <div className="space-y-3">
-      {isLoading && <p className="text-sm text-muted-foreground">Loading homework…</p>}
-      {!isLoading && sorted.length === 0 && <p className="text-sm text-muted-foreground">No homework assigned right now.</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t("Loading homework…")}</p>}
+      {!isLoading && sorted.length === 0 && <p className="text-sm text-muted-foreground">{t("No homework assigned right now.")}</p>}
 
       {sorted.map((row) => {
         const config = SUBMISSION_STATUS_CONFIG[row.submission.status];
@@ -42,15 +44,15 @@ export default function MyHomeworkListTab({ studentId }: { studentId: string }) 
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{row.homework.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {subjectById.get(row.homework.subjectId)?.name ?? "—"} · {classById.get(row.homework.classId)?.name ?? "—"} · Due{" "}
+                  {subjectById.get(row.homework.subjectId)?.name ?? "—"} · {classById.get(row.homework.classId)?.name ?? "—"} {t("· Due")}{" "}
                   {formatRelativeDay(row.homework.dueDate)}
-                  {row.submission.grade !== undefined ? ` · Grade: ${row.submission.grade}` : ""}
+                  {row.submission.grade !== undefined ? t(" · Grade: {{grade}}", { grade: row.submission.grade }) : ""}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Badge variant={config.variant}>{config.label}</Badge>
+                <Badge variant={config.variant}>{t(config.label)}</Badge>
                 <Button size="sm" variant="outline" onClick={() => setOpenRow(row)}>
-                  {row.submission.status === "not_submitted" ? "Submit" : "View"}
+                  {row.submission.status === "not_submitted" ? t("Submit") : t("View")}
                 </Button>
               </div>
             </CardContent>

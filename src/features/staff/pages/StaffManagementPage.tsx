@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Upload, RotateCcw, TrendingUp, UserCog, UserMinus, Users } from "lucide-react";
@@ -40,6 +41,7 @@ function initialsOf(first: string, last: string) {
 }
 
 function StaffDirectoryTab() {
+  const { t } = useTranslation("staff");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: staffList = [], isLoading, isError, refetch } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
@@ -60,28 +62,28 @@ function StaffDirectoryTab() {
     mutationFn: createStaff,
     onSuccess: () => {
       invalidate();
-      toast.success("Staff member added");
+      toast.success(t("Staff member added"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add staff member"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add staff member")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: StaffFormValues }) => updateStaff(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Staff member updated");
+      toast.success(t("Staff member updated"));
       setFormOpen(false);
       setEditingStaff(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update staff member"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update staff member")),
   });
 
   const promoteMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: PromoteStaffFormValues }) => promoteStaff(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success(`${promoteTarget?.firstName} promoted`);
+      toast.success(t("{{name}} promoted", { name: promoteTarget?.firstName }));
       setPromoteTarget(null);
     },
   });
@@ -90,7 +92,7 @@ function StaffDirectoryTab() {
     mutationFn: ({ id, values }: { id: string; values: ResignStaffFormValues }) => resignStaff(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success(`${resignTarget?.firstName} marked as resigned`);
+      toast.success(t("{{name}} marked as resigned", { name: resignTarget?.firstName }));
       setResignTarget(null);
     },
   });
@@ -99,10 +101,10 @@ function StaffDirectoryTab() {
     mutationFn: (id: string) => reactivateStaff(id),
     onSuccess: (member) => {
       invalidate();
-      toast.success(`${member.firstName} reactivated`);
+      toast.success(t("{{name}} reactivated", { name: member.firstName }));
     },
     // e.g. the school's plan has no staff seats left.
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not reactivate staff member"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not reactivate staff member")),
   });
 
   const filtered = useMemo(() => {
@@ -122,18 +124,19 @@ function StaffDirectoryTab() {
     setStatusFilter("all");
   };
   const activeFilters: ActiveFilter[] = [];
-  if (search.trim()) activeFilters.push({ id: "search", label: "Search", value: search.trim(), onRemove: () => setSearch("") });
+  if (search.trim()) activeFilters.push({ id: "search", label: t("Search"), value: search.trim(), onRemove: () => setSearch("") });
   if (designationFilter !== "all")
-    activeFilters.push({ id: "designation", label: "Designation", value: designationFilter, onRemove: () => setDesignationFilter("all") });
+    activeFilters.push({ id: "designation", label: t("Designation"), value: t(designationFilter), onRemove: () => setDesignationFilter("all") });
   if (statusFilter !== "all") {
-    const label = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? statusFilter;
-    activeFilters.push({ id: "status", label: "Status", value: label, onRemove: () => setStatusFilter("all") });
+    const option = STATUS_OPTIONS.find((o) => o.value === statusFilter);
+    const label = option ? t(option.label) : statusFilter;
+    activeFilters.push({ id: "status", label: t("Status"), value: label, onRemove: () => setStatusFilter("all") });
   }
 
   const columns: ColumnDef<StaffMember, unknown>[] = [
     {
       accessorKey: "firstName",
-      header: "Staff",
+      header: t("Staff"),
       meta: { exportValue: (s) => `${s.firstName} ${s.lastName}` },
       cell: ({ row }) => {
         const s = row.original;
@@ -141,7 +144,7 @@ function StaffDirectoryTab() {
           <button
             type="button"
             onClick={() => navigate(`/staff/${s.id}`)}
-            className="flex items-center gap-3 text-left cursor-pointer group"
+            className="flex items-center gap-3 text-start cursor-pointer group"
           >
             <Avatar className="w-8 h-8">
               {s.photoUrl && <AvatarImage src={s.photoUrl} alt={s.firstName} />}
@@ -159,22 +162,22 @@ function StaffDirectoryTab() {
     },
     {
       accessorKey: "designation",
-      header: "Designation",
-      cell: ({ row }) => <span className="text-sm text-foreground">{row.original.designation}</span>,
+      header: t("Designation"),
+      cell: ({ row }) => <span className="text-sm text-foreground">{t(row.original.designation)}</span>,
     },
     {
       accessorKey: "department",
-      header: "Department",
+      header: t("Department"),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.department || "—"}</span>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => <StaffStatusBadge status={row.original.status} />,
     },
     {
       accessorKey: "joiningDate",
-      header: "Joined",
+      header: t("Joined"),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{new Date(row.original.joiningDate).toLocaleDateString()}</span>,
     },
     {
@@ -187,7 +190,7 @@ function StaffDirectoryTab() {
           <RowActions>
             <DropdownMenuItem onClick={() => navigate(`/staff/${s.id}`)}>
               <UserCog className="w-3.5 h-3.5" />
-              View profile
+              {t("View profile")}
             </DropdownMenuItem>
             {canEdit && (
               <DropdownMenuItem
@@ -197,19 +200,19 @@ function StaffDirectoryTab() {
                 }}
               >
                 <Pencil className="w-3.5 h-3.5" />
-                Edit details
+                {t("Edit details")}
               </DropdownMenuItem>
             )}
             {canEdit && (
               <DropdownMenuItem onClick={() => setPromoteTarget(s)}>
                 <TrendingUp className="w-3.5 h-3.5" />
-                Promote
+                {t("Promote")}
               </DropdownMenuItem>
             )}
             {s.status === "resigned" ? (
               <DropdownMenuItem onClick={() => reactivateMutation.mutate(s.id)}>
                 <RotateCcw className="w-3.5 h-3.5" />
-                Reactivate
+                {t("Reactivate")}
               </DropdownMenuItem>
             ) : (
               canEdit && (
@@ -218,7 +221,7 @@ function StaffDirectoryTab() {
                   variant="destructive"
                 >
                   <UserMinus className="w-3.5 h-3.5" />
-                  Record resignation
+                  {t("Record resignation")}
                 </DropdownMenuItem>
               )
             )}
@@ -237,32 +240,32 @@ function StaffDirectoryTab() {
         isError={isError}
         onRetry={() => refetch()}
         getRowId={(s) => s.id}
-        empty={{ icon: Users, title: "No staff yet", description: "Record a new joining to start building the staff directory." }}
+        empty={{ icon: Users, title: t("No staff yet"), description: t("Record a new joining to start building the staff directory.") }}
         filters={
           <>
-            <SearchInput value={search} onValueChange={setSearch} placeholder="Search by name or employee ID" containerClassName="sm:w-72" />
+            <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by name or employee ID")} containerClassName="sm:w-72" />
             <Select value={designationFilter} onValueChange={setDesignationFilter}>
-              <SelectTrigger className="sm:w-40" aria-label="Filter by designation">
-                <SelectValue placeholder="Designation" />
+              <SelectTrigger className="sm:w-40" aria-label={t("Filter by designation")}>
+                <SelectValue placeholder={t("Designation")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All designations</SelectItem>
+                <SelectItem value="all">{t("All designations")}</SelectItem>
                 {DESIGNATIONS.map((d) => (
                   <SelectItem key={d} value={d}>
-                    {d}
+                    {t(d)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="sm:w-36" aria-label="Filter by status">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="sm:w-36" aria-label={t("Filter by status")}>
+                <SelectValue placeholder={t("Status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">{t("All statuses")}</SelectItem>
                 {STATUS_OPTIONS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
-                    {o.label}
+                    {t(o.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -275,7 +278,7 @@ function StaffDirectoryTab() {
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="w-4 h-4" />
-              Import
+              {t("Import")}
             </Button>
             <Button
               onClick={() => {
@@ -284,7 +287,7 @@ function StaffDirectoryTab() {
               }}
             >
               <Plus className="w-4 h-4" />
-              New joining
+              {t("New joining")}
             </Button>
           </>
       }
@@ -335,14 +338,15 @@ function StaffDirectoryTab() {
 
 /** HR's view: the staff directory and everyone's leave. */
 function HrManagementView() {
+  const { t } = useTranslation("staff");
   return (
     <PageContainer>
-      <PageHeader title="Staff management" description="Joining, promotions, resignations, and leave across all staff." />
+      <PageHeader title={t("Staff management")} description={t("Joining, promotions, resignations, and leave across all staff.")} />
 
       <Tabs defaultValue="staff">
         <TabsList variant="line">
-          <TabsTrigger value="staff">Staff</TabsTrigger>
-          <TabsTrigger value="leave">Leave Requests</TabsTrigger>
+          <TabsTrigger value="staff">{t("Staff")}</TabsTrigger>
+          <TabsTrigger value="leave">{t("Leave Requests")}</TabsTrigger>
         </TabsList>
         <TabsContent value="staff">
           <StaffDirectoryTab />
@@ -357,6 +361,7 @@ function HrManagementView() {
 
 /** The signed-in staff member's own staff record: what the school holds about them. */
 function MyDetailsTab() {
+  const { t } = useTranslation("staff");
   const { data: myStaffId, isLoading: idLoading } = useQuery({ queryKey: ["staff", "me"], queryFn: getMyStaffId });
   const { data: staff, isLoading, isError, refetch } = useQuery({
     queryKey: ["staff", myStaffId],
@@ -364,17 +369,17 @@ function MyDetailsTab() {
     enabled: Boolean(myStaffId),
   });
 
-  if (idLoading || (myStaffId && isLoading)) return <LoadingState label="Loading your details…" />;
+  if (idLoading || (myStaffId && isLoading)) return <LoadingState label={t("Loading your details…")} />;
   if (!myStaffId) {
     return (
       <EmptyState
         icon={UserCog}
-        title="Your login isn't linked to a staff record"
-        description="Ask an administrator to link your login to your staff record, and your details, leave and payslips will appear here."
+        title={t("Your login isn't linked to a staff record")}
+        description={t("Ask an administrator to link your login to your staff record, and your details, leave and payslips will appear here.")}
       />
     );
   }
-  if (isError || !staff) return <ErrorState title="We couldn't load your details" onRetry={() => void refetch()} />;
+  if (isError || !staff) return <ErrorState title={t("We couldn't load your details")} onRetry={() => void refetch()} />;
 
   return (
     <div className="space-y-6">
@@ -384,7 +389,7 @@ function MyDetailsTab() {
         </h2>
         <StaffStatusBadge status={staff.status} />
         <p className="w-full text-sm text-muted-foreground">
-          {staff.designation} &middot; {staff.department} &middot; {staff.employeeId}
+          {t(staff.designation)} &middot; {staff.department} &middot; {staff.employeeId}
         </p>
       </div>
       <StaffOverviewTab staff={staff} />
@@ -395,15 +400,16 @@ function MyDetailsTab() {
 
 /** Teachers and other staff: only their own details, leave requests and payslips, as tabs. */
 function MyHrView() {
+  const { t } = useTranslation("staff");
   return (
     <PageContainer>
-      <PageHeader title="Staff management" description="Your staff details, your leave requests and your payslips." />
+      <PageHeader title={t("Staff management")} description={t("Your staff details, your leave requests and your payslips.")} />
 
       <Tabs defaultValue="details">
         <TabsList variant="line">
-          <TabsTrigger value="details">My Details</TabsTrigger>
-          <TabsTrigger value="leave">Leave Requests</TabsTrigger>
-          <TabsTrigger value="payslips">Payslips</TabsTrigger>
+          <TabsTrigger value="details">{t("My Details")}</TabsTrigger>
+          <TabsTrigger value="leave">{t("Leave Requests")}</TabsTrigger>
+          <TabsTrigger value="payslips">{t("Payslips")}</TabsTrigger>
         </TabsList>
         <TabsContent value="details">
           <MyDetailsTab />

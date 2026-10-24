@@ -190,7 +190,7 @@ export default function PlanFormDialog({
                               onCheckedChange={(v) => setValue("includedModules", v ? normalizeModules([...includedModules, label]) : includedModules.filter((m) => m !== label))}
                             />
                             <span className="text-sm text-foreground">{label}</span>
-                            {locked && <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Always</span>}
+                            {locked && <span className="ms-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Always</span>}
                           </label>
                         );
                       })}

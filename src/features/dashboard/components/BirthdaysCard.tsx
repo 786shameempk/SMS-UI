@@ -1,4 +1,5 @@
 import { Cake } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -6,16 +7,17 @@ import { formatRelativeDay } from "@/utils/format";
 import type { BirthdayItem } from "../types";
 
 export default function BirthdaysCard({ birthdays }: { birthdays: BirthdayItem[] }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Cake className="w-4 h-4 text-muted-foreground" />
-          Birthdays
+          {t("Birthdays")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        {birthdays.length === 0 && <EmptyState bare size="sm" icon={Cake} title="No birthdays this week" className="py-6" />}
+        {birthdays.length === 0 && <EmptyState bare size="sm" icon={Cake} title={t("No birthdays this week")} className="py-6" />}
         {birthdays.map((b) => (
           <div key={b.id} className="flex items-center gap-3">
             <Avatar className="w-8 h-8">
@@ -23,7 +25,7 @@ export default function BirthdaysCard({ birthdays }: { birthdays: BirthdayItem[]
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground truncate">{b.name}</p>
-              <p className="text-[11px] text-muted-foreground capitalize">{b.role}</p>
+              <p className="text-[11px] text-muted-foreground capitalize">{t(b.role)}</p>
             </div>
             <span className="text-xs font-medium text-muted-foreground shrink-0">{formatRelativeDay(b.date)}</span>
           </div>

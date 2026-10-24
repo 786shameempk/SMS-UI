@@ -137,9 +137,9 @@ export default function AzureCostPage() {
                   <TableHead>{first}</TableHead>
                   {showType && <TableHead>Type</TableHead>}
                   {showType && <TableHead>Resource group</TableHead>}
-                  <TableHead className="text-right">Current month</TableHead>
-                  <TableHead className="text-right">Previous month</TableHead>
-                  <TableHead className="text-right">Change</TableHead>
+                  <TableHead className="text-end">Current month</TableHead>
+                  <TableHead className="text-end">Previous month</TableHead>
+                  <TableHead className="text-end">Change</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -148,9 +148,9 @@ export default function AzureCostPage() {
                     <TableCell className="font-medium">{line.name}</TableCell>
                     {showType && <TableCell className="text-muted-foreground">{line.type ?? "—"}</TableCell>}
                     {showType && <TableCell className="text-muted-foreground">{line.resourceGroup || "—"}</TableCell>}
-                    <TableCell className="text-right tabular-nums">{money(line.cost, currency)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{money(line.previousCost, currency)}</TableCell>
-                    <TableCell className="text-right"><Change value={line.changePercent} /></TableCell>
+                    <TableCell className="text-end tabular-nums">{money(line.cost, currency)}</TableCell>
+                    <TableCell className="text-end tabular-nums">{money(line.previousCost, currency)}</TableCell>
+                    <TableCell className="text-end"><Change value={line.changePercent} /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

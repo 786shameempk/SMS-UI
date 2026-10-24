@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { UserStatus } from "../types";
 
@@ -9,5 +10,6 @@ const LABEL: Record<UserStatus, string> = {
 };
 
 export default function UserStatusBadge({ status }: { status: UserStatus }) {
-  return <StatusBadge status={status} label={LABEL[status]} />;
+  const { t } = useTranslation("administration");
+  return <StatusBadge status={status} label={t(LABEL[status])} />;
 }

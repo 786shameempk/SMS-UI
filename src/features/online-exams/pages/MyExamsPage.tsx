@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +14,7 @@ import { useAuthStore } from "@/store/authStore";
 import { listMyExams } from "../api";
 import { EXAM_TYPE_LABEL, formatDuration, formatExamTime, formatMarks, isExamStudent, MY_STATE_LABEL } from "../constants";
 import type { MyOnlineExam } from "../types";
+import { Trans, useTranslation } from "react-i18next";
 
 type View = "all" | "upcoming" | "completed";
 
@@ -30,17 +32,19 @@ function useNow(intervalMs = 30_000) {
 }
 
 function relative(ms: number) {
+  const t = (key: string, values?: Record<string, number>) => i18n.t(key, { ns: "online-exams", ...values });
   const mins = Math.max(0, Math.round(ms / 60000));
-  if (mins < 1) return "less than a minute";
-  if (mins < 60) return `${mins} min`;
+  if (mins < 1) return t("less than a minute");
+  if (mins < 60) return t("{{m}} min", { m: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 48) return `${hours} h ${mins % 60 ? `${mins % 60} min` : ""}`.trim();
-  return `${Math.round(hours / 24)} days`;
+  if (hours < 48) return mins % 60 ? t("{{h}} h {{m}} min", { h: hours, m: mins % 60 }) : t("{{h}} h", { h: hours });
+  return t("{{d}} days", { d: Math.round(hours / 24) });
 }
 
 const STATE_TONE: Record<MyOnlineExam["myState"], BadgeVariant> = { NotStarted: "info", InProgress: "warning", Submitted: "success", Missed: "neutral" };
 
 function ExamCard({ exam, now, onStart }: { exam: MyOnlineExam; now: number; onStart: (e: MyOnlineExam) => void }) {
+  const { t } = useTranslation("online-exams");
   const navigate = useNavigate();
   const live = isLive(exam);
   const opensIn = Date.parse(exam.startUtc) - now;
@@ -53,34 +57,34 @@ function ExamCard({ exam, now, onStart }: { exam: MyOnlineExam; now: number; onS
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {exam.subjectName ?? "Exam"} · {EXAM_TYPE_LABEL[exam.examType]}
+              {exam.subjectName ?? t("Exam")} · {t(EXAM_TYPE_LABEL[exam.examType])}
             </p>
             <h3 className="mt-0.5 font-semibold text-foreground">{exam.name}</h3>
           </div>
           {cancelled ? (
-            <Badge variant="neutral">Cancelled</Badge>
+            <Badge variant="neutral">{t("Cancelled")}</Badge>
           ) : live && exam.myState !== "InProgress" ? (
             <Badge variant="danger" dot>
-              Open now
+              {t("Open now")}
             </Badge>
           ) : (
             <Badge variant={STATE_TONE[exam.myState]} dot>
-              {MY_STATE_LABEL[exam.myState]}
+              {t(MY_STATE_LABEL[exam.myState])}
             </Badge>
           )}
         </div>
 
         <dl className="grid grid-cols-3 gap-2 text-sm">
           <div className="rounded-lg bg-secondary/60 px-2.5 py-2">
-            <dt className="text-xs text-muted-foreground">Duration</dt>
+            <dt className="text-xs text-muted-foreground">{t("Duration")}</dt>
             <dd className="font-medium">{formatDuration(exam.durationMinutes)}</dd>
           </div>
           <div className="rounded-lg bg-secondary/60 px-2.5 py-2">
-            <dt className="text-xs text-muted-foreground">Questions</dt>
+            <dt className="text-xs text-muted-foreground">{t("Questions")}</dt>
             <dd className="font-medium tabular-nums">{exam.questionCount}</dd>
           </div>
           <div className="rounded-lg bg-secondary/60 px-2.5 py-2">
-            <dt className="text-xs text-muted-foreground">Marks</dt>
+            <dt className="text-xs text-muted-foreground">{t("Marks")}</dt>
             <dd className="font-medium tabular-nums">{formatMarks(exam.totalMarks)}</dd>
           </div>
         </dl>
@@ -92,18 +96,18 @@ function ExamCard({ exam, now, onStart }: { exam: MyOnlineExam; now: number; onS
         {live && closesIn > 0 && (
           <p className="flex items-center gap-1.5 text-sm font-medium text-warning-strong">
             <Clock className="h-4 w-4" />
-            Closes in {relative(closesIn)}
+            {t("Closes in {{time}}", { time: relative(closesIn) })}
           </p>
         )}
         {isUpcoming(exam) && opensIn > 0 && (
           <p className="flex items-center gap-1.5 text-sm font-medium text-info-strong">
             <Clock className="h-4 w-4" />
-            Opens in {relative(opensIn)}
+            {t("Opens in {{time}}", { time: relative(opensIn) })}
           </p>
         )}
         {exam.maxAttempts > 1 && (
           <p className="text-xs text-muted-foreground">
-            Attempts used: {exam.attemptsUsed} of {exam.maxAttempts}
+            {t("Attempts used: {{used}} of {{max}}", { used: exam.attemptsUsed, max: exam.maxAttempts })}
           </p>
         )}
 
@@ -111,24 +115,24 @@ function ExamCard({ exam, now, onStart }: { exam: MyOnlineExam; now: number; onS
           {exam.myState === "InProgress" ? (
             <Button onClick={() => navigate(`/online-exams/take/${exam.id}`)}>
               <PlayCircle className="h-4 w-4" />
-              Resume exam
+              {t("Resume exam")}
             </Button>
           ) : exam.canStart ? (
             <Button onClick={() => onStart(exam)}>
               {exam.attemptsUsed > 0 ? <RotateCcw className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
-              {exam.attemptsUsed > 0 ? "Try again" : "Start exam"}
+              {exam.attemptsUsed > 0 ? t("Try again") : t("Start exam")}
             </Button>
           ) : null}
           {exam.resultAvailable && (
             <Button variant="outline" onClick={() => navigate(`/online-exams/my/${exam.id}/result`)}>
               <Award className="h-4 w-4" />
-              View result
+              {t("View result")}
             </Button>
           )}
           {exam.myState === "Submitted" && !exam.resultAvailable && !exam.canStart && (
             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-success" />
-              Submitted - results will appear once published
+              {t("Submitted - results will appear once published")}
             </p>
           )}
         </div>
@@ -160,6 +164,7 @@ const TITLES: Record<View, { title: string; description: string }> = {
 };
 
 export default function MyExamsPage({ view }: { view: View }) {
+  const { t } = useTranslation("online-exams");
   const role = useAuthStore((s) => s.user?.role);
   const navigate = useNavigate();
   const now = useNow();
@@ -176,7 +181,7 @@ export default function MyExamsPage({ view }: { view: View }) {
 
   return (
     <PageContainer>
-      <PageHeader icon={MonitorCheck} title={TITLES[view].title} description={TITLES[view].description} />
+      <PageHeader icon={MonitorCheck} title={t(TITLES[view].title)} description={t(TITLES[view].description)} />
 
       {exams.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -185,47 +190,52 @@ export default function MyExamsPage({ view }: { view: View }) {
           ))}
         </div>
       ) : exams.isError ? (
-        <ErrorState title="Couldn't load your exams" description={exams.error instanceof Error ? exams.error.message : undefined} onRetry={() => exams.refetch()} retrying={exams.isRefetching} />
+        <ErrorState title={t("Couldn't load your exams")} description={exams.error instanceof Error ? exams.error.message : undefined} onRetry={() => exams.refetch()} retrying={exams.isRefetching} />
       ) : shown.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={view === "completed" ? "Nothing completed yet" : view === "upcoming" ? "No upcoming exams" : "No exams assigned yet"}
-          description={view === "completed" ? "Exams you submit appear here." : "When a teacher schedules an exam for you, it appears here and you get a notification."}
+          title={view === "completed" ? t("Nothing completed yet") : view === "upcoming" ? t("No upcoming exams") : t("No exams assigned yet")}
+          description={view === "completed" ? t("Exams you submit appear here.") : t("When a teacher schedules an exam for you, it appears here and you get a notification.")}
         />
       ) : (
         <div className="space-y-6">
-          {view !== "completed" && <Section title="Open now" exams={live} now={now} onStart={setConfirm} />}
-          {view !== "completed" && <Section title="Upcoming" exams={upcoming} now={now} onStart={setConfirm} />}
-          {view !== "upcoming" && <Section title="Completed" exams={done} now={now} onStart={setConfirm} />}
+          {view !== "completed" && <Section title={t("Open now")} exams={live} now={now} onStart={setConfirm} />}
+          {view !== "completed" && <Section title={t("Upcoming")} exams={upcoming} now={now} onStart={setConfirm} />}
+          {view !== "upcoming" && <Section title={t("Completed")} exams={done} now={now} onStart={setConfirm} />}
         </div>
       )}
 
       <Dialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Start {confirm?.name}?</DialogTitle>
-            <DialogDescription>The timer starts as soon as you begin and keeps running even if you close the page.</DialogDescription>
+            <DialogTitle>{t("Start {{name}}?", { name: confirm?.name })}</DialogTitle>
+            <DialogDescription>{t("The timer starts as soon as you begin and keeps running even if you close the page.")}</DialogDescription>
           </DialogHeader>
           {confirm && (
             <div className="space-y-3 text-sm">
               <ul className="space-y-1.5 rounded-xl bg-secondary/60 px-4 py-3">
                 <li>
-                  <strong>{formatDuration(confirm.durationMinutes)}</strong> to answer <strong>{confirm.questionCount}</strong> question{confirm.questionCount === 1 ? "" : "s"} ({formatMarks(confirm.totalMarks)} mark{confirm.totalMarks === 1 ? "" : "s"})
+                  <Trans
+                    t={t}
+                    i18nKey={confirm.questionCount === 1 ? (confirm.totalMarks === 1 ? "<0>{{duration}}</0> to answer <1>{{n}}</1> question ({{marks}} mark)" : "<0>{{duration}}</0> to answer <1>{{n}}</1> question ({{marks}} marks)") : confirm.totalMarks === 1 ? "<0>{{duration}}</0> to answer <1>{{n}}</1> questions ({{marks}} mark)" : "<0>{{duration}}</0> to answer <1>{{n}}</1> questions ({{marks}} marks)"}
+                    values={{ duration: formatDuration(confirm.durationMinutes), n: confirm.questionCount, marks: formatMarks(confirm.totalMarks) }}
+                    components={[<strong key="d" />, <strong key="n" />]}
+                  />
                 </li>
-                <li>Answers save automatically as you go.</li>
-                <li>When time runs out, your answers are submitted for you.</li>
-                {confirm.maxAttempts > 1 && <li>This is attempt {confirm.attemptsUsed + 1} of {confirm.maxAttempts}.</li>}
+                <li>{t("Answers save automatically as you go.")}</li>
+                <li>{t("When time runs out, your answers are submitted for you.")}</li>
+                {confirm.maxAttempts > 1 && <li>{t("This is attempt {{n}} of {{max}}.", { n: confirm.attemptsUsed + 1, max: confirm.maxAttempts })}</li>}
               </ul>
               {confirm.description && <p className="whitespace-pre-wrap text-muted-foreground">{confirm.description}</p>}
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirm(null)}>
-              Not yet
+              {t("Not yet")}
             </Button>
             <Button onClick={() => confirm && navigate(`/online-exams/take/${confirm.id}`, { state: { start: true } })}>
               <PlayCircle className="h-4 w-4" />
-              Start now
+              {t("Start now")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -123,7 +123,7 @@ function Body({ d, canAlerts }: { d: OfficeDashboard; canAlerts: boolean }) {
                 <Link className="font-medium text-primary hover:underline" to={`/office/subscriptions/${e.subscriptionId}`}>{e.schoolName}</Link>
                 <span className="text-muted-foreground">{e.planName}</span>
                 <StatusBadge status={e.status} />
-                <span className="ml-auto tabular-nums">{day(e.endDate)} · {e.daysLeft < 0 ? `${-e.daysLeft} days ago` : `${e.daysLeft} days`}</span>
+                <span className="ms-auto tabular-nums">{day(e.endDate)} · {e.daysLeft < 0 ? `${-e.daysLeft} days ago` : `${e.daysLeft} days`}</span>
               </li>
             ))}
           </ul>

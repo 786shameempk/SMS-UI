@@ -28,6 +28,25 @@ export interface VisitorEntry extends HostDetails {
   checkOutAt?: string;
   status: VisitorStatus;
   preApprovalId?: string;
+  /** What the badge's QR code carries; the badge stops working a day after check-in. */
+  passToken?: string;
+  passExpiresAt?: string;
+}
+
+export type VisitorScanResult = "inside" | "already-left" | "expired" | "arrival-expected" | "pre-approval-closed" | "not-today" | "unknown";
+
+/** Security's answer for one scanned pass. Scanning checks nobody in or out: the ids say which action to offer next. */
+export interface VisitorScan {
+  result: VisitorScanResult;
+  message: string;
+  visitorName?: string;
+  badgeNumber?: string;
+  purpose?: VisitPurpose;
+  checkInAt?: string;
+  checkOutAt?: string;
+  scheduledAt?: string;
+  visitorEntryId?: string;
+  preApprovalId?: string;
 }
 
 export interface VisitorCheckInFormValues extends HostDetails {
@@ -59,6 +78,9 @@ export interface PreApprovedVisit extends HostDetails {
   scheduledAt: string;
   status: PreApprovalStatus;
   visitorEntryId?: string;
+  /** What the invitation's QR code carries; the visitor shows it at the gate. */
+  passToken?: string;
+  passExpiresAt?: string;
 }
 
 export interface PreApprovedVisitFormValues extends HostDetails {

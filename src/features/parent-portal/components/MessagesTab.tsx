@@ -9,7 +9,9 @@ import { cn } from "@/utils/cn";
 import { formatDateTime } from "@/utils/format";
 import { listMessageThreads, sendMessage } from "../api";
 
+import { useTranslation } from "react-i18next";
 export default function MessagesTab({ studentId, teacherName }: { studentId: string; teacherName: string }) {
+  const { t } = useTranslation("parent-portal");
   const queryClient = useQueryClient();
   const { data: threads = [], isLoading } = useQuery({
     queryKey: ["parent-portal", "messages", studentId],
@@ -30,18 +32,18 @@ export default function MessagesTab({ studentId, teacherName }: { studentId: str
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Teacher communication</CardTitle>
-        <CardDescription>{thread ? `Conversation with ${thread.teacherName}` : "No conversations yet."}</CardDescription>
+        <CardTitle>{t("Teacher communication")}</CardTitle>
+        <CardDescription>{thread ? t("Conversation with {{teacherName}}", { teacherName: thread.teacherName }) : t("No conversations yet.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading messages…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading messages…")}</p>}
         {thread && (
           <>
-            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-80 overflow-y-auto pe-1">
               {thread.messages.map((m) => (
                 <div key={m.id} className={cn("flex gap-2.5", m.sender === "parent" && "flex-row-reverse")}>
                   <Avatar className="w-7 h-7 shrink-0">
-                    <AvatarFallback className="text-[10px]">{m.sender === "parent" ? "Me" : "T"}</AvatarFallback>
+                    <AvatarFallback className="text-[10px]">{m.sender === "parent" ? t("Me") : "T"}</AvatarFallback>
                   </Avatar>
                   <div className={cn("max-w-[75%] rounded-2xl px-3.5 py-2", m.sender === "parent" ? "bg-brand-500 text-white" : "bg-secondary")}>
                     <p className="text-sm">{m.body}</p>
@@ -57,7 +59,7 @@ export default function MessagesTab({ studentId, teacherName }: { studentId: str
               <Textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={`Message ${thread.teacherName}...`}
+                placeholder={t("Message {{teacherName}}...", { teacherName: thread.teacherName })}
                 rows={2}
                 className="flex-1"
               />

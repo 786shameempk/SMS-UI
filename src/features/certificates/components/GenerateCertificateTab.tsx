@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileCheck2, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listStudents } from "@/features/students/api";
 import { listStaff } from "@/features/staff/api";
 import { CERTIFICATE_TYPE_OPTIONS } from "../constants";
+import { useIssuingSchoolName } from "../verifyUrl";
 import {
   generateAchievementCertificate,
   generateBonafide,
@@ -66,7 +68,9 @@ const emptyValues: FormValues = {
 };
 
 export default function GenerateCertificateTab() {
+  const { t } = useTranslation("certificates");
   const queryClient = useQueryClient();
+  useIssuingSchoolName();
   const [issued, setIssued] = useState<IssuedCertificate | null>(null);
 
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
@@ -110,24 +114,24 @@ export default function GenerateCertificateTab() {
     },
     onSuccess: (certificate) => {
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
-      toast.success(`${certificate.certificateNumber} generated`);
+      toast.success(t("{{number}} generated", { number: certificate.certificateNumber }));
       reset({ ...emptyValues, type: type });
       setIssued(certificate);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not generate certificate"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not generate certificate")),
   });
 
   return (
     <div className="max-w-2xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Generate a certificate</CardTitle>
-          <CardDescription>{typeConfig.description}</CardDescription>
+          <CardTitle>{t("Generate a certificate")}</CardTitle>
+          <CardDescription>{t(typeConfig.description)}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit((values) => generateMutation.mutate(values))} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="cert-type">Certificate type</Label>
+              <Label htmlFor="cert-type">{t("Certificate type")}</Label>
               <Controller
                 control={control}
                 name="type"
@@ -145,7 +149,7 @@ export default function GenerateCertificateTab() {
                     <SelectContent>
                       {CERTIFICATE_TYPE_OPTIONS.map((o) => (
                         <SelectItem key={o.type} value={o.type}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -156,14 +160,14 @@ export default function GenerateCertificateTab() {
 
             {typeConfig.recipientType === "student" ? (
               <div className="space-y-1.5">
-                <Label htmlFor="cert-studentId">Student</Label>
+                <Label htmlFor="cert-studentId">{t("Student")}</Label>
                 <Controller
                   control={control}
                   name="studentId"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="cert-studentId">
-                        <SelectValue placeholder="Select a student" />
+                        <SelectValue placeholder={t("Select a student")} />
                       </SelectTrigger>
                       <SelectContent>
                         {students.map((s) => (
@@ -175,18 +179,18 @@ export default function GenerateCertificateTab() {
                     </Select>
                   )}
                 />
-                {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
+                {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentId.message ?? "")}</p>}
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label htmlFor="cert-staffId">Staff member</Label>
+                <Label htmlFor="cert-staffId">{t("Staff member")}</Label>
                 <Controller
                   control={control}
                   name="staffId"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="cert-staffId">
-                        <SelectValue placeholder="Select a staff member" />
+                        <SelectValue placeholder={t("Select a staff member")} />
                       </SelectTrigger>
                       <SelectContent>
                         {staff.map((s) => (
@@ -198,7 +202,7 @@ export default function GenerateCertificateTab() {
                     </Select>
                   )}
                 />
-                {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.staffId.message}</p>}
+                {errors.staffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.staffId.message ?? "")}</p>}
               </div>
             )}
 
@@ -209,29 +213,29 @@ export default function GenerateCertificateTab() {
                 }`}
               >
                 {selectedStudent?.transferRecord
-                  ? `Transferring to ${selectedStudent.transferRecord.toSchool}, TC number ${selectedStudent.transferRecord.transferCertificateNumber}.`
-                  : "This student has no transfer record yet — transfer them out from Student Management first."}
+                  ? t("Transferring to {{school}}, TC number {{number}}.", { school: selectedStudent.transferRecord.toSchool, number: selectedStudent.transferRecord.transferCertificateNumber })
+                  : t("This student has no transfer record yet — transfer them out from Student Management first.")}
               </p>
             )}
 
             {(type === "bonafide" || type === "character" || type === "study" || type === "staff_service") && (
               <div className="space-y-1.5">
-                <Label htmlFor="cert-purpose" optional>Purpose</Label>
-                <Input id="cert-purpose" placeholder="e.g. passport application" {...register("purpose")} />
+                <Label htmlFor="cert-purpose" optional>{t("Purpose")}</Label>
+                <Input id="cert-purpose" placeholder={t("e.g. passport application")} {...register("purpose")} />
               </div>
             )}
 
             {type === "study" && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="cert-fromDate">From</Label>
+                  <Label htmlFor="cert-fromDate">{t("From")}</Label>
                   <Input id="cert-fromDate" type="date" aria-invalid={errors.fromDate ? true : undefined} {...register("fromDate")} />
-                  {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromDate.message}</p>}
+                  {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.fromDate.message ?? "")}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="cert-toDate">To</Label>
+                  <Label htmlFor="cert-toDate">{t("To")}</Label>
                   <Input id="cert-toDate" type="date" aria-invalid={errors.toDate ? true : undefined} {...register("toDate")} />
-                  {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toDate.message}</p>}
+                  {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.toDate.message ?? "")}</p>}
                 </div>
               </div>
             )}
@@ -239,20 +243,20 @@ export default function GenerateCertificateTab() {
             {type === "achievement" && (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="cert-event">Event</Label>
-                  <Input id="cert-event" placeholder="e.g. Inter-school Science Fair 2026" aria-invalid={errors.event ? true : undefined} {...register("event")} />
-                  {errors.event && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.event.message}</p>}
+                  <Label htmlFor="cert-event">{t("Event")}</Label>
+                  <Input id="cert-event" placeholder={t("e.g. Inter-school Science Fair 2026")} aria-invalid={errors.event ? true : undefined} {...register("event")} />
+                  {errors.event && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.event.message ?? "")}</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="cert-achievement">Achievement</Label>
-                    <Input id="cert-achievement" placeholder="e.g. 1st place" aria-invalid={errors.achievement ? true : undefined} {...register("achievement")} />
-                    {errors.achievement && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.achievement.message}</p>}
+                    <Label htmlFor="cert-achievement">{t("Achievement")}</Label>
+                    <Input id="cert-achievement" placeholder={t("e.g. 1st place")} aria-invalid={errors.achievement ? true : undefined} {...register("achievement")} />
+                    {errors.achievement && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.achievement.message ?? "")}</p>}
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="cert-eventDate">Event date</Label>
+                    <Label htmlFor="cert-eventDate">{t("Event date")}</Label>
                     <Input id="cert-eventDate" type="date" aria-invalid={errors.eventDate ? true : undefined} {...register("eventDate")} />
-                    {errors.eventDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.eventDate.message}</p>}
+                    {errors.eventDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.eventDate.message ?? "")}</p>}
                   </div>
                 </div>
               </>
@@ -264,7 +268,7 @@ export default function GenerateCertificateTab() {
             >
               {generateMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               <FileCheck2 className="w-4 h-4" />
-              Generate certificate
+              {t("Generate certificate")}
             </Button>
           </form>
         </CardContent>

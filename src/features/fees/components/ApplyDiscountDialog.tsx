@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ export default function ApplyDiscountDialog({
   submitting: boolean;
   onSubmit: (discountId: string) => Promise<void>;
 }) {
+  const { t } = useTranslation("fees");
   const [discountId, setDiscountId] = useState<string>("");
 
   return (
@@ -33,15 +35,15 @@ export default function ApplyDiscountDialog({
     >
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Apply discount</DialogTitle>
-          <DialogDescription>{invoice ? `${invoice.term} · ${invoice.feeType} invoice` : ""}</DialogDescription>
+          <DialogTitle>{t("Apply discount")}</DialogTitle>
+          <DialogDescription>{invoice ? t("{{term}} · {{feeType}} invoice", { term: invoice.term, feeType: invoice.feeType }) : ""}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="apply-discount">Discount</Label>
+            <Label htmlFor="apply-discount">{t("Discount")}</Label>
             <Select value={discountId} onValueChange={setDiscountId}>
               <SelectTrigger id="apply-discount">
-                <SelectValue placeholder="Select a discount" />
+                <SelectValue placeholder={t("Select a discount")} />
               </SelectTrigger>
               <SelectContent>
                 {discounts.map((d) => (
@@ -54,7 +56,7 @@ export default function ApplyDiscountDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="button"
@@ -65,7 +67,7 @@ export default function ApplyDiscountDialog({
               }}
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Apply
+              {t("Apply")}
             </Button>
           </DialogFooter>
         </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -11,6 +12,7 @@ import AssignSubjectDialog from "../AssignSubjectDialog";
 import { assignSubject, listSubjectAssignments, removeSubjectAssignment } from "../../api";
 
 export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("teachers");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [removeId, setRemoveId] = useState<string | null>(null);
@@ -28,40 +30,40 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
     mutationFn: (values: { subjectId: string; classId: string }) => assignSubject({ staffId: staff.id, ...values }),
     onSuccess: () => {
       invalidate();
-      toast.success("Subject assigned");
+      toast.success(t("Subject assigned"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not assign subject"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not assign subject")),
   });
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => removeSubjectAssignment(id),
     onSuccess: () => {
       invalidate();
-      toast.success("Assignment removed");
+      toast.success(t("Assignment removed"));
       setRemoveId(null);
     },
   });
 
-  const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "Unknown subject";
-  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? "Unknown class";
+  const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? t("Unknown subject");
+  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? t("Unknown class");
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-muted-foreground" />
-          Subjects &amp; classes
+          {t("Subjects & classes")}
         </CardTitle>
         <Button size="sm" onClick={() => setFormOpen(true)}>
           <Plus className="w-3.5 h-3.5" />
-          Assign subject
+          {t("Assign subject")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading assignments…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading assignments…")}</p>}
         {!isLoading && assignments.length === 0 && (
-          <p className="text-sm text-muted-foreground">No subjects or classes assigned yet.</p>
+          <p className="text-sm text-muted-foreground">{t("No subjects or classes assigned yet.")}</p>
         )}
         {!isLoading &&
           assignments.map((a) => (
@@ -91,9 +93,9 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
       <ConfirmDialog
         open={Boolean(removeId)}
         onOpenChange={(v) => !v && setRemoveId(null)}
-        title="Remove assignment"
-        description="This will unassign the subject and class from this teacher."
-        confirmLabel="Remove"
+        title={t("Remove assignment")}
+        description={t("This will unassign the subject and class from this teacher.")}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={removeMutation.isPending}
         onConfirm={() => {

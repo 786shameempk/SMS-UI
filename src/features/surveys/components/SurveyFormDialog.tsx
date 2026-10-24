@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,6 +69,7 @@ export default function SurveyFormDialog({
   submitting: boolean;
   onSubmit: (values: SurveyFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("surveys");
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
   const {
@@ -91,8 +93,8 @@ export default function SurveyFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-2xl">
         <DialogHeader>
-          <DialogTitle>New survey</DialogTitle>
-          <DialogDescription>Build a survey as a draft — publish it separately when you're ready to collect responses.</DialogDescription>
+          <DialogTitle>{t("New survey")}</DialogTitle>
+          <DialogDescription>{t("Build a survey as a draft — publish it separately when you're ready to collect responses.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -110,19 +112,19 @@ export default function SurveyFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="survey-title" required>Title</Label>
+            <Label htmlFor="survey-title" required>{t("Title")}</Label>
             <Input id="survey-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
-            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.title.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="survey-description" optional>Description</Label>
+            <Label htmlFor="survey-description" optional>{t("Description")}</Label>
             <Textarea id="survey-description" rows={2} {...register("description")} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="survey-audience" required>Audience</Label>
+              <Label htmlFor="survey-audience" required>{t("Audience")}</Label>
               <Controller
                 control={control}
                 name="audience"
@@ -134,7 +136,7 @@ export default function SurveyFormDialog({
                     <SelectContent>
                       {AUDIENCE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -143,14 +145,14 @@ export default function SurveyFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="survey-createdBy" optional>Created by</Label>
+              <Label htmlFor="survey-createdBy" optional>{t("Created by")}</Label>
               <Controller
                 control={control}
                 name="createdByStaffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="survey-createdBy">
-                      <SelectValue placeholder="Select staff member" />
+                      <SelectValue placeholder={t("Select staff member")} />
                     </SelectTrigger>
                     <SelectContent>
                       {staff.map((s) => (
@@ -167,12 +169,12 @@ export default function SurveyFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="survey-opensAt" required>Opens</Label>
+              <Label htmlFor="survey-opensAt" required>{t("Opens")}</Label>
               <Input id="survey-opensAt" type="date" aria-invalid={errors.opensAt ? true : undefined} {...register("opensAt")} />
-              {errors.opensAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.opensAt.message}</p>}
+              {errors.opensAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.opensAt.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="survey-closesAt" optional>Closes</Label>
+              <Label htmlFor="survey-closesAt" optional>{t("Closes")}</Label>
               <Input id="survey-closesAt" type="date" {...register("closesAt")} />
             </div>
           </div>
@@ -183,7 +185,7 @@ export default function SurveyFormDialog({
               name="anonymousAllowed"
               render={({ field }) => <Checkbox checked={field.value} onCheckedChange={(v) => field.onChange(v === true)} />}
             />
-            <span className="text-sm text-secondary-foreground">Allow anonymous responses</span>
+            <span className="text-sm text-secondary-foreground">{t("Allow anonymous responses")}</span>
           </label>
 
           <div className="space-y-3">
@@ -192,15 +194,15 @@ export default function SurveyFormDialog({
               return (
                 <div key={field.id} className="rounded-lg border border-border p-3 space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <Label htmlFor={`survey-q-${qIndex}`}>Question {qIndex + 1}</Label>
+                    <Label htmlFor={`survey-q-${qIndex}`}>{t("Question {{number}}", { number: qIndex + 1 })}</Label>
                     {fields.length > MIN_QUESTIONS && (
                       <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => remove(qIndex)}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     )}
                   </div>
-                  <Input id={`survey-q-${qIndex}`} placeholder="Question text" {...register(`questions.${qIndex}.text`)} />
-                  {errors.questions?.[qIndex]?.text && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.questions[qIndex]?.text?.message}</p>}
+                  <Input id={`survey-q-${qIndex}`} placeholder={t("Question text")} {...register(`questions.${qIndex}.text`)} />
+                  {errors.questions?.[qIndex]?.text && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.questions[qIndex]?.text?.message ?? "")}</p>}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Controller
@@ -214,7 +216,7 @@ export default function SurveyFormDialog({
                           <SelectContent>
                             {QUESTION_TYPE_OPTIONS.map((o) => (
                               <SelectItem key={o.value} value={o.value}>
-                                {o.label}
+                                {t(o.label)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -227,7 +229,7 @@ export default function SurveyFormDialog({
                         name={`questions.${qIndex}.required`}
                         render={({ field: reqField }) => <Checkbox checked={reqField.value} onCheckedChange={(v) => reqField.onChange(v === true)} />}
                       />
-                      <span className="text-sm text-secondary-foreground">Required</span>
+                      <span className="text-sm text-secondary-foreground">{t("Required")}</span>
                     </label>
                   </div>
 
@@ -248,7 +250,7 @@ export default function SurveyFormDialog({
                 </div>
               );
             })}
-            {typeof errors.questions?.message === "string" && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.questions.message}</p>}
+            {typeof errors.questions?.message === "string" && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.questions.message ?? "")}</p>}
           </div>
 
           <Button
@@ -259,15 +261,15 @@ export default function SurveyFormDialog({
             onClick={() => append({ ...emptyQuestion, options: [...(emptyQuestion.options ?? [])] })}
           >
             <Plus className="w-3.5 h-3.5" />
-            Add question
+            {t("Add question")}
           </Button>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save as draft
+              {t("Save as draft")}
             </Button>
           </DialogFooter>
         </form>
@@ -295,12 +297,14 @@ function QuestionOptions({
   onAdd: () => void;
   onRemove: (index: number) => void;
 }) {
+  const { t } = useTranslation("surveys");
   return (
     <div className="space-y-1.5">
+
       {options.map((option, oIndex) => (
         <div key={oIndex} className="flex items-center gap-2">
           <Input
-            placeholder={`Option ${oIndex + 1}`}
+            placeholder={t("Option {{number}}", { number: oIndex + 1 })}
             value={option}
             onChange={(e) => onChange(options.map((o, i) => (i === oIndex ? e.target.value : o)))}
           />
@@ -311,10 +315,10 @@ function QuestionOptions({
           )}
         </div>
       ))}
-      {errorMessage && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errorMessage}</p>}
+      {errorMessage && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errorMessage)}</p>}
       <Button type="button" variant="ghost" size="sm" disabled={options.length >= MAX_CHOICE_OPTIONS} onClick={onAdd}>
         <Plus className="w-3 h-3" />
-        Add option
+        {t("Add option")}
       </Button>
     </div>
   );

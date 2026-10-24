@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ export default function SchoolProfileTab() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useQuery({ queryKey: ["settings", "profile"], queryFn: getSchoolProfile });
   const { data: academicYears = [] } = useQuery({ queryKey: ["academics", "academic-years"], queryFn: listAcademicYears });
+  const { t } = useTranslation("settings");
 
   const {
     register,
@@ -62,9 +64,9 @@ export default function SchoolProfileTab() {
       queryClient.invalidateQueries({ queryKey: ["settings", "audit-log"] });
       // Header, sidebar and login show the new name/email/contact straight away, no reload.
       queryClient.invalidateQueries({ queryKey: TENANT_BRANDING_QUERY_KEY });
-      toast.success("School profile saved");
+      toast.success(t("School profile saved"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not save profile"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not save profile")),
   });
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -74,20 +76,20 @@ export default function SchoolProfileTab() {
       queryClient.invalidateQueries({ queryKey: ["settings", "profile"] });
       queryClient.invalidateQueries({ queryKey: ["settings", "audit-log"] });
       queryClient.invalidateQueries({ queryKey: TENANT_BRANDING_QUERY_KEY });
-      toast.success(dataUrl ? "School logo updated" : "School logo removed - School Sphere's logo is shown instead");
+      toast.success(dataUrl ? t("School logo updated") : t("School logo removed - School Sphere's logo is shown instead"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update the logo"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update the logo")),
   });
 
   const onLogoPicked = async (file: File | undefined) => {
     if (fileInput.current) fileInput.current.value = "";
     if (!file) return;
-    if (!LOGO_TYPES.includes(file.type)) return void toast.error("Logo must be a PNG, JPG, WebP or SVG image");
-    if (file.size > MAX_LOGO_BYTES) return void toast.error("Logo must be 2 MB or smaller");
+    if (!LOGO_TYPES.includes(file.type)) return void toast.error(t("Logo must be a PNG, JPG, WebP or SVG image"));
+    if (file.size > MAX_LOGO_BYTES) return void toast.error(t("Logo must be 2 MB or smaller"));
     try {
       logoMutation.mutate(await readAsDataUrl(file));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not read that file");
+      toast.error(err instanceof Error ? t(err.message) : t("Could not read that file"));
     }
   };
 
@@ -99,19 +101,19 @@ export default function SchoolProfileTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["academics", "academic-years"] });
-      toast.success("Current academic year updated");
+      toast.success(t("Current academic year updated"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not switch academic year"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not switch academic year")),
   });
 
-  if (isLoading || !profile) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !profile) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5 max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle>School logo</CardTitle>
-          <CardDescription>Shown on your login page, sidebar and documents. Until you add one, School Sphere's logo is used.</CardDescription>
+          <CardTitle>{t("School logo")}</CardTitle>
+          <CardDescription>{t("Shown on your login page, sidebar and documents. Until you add one, School Sphere's logo is used.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
@@ -123,21 +125,21 @@ export default function SchoolProfileTab() {
                   type="file"
                   accept={LOGO_TYPES.join(",")}
                   className="sr-only"
-                  aria-label="Upload school logo"
+                  aria-label={t("Upload school logo")}
                   onChange={(e) => void onLogoPicked(e.target.files?.[0])}
                 />
                 <Button type="button" variant="outline" onClick={() => fileInput.current?.click()} disabled={logoMutation.isPending}>
                   {logoMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
-                  {profile.logoUrl ? "Replace logo" : "Upload logo"}
+                  {profile.logoUrl ? t("Replace logo") : t("Upload logo")}
                 </Button>
                 {profile.logoUrl && (
                   <Button type="button" variant="ghost" onClick={() => logoMutation.mutate(null)} disabled={logoMutation.isPending}>
                     <Trash2 className="w-4 h-4" />
-                    Remove
+                    {t("Remove")}
                   </Button>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">PNG, JPG, WebP or SVG, up to 2 MB.</p>
+              <p className="text-xs text-muted-foreground">{t("PNG, JPG, WebP or SVG, up to 2 MB.")}</p>
             </div>
           </div>
         </CardContent>
@@ -145,48 +147,48 @@ export default function SchoolProfileTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>School profile</CardTitle>
-          <CardDescription>Shown across the portal — login screen, reports, and outgoing communications.</CardDescription>
+          <CardTitle>{t("School profile")}</CardTitle>
+          <CardDescription>{t("Shown across the portal — login screen, reports, and outgoing communications.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit((values) => saveMutation.mutate(values))} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="sp-name" required>School name</Label>
+              <Label htmlFor="sp-name" required>{t("School name")}</Label>
               <Input id="sp-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-              {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+              {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="sp-tagline" optional>Tagline</Label>
+              <Label htmlFor="sp-tagline" optional>{t("Tagline")}</Label>
               <Input id="sp-tagline" {...register("tagline")} />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="sp-address" optional>Address</Label>
+              <Label htmlFor="sp-address" optional>{t("Address")}</Label>
               <Input id="sp-address" aria-invalid={errors.address ? true : undefined} {...register("address")} />
               {errors.address && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.address.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="sp-phone" optional>Contact number</Label>
+                <Label htmlFor="sp-phone" optional>{t("Contact number")}</Label>
                 <Input id="sp-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
-                {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
+                {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.phone.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sp-email" optional>School email</Label>
+                <Label htmlFor="sp-email" optional>{t("School email")}</Label>
                 <Input id="sp-email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
-                {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.email.message}</p>}
+                {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.email.message ?? "")}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="sp-principalName">Principal</Label>
+                <Label htmlFor="sp-principalName">{t("Principal")}</Label>
                 <Input id="sp-principalName" {...register("principalName")} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sp-establishedYear">Established year</Label>
+                <Label htmlFor="sp-establishedYear">{t("Established year")}</Label>
                 <Input id="sp-establishedYear" type="number" aria-invalid={errors.establishedYear ? true : undefined} {...register("establishedYear")} />
                 {errors.establishedYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.establishedYear.message}</p>}
               </div>
@@ -194,7 +196,7 @@ export default function SchoolProfileTab() {
 
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save profile
+              {t("Save profile")}
             </Button>
           </form>
         </CardContent>
@@ -202,15 +204,15 @@ export default function SchoolProfileTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Academic year</CardTitle>
-          <CardDescription>Which academic year is treated as "current" across Academics, Attendance, Timetable, and Examinations.</CardDescription>
+          <CardTitle>{t("Academic year")}</CardTitle>
+          <CardDescription>{t("Which academic year is treated as \"current\" across Academics, Attendance, Timetable, and Examinations.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-1.5 max-w-xs">
-            <Label>Current academic year</Label>
+            <Label>{t("Current academic year")}</Label>
             <Select value={currentYear?.id ?? ""} onValueChange={(id) => yearMutation.mutate(id)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select academic year" />
+                <SelectValue placeholder={t("Select academic year")} />
               </SelectTrigger>
               <SelectContent>
                 {academicYears.map((y) => (

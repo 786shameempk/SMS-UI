@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AUDIT_CATEGORY_CONFIG } from "../constants";
@@ -10,6 +11,7 @@ const ALL = "__all__";
 
 export default function AuditLogTab() {
   const [category, setCategory] = useState<string>(ALL);
+  const { t } = useTranslation("settings");
   const { data: entries = [], isLoading } = useQuery({ queryKey: ["settings", "audit-log"], queryFn: listAuditLog });
 
   const filtered = useMemo(() => (category === ALL ? entries : entries.filter((e) => e.category === category)), [entries, category]);
@@ -17,16 +19,16 @@ export default function AuditLogTab() {
   return (
     <div className="space-y-4 max-w-3xl">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">A running record of administrative and system actions.</p>
+        <p className="text-sm text-muted-foreground">{t("A running record of administrative and system actions.")}</p>
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>All categories</SelectItem>
+            <SelectItem value={ALL}>{t("All categories")}</SelectItem>
             {(Object.keys(AUDIT_CATEGORY_CONFIG) as AuditCategory[]).map((c) => (
               <SelectItem key={c} value={c}>
-                {AUDIT_CATEGORY_CONFIG[c].label}
+                {t(AUDIT_CATEGORY_CONFIG[c].label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -34,8 +36,8 @@ export default function AuditLogTab() {
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        {isLoading && <p className="px-4 py-8 text-sm text-muted-foreground text-center">Loading…</p>}
-        {!isLoading && filtered.length === 0 && <p className="px-4 py-8 text-sm text-muted-foreground text-center">No matching entries.</p>}
+        {isLoading && <p className="px-4 py-8 text-sm text-muted-foreground text-center">{t("Loading…")}</p>}
+        {!isLoading && filtered.length === 0 && <p className="px-4 py-8 text-sm text-muted-foreground text-center">{t("No matching entries.")}</p>}
         <div className="divide-y divide-border">
           {filtered.map((entry) => {
             const config = AUDIT_CATEGORY_CONFIG[entry.category];
@@ -48,7 +50,7 @@ export default function AuditLogTab() {
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">{new Date(entry.createdAt).toLocaleString()}</p>
                 </div>
-                <Badge variant={config.variant}>{config.label}</Badge>
+                <Badge variant={config.variant}>{t(config.label)}</Badge>
               </div>
             );
           })}

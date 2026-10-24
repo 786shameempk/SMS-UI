@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +33,7 @@ export default function AuthorFormDialog({
   submitting: boolean;
   onSubmit: (values: AuthorFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("library");
   const isEdit = Boolean(author);
   const {
     register,
@@ -49,28 +51,28 @@ export default function AuthorFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit author" : "New author"}</DialogTitle>
-          <DialogDescription>Authors are referenced by books in the catalog.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit author") : t("New author")}</DialogTitle>
+          <DialogDescription>{t("Authors are referenced by books in the catalog.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) => onSubmit({ ...values, bio: values.bio?.trim() || undefined }))}
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="auth-name" required>Name</Label>
-            <Input id="auth-name" placeholder="e.g. R.K. Narayan" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="auth-name" required>{t("Name")}</Label>
+            <Input id="auth-name" placeholder={t("e.g. R.K. Narayan")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="auth-bio" optional>Bio</Label>
+            <Label htmlFor="auth-bio" optional>{t("Bio")}</Label>
             <Textarea id="auth-bio" rows={3} {...register("bio")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create author"}
+              {isEdit ? t("Save changes") : t("Create author")}
             </Button>
           </DialogFooter>
         </form>

@@ -16,11 +16,14 @@ interface PushStatus {
 export const pushSupported = () =>
   typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 
-/** Registers the service worker once per page load. Safe to call repeatedly. */
+/**
+ * Registers the service worker once per page load. Safe to call repeatedly. It serves two purposes: Web Push, and the
+ * cached app shell that lets the app open offline, so browsers without push support still register it.
+ */
 export function registerServiceWorker() {
-  if (!pushSupported()) return;
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   navigator.serviceWorker.register("/sw.js").catch(() => {
-    // No service worker = no push; the rest of the app is unaffected.
+    // No service worker = no push and no offline start; the rest of the app is unaffected.
   });
 }
 

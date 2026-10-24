@@ -120,6 +120,9 @@ export interface Receipt {
 
 export type RefundStatus = "pending" | "processed";
 
+/** Where a refund sent back through the payment gateway stands. not_sent: paid out by hand. */
+export type GatewayRefundStatus = "not_sent" | "initiated" | "succeeded" | "failed";
+
 export interface Refund {
   id: string;
   tenantId: string;
@@ -129,6 +132,10 @@ export interface Refund {
   reason: string;
   refundedOn: string;
   status: RefundStatus;
+  gatewayStatus: GatewayRefundStatus;
+  /** The gateway's reason when it refused the refund, or the last problem reaching it. */
+  gatewayError?: string;
+  gatewayUpdatedAt?: string;
 }
 
 export interface RefundFormValues {

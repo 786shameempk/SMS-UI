@@ -5,6 +5,7 @@ import { REACTION_CONFIG, REACTION_ORDER } from "../constants";
 import { formatCount, useReaction } from "../hooks";
 import type { ReactionCounts, TalentCard, TalentReactionType } from "../types";
 
+import { useTranslation } from "react-i18next";
 interface Burst {
   id: number;
   emoji: string;
@@ -35,6 +36,7 @@ export function ReactionSummary({ reactions, total, className }: { reactions: Re
  * optimistic and celebrated with a small emoji burst; counts are shown but kept quiet on purpose.
  */
 export default function ReactionBar({ talent, disabled, compact = false }: { talent: TalentCard; disabled?: boolean; compact?: boolean }) {
+  const { t } = useTranslation("talents");
   const mutation = useReaction(talent);
   const [mine, setMine] = useState<TalentReactionType | undefined>(talent.myReaction);
   const [counts, setCounts] = useState<ReactionCounts>(talent.reactions);
@@ -71,7 +73,7 @@ export default function ReactionBar({ talent, disabled, compact = false }: { tal
   };
 
   return (
-    <div className={cn("relative flex flex-wrap items-center", compact ? "gap-1" : "gap-1.5 sm:gap-2")} role="group" aria-label="Appreciate this talent">
+    <div className={cn("relative flex flex-wrap items-center", compact ? "gap-1" : "gap-1.5 sm:gap-2")} role="group" aria-label={t("Appreciate this talent")}>
       {REACTION_ORDER.map((type) => {
         const config = REACTION_CONFIG[type];
         const active = mine === type;
@@ -85,7 +87,7 @@ export default function ReactionBar({ talent, disabled, compact = false }: { tal
             onClick={() => choose(type)}
             disabled={disabled}
             aria-pressed={active}
-            title={disabled ? "Reactions open once this is published" : config.label}
+            title={disabled ? t("Reactions open once this is published") : config.label}
             className={cn(
               "relative inline-flex items-center gap-1.5 rounded-full border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
               compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm",
@@ -104,7 +106,7 @@ export default function ReactionBar({ talent, disabled, compact = false }: { tal
             >
               {config.emoji}
             </motion.span>
-            {!compact && <span className="hidden sm:inline">{config.label === "Congratulations" ? "Congrats" : config.label}</span>}
+            {!compact && <span className="hidden sm:inline">{config.label === "Congratulations" ? t("Congrats") : config.label}</span>}
             {count > 0 && <span className="tabular-nums text-xs opacity-80">{formatCount(count)}</span>}
           </motion.button>
         );

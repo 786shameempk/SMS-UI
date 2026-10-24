@@ -15,6 +15,7 @@ import { CreatorAvatar, CreatorTypePill, StatusBadge } from "./Bits";
 import MediaShowcase from "./MediaShowcase";
 import ReviewTimeline from "./ReviewTimeline";
 
+import { useTranslation } from "react-i18next";
 const QUICK_FEEDBACK = [
   "Please add a short description of your work.",
   "Please remove personal details (full name, address, phone) from the media.",
@@ -28,6 +29,7 @@ const QUICK_FEEDBACK = [
  * visibility - then approves, asks for changes, or declines, with feedback that goes straight to the creator.
  */
 export default function ReviewPanel({ talentId, onClose }: { talentId: string | null; onClose: () => void }) {
+  const { t: tr } = useTranslation("talents");
   const queryClient = useQueryClient();
   const [decision, setDecision] = useState<TalentDecision>("approve");
   const [comment, setComment] = useState("");
@@ -46,7 +48,7 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
     onSuccess: (t) => {
       queryClient.setQueryData(["talents", "detail", talentId], t);
       void queryClient.invalidateQueries({ queryKey: ["talents"] });
-      toast.success(decision === "approve" ? "✅ Approved and published" : decision === "request_changes" ? "Changes requested - the creator has been notified" : "Declined - the creator has been notified");
+      toast.success(decision === "approve" ? tr("✅ Approved and published") : decision === "request_changes" ? tr("Changes requested - the creator has been notified") : tr("Declined - the creator has been notified"));
       onClose();
     },
     onError: (err: Error) => toast.error(err.message),
@@ -66,8 +68,8 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
         }}
       >
         <DialogHeader>
-          <DialogTitle className="cc-display text-xl">Talent review</DialogTitle>
-          <DialogDescription>{talent ? `Submitted ${talent.submittedAt ? formatDateTime(talent.submittedAt) : ""}` : "Loading submission…"}</DialogDescription>
+          <DialogTitle className="cc-display text-xl">{tr("Talent review")}</DialogTitle>
+          <DialogDescription>{talent ? tr("Submitted {{v1}}", { v1: talent.submittedAt ? formatDateTime(talent.submittedAt) : "" }) : tr("Loading submission…")}</DialogDescription>
         </DialogHeader>
 
         {isLoading && <div className="space-y-3"><div className="aspect-video rounded-3xl cc-shimmer" /><div className="h-6 w-1/2 rounded cc-shimmer" /></div>}
@@ -93,11 +95,9 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2 text-xs">
                 <span className={cn("rounded-full px-2.5 py-1 font-medium", CATEGORY_CONFIG[talent.category].tint)}>
-                  {CATEGORY_CONFIG[talent.category].emoji} {CATEGORY_CONFIG[talent.category].label}
+                  {CATEGORY_CONFIG[talent.category].emoji} {tr(CATEGORY_CONFIG[talent.category].label)}
                 </span>
-                <span className={cn("rounded-full px-2.5 py-1 font-medium", talent.visibility === "public" ? "bg-brand-500/12 text-brand-700 dark:text-brand-300" : "bg-brand-500/10 text-brand-700 dark:text-brand-300")}>
-                  Requested: {VISIBILITY_CONFIG[talent.visibility].emoji} {VISIBILITY_CONFIG[talent.visibility].label}
-                </span>
+                <span className={cn("rounded-full px-2.5 py-1 font-medium", talent.visibility === "public" ? "bg-brand-500/12 text-brand-700 dark:text-brand-300" : "bg-brand-500/10 text-brand-700 dark:text-brand-300")}>{tr("Requested: {{emoji}} {{label}}", { emoji: VISIBILITY_CONFIG[talent.visibility].emoji, label: VISIBILITY_CONFIG[talent.visibility].label })}</span>
                 {talent.tags.map((t) => (
                   <span key={t} className="rounded-full bg-secondary px-2 py-1 text-secondary-foreground">
                     #{t}
@@ -106,46 +106,46 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
               </div>
               <h3 className="cc-display text-2xl font-bold text-foreground">{talent.title}</h3>
               <MediaShowcase talent={talent} onMeaningfulPlay={() => undefined} />
-              {talent.media.length > 0 && (talent.description ? <p className="text-sm text-foreground/90 whitespace-pre-line">{talent.description}</p> : <p className="text-sm italic text-muted-foreground">No description provided.</p>)}
+              {talent.media.length > 0 && (talent.description ? <p className="text-sm text-foreground/90 whitespace-pre-line">{talent.description}</p> : <p className="text-sm italic text-muted-foreground">{tr("No description provided.")}</p>)}
               <Link to={`/talents/${talent.id}`} className="inline-flex items-center gap-1 text-xs text-brand-600 dark:text-brand-300 hover:underline">
-                Open full page <ExternalLink className="w-3 h-3" />
+                {tr("Open full page")} <ExternalLink className="w-3 h-3" />
               </Link>
             </div>
 
             {/* Decision */}
             {canAct ? (
               <div className="space-y-3 rounded-3xl border border-border p-4">
-                <p className="text-sm font-semibold text-foreground">Your decision</p>
+                <p className="text-sm font-semibold text-foreground">{tr("Your decision")}</p>
                 <div className="grid grid-cols-3 gap-2">
-                  <DecisionButton active={decision === "approve"} onClick={() => setDecision("approve")} tone="emerald" icon={CheckCircle2} label="Approve" />
-                  <DecisionButton active={decision === "request_changes"} onClick={() => setDecision("request_changes")} tone="orange" icon={PencilLine} label="Request changes" />
-                  <DecisionButton active={decision === "reject"} onClick={() => setDecision("reject")} tone="rose" icon={XCircle} label="Decline" />
+                  <DecisionButton active={decision === "approve"} onClick={() => setDecision("approve")} tone="emerald" icon={CheckCircle2} label={tr("Approve")} />
+                  <DecisionButton active={decision === "request_changes"} onClick={() => setDecision("request_changes")} tone="orange" icon={PencilLine} label={tr("Request changes")} />
+                  <DecisionButton active={decision === "reject"} onClick={() => setDecision("reject")} tone="rose" icon={XCircle} label={tr("Decline")} />
                 </div>
 
                 {decision === "approve" && talent.visibility === "public" && (
                   <label className="flex items-start gap-2.5 rounded-2xl bg-secondary/60 px-3.5 py-3 cursor-pointer">
                     <input type="checkbox" checked={narrowToSchool} onChange={(e) => setNarrowToSchool(e.target.checked)} className="mt-0.5 accent-brand-600" />
                     <span className="text-sm">
-                      <span className="font-medium text-foreground">Publish as School Only instead</span>
-                      <span className="block text-xs text-muted-foreground">The creator asked for Public. You can narrow it to your school - never widen it.</span>
+                      <span className="font-medium text-foreground">{tr("Publish as School Only instead")}</span>
+                      <span className="block text-xs text-muted-foreground">{tr("The creator asked for Public. You can narrow it to your school - never widen it.")}</span>
                     </span>
                   </label>
                 )}
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="review-comment">{decision === "approve" ? "Note to the creator (optional)" : "Feedback for the creator (required)"}</Label>
+                  <Label htmlFor="review-comment">{decision === "approve" ? tr("Note to the creator (optional)") : tr("Feedback for the creator (required)")}</Label>
                   <Textarea
                     id="review-comment"
                     rows={3}
                     maxLength={2000}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder={decision === "approve" ? "Wonderful work - keep it up! 🌟" : "Be kind and specific - what should they change?"}
+                    placeholder={decision === "approve" ? tr("Wonderful work - keep it up! 🌟") : tr("Be kind and specific - what should they change?")}
                   />
                   {decision !== "approve" && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {QUICK_FEEDBACK.map((q) => (
-                        <button key={q} type="button" onClick={() => setComment((c) => (c ? `${c}\n${q}` : q))} className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer text-left">
+                        <button key={q} type="button" onClick={() => setComment((c) => (c ? `${c}\n${q}` : q))} className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer text-start">
                           + {q}
                         </button>
                       ))}
@@ -155,13 +155,13 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
               </div>
             ) : (
               <p className="rounded-2xl bg-secondary/60 px-4 py-3 text-sm text-muted-foreground">
-                {talent.permissions.isOwner ? "This is your own showcase - another reviewer needs to review it." : "This showcase isn't awaiting review."}
+                {talent.permissions.isOwner ? tr("This is your own showcase - another reviewer needs to review it.") : tr("This showcase isn't awaiting review.")}
               </p>
             )}
 
             {talent.reviews.length > 0 && (
               <div>
-                <p className="text-sm font-semibold text-foreground mb-3">Approval history</p>
+                <p className="text-sm font-semibold text-foreground mb-3">{tr("Approval history")}</p>
                 <ReviewTimeline entries={talent.reviews} />
               </div>
             )}
@@ -171,7 +171,7 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
         {canAct && (
           <DialogFooter>
             <button type="button" onClick={onClose} className="rounded-lg border border-border px-4 h-10 text-sm cursor-pointer hover:bg-secondary">
-              Cancel
+              {tr("Cancel")}
             </button>
             <button
               type="button"
@@ -183,7 +183,7 @@ export default function ReviewPanel({ talentId, onClose }: { talentId: string | 
               )}
             >
               {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              {decision === "approve" ? "Approve & publish" : decision === "request_changes" ? "Send back for changes" : "Decline submission"}
+              {decision === "approve" ? tr("Approve & publish") : decision === "request_changes" ? tr("Send back for changes") : tr("Decline submission")}
             </button>
           </DialogFooter>
         )}

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listClasses, listSections } from "@/features/academics/api";
@@ -18,6 +19,7 @@ export default function AssignClassTeacherDialog({
   onOpenChange: (open: boolean) => void;
   teachers: StaffMember[];
 }) {
+  const { t } = useTranslation("teachers");
   const queryClient = useQueryClient();
 
   const { data: sections = [], isLoading: sectionsLoading } = useQuery({
@@ -35,38 +37,38 @@ export default function AssignClassTeacherDialog({
     mutationFn: ({ sectionId, staffId }: { sectionId: string; staffId: string }) => assignClassTeacher(sectionId, staffId),
     onSuccess: () => {
       invalidate();
-      toast.success("Class teacher assigned");
+      toast.success(t("Class teacher assigned"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not assign class teacher"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not assign class teacher")),
   });
 
   const unassignMutation = useMutation({
     mutationFn: (sectionId: string) => unassignClassTeacher(sectionId),
     onSuccess: () => {
       invalidate();
-      toast.success("Class teacher removed");
+      toast.success(t("Class teacher removed"));
     },
   });
 
-  const classNameOf = (classId: string) => classes.find((c) => c.id === classId)?.name ?? "Unknown class";
+  const classNameOf = (classId: string) => classes.find((c) => c.id === classId)?.name ?? t("Unknown class");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>Assign class teachers</DialogTitle>
-          <DialogDescription>Pick a teacher to be the class teacher for each section.</DialogDescription>
+          <DialogTitle>{t("Assign class teachers")}</DialogTitle>
+          <DialogDescription>{t("Pick a teacher to be the class teacher for each section.")}</DialogDescription>
         </DialogHeader>
 
         {sectionsLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
             <Loader2 className="w-4 h-4 animate-spin" />
-            Loading sections…
+            {t("Loading sections…")}
           </div>
         )}
 
         {!sectionsLoading && (
-          <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[55vh] overflow-y-auto pe-1">
             {sections.map((section) => (
               <div key={section.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
                 <div className="min-w-0">
@@ -74,7 +76,7 @@ export default function AssignClassTeacherDialog({
                     {classNameOf(section.classId)} &middot; {section.name}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {section.classTeacherName ? `Class teacher: ${section.classTeacherName}` : "No class teacher assigned"}
+                    {section.classTeacherName ? t("Class teacher: {{name}}", { name: section.classTeacherName }) : t("No class teacher assigned")}
                   </p>
                 </div>
                 <Select
@@ -85,13 +87,13 @@ export default function AssignClassTeacherDialog({
                   }}
                 >
                   <SelectTrigger className="w-44 shrink-0">
-                    <SelectValue placeholder="Assign teacher" />
+                    <SelectValue placeholder={t("Assign teacher")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
-                    {teachers.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.firstName} {t.lastName}
+                    <SelectItem value={UNASSIGNED}>{t("Unassigned")}</SelectItem>
+                    {teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.firstName} {teacher.lastName}
                       </SelectItem>
                     ))}
                   </SelectContent>

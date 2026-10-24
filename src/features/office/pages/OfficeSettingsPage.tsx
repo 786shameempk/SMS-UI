@@ -80,7 +80,7 @@ function Body({ s }: { s: OfficeSettingsView }) {
           <p className="mb-3 text-xs text-muted-foreground">These control money and access, so they are set in the deployment configuration and change with a release, not with a click.</p>
           <dl className="divide-y divide-border text-sm">
             {rules.map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-4 py-1.5"><dt className="text-muted-foreground">{k}</dt><dd className="text-right">{v}</dd></div>
+              <div key={k} className="flex justify-between gap-4 py-1.5"><dt className="text-muted-foreground">{k}</dt><dd className="text-end">{v}</dd></div>
             ))}
           </dl>
         </Card>

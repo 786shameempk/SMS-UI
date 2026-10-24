@@ -2,6 +2,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { updateMedical } from "../../api";
 import type { MedicalInfo, Student } from "../../types";
 
 export default function MedicalTab({ student }: { student: Student }) {
+  const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const {
     register,
@@ -26,21 +28,21 @@ export default function MedicalTab({ student }: { student: Student }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["students", student.id] });
-      toast.success("Medical information saved");
+      toast.success(t("Medical information saved"));
     },
   });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Medical history</CardTitle>
-        <CardDescription>Blood group, allergies, and ongoing conditions the school should know about.</CardDescription>
+        <CardTitle>{t("Medical history")}</CardTitle>
+        <CardDescription>{t("Blood group, allergies, and ongoing conditions the school should know about.")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit((values) => mutation.mutate(values))} className="space-y-4 max-w-xl">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bloodGroup">Blood group</Label>
+              <Label htmlFor="bloodGroup">{t("Blood group")}</Label>
               <Controller
                 control={control}
                 name="bloodGroup"
@@ -52,7 +54,7 @@ export default function MedicalTab({ student }: { student: Student }) {
                     <SelectContent>
                       {BLOOD_GROUPS.map((bg) => (
                         <SelectItem key={bg} value={bg}>
-                          {bg === "unknown" ? "Unknown" : bg}
+                          {bg === "unknown" ? t("Unknown") : bg}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -61,35 +63,35 @@ export default function MedicalTab({ student }: { student: Student }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="allergies">Allergies</Label>
-              <Input id="allergies" placeholder="e.g. Peanuts, Penicillin" {...register("allergies")} />
+              <Label htmlFor="allergies">{t("Allergies")}</Label>
+              <Input id="allergies" placeholder={t("e.g. Peanuts, Penicillin")} {...register("allergies")} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="conditions">Ongoing conditions</Label>
-            <Textarea id="conditions" rows={2} placeholder="e.g. Asthma" {...register("conditions")} />
+            <Label htmlFor="conditions">{t("Ongoing conditions")}</Label>
+            <Textarea id="conditions" rows={2} placeholder={t("e.g. Asthma")} {...register("conditions")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="medications">Current medications</Label>
+            <Label htmlFor="medications">{t("Current medications")}</Label>
             <Textarea id="medications" rows={2} {...register("medications")} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="doctorName">Doctor name</Label>
+              <Label htmlFor="doctorName">{t("Doctor name")}</Label>
               <Input id="doctorName" {...register("doctorName")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="doctorPhone">Doctor phone</Label>
+              <Label htmlFor="doctorPhone">{t("Doctor phone")}</Label>
               <Input id="doctorPhone" {...register("doctorPhone")} />
             </div>
           </div>
 
           <Button type="submit" disabled={!isDirty || mutation.isPending}>
             {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-            Save medical information
+            {t("Save medical information")}
           </Button>
         </form>
       </CardContent>

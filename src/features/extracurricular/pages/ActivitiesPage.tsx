@@ -17,9 +17,11 @@ import { ACTIVITY_STATUS_LABEL, KIND_LABEL, SETTING_LABEL } from "../constants";
 import { ColorDot, SelectField, formatDate, options, useAcademicYears, useApiMutation, useExtracurricularAccess } from "../shared";
 import type { Activity, ActivityStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 const PAGE_SIZE = 12;
 
 export default function ActivitiesPage() {
+  const { t } = useTranslation("extracurricular");
   const access = useExtracurricularAccess();
   const years = useAcademicYears();
   const [search, setSearch] = useState("");
@@ -61,7 +63,7 @@ export default function ActivitiesPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-56 flex-1">
-          <SearchInput value={search} onValueChange={reset(setSearch)} placeholder="Search activities" aria-label="Search activities" />
+          <SearchInput value={search} onValueChange={reset(setSearch)} placeholder={t("Search activities")} aria-label={t("Search activities")} />
         </div>
         <div className="w-52">
           <SelectField value={categoryId} onChange={reset(setCategoryId)} allLabel="All categories" items={(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))} />
@@ -77,7 +79,7 @@ export default function ActivitiesPage() {
           </>
         )}
         <Button variant={openOnly ? "default" : "outline"} onClick={() => reset(setOpenOnly)(!openOnly)} aria-pressed={openOnly}>
-          Open for enrollment
+          {t("Open for enrollment")}
         </Button>
         {access.canManage && (
           <Button
@@ -86,7 +88,7 @@ export default function ActivitiesPage() {
               setFormOpen(true);
             }}
           >
-            <Plus className="h-4 w-4" /> New activity
+            <Plus className="h-4 w-4" /> {t("New activity")}
           </Button>
         )}
       </div>
@@ -101,8 +103,8 @@ export default function ActivitiesPage() {
       )}
       {data && data.items.length === 0 && (
         <EmptyState
-          title="No activities match"
-          description={access.canManage ? "Try different filters, or create the first activity." : "Nothing is open right now. Check back soon."}
+          title={t("No activities match")}
+          description={access.canManage ? t("Try different filters, or create the first activity.") : t("Nothing is open right now. Check back soon.")}
           action={
             access.canManage ? (
               <Button
@@ -111,7 +113,7 @@ export default function ActivitiesPage() {
                   setFormOpen(true);
                 }}
               >
-                <Plus className="h-4 w-4" /> New activity
+                <Plus className="h-4 w-4" /> {t("New activity")}
               </Button>
             ) : undefined
           }
@@ -141,38 +143,38 @@ export default function ActivitiesPage() {
                   <Badge variant="neutral">{KIND_LABEL[a.kind]}</Badge>
                   <Badge variant="neutral">{SETTING_LABEL[a.setting]}</Badge>
                   {a.eligibility && <Badge variant="info">{a.eligibility}</Badge>}
-                  {a.requiresConsent && <Badge variant="warning">Consent needed</Badge>}
+                  {a.requiresConsent && <Badge variant="warning">{t("Consent needed")}</Badge>}
                 </div>
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  <dt>Places</dt>
-                  <dd className="text-right text-foreground">
+                  <dt>{t("Places")}</dt>
+                  <dd className="text-end text-foreground">
                     {a.enrolled}
-                    {a.capacity ? ` / ${a.capacity}` : ""} {full && <Badge variant="warning">Full</Badge>}
+                    {a.capacity ? ` / ${a.capacity}` : ""} {full && <Badge variant="warning">{t("Full")}</Badge>}
                   </dd>
                   {!access.isFamily && (
                     <>
-                      <dt>Waiting / pending</dt>
-                      <dd className="text-right text-foreground">
+                      <dt>{t("Waiting / pending")}</dt>
+                      <dd className="text-end text-foreground">
                         {a.waitlisted} / {a.pending}
                       </dd>
                     </>
                   )}
                   {a.coordinatorName && (
                     <>
-                      <dt>Coordinator</dt>
-                      <dd className="truncate text-right text-foreground">{a.coordinatorName}</dd>
+                      <dt>{t("Coordinator")}</dt>
+                      <dd className="truncate text-end text-foreground">{a.coordinatorName}</dd>
                     </>
                   )}
                   {a.scheduleNote && (
                     <>
-                      <dt>Meets</dt>
-                      <dd className="truncate text-right text-foreground">{a.scheduleNote}</dd>
+                      <dt>{t("Meets")}</dt>
+                      <dd className="truncate text-end text-foreground">{a.scheduleNote}</dd>
                     </>
                   )}
                   {(a.enrollmentStart || a.enrollmentEnd) && (
                     <>
-                      <dt>Enrollment</dt>
-                      <dd className="text-right text-foreground">
+                      <dt>{t("Enrollment")}</dt>
+                      <dd className="text-end text-foreground">
                         {formatDate(a.enrollmentStart)} – {formatDate(a.enrollmentEnd)}
                       </dd>
                     </>
@@ -181,7 +183,7 @@ export default function ActivitiesPage() {
                 <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                   <Button size="sm" variant={a.enrollmentOpen || !access.isFamily ? "default" : "outline"} disabled={a.status !== "Active" || (access.isFamily && !a.enrollmentOpen)} onClick={() => setEnrolling(a)}>
                     <UserPlus className="h-4 w-4" />
-                    {access.isFamily ? (full ? "Join waiting list" : "Ask to join") : "Enroll"}
+                    {access.isFamily ? (full ? t("Join waiting list") : t("Ask to join")) : t("Enroll")}
                   </Button>
                   {access.canManage && (
                     <div className="flex gap-1">
@@ -189,7 +191,7 @@ export default function ActivitiesPage() {
                         size="icon"
                         variant="ghost"
                         className="h-8 w-8"
-                        aria-label={`Edit ${a.name}`}
+                        aria-label={t("Edit {{name}}", { name: a.name })}
                         onClick={() => {
                           setEditing(a);
                           setFormOpen(true);
@@ -197,7 +199,7 @@ export default function ActivitiesPage() {
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Delete ${a.name}`} onClick={() => setRemoving(a)}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Delete {{name}}", { name: a.name })} onClick={() => setRemoving(a)}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive-strong" />
                       </Button>
                     </div>
@@ -246,9 +248,9 @@ export default function ActivitiesPage() {
       <ConfirmDialog
         open={Boolean(removing)}
         onOpenChange={(v) => !v && setRemoving(null)}
-        title="Delete activity"
-        description={`Delete "${removing?.name}"? If it already has enrollments, teams or sessions it is set to inactive instead, so history is kept.`}
-        confirmLabel="Delete"
+        title={t("Delete activity")}
+        description={t("Delete \"{{name}}\"? If it already has enrollments, teams or sessions it is set to inactive instead, so history is kept.", { name: removing?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {

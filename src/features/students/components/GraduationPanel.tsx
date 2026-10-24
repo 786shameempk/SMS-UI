@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GraduationCap } from "lucide-react";
 import toast from "react-hot-toast";
+import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +12,7 @@ import { useClassSectionOptions } from "../hooks";
 import { graduateStudents, listStudents } from "../api";
 
 export default function GraduationPanel() {
+  const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { classNames, finalClassName } = useClassSectionOptions(getCurrentBranchId());
@@ -28,10 +30,10 @@ export default function GraduationPanel() {
     mutationFn: () => graduateStudents(className),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
-      toast.success(`Graduated ${result.graduatedCount} student(s) from ${className}`);
+      toast.success(t("Graduated {{count}} student(s) from {{className}}", { count: result.graduatedCount, className }));
       setConfirmOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not graduate students"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not graduate students")),
   });
 
   return (
@@ -39,14 +41,14 @@ export default function GraduationPanel() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GraduationCap className="w-4 h-4 text-muted-foreground" />
-          Graduate students
+          {t("Graduate students")}
         </CardTitle>
-        <CardDescription>Move all active students in a class to alumni status at the end of their final year.</CardDescription>
+        <CardDescription>{t("Move all active students in a class to alumni status at the end of their final year.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <Select value={className} onValueChange={setClassName}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="Select class" />
+            <SelectValue placeholder={t("Select class")} />
           </SelectTrigger>
           <SelectContent>
             {classNames.map((c) => (
@@ -59,21 +61,26 @@ export default function GraduationPanel() {
 
         {className && (
           <p className="text-sm text-secondary-foreground">
-            <span className="font-semibold tabular-nums">{eligible.length}</span> active student(s) in {className} will graduate.
+            <Trans
+              t={t}
+              i18nKey="<0>{{count}}</0> active student(s) in {{className}} will graduate."
+              values={{ count: eligible.length, className }}
+              components={[<span className="font-semibold tabular-nums" />]}
+            />
           </p>
         )}
 
         <Button disabled={eligible.length === 0} onClick={() => setConfirmOpen(true)}>
-          Graduate class
+          {t("Graduate class")}
         </Button>
       </CardContent>
 
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Graduate students"
-        description={`This will mark ${eligible.length} student(s) in ${className} as graduated.`}
-        confirmLabel="Graduate"
+        title={t("Graduate students")}
+        description={t("This will mark {{count}} student(s) in {{className}} as graduated.", { count: eligible.length, className })}
+        confirmLabel={t("Graduate")}
         submitting={graduateMutation.isPending}
         onConfirm={() => graduateMutation.mutate()}
       />

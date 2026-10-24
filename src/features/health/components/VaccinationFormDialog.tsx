@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,6 +37,7 @@ export default function VaccinationFormDialog({
   submitting: boolean;
   onSubmit: (values: VaccinationFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("health");
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
 
   const {
@@ -54,19 +56,19 @@ export default function VaccinationFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>Schedule a vaccination</DialogTitle>
-          <DialogDescription>Adds a due vaccination to the student's record — mark it administered once given.</DialogDescription>
+          <DialogTitle>{t("Schedule a vaccination")}</DialogTitle>
+          <DialogDescription>{t("Adds a due vaccination to the student's record — mark it administered once given.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, notes: values.notes?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="vax-studentId" required>Student</Label>
+            <Label htmlFor="vax-studentId" required>{t("Student")}</Label>
             <Controller
               control={control}
               name="studentId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="vax-studentId">
-                    <SelectValue placeholder="Select a student" />
+                    <SelectValue placeholder={t("Select a student")} />
                   </SelectTrigger>
                   <SelectContent>
                     {students.map((s) => (
@@ -78,39 +80,39 @@ export default function VaccinationFormDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentId.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="vax-name">Vaccine name</Label>
-              <Input id="vax-name" placeholder="e.g. Tdap Booster" aria-invalid={errors.vaccineName ? true : undefined} {...register("vaccineName")} />
-              {errors.vaccineName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.vaccineName.message}</p>}
+              <Label htmlFor="vax-name">{t("Vaccine name")}</Label>
+              <Input id="vax-name" placeholder={t("e.g. Tdap Booster")} aria-invalid={errors.vaccineName ? true : undefined} {...register("vaccineName")} />
+              {errors.vaccineName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.vaccineName.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="vax-dose">Dose number</Label>
+              <Label htmlFor="vax-dose">{t("Dose number")}</Label>
               <Input id="vax-dose" type="number" min="1" step="1" aria-invalid={errors.doseNumber ? true : undefined} {...register("doseNumber")} />
-              {errors.doseNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.doseNumber.message}</p>}
+              {errors.doseNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.doseNumber.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vax-dueDate" required>Due date</Label>
+            <Label htmlFor="vax-dueDate" required>{t("Due date")}</Label>
             <Input id="vax-dueDate" type="date" aria-invalid={errors.dueDate ? true : undefined} {...register("dueDate")} />
-            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dueDate.message}</p>}
+            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.dueDate.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="vax-notes" optional>Notes</Label>
+            <Label htmlFor="vax-notes" optional>{t("Notes")}</Label>
             <Textarea id="vax-notes" rows={2} {...register("notes")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Schedule vaccination
+              {t("Schedule vaccination")}
             </Button>
           </DialogFooter>
         </form>

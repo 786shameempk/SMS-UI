@@ -7,15 +7,17 @@ import { CategoryChip, CreatorAvatar, CreatorTypePill, EmptyState, SectionHeader
 import { HeroDecor } from "../components/Decor";
 import TalentCard, { TalentGrid } from "../components/TalentCard";
 
+import { useTranslation } from "react-i18next";
 /** A creator's public talent profile - only ever built from content the viewer is allowed to see. */
 export default function CreatorProfilePage() {
+  const { t: tr } = useTranslation("talents");
   const { userId } = useParams<{ userId: string }>();
   const { data, isLoading, isError } = useQuery({ queryKey: ["talents", "creator", userId], queryFn: () => getCreatorProfile(userId!), enabled: !!userId });
 
   if (isError) {
     return (
       <div className="max-w-[900px] mx-auto px-4 pt-10">
-        <EmptyState emoji="🙈" title="No talents to show" body="This creator hasn't published anything you can see yet." />
+        <EmptyState emoji="🙈" title={tr("No talents to show")} body="This creator hasn't published anything you can see yet." />
       </div>
     );
   }
@@ -50,28 +52,28 @@ export default function CreatorProfilePage() {
             </div>
             <dl className="flex gap-6 md:gap-8">
               {[
-                { label: "Showcases", value: data.stats.showcases },
-                { label: "Views", value: data.stats.views },
-                { label: "Appreciations", value: data.stats.reactions },
+                { label: tr("Showcases"), value: data.stats.showcases },
+                { label: tr("Views"), value: data.stats.views },
+                { label: tr("Appreciations"), value: data.stats.reactions },
               ].map((s) => (
                 <div key={s.label} className="text-center">
                   <dd className="cc-display text-2xl sm:text-3xl font-bold">{formatCount(s.value)}</dd>
-                  <dt className="text-xs uppercase tracking-wider text-white/55">{s.label}</dt>
+                  <dt className="text-xs uppercase tracking-wider text-white/55">{tr(s.label)}</dt>
                 </div>
               ))}
             </dl>
           </div>
         )}
         {data?.isMe && (
-          <Link to="/talents/mine" className="cc-glass absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium">
-            <Pencil className="w-3.5 h-3.5" /> Manage my talents
+          <Link to="/talents/mine" className="cc-glass absolute top-4 end-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium">
+            <Pencil className="w-3.5 h-3.5" /> {tr("Manage my talents")}
           </Link>
         )}
       </section>
 
       {data && data.highlights.length > 0 && (
         <section>
-          <SectionHeader emoji="🌟" title="Talent highlights" subtitle="Their most celebrated work" />
+          <SectionHeader emoji="🌟" title={tr("Talent highlights")} subtitle={tr("Their most celebrated work")} />
           <div className="grid md:grid-cols-3 gap-4">
             {data.highlights.map((t) => (
               <TalentCard key={t.id} talent={t} variant="feature" className="md:aspect-[4/5]" />
@@ -81,9 +83,9 @@ export default function CreatorProfilePage() {
       )}
 
       <section>
-        <SectionHeader emoji="🎨" title="All published showcases" />
+        <SectionHeader emoji="🎨" title={tr("All published showcases")} />
         {data && data.showcases.length === 0 ? (
-          <EmptyState emoji="🌱" title={data.isMe ? "Nothing published yet" : "Nothing to show yet"} body={data.isMe ? "Once a reviewer approves your work, it appears here." : undefined} />
+          <EmptyState emoji="🌱" title={data.isMe ? tr("Nothing published yet") : tr("Nothing to show yet")} body={data.isMe ? "Once a reviewer approves your work, it appears here." : undefined} />
         ) : (
           <TalentGrid talents={data?.showcases} loading={isLoading} />
         )}

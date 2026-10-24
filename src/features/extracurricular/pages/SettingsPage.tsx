@@ -15,6 +15,7 @@ import { createCategory, deleteCategory, getSettings, listCategories, reorderCat
 import { ColorDot, useApiMutation } from "../shared";
 import type { Category, Settings } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function SettingsPage() {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -25,6 +26,7 @@ export default function SettingsPage() {
 }
 
 function SettingsCard() {
+  const { t } = useTranslation("extracurricular");
   const settings = useQuery({ queryKey: ["extracurricular", "settings"], queryFn: getSettings });
   const [v, setV] = useState<Settings | null>(null);
   const [limit, setLimit] = useState("0");
@@ -40,15 +42,15 @@ function SettingsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Rules</CardTitle>
-        <CardDescription>How enrollment and groups behave across the school.</CardDescription>
+        <CardTitle>{t("Rules")}</CardTitle>
+        <CardDescription>{t("How enrollment and groups behave across the school.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {settings.isLoading && <Skeleton className="h-32 w-full" />}
         {settings.isError && <ErrorState onRetry={() => settings.refetch()} retrying={settings.isFetching} />}
         {v && (
           <>
-            <FormField label="Most activities per student" htmlFor="st-limit" error={limitError} hint="0 means no limit. Counts live requests and places.">
+            <FormField label={t("Most activities per student")} htmlFor="st-limit" error={limitError} hint={t("0 means no limit. Counts live requests and places.")}>
               <Input id="st-limit" inputMode="numeric" value={limit} onChange={(e) => setLimit(e.target.value)} className="w-28" aria-invalid={limitError ? true : undefined} />
             </FormField>
             {([
@@ -65,7 +67,7 @@ function SettingsCard() {
               </label>
             ))}
             <Button disabled={Boolean(limitError)} loading={save.isPending} onClick={() => save.mutate({ ...v, maxActivitiesPerStudent: Number(limit) })}>
-              Save rules
+              {t("Save rules")}
             </Button>
           </>
         )}
@@ -75,6 +77,7 @@ function SettingsCard() {
 }
 
 function CategoriesCard() {
+  const { t } = useTranslation("extracurricular");
   const categories = useQuery({ queryKey: ["extracurricular", "categories"], queryFn: () => listCategories(true) });
   const [editing, setEditing] = useState<Category | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -95,11 +98,11 @@ function CategoriesCard() {
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-3">
         <div>
-          <CardTitle>Categories</CardTitle>
-          <CardDescription>Add your own, rename, hide or reorder. Hidden categories keep their old activities.</CardDescription>
+          <CardTitle>{t("Categories")}</CardTitle>
+          <CardDescription>{t("Add your own, rename, hide or reorder. Hidden categories keep their old activities.")}</CardDescription>
         </div>
         <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-          <Plus className="h-4 w-4" /> Add
+          <Plus className="h-4 w-4" /> {t("Add")}
         </Button>
       </CardHeader>
       <CardContent>
@@ -111,14 +114,14 @@ function CategoriesCard() {
               <span className="flex min-w-0 items-center gap-2">
                 <ColorDot color={c.color} />
                 <span className={`truncate ${c.isActive ? "" : "text-muted-foreground line-through"}`}>{c.name}</span>
-                {c.isSustainability && <Badge variant="success">Green</Badge>}
+                {c.isSustainability && <Badge variant="success">{t("Green")}</Badge>}
                 <span className="text-xs text-muted-foreground">{c.activityCount}</span>
               </span>
               <span className="flex shrink-0">
-                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Move ${c.name} up`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Move ${c.name} down`} disabled={i === list.length - 1} onClick={() => move(i, 1)}><ArrowDown className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Edit ${c.name}`} onClick={() => { setEditing(c); setFormOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Delete ${c.name}`} onClick={() => setRemoving(c)}><Trash2 className="h-3.5 w-3.5 text-destructive-strong" /></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Move {{name}} up", { name: c.name })} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Move {{name}} down", { name: c.name })} disabled={i === list.length - 1} onClick={() => move(i, 1)}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Edit {{name}}", { name: c.name })} onClick={() => { setEditing(c); setFormOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Delete {{name}}", { name: c.name })} onClick={() => setRemoving(c)}><Trash2 className="h-3.5 w-3.5 text-destructive-strong" /></Button>
               </span>
             </li>
           ))}
@@ -128,9 +131,9 @@ function CategoriesCard() {
       <ConfirmDialog
         open={Boolean(removing)}
         onOpenChange={(v) => !v && setRemoving(null)}
-        title="Delete category"
-        description={`Delete "${removing?.name}"? A category that has activities can't be deleted: hide it instead.`}
-        confirmLabel="Delete"
+        title={t("Delete category")}
+        description={t("Delete \"{{name}}\"? A category that has activities can't be deleted: hide it instead.", { name: removing?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {
@@ -142,6 +145,7 @@ function CategoriesCard() {
 }
 
 function CategoryDialog({ open, onOpenChange, category }: { open: boolean; onOpenChange: (o: boolean) => void; category: Category | null }) {
+  const { t } = useTranslation("extracurricular");
   const [name, setName] = useState("");
   const [color, setColor] = useState("#6366f1");
   const [active, setActive] = useState(true);
@@ -161,17 +165,17 @@ function CategoryDialog({ open, onOpenChange, category }: { open: boolean; onOpe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>{category ? "Edit category" : "New category"}</DialogTitle>
-          <DialogDescription>Categories group activities in lists and reports.</DialogDescription>
+          <DialogTitle>{category ? t("Edit category") : t("New category")}</DialogTitle>
+          <DialogDescription>{t("Categories group activities in lists and reports.")}</DialogDescription>
         </DialogHeader>
         <form className="space-y-4" noValidate onSubmit={(e) => { e.preventDefault(); setTouched(true); if (!name.trim()) return; save.mutate({ name: name.trim(), color, isActive: active, isSustainability: green }); }}>
-          <FormField label="Name" htmlFor="cat-name" required error={touched && !name.trim() ? "Name is required" : undefined}><Input id="cat-name" value={name} onChange={(e) => setName(e.target.value)} /></FormField>
-          <FormField label="Colour" htmlFor="cat-color"><Input id="cat-color" type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-9 w-20 p-1" /></FormField>
-          <label className="flex items-center justify-between gap-3 text-sm"><span>Shown when creating activities</span><Switch checked={active} onCheckedChange={setActive} aria-label="Active" /></label>
-          <label className="flex items-center justify-between gap-3 text-sm"><span>Environmental / green category</span><Switch checked={green} onCheckedChange={setGreen} aria-label="Green category" /></label>
+          <FormField label={t("Name")} htmlFor="cat-name" required error={touched && !name.trim() ? "Name is required" : undefined}><Input id="cat-name" value={name} onChange={(e) => setName(e.target.value)} /></FormField>
+          <FormField label={t("Colour")} htmlFor="cat-color"><Input id="cat-color" type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-9 w-20 p-1" /></FormField>
+          <label className="flex items-center justify-between gap-3 text-sm"><span>{t("Shown when creating activities")}</span><Switch checked={active} onCheckedChange={setActive} aria-label={t("Active")} /></label>
+          <label className="flex items-center justify-between gap-3 text-sm"><span>{t("Environmental / green category")}</span><Switch checked={green} onCheckedChange={setGreen} aria-label={t("Green category")} /></label>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" loading={save.isPending}>Save</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("Cancel")}</Button>
+            <Button type="submit" loading={save.isPending}>{t("Save")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

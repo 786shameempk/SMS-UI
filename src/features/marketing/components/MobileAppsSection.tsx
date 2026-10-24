@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Bell, Bus, Check, CheckCircle2, ClipboardCheck, Megaphone, WifiOff } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
 import { MOBILE_APP_HIGHLIGHTS, MOBILE_APPS, type MobileAppId } from "../data";
 import SectionHeading from "./SectionHeading";
@@ -24,31 +25,33 @@ function Row({ children, className }: { children: ReactNode; className?: string 
 }
 
 function FamilyScreen() {
+  const { t } = useTranslation("marketing");
   return (
     <Phone>
-      <p className="text-[11px] font-semibold text-slate-900">Hi, Aarav&apos;s parent</p>
+      <p className="text-[11px] font-semibold text-slate-900">{t("Hi, Aarav's parent")}</p>
       <div className="grid grid-cols-2 gap-1.5">
         <div className="rounded-lg bg-emerald-50 px-2 py-1.5">
-          <p className="text-[9px] text-emerald-700">Attendance</p>
+          <p className="text-[9px] text-emerald-700">{t("Attendance")}</p>
           <p className="text-sm font-bold text-emerald-700">96%</p>
         </div>
         <div className="rounded-lg bg-amber-50 px-2 py-1.5">
-          <p className="text-[9px] text-amber-700">Fees due</p>
+          <p className="text-[9px] text-amber-700">{t("Fees due")}</p>
           <p className="text-sm font-bold text-amber-700">₹4,200</p>
         </div>
       </div>
       <Row>
-        <Bus className="h-3 w-3 shrink-0 text-brand-600" /> Bus is 3 stops away
+        <Bus className="h-3 w-3 shrink-0 text-brand-600" /> {t("Bus is 3 stops away")}
       </Row>
       <Row>
-        <ClipboardCheck className="h-3 w-3 shrink-0 text-brand-600" /> Science worksheet · due Fri
+        <ClipboardCheck className="h-3 w-3 shrink-0 text-brand-600" /> {t("Science worksheet · due Fri")}
       </Row>
-      <span className="bg-brand-gradient block rounded-lg py-1.5 text-center text-[10px] font-semibold text-white">Pay fees</span>
+      <span className="bg-brand-gradient block rounded-lg py-1.5 text-center text-[10px] font-semibold text-white">{t("Pay fees")}</span>
     </Phone>
   );
 }
 
 function TeacherScreen() {
+  const { t } = useTranslation("marketing");
   const students = [
     { name: "Aarav S.", status: "P", cls: "bg-emerald-50 text-emerald-700" },
     { name: "Diya K.", status: "P", cls: "bg-emerald-50 text-emerald-700" },
@@ -58,34 +61,35 @@ function TeacherScreen() {
   return (
     <Phone>
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold text-slate-900">Grade 6 A register</p>
+        <p className="text-[11px] font-semibold text-slate-900">{t("Grade 6 A register")}</p>
         <WifiOff className="h-3 w-3 text-slate-400" aria-hidden="true" />
       </div>
       {students.map((s) => (
         <Row key={s.name} className="justify-between">
           {s.name}
-          <span className={cn("flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold", s.cls)}>{s.status}</span>
+          <span className={cn("flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold", s.cls)}>{t(s.status)}</span>
         </Row>
       ))}
-      <p className="text-center text-[9px] text-slate-400">Saved offline · syncs when online</p>
+      <p className="text-center text-[9px] text-slate-400">{t("Saved offline · syncs when online")}</p>
     </Phone>
   );
 }
 
 function StaffScreen() {
+  const { t } = useTranslation("marketing");
   return (
     <Phone>
-      <p className="text-[11px] font-semibold text-slate-900">Good morning, Priya</p>
+      <p className="text-[11px] font-semibold text-slate-900">{t("Good morning, Priya")}</p>
       <Row>
-        <Megaphone className="h-3 w-3 shrink-0 text-brand-600" /> Annual day on 14 Dec
+        <Megaphone className="h-3 w-3 shrink-0 text-brand-600" /> {t("Annual day on 14 Dec")}
       </Row>
       <Row>
-        <Bell className="h-3 w-3 shrink-0 text-amber-600" /> 3 items need your action
+        <Bell className="h-3 w-3 shrink-0 text-amber-600" /> {t("3 items need your action")}
       </Row>
       <Row>
-        <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" /> Office: request approved
+        <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" /> {t("Office: request approved")}
       </Row>
-      <span className="block rounded-lg border border-slate-200 py-1.5 text-center text-[10px] font-semibold text-slate-700">Open messages</span>
+      <span className="block rounded-lg border border-slate-200 py-1.5 text-center text-[10px] font-semibold text-slate-700">{t("Open messages")}</span>
     </Phone>
   );
 }
@@ -100,18 +104,17 @@ const SCREENS: Record<MobileAppId, () => ReactNode> = {
 
 /** The three mobile apps, one card each, with a small phone preview on top. */
 export default function MobileAppsSection() {
+  const { t } = useTranslation("marketing");
   return (
     <section id="mobile-apps" className="scroll-mt-16 border-t border-slate-200/70 bg-slate-50/70 py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <SectionHeading
-            eyebrow="Mobile apps"
+            eyebrow={t("Mobile apps")}
             title={
-              <>
-                Three apps. <span className="text-brand-gradient">Your whole school</span> on the go.
-              </>
+              <Trans t={t} i18nKey="Three apps. <hl>Your whole school</hl> on the go." components={{ hl: <span className="text-brand-gradient" /> }} />
             }
-            description="Dedicated Android and iOS apps for students and parents, teachers, and non-teaching staff — each built around what that person needs every day, all running on the same school account."
+            description={t("Dedicated Android and iOS apps for students and parents, teachers, and non-teaching staff — each built around what that person needs every day, all running on the same school account.")}
           />
         </Reveal>
 
@@ -137,11 +140,11 @@ export default function MobileAppsSection() {
                       <app.icon className="h-[18px] w-[18px]" />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">{app.audience}</p>
-                      <h3 className="text-base font-bold tracking-tight text-slate-900">{app.name}</h3>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">{t(app.audience)}</p>
+                      <h3 className="text-base font-bold tracking-tight text-slate-900">{t(app.name)}</h3>
                     </div>
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">{app.description}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600">{t(app.description)}</p>
 
                   <ul className="mt-5 space-y-2.5">
                     {app.features.map((f) => (
@@ -149,7 +152,7 @@ export default function MobileAppsSection() {
                         <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                           <Check className="h-3 w-3" strokeWidth={2.5} />
                         </span>
-                        {f}
+                        {t(f)}
                       </li>
                     ))}
                   </ul>
@@ -160,13 +163,13 @@ export default function MobileAppsSection() {
         </div>
 
         <Reveal delay={0.15} className="mt-12">
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Included in every School Sphere app">
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label={t("Included in every School Sphere app")}>
             {MOBILE_APP_HIGHLIGHTS.map((h) => (
               <li key={h.label} className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-4 py-3 text-sm font-medium text-slate-700">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
                   <h.icon className="h-4 w-4" />
                 </span>
-                {h.label}
+                {t(h.label)}
               </li>
             ))}
           </ul>

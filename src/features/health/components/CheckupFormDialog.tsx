@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +52,7 @@ export default function CheckupFormDialog({
   submitting: boolean;
   onSubmit: (values: HealthCheckupFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("health");
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
@@ -70,8 +72,8 @@ export default function CheckupFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>Record a health checkup</DialogTitle>
-          <DialogDescription>Height, weight, vision, and dental notes from a routine or drive checkup.</DialogDescription>
+          <DialogTitle>{t("Record a health checkup")}</DialogTitle>
+          <DialogDescription>{t("Height, weight, vision, and dental notes from a routine or drive checkup.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -86,14 +88,14 @@ export default function CheckupFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-studentId" required>Student</Label>
+              <Label htmlFor="checkup-studentId" required>{t("Student")}</Label>
               <Controller
                 control={control}
                 name="studentId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="checkup-studentId">
-                      <SelectValue placeholder="Select a student" />
+                      <SelectValue placeholder={t("Select a student")} />
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
@@ -105,60 +107,60 @@ export default function CheckupFormDialog({
                   </Select>
                 )}
               />
-              {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
+              {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentId.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-date">Checkup date</Label>
+              <Label htmlFor="checkup-date">{t("Checkup date")}</Label>
               <Input id="checkup-date" type="date" aria-invalid={errors.checkupDate ? true : undefined} {...register("checkupDate")} />
-              {errors.checkupDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.checkupDate.message}</p>}
+              {errors.checkupDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.checkupDate.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-height">Height (cm)</Label>
+              <Label htmlFor="checkup-height">{t("Height (cm)")}</Label>
               <Input id="checkup-height" type="number" min="30" max="250" step="0.1" aria-invalid={errors.heightCm ? true : undefined} {...register("heightCm")} />
-              {errors.heightCm && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.heightCm.message}</p>}
+              {errors.heightCm && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.heightCm.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-weight">Weight (kg)</Label>
+              <Label htmlFor="checkup-weight">{t("Weight (kg)")}</Label>
               <Input id="checkup-weight" type="number" min="5" max="200" step="0.1" aria-invalid={errors.weightKg ? true : undefined} {...register("weightKg")} />
-              {errors.weightKg && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.weightKg.message}</p>}
+              {errors.weightKg && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.weightKg.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-visionLeft" required>Vision (left eye)</Label>
+              <Label htmlFor="checkup-visionLeft" required>{t("Vision (left eye)")}</Label>
               <Input id="checkup-visionLeft" placeholder="e.g. 6/6" aria-invalid={errors.visionLeft ? true : undefined} {...register("visionLeft")} />
-              {errors.visionLeft && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visionLeft.message}</p>}
+              {errors.visionLeft && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.visionLeft.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="checkup-visionRight" required>Vision (right eye)</Label>
+              <Label htmlFor="checkup-visionRight" required>{t("Vision (right eye)")}</Label>
               <Input id="checkup-visionRight" placeholder="e.g. 6/6" aria-invalid={errors.visionRight ? true : undefined} {...register("visionRight")} />
-              {errors.visionRight && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visionRight.message}</p>}
+              {errors.visionRight && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.visionRight.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="checkup-dental" optional>Dental remarks</Label>
+            <Label htmlFor="checkup-dental" optional>{t("Dental remarks")}</Label>
             <Textarea id="checkup-dental" rows={2} {...register("dentalRemarks")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="checkup-general" optional>General remarks</Label>
+            <Label htmlFor="checkup-general" optional>{t("General remarks")}</Label>
             <Textarea id="checkup-general" rows={2} {...register("generalRemarks")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="checkup-examinedBy" optional>Examined by</Label>
+            <Label htmlFor="checkup-examinedBy" optional>{t("Examined by")}</Label>
             <Controller
               control={control}
               name="examinedByStaffId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="checkup-examinedBy">
-                    <SelectValue placeholder="Select staff member" />
+                    <SelectValue placeholder={t("Select staff member")} />
                   </SelectTrigger>
                   <SelectContent>
                     {staff.map((s) => (
@@ -174,10 +176,10 @@ export default function CheckupFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save checkup
+              {t("Save checkup")}
             </Button>
           </DialogFooter>
         </form>
