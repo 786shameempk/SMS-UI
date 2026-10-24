@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,6 +31,7 @@ export default function CategoryFormDialog({
   submitting: boolean;
   onSubmit: (values: BookCategoryFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("library");
   const isEdit = Boolean(category);
   const {
     register,
@@ -47,21 +49,21 @@ export default function CategoryFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit category" : "New category"}</DialogTitle>
-          <DialogDescription>Categories group books for browsing and reporting.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit category") : t("New category")}</DialogTitle>
+          <DialogDescription>{t("Categories group books for browsing and reporting.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="cat-name" required>Name</Label>
-            <Input id="cat-name" placeholder="e.g. Fiction" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="cat-name" required>{t("Name")}</Label>
+            <Input id="cat-name" placeholder={t("e.g. Fiction")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create category"}
+              {isEdit ? t("Save changes") : t("Create category")}
             </Button>
           </DialogFooter>
         </form>

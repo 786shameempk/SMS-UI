@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCheck, Loader2, Save } from "lucide-react";
@@ -32,6 +33,7 @@ function badgeVariant(status: HostelAttendanceStatus): "success" | "danger" | "w
 }
 
 export default function HostelAttendanceTab() {
+  const { t } = useTranslation("hostel");
   const queryClient = useQueryClient();
   const [hostelId, setHostelId] = useState("");
   const [date, setDate] = useState(attendanceTodayDateKey());
@@ -70,10 +72,10 @@ export default function HostelAttendanceTab() {
   const saveMutation = useMutation({
     mutationFn: (entries: MarkHostelAttendanceEntry[]) => saveHostelAttendance(date, entries),
     onSuccess: () => {
-      toast.success("Hostel attendance saved");
+      toast.success(t("Hostel attendance saved"));
       queryClient.invalidateQueries({ queryKey: ["hostel", "attendance", date] });
     },
-    onError: () => toast.error("Could not save attendance"),
+    onError: () => toast.error(t("Could not save attendance")),
   });
 
   const counts = useMemo(() => {
@@ -105,15 +107,15 @@ export default function HostelAttendanceTab() {
     <div className="space-y-5">
       <Card>
         <CardHeader>
-          <CardTitle>Hostel &amp; date</CardTitle>
+          <CardTitle>{t("Hostel & date")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Hostel</Label>
+              <Label>{t("Hostel")}</Label>
               <Select value={hostelId} onValueChange={setHostelId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select hostel" />
+                  <SelectValue placeholder={t("Select hostel")} />
                 </SelectTrigger>
                 <SelectContent>
                   {hostels.map((h) => (
@@ -125,7 +127,7 @@ export default function HostelAttendanceTab() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="hostel-attendance-date">Date</Label>
+              <Label htmlFor="hostel-attendance-date">{t("Date")}</Label>
               <Input
                 id="hostel-attendance-date"
                 type="date"
@@ -141,20 +143,20 @@ export default function HostelAttendanceTab() {
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3">
           <div>
-            <CardTitle>{selectedHostel?.name ?? "Residents"}</CardTitle>
+            <CardTitle>{selectedHostel?.name ?? t("Residents")}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {hostelResidents.length} resident{hostelResidents.length === 1 ? "" : "s"} ·{" "}
+              {hostelResidents.length === 1 ? t("{{count}} resident", { count: 1 }) : t("{{count}} residents", { count: hostelResidents.length })} ·{" "}
               {new Date(date).toLocaleDateString(undefined, { dateStyle: "medium" })}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" onClick={markAllPresent} disabled={!hostelResidents.length}>
               <CheckCheck className="w-4 h-4" />
-              Mark all present
+              {t("Mark all present")}
             </Button>
             <Button type="button" onClick={handleSave} disabled={!hostelResidents.length || saveMutation.isPending}>
               {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save attendance
+              {t("Save attendance")}
             </Button>
           </div>
         </CardHeader>
@@ -162,16 +164,16 @@ export default function HostelAttendanceTab() {
           <div className="flex flex-wrap gap-2">
             {STATUS_OPTIONS.map((s) => (
               <Badge key={s.value} variant={badgeVariant(s.value)}>
-                {s.label}: {counts[s.value]}
+                {t("{{label}}: {{count}}", { label: t(s.label), count: counts[s.value] })}
               </Badge>
             ))}
           </div>
 
           <div className="rounded-xl border border-border overflow-hidden">
             <div className="max-h-[520px] overflow-y-auto divide-y divide-border">
-              {residentsLoading && <p className="px-4 py-6 text-sm text-muted-foreground">Loading residents…</p>}
+              {residentsLoading && <p className="px-4 py-6 text-sm text-muted-foreground">{t("Loading residents…")}</p>}
               {!residentsLoading && !hostelResidents.length && (
-                <p className="px-4 py-6 text-sm text-muted-foreground">No active residents in this hostel.</p>
+                <p className="px-4 py-6 text-sm text-muted-foreground">{t("No active residents in this hostel.")}</p>
               )}
               {!residentsLoading &&
                 hostelResidents.map((resident) => (
@@ -181,14 +183,14 @@ export default function HostelAttendanceTab() {
                         {resident.student.firstName} {resident.student.lastName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {resident.room.roomNumber} · Bed {resident.bedNumber}
+                        {t("{{room}} · Bed {{bed}}", { room: resident.room.roomNumber, bed: resident.bedNumber })}
                       </p>
                     </div>
-                    <div className="sm:ml-auto">
+                    <div className="sm:ms-auto">
                       <StatusToggleGroup
                         value={statusMap[resident.studentId]}
                         onChange={(status) => setStatusMap((prev) => ({ ...prev, [resident.studentId]: status }))}
-                        options={STATUS_OPTIONS}
+                        options={STATUS_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))}
                       />
                     </div>
                   </div>

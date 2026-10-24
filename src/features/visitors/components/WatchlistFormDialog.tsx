@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +32,7 @@ export default function WatchlistFormDialog({
   submitting: boolean;
   onSubmit: (values: WatchlistEntryFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("visitors");
   const {
     register,
     handleSubmit,
@@ -46,30 +48,30 @@ export default function WatchlistFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add to watchlist</DialogTitle>
-          <DialogDescription>Front desk sees a warning if this name is entered during check-in.</DialogDescription>
+          <DialogTitle>{t("Add to watchlist")}</DialogTitle>
+          <DialogDescription>{t("Front desk sees a warning if this name is entered during check-in.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, phone: values.phone?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="watch-name" required>Name</Label>
+            <Label htmlFor="watch-name" required>{t("Name")}</Label>
             <Input id="watch-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="watch-phone" optional>Phone</Label>
+            <Label htmlFor="watch-phone" optional>{t("Phone")}</Label>
             <Input id="watch-phone" {...register("phone")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="watch-reason" required>Reason</Label>
+            <Label htmlFor="watch-reason" required>{t("Reason")}</Label>
             <Textarea id="watch-reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
-            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.reason.message ?? "")}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" variant="destructive" loading={submitting}>
-              Add to watchlist
+              {t("Add to watchlist")}
             </Button>
           </DialogFooter>
         </form>

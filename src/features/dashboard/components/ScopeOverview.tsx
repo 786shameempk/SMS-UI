@@ -1,6 +1,7 @@
 import { AlertTriangle, Briefcase, Building2, Clock, Layers, Users, Wallet } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 import { formatCurrency } from "@/utils/format";
 import type { DashboardScopeView, ScopeSummary } from "../types";
 
@@ -19,15 +20,18 @@ export default function ScopeOverview({
   isError: boolean;
   rangeLabel: string;
 }) {
+  const { t } = useTranslation("dashboard");
   const branches = summary?.branches ?? [];
   const total = summary?.metrics;
   const TitleIcon = view === "aggregated" ? Layers : Building2;
 
-  const title = view === "aggregated" ? "All branches" : (branches[0]?.name ?? "Selected branch");
+  const title = view === "aggregated" ? t("All branches") : (branches[0]?.name ?? t("Selected branch"));
   const description =
     view === "aggregated"
-      ? `${branches.length} ${branches.length === 1 ? "branch" : "branches"} combined · fees for ${rangeLabel}`
-      : `Selected branch only · fees for ${rangeLabel}`;
+      ? branches.length === 1
+        ? t("{{count}} branch combined · fees for {{range}}", { count: branches.length, range: rangeLabel })
+        : t("{{count}} branches combined · fees for {{range}}", { count: branches.length, range: rangeLabel })
+      : t("Selected branch only · fees for {{range}}", { range: rangeLabel });
 
   return (
     <Card>
@@ -41,7 +45,7 @@ export default function ScopeOverview({
         </div>
         {total?.failed && (
           <span className="flex items-center gap-1 text-xs text-warning-strong shrink-0">
-            <AlertTriangle className="w-3.5 h-3.5" /> Some data could not be loaded
+            <AlertTriangle className="w-3.5 h-3.5" /> {t("Some data could not be loaded")}
           </span>
         )}
       </CardHeader>
@@ -53,20 +57,20 @@ export default function ScopeOverview({
             ))}
           </div>
         ) : isError || !total ? (
-          <p className="text-sm text-destructive py-6 text-center">Couldn't load the overview. Try again shortly.</p>
+          <p className="text-sm text-destructive py-6 text-center">{t("Couldn't load the overview. Try again shortly.")}</p>
         ) : branches.length === 0 ? (
           <p className="text-sm text-muted-foreground py-6 text-center">
-            {view === "aggregated" ? "No active branches yet." : "Pick a branch in the header to see its numbers."}
+            {view === "aggregated" ? t("No active branches yet.") : t("Pick a branch in the header to see its numbers.")}
           </p>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            <Metric icon={Users} label="Students" value={nf.format(total.students)} />
-            <Metric icon={Briefcase} label="Staff" value={nf.format(total.staff)} />
-            <Metric icon={Wallet} label="Fees collected" value={formatCurrency(total.feesCollected)} />
-            <Metric icon={Clock} label="Fees pending" value={formatCurrency(total.feesPending)} />
+            <Metric icon={Users} label={t("Students")} value={nf.format(total.students)} />
+            <Metric icon={Briefcase} label={t("Staff")} value={nf.format(total.staff)} />
+            <Metric icon={Wallet} label={t("Fees collected")} value={formatCurrency(total.feesCollected)} />
+            <Metric icon={Clock} label={t("Fees pending")} value={formatCurrency(total.feesPending)} />
             <Metric
               icon={AlertTriangle}
-              label="Overdue invoices"
+              label={t("Overdue invoices")}
               value={nf.format(total.overdueInvoices)}
               tone={total.overdueInvoices > 0 ? "danger" : undefined}
             />

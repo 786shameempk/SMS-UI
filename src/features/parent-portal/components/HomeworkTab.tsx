@@ -5,6 +5,7 @@ import { formatRelativeDay } from "@/utils/format";
 import { listHomework } from "../api";
 import type { HomeworkStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 const STATUS_CONFIG: Record<HomeworkStatus, { label: string; variant: "success" | "warning" | "danger" | "info" }> = {
   pending: { label: "Pending", variant: "warning" },
   submitted: { label: "Submitted", variant: "info" },
@@ -13,6 +14,7 @@ const STATUS_CONFIG: Record<HomeworkStatus, { label: string; variant: "success" 
 };
 
 export default function HomeworkTab({ studentId }: { studentId: string }) {
+  const { t } = useTranslation("parent-portal");
   const { data: homework = [], isLoading } = useQuery({
     queryKey: ["parent-portal", "homework", studentId],
     queryFn: () => listHomework(studentId),
@@ -21,12 +23,12 @@ export default function HomeworkTab({ studentId }: { studentId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Homework</CardTitle>
-        <CardDescription>Assignments across all subjects.</CardDescription>
+        <CardTitle>{t("Homework")}</CardTitle>
+        <CardDescription>{t("Assignments across all subjects.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading homework…</p>}
-        {!isLoading && homework.length === 0 && <p className="text-sm text-muted-foreground">No homework assigned.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading homework…")}</p>}
+        {!isLoading && homework.length === 0 && <p className="text-sm text-muted-foreground">{t("No homework assigned.")}</p>}
         {homework.map((hw) => {
           const config = STATUS_CONFIG[hw.status];
           return (
@@ -34,12 +36,12 @@ export default function HomeworkTab({ studentId }: { studentId: string }) {
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{hw.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {hw.subject} &middot; Due {formatRelativeDay(hw.dueDate)}
-                  {hw.grade ? ` · Grade: ${hw.grade}` : ""}
+                  {hw.subject} {t("· Due")} {formatRelativeDay(hw.dueDate)}
+                  {hw.grade ? t(" · Grade: {{grade}}", { grade: hw.grade }) : ""}
                 </p>
               </div>
               <Badge variant={config.variant} className="shrink-0">
-                {config.label}
+                {t(config.label)}
               </Badge>
             </div>
           );

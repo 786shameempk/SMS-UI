@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 /**
  * Makes a single-row strip (tabs, a sub-menu) reachable when it doesn't fit: it tracks whether more items are hidden past
@@ -88,15 +89,16 @@ export function useScrollStrip(activeSelector: string, forwardedRef?: React.Forw
 
 /** The "show more" arrow shown over whichever edge of a strip still has items hidden past it. */
 export function ScrollArrow({ dir, onClick, className }: { dir: -1 | 1; onClick: () => void; className?: string }) {
+  const { t } = useTranslation("common");
   return (
     <button
       type="button"
       tabIndex={-1}
-      aria-label={dir < 0 ? "Show previous items" : "Show more items"}
+      aria-label={dir < 0 ? t("Show previous items") : t("Show more items")}
       onClick={onClick}
       className={cn(
         "absolute top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground cursor-pointer print:hidden",
-        dir < 0 ? "left-0" : "right-0",
+        dir < 0 ? "start-0" : "end-0",
         className,
       )}
     >

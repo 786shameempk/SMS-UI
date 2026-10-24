@@ -1,17 +1,19 @@
 import { CalendarClock, MapPin } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 import { EmptyState } from "@/components/ui/states";
 import type { ClassSession } from "../types";
 
 export default function TodayClassesCard({ classes }: { classes: ClassSession[] }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
-        <CardTitle>Today&apos;s classes</CardTitle>
-        <CardDescription>{classes.length} session{classes.length !== 1 ? "s" : ""} scheduled today.</CardDescription>
+        <CardTitle>{t("Today's classes")}</CardTitle>
+        <CardDescription>{classes.length === 1 ? t("{{count}} session scheduled today.", { count: classes.length }) : t("{{count}} sessions scheduled today.", { count: classes.length })}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-2">
-        {classes.length === 0 && <EmptyState bare size="sm" icon={CalendarClock} title="No classes today" description="Your timetable for today is clear." className="h-full py-6" />}
+        {classes.length === 0 && <EmptyState bare size="sm" icon={CalendarClock} title={t("No classes today")} description={t("Your timetable for today is clear.")} className="h-full py-6" />}
         {classes.map((session) => (
           <div key={session.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
             <div className="w-11 text-center shrink-0">

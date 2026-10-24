@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +33,7 @@ export default function MarkVaccinationAdministeredDialog({
   submitting: boolean;
   onSubmit: (values: MarkVaccinationAdministeredFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("health");
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
   const {
@@ -50,26 +52,26 @@ export default function MarkVaccinationAdministeredDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Mark as administered</DialogTitle>
+          <DialogTitle>{t("Mark as administered")}</DialogTitle>
           <DialogDescription>
             {vaccination ? `${vaccination.vaccineName} (dose ${vaccination.doseNumber}) for ${vaccination.student.firstName} ${vaccination.student.lastName}.` : ""}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, administeredByStaffId: values.administeredByStaffId || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="mark-vax-date">Date administered</Label>
+            <Label htmlFor="mark-vax-date">{t("Date administered")}</Label>
             <Input id="mark-vax-date" type="date" aria-invalid={errors.dateAdministered ? true : undefined} {...register("dateAdministered")} />
-            {errors.dateAdministered && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dateAdministered.message}</p>}
+            {errors.dateAdministered && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.dateAdministered.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="mark-vax-staff" optional>Administered by</Label>
+            <Label htmlFor="mark-vax-staff" optional>{t("Administered by")}</Label>
             <Controller
               control={control}
               name="administeredByStaffId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="mark-vax-staff">
-                    <SelectValue placeholder="Select staff member" />
+                    <SelectValue placeholder={t("Select staff member")} />
                   </SelectTrigger>
                   <SelectContent>
                     {staff.map((s) => (
@@ -84,10 +86,10 @@ export default function MarkVaccinationAdministeredDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Mark administered
+              {t("Mark administered")}
             </Button>
           </DialogFooter>
         </form>

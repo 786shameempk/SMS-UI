@@ -8,8 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/authStore";
 import { listMyExams } from "../api";
 import { EXAM_TYPE_LABEL, formatExamTime, isExamStudent } from "../constants";
+import { useTranslation } from "react-i18next";
 
 export default function MyResultsPage() {
+  const { t } = useTranslation("online-exams");
   const role = useAuthStore((s) => s.user?.role);
   const navigate = useNavigate();
   const exams = useQuery({ queryKey: ["online-exams", "my"], queryFn: listMyExams, enabled: isExamStudent(role) });
@@ -22,7 +24,7 @@ export default function MyResultsPage() {
 
   return (
     <PageContainer>
-      <PageHeader icon={Award} title="My results" description="Your marks for submitted exams. Results appear once your teacher publishes them." />
+      <PageHeader icon={Award} title={t("My results")} description={t("Your marks for submitted exams. Results appear once your teacher publishes them.")} />
       {exams.isLoading ? (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
@@ -30,13 +32,13 @@ export default function MyResultsPage() {
           ))}
         </div>
       ) : exams.isError ? (
-        <ErrorState title="Couldn't load your results" onRetry={() => exams.refetch()} retrying={exams.isRefetching} />
+        <ErrorState title={t("Couldn't load your results")} onRetry={() => exams.refetch()} retrying={exams.isRefetching} />
       ) : submitted.length === 0 ? (
-        <EmptyState icon={Award} title="No results yet" description="Once you submit an exam and the results are published, they'll show here." />
+        <EmptyState icon={Award} title={t("No results yet")} description={t("Once you submit an exam and the results are published, they'll show here.")} />
       ) : (
         <div className="space-y-3">
           {ready.map((e) => (
-            <button key={e.id} type="button" onClick={() => navigate(`/online-exams/my/${e.id}/result`)} className="block w-full cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl">
+            <button key={e.id} type="button" onClick={() => navigate(`/online-exams/my/${e.id}/result`)} className="block w-full cursor-pointer text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl">
               <Card className="transition-colors hover:border-primary/40">
                 <CardContent className="flex items-center gap-4 py-4">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success-soft text-success-strong">
@@ -45,10 +47,10 @@ export default function MyResultsPage() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-foreground">{e.name}</span>
                     <span className="block text-sm text-muted-foreground">
-                      {[e.subjectName, EXAM_TYPE_LABEL[e.examType], e.lastSubmittedAt && `Submitted ${formatExamTime(e.lastSubmittedAt)}`].filter(Boolean).join(" · ")}
+                      {[e.subjectName, t(EXAM_TYPE_LABEL[e.examType]), e.lastSubmittedAt && t("Submitted {{time}}", { time: formatExamTime(e.lastSubmittedAt) })].filter(Boolean).join(" · ")}
                     </span>
                   </span>
-                  <span className="hidden text-sm font-medium text-primary sm:inline">View result</span>
+                  <span className="hidden text-sm font-medium text-primary sm:inline">{t("View result")}</span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </CardContent>
               </Card>
@@ -62,7 +64,7 @@ export default function MyResultsPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold text-foreground">{e.name}</span>
-                  <span className="block text-sm text-muted-foreground">{e.subjectName ?? "Exam"} · Waiting for your teacher to publish results</span>
+                  <span className="block text-sm text-muted-foreground">{e.subjectName ?? t("Exam")} · {t("Waiting for your teacher to publish results")}</span>
                 </span>
               </CardContent>
             </Card>

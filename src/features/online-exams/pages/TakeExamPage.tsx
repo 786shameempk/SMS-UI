@@ -13,8 +13,18 @@ import { cn } from "@/utils/cn";
 import { getExamSession, OnlineExamApiError, saveAnswers, startExam, submitExam } from "../api";
 import { formatMarks, isExamStudent, QUESTION_TYPE_LABEL } from "../constants";
 import type { AnswerInput, AttemptQuestion, AttemptSession, SubmitResult } from "../types";
+import { getProctoringSetup } from "../proctoring/api";
+import ProctoringConsent from "../proctoring/ProctoringConsent";
+import { useProctoring } from "../proctoring/useProctoring";
+import type { ProctoringSetup } from "../proctoring/types";
+import { useTranslation } from "react-i18next";
 
-type Phase = { kind: "loading" } | { kind: "error"; title: string; message: string } | { kind: "taking" } | { kind: "submitted"; result: SubmitResult | null; timedOut: boolean };
+type Phase =
+  | { kind: "loading" }
+  | { kind: "error"; title: string; message: string }
+  | { kind: "consent"; setup: ProctoringSetup }
+  | { kind: "taking" }
+  | { kind: "submitted"; result: SubmitResult | null; timedOut: boolean; autoSubmittedMessage?: string };
 type SaveState = "saved" | "saving" | "retrying";
 
 const AUTOSAVE_DELAY = 1500;
@@ -34,9 +44,10 @@ function formatClock(ms: number) {
 }
 
 function QuestionBody({ q, answer, onChange }: { q: AttemptQuestion; answer: AnswerInput; onChange: (a: AnswerInput) => void }) {
+  const { t } = useTranslation("online-exams");
   if (q.type === "SingleChoice" || q.type === "TrueFalse") {
     return (
-      <div role="radiogroup" aria-label="Choose one answer" className="grid gap-2">
+      <div role="radiogroup" aria-label={t("Choose one answer")} className="grid gap-2">
         {q.options.map((o, i) => {
           const checked = answer.selectedOptionIds[0] === o.id;
           return (
@@ -60,8 +71,8 @@ function QuestionBody({ q, answer, onChange }: { q: AttemptQuestion; answer: Ans
   }
   if (q.type === "MultipleSelect") {
     return (
-      <div className="grid gap-2" role="group" aria-label="Choose all that apply">
-        <p className="text-xs text-muted-foreground">Select all that apply.</p>
+      <div className="grid gap-2" role="group" aria-label={t("Choose all that apply")}>
+        <p className="text-xs text-muted-foreground">{t("Select all that apply.")}</p>
         {q.options.map((o, i) => {
           const checked = answer.selectedOptionIds.includes(o.id);
           return (
@@ -89,9 +100,9 @@ function QuestionBody({ q, answer, onChange }: { q: AttemptQuestion; answer: Ans
       <Input
         value={answer.textAnswer ?? ""}
         onChange={(e) => onChange({ ...answer, textAnswer: e.target.value })}
-        placeholder="Type your answer"
+        placeholder={t("Type your answer")}
         maxLength={500}
-        aria-label="Your answer"
+        aria-label={t("Your answer")}
         className="max-w-md"
       />
     );
@@ -104,11 +115,11 @@ function QuestionBody({ q, answer, onChange }: { q: AttemptQuestion; answer: Ans
         rows={long ? 10 : 4}
         value={answer.textAnswer ?? ""}
         onChange={(e) => onChange({ ...answer, textAnswer: e.target.value })}
-        placeholder={long ? "Write your answer in detail" : "Write a short answer"}
+        placeholder={long ? t("Write your answer in detail") : t("Write a short answer")}
         maxLength={long ? LONG_ANSWER_LIMIT : 2000}
-        aria-label="Your answer"
+        aria-label={t("Your answer")}
       />
-      <p className="text-right text-xs tabular-nums text-muted-foreground">
+      <p className="text-end text-xs tabular-nums text-muted-foreground">
         {length.toLocaleString()} / {(long ? LONG_ANSWER_LIMIT : 2000).toLocaleString()}
       </p>
     </div>
@@ -122,6 +133,7 @@ export default function TakeExamPage() {
   const queryClient = useQueryClient();
   const role = useAuthStore((s) => s.user?.role);
   const wantsStart = (location.state as { start?: boolean } | null)?.start === true;
+  const { t } = useTranslation("online-exams");
 
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
   const [session, setSession] = useState<AttemptSession | null>(null);
@@ -171,18 +183,23 @@ export default function TakeExamPage() {
         const status = err instanceof OnlineExamApiError ? err.status : undefined;
         if (status === 404 && wantsStart) {
           try {
+            const setup = await getProctoringSetup(id);
+            if (setup.mode !== "Off" && !setup.consentGiven) {
+              if (!cancelled) setPhase({ kind: "consent", setup });
+              return;
+            }
             open(await startExam(id));
             // Drop the "start" flag so a refresh resumes rather than starting a new attempt.
             navigate(location.pathname, { replace: true, state: null });
           } catch (e) {
-            if (!cancelled) setPhase({ kind: "error", title: "You can't start this exam", message: e instanceof Error ? e.message : "Please try again." });
+            if (!cancelled) setPhase({ kind: "error", title: t("You can't start this exam"), message: e instanceof Error ? e.message : t("Please try again.") });
           }
           return;
         }
         if (cancelled) return;
         if (status === 409) setPhase({ kind: "submitted", result: null, timedOut: true });
-        else if (status === 404) setPhase({ kind: "error", title: "No exam in progress", message: "Start the exam from My exams." });
-        else setPhase({ kind: "error", title: "The exam couldn't load", message: err instanceof Error ? err.message : "Check your connection and try again." });
+        else if (status === 404) setPhase({ kind: "error", title: t("No exam in progress"), message: t("Start the exam from My exams.") });
+        else setPhase({ kind: "error", title: t("The exam couldn't load"), message: err instanceof Error ? err.message : t("Check your connection and try again.") });
       }
     })();
     return () => {
@@ -200,6 +217,21 @@ export default function TakeExamPage() {
     },
     [queryClient],
   );
+
+  const proctoring = useProctoring(id, session?.attemptId, session?.proctoring, phase.kind === "taking", (st) => {
+    finished.current = true;
+    window.clearTimeout(saveTimer.current);
+    void queryClient.invalidateQueries({ queryKey: ["online-exams"] });
+    setPhase({ kind: "submitted", result: null, timedOut: false, autoSubmittedMessage: st.message ?? undefined });
+  });
+  const lastProctoringMessage = useRef<string | null>(null);
+  useEffect(() => {
+    const message = proctoring.status?.message;
+    if (message && message !== lastProctoringMessage.current) {
+      lastProctoringMessage.current = message;
+      toast(message, { icon: "⚠️", duration: 6000 });
+    }
+  }, [proctoring.status?.message]);
 
   // ── autosave ──
   const flush = useCallback(async () => {
@@ -275,7 +307,7 @@ export default function TakeExamPage() {
         finish(result, auto || result.status === "TimedOut");
       } catch (err) {
         if (err instanceof OnlineExamApiError && err.status === 409) finish(null, true);
-        else toast.error(err instanceof Error ? `${err.message} - your answers are saved, try again.` : "Couldn't submit - try again.");
+        else toast.error(err instanceof Error ? t("{{message}} - your answers are saved, try again.", { message: err.message }) : t("Couldn't submit - try again."));
       } finally {
         setSubmitting(false);
       }
@@ -295,7 +327,7 @@ export default function TakeExamPage() {
     for (const mins of [5, 1]) {
       if (remaining <= mins * 60000 && remaining > 0 && !warned.current.has(mins)) {
         warned.current.add(mins);
-        toast(`${mins} minute${mins === 1 ? "" : "s"} left`, { icon: "⏰" });
+        toast(mins === 1 ? t("{{count}} minute left", { count: mins }) : t("{{count}} minutes left", { count: mins }), { icon: "⏰" });
       }
     }
     if (remaining <= 0 && !finished.current && !submitting && Date.now() - lastAutoSubmit.current > 5000) {
@@ -319,7 +351,7 @@ export default function TakeExamPage() {
   if (role && !isExamStudent(role)) {
     return (
       <Shell>
-        <Message icon={AlertTriangle} title="Only students can take exams" body="Preview an exam from its page in Online Exams." action={<Button onClick={() => navigate("/online-exams")}>Go to Online Exams</Button>} />
+        <Message icon={AlertTriangle} title={t("Only students can take exams")} body={t("Preview an exam from its page in Online Exams.")} action={<Button onClick={() => navigate("/online-exams")}>{t("Go to Online Exams")}</Button>} />
       </Shell>
     );
   }
@@ -329,8 +361,37 @@ export default function TakeExamPage() {
       <Shell>
         <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground" role="status">
           <Loader2 className="h-5 w-5 animate-spin" />
-          {wantsStart ? "Starting your exam…" : "Loading your exam…"}
+          {wantsStart ? t("Starting your exam…") : t("Loading your exam…")}
         </div>
+      </Shell>
+    );
+  }
+
+  if (phase.kind === "consent") {
+    return (
+      <Shell>
+        <ProctoringConsent
+          examId={id!}
+          setup={phase.setup}
+          onCancel={() => navigate("/online-exams/my")}
+          onAgreed={async () => {
+            try {
+              const s = await startExam(id!);
+              offset.current = Date.parse(s.serverNowUtc) - Date.now();
+              setSession(s);
+              const initial: Record<string, AnswerInput> = {};
+              for (const q of s.questions) initial[q.id] = blank(q.id);
+              for (const a of s.answers) initial[a.questionId] = { ...a, textAnswer: a.textAnswer ?? null };
+              setAnswers(initial);
+              setIndex(0);
+              setFurthest(0);
+              navigate(location.pathname, { replace: true, state: null });
+              setPhase({ kind: "taking" });
+            } catch (e) {
+              setPhase({ kind: "error", title: t("You can't start this exam"), message: e instanceof Error ? e.message : t("Please try again.") });
+            }
+          }}
+        />
       </Shell>
     );
   }
@@ -338,7 +399,7 @@ export default function TakeExamPage() {
   if (phase.kind === "error") {
     return (
       <Shell>
-        <Message icon={AlertTriangle} title={phase.title} body={phase.message} action={<Button onClick={() => navigate("/online-exams/my")}>Back to my exams</Button>} />
+        <Message icon={AlertTriangle} title={phase.title} body={phase.message} action={<Button onClick={() => navigate("/online-exams/my")}>{t("Back to my exams")}</Button>} />
       </Shell>
     );
   }
@@ -350,21 +411,23 @@ export default function TakeExamPage() {
         <Message
           icon={phase.timedOut ? TimerOff : CheckCircle2}
           tone={phase.timedOut ? "warning" : "success"}
-          title={phase.timedOut ? "Time's up - your exam was submitted" : "Exam submitted"}
+          title={phase.autoSubmittedMessage ? t("Your exam was submitted automatically") : phase.timedOut ? t("Time's up - your exam was submitted") : t("Exam submitted")}
           body={
-            r
-              ? `You answered ${r.answered} of ${r.totalQuestions} question${r.totalQuestions === 1 ? "" : "s"} in ${r.examName}. ${r.resultAvailable ? "Your result is ready." : "You'll be notified when results are published."}`
-              : "Your saved answers were submitted automatically. You'll be notified when results are published."
+            phase.autoSubmittedMessage
+              ? phase.autoSubmittedMessage
+              : r
+              ? `${r.totalQuestions === 1 ? t("You answered {{answered}} of {{total}} question in {{exam}}.", { answered: r.answered, total: r.totalQuestions, exam: r.examName }) : t("You answered {{answered}} of {{total}} questions in {{exam}}.", { answered: r.answered, total: r.totalQuestions, exam: r.examName })} ${r.resultAvailable ? t("Your result is ready.") : t("You'll be notified when results are published.")}`
+              : t("Your saved answers were submitted automatically. You'll be notified when results are published.")
           }
           action={
             <div className="flex flex-wrap justify-center gap-2">
               <Button variant={r?.resultAvailable ? "outline" : "default"} onClick={() => navigate("/online-exams/my")}>
-                Back to my exams
+                {t("Back to my exams")}
               </Button>
               {r?.resultAvailable && (
                 <Button onClick={() => navigate(`/online-exams/my/${r.examId}/result`)}>
                   <Award className="h-4 w-4" />
-                  View result
+                  {t("View result")}
                 </Button>
               )}
             </div>
@@ -387,7 +450,7 @@ export default function TakeExamPage() {
     setFurthest((f) => Math.max(f, i));
     window.scrollTo({ top: 0 });
   };
-  const label = (i: number) => (s.showQuestionNumbers ? `Question ${questions[i].number}` : `Question ${i + 1}`);
+  const label = (i: number) => t("Question {{number}}", { number: s.showQuestionNumbers ? questions[i].number : i + 1 });
 
   return (
     <Shell>
@@ -397,30 +460,30 @@ export default function TakeExamPage() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-foreground">{s.examName}</p>
             <p className="truncate text-xs text-muted-foreground">
-              {[s.subjectName, s.studentName, s.attemptNumber > 1 && `Attempt ${s.attemptNumber}`].filter(Boolean).join(" · ")}
+              {[s.subjectName, s.studentName, s.attemptNumber > 1 && t("Attempt {{number}}", { number: s.attemptNumber })].filter(Boolean).join(" · ")}
             </p>
           </div>
           <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex" aria-live="polite">
             {saveState === "retrying" ? (
               <>
                 <CloudOff className="h-3.5 w-3.5 text-warning-strong" />
-                <span className="text-warning-strong">Offline - retrying</span>
+                <span className="text-warning-strong">{t("Offline - retrying")}</span>
               </>
             ) : saveState === "saving" || unsaved > 0 ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Saving…
+                {t("Saving…")}
               </>
             ) : (
               <>
                 <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                All answers saved
+                {t("All answers saved")}
               </>
             )}
           </span>
           <div
             role="timer"
-            aria-label={`Time left ${formatClock(remaining)}`}
+            aria-label={t("Time left {{time}}", { time: formatClock(remaining) })}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-base font-semibold tabular-nums",
               critical ? "animate-pulse bg-destructive text-destructive-foreground" : low ? "bg-warning-soft text-warning-strong" : "bg-secondary text-foreground",
@@ -431,13 +494,35 @@ export default function TakeExamPage() {
           </div>
           <Button onClick={() => { void flush(); setConfirmOpen(true); }} disabled={submitting}>
             <Send className="h-4 w-4" />
-            <span className="hidden sm:inline">Submit</span>
+            <span className="hidden sm:inline">{t("Submit")}</span>
           </Button>
         </div>
         {saveState === "retrying" && (
-          <p className="bg-warning-soft px-4 py-1.5 text-center text-xs text-warning-strong sm:hidden">Connection lost - your answers are kept and will save when you're back online.</p>
+          <p className="bg-warning-soft px-4 py-1.5 text-center text-xs text-warning-strong sm:hidden">{t("Connection lost - your answers are kept and will save when you're back online.")}</p>
         )}
       </header>
+
+      {s.proctoring && (
+        <div className="border-b border-border bg-secondary/40">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-1.5 text-xs text-muted-foreground">
+            <span>{t("Proctored exam")}{s.proctoring.mode === "Webcam" ? ` · ${t("camera on")}` : ""}{s.proctoring.requireFullscreen ? ` · ${t("fullscreen")}` : ""}</span>
+            {proctoring.status && (
+              <span className={proctoring.status.flagged ? "font-medium text-warning-strong" : ""}>
+                {proctoring.status.incidents === 1 ? t("{{count}} incident recorded", { count: proctoring.status.incidents }) : t("{{count}} incidents recorded", { count: proctoring.status.incidents })}{proctoring.status.flagged ? ` · ${t("flagged for review")}` : ""}
+              </span>
+            )}
+            {proctoring.cameraError && <span className="font-medium text-destructive-strong">{proctoring.cameraError}</span>}
+          </div>
+        </div>
+      )}
+      {s.proctoring?.mode === "Webcam" && proctoring.stream && <CameraPreview stream={proctoring.stream} />}
+      {s.proctoring?.requireFullscreen && !proctoring.inFullscreen && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/95 p-6 text-center">
+          <p className="text-lg font-semibold">{t("Return to fullscreen to continue")}</p>
+          <p className="max-w-md text-sm text-muted-foreground">{t("Leaving fullscreen is recorded for your teacher. Your answers and the timer are safe.")}</p>
+          <Button onClick={() => void proctoring.enterFullscreen()}>{t("Go fullscreen")}</Button>
+        </div>
+      )}
 
       <div className="mx-auto grid w-full max-w-6xl flex-1 content-start gap-4 px-4 py-4 lg:grid-cols-[1fr_17rem]">
         {/* Question */}
@@ -445,10 +530,10 @@ export default function TakeExamPage() {
           <section className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm sm:p-6" aria-labelledby="question-heading">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h1 id="question-heading" className="text-sm font-semibold text-muted-foreground">
-                {label(index)} <span className="font-normal">of {questions.length}</span>
+                {label(index)} <span className="font-normal">{t("of {{total}}", { total: questions.length })}</span>
               </h1>
               <span className="text-xs text-muted-foreground">
-                {QUESTION_TYPE_LABEL[q.type]} · {formatMarks(q.marks)} mark{q.marks === 1 ? "" : "s"}
+                {t(QUESTION_TYPE_LABEL[q.type])} · {q.marks === 1 ? t("{{marks}} mark", { marks: formatMarks(q.marks) }) : t("{{marks}} marks", { marks: formatMarks(q.marks) })}
               </span>
             </div>
             <p className="mb-5 whitespace-pre-wrap text-base leading-relaxed text-foreground sm:text-lg">{q.text}</p>
@@ -458,39 +543,39 @@ export default function TakeExamPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => go(index - 1)} disabled={index === 0 || !s.allowBackNavigation}>
               <ArrowLeft className="h-4 w-4" />
-              Previous
+              {t("Previous")}
             </Button>
             <Button variant={answer.markedForReview ? "secondary" : "ghost"} onClick={() => update({ ...answer, markedForReview: !answer.markedForReview })} aria-pressed={answer.markedForReview}>
               {answer.markedForReview ? <BookmarkCheck className="h-4 w-4 text-warning-strong" /> : <Bookmark className="h-4 w-4" />}
-              {answer.markedForReview ? "Marked for review" : "Mark for review"}
+              {answer.markedForReview ? t("Marked for review") : t("Mark for review")}
             </Button>
             <Button variant="ghost" onClick={() => update({ ...answer, selectedOptionIds: [], textAnswer: null })} disabled={!hasResponse(answer)}>
               <Eraser className="h-4 w-4" />
-              Clear response
+              {t("Clear response")}
             </Button>
             <span className="flex-1" />
             {index < questions.length - 1 ? (
               <Button onClick={() => go(index + 1)}>
-                {hasResponse(answer) ? "Save & next" : "Next"}
+                {hasResponse(answer) ? t("Save & next") : t("Next")}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button onClick={() => { void flush(); setConfirmOpen(true); }}>
                 <Send className="h-4 w-4" />
-                Finish & submit
+                {t("Finish & submit")}
               </Button>
             )}
           </div>
-          {!s.allowBackNavigation && <p className="text-xs text-muted-foreground">This exam doesn't allow going back to earlier questions.</p>}
+          {!s.allowBackNavigation && <p className="text-xs text-muted-foreground">{t("This exam doesn't allow going back to earlier questions.")}</p>}
         </main>
 
         {/* Navigator */}
-        <aside className="order-first lg:order-none" aria-label="Question navigator">
+        <aside className="order-first lg:order-none" aria-label={t("Question navigator")}>
           <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm lg:sticky lg:top-20">
             <div className="mb-3 flex items-center justify-between text-sm">
-              <span className="font-semibold text-foreground">Questions</span>
+              <span className="font-semibold text-foreground">{t("Questions")}</span>
               <span className="tabular-nums text-muted-foreground">
-                {counts.answered}/{questions.length} answered
+                {t("{{answered}}/{{total}} answered", { answered: counts.answered, total: questions.length })}
               </span>
             </div>
             <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-secondary">
@@ -509,7 +594,7 @@ export default function TakeExamPage() {
                       onClick={() => go(i)}
                       disabled={!canVisit(i)}
                       aria-current={current ? "step" : undefined}
-                      aria-label={`${label(i)}: ${done ? "answered" : i <= furthest ? "not answered" : "not visited"}${marked ? ", marked for review" : ""}`}
+                      aria-label={`${label(i)}: ${done ? t("answered") : i <= furthest ? t("not answered") : t("not visited")}${marked ? t(", marked for review") : ""}`}
                       className={cn(
                         "relative flex h-9 w-full items-center justify-center rounded-lg border text-xs font-semibold tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         done ? "border-success/40 bg-success-soft text-success-strong" : i <= furthest ? "border-destructive/30 bg-destructive-soft/60 text-destructive-strong" : "border-border bg-background text-muted-foreground",
@@ -517,17 +602,17 @@ export default function TakeExamPage() {
                       )}
                     >
                       {s.showQuestionNumbers ? qq.number : i + 1}
-                      {marked && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-card bg-warning" aria-hidden="true" />}
+                      {marked && <span className="absolute -end-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-card bg-warning" aria-hidden="true" />}
                     </button>
                   </li>
                 );
               })}
             </ol>
             <ul className="mt-3 grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground">
-              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-success-soft ring-1 ring-success/40" />Answered</li>
-              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-destructive-soft ring-1 ring-destructive/30" />Not answered</li>
-              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-background ring-1 ring-border" />Not visited</li>
-              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-warning" />For review</li>
+              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-success-soft ring-1 ring-success/40" />{t("Answered")}</li>
+              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-destructive-soft ring-1 ring-destructive/30" />{t("Not answered")}</li>
+              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-background ring-1 ring-border" />{t("Not visited")}</li>
+              <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-warning" />{t("For review")}</li>
             </ul>
           </div>
         </aside>
@@ -536,26 +621,26 @@ export default function TakeExamPage() {
       <Dialog open={confirmOpen} onOpenChange={(o) => !submitting && setConfirmOpen(o)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Submit your exam?</DialogTitle>
-            <DialogDescription>You can't change your answers after submitting.</DialogDescription>
+            <DialogTitle>{t("Submit your exam?")}</DialogTitle>
+            <DialogDescription>{t("You can't change your answers after submitting.")}</DialogDescription>
           </DialogHeader>
           <dl className="grid grid-cols-3 gap-2 text-center text-sm">
             <div className="rounded-lg bg-success-soft px-2 py-2 text-success-strong">
-              <dt className="text-xs">Answered</dt>
+              <dt className="text-xs">{t("Answered")}</dt>
               <dd className="text-xl font-semibold tabular-nums">{counts.answered}</dd>
             </div>
             <div className={cn("rounded-lg px-2 py-2", counts.unanswered ? "bg-destructive-soft text-destructive-strong" : "bg-secondary text-secondary-foreground")}>
-              <dt className="text-xs">Not answered</dt>
+              <dt className="text-xs">{t("Not answered")}</dt>
               <dd className="text-xl font-semibold tabular-nums">{counts.unanswered}</dd>
             </div>
             <div className={cn("rounded-lg px-2 py-2", counts.marked ? "bg-warning-soft text-warning-strong" : "bg-secondary text-secondary-foreground")}>
-              <dt className="text-xs">For review</dt>
+              <dt className="text-xs">{t("For review")}</dt>
               <dd className="text-xl font-semibold tabular-nums">{counts.marked}</dd>
             </div>
           </dl>
           {s.allowReviewBeforeSubmit && (counts.unanswered > 0 || counts.marked > 0) && (
             <div className="space-y-1.5 text-sm">
-              <p className="text-muted-foreground">Go back to:</p>
+              <p className="text-muted-foreground">{t("Go back to:")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {questions.map((qq, i) =>
                   (!hasResponse(answers[qq.id]) || answers[qq.id]?.markedForReview) && canVisit(i) ? (
@@ -568,14 +653,14 @@ export default function TakeExamPage() {
               </div>
             </div>
           )}
-          {saveState === "retrying" && <p className="text-sm text-warning-strong">You seem to be offline. Your answers are sent with the submission once you're connected.</p>}
+          {saveState === "retrying" && <p className="text-sm text-warning-strong">{t("You seem to be offline. Your answers are sent with the submission once you're connected.")}</p>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={submitting}>
-              Keep working
+              {t("Keep working")}
             </Button>
             <Button onClick={() => void submit(false)} loading={submitting}>
               <Send className="h-4 w-4" />
-              Submit exam
+              {t("Submit exam")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -589,6 +674,7 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function Message({ icon: Icon, title, body, action, tone = "neutral" }: { icon: typeof Clock; title: string; body: string; action: ReactNode; tone?: "neutral" | "success" | "warning" }) {
+  const { t } = useTranslation("online-exams");
   return (
     <div className="flex flex-1 items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-8 text-center shadow-sm">
@@ -605,10 +691,31 @@ function Message({ icon: Icon, title, body, action, tone = "neutral" }: { icon: 
         <div className="mt-6">{action}</div>
         <p className="mt-4 text-xs text-muted-foreground">
           <Link to="/dashboard" className="hover:text-foreground">
-            Go to dashboard
+            {t("Go to dashboard")}
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+/** Small self-view so the student can see the camera is on (nothing is recorded unless the exam keeps snapshots). */
+function CameraPreview({ stream }: { stream: MediaStream }) {
+  const { t } = useTranslation("online-exams");
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.srcObject = stream;
+      void ref.current.play().catch(() => undefined);
+    }
+  }, [stream]);
+  return (
+    <video
+      ref={ref}
+      muted
+      playsInline
+      aria-label={t("Your camera")}
+      className="fixed bottom-3 end-3 z-40 h-24 w-32 rounded-lg border border-border bg-black object-cover shadow-lg"
+    />
   );
 }

@@ -114,7 +114,22 @@ export function fromDetail(e: OnlineExamDetail): WizardState {
   };
 }
 
-export const totalMarks = (s: WizardState) => s.questions.reduce((sum, q) => sum + (Number.isFinite(q.content.marks) ? q.content.marks : 0), 0);
+export const totalMarks = (s: WizardState) => {
+  const marks = s.questions.map((q) => (Number.isFinite(q.content.marks) ? q.content.marks : 0));
+  const draw = s.settings.questionsPerAttempt;
+  // Question pool: every paper has `draw` questions of equal marks.
+  if (draw > 0 && draw < marks.length) return marks.slice(0, draw).reduce((a, b) => a + b, 0);
+  return marks.reduce((a, b) => a + b, 0);
+};
+
+/** A pool needs equal marks so every student's paper is worth the same. */
+export const poolProblem = (s: WizardState): string | null => {
+  const draw = s.settings.questionsPerAttempt;
+  if (!draw) return null;
+  if (draw > s.questions.length) return `The pool draws ${draw} questions but the exam has only ${s.questions.length}.`;
+  if (draw < s.questions.length && new Set(s.questions.map((q) => q.content.marks)).size > 1) return "A question pool needs every question to carry the same marks.";
+  return null;
+};
 
 export function windowUtc(s: WizardState): { start: string; end: string } | null {
   if (!s.startDate || !s.startTime || !s.endDate || !s.endTime) return null;
@@ -174,6 +189,15 @@ export function validateStep(step: number, s: WizardState): Record<string, strin
     if (!Number.isFinite(s.settings.passingMarks) || s.settings.passingMarks < 0) e.passingMarks = "Passing marks can't be negative.";
     if (!Number.isFinite(s.settings.maxAttempts) || s.settings.maxAttempts < 1 || s.settings.maxAttempts > 5) e.maxAttempts = "Allow between 1 and 5 attempts.";
     if (!Number.isFinite(s.settings.negativeMarkPerWrong) || s.settings.negativeMarkPerWrong < 0) e.negativeMarkPerWrong = "Can't be negative.";
+    const st = s.settings;
+    if (!Number.isInteger(st.questionsPerAttempt) || st.questionsPerAttempt < 0) e.questionsPerAttempt = "0 (all questions) or a whole number.";
+    if (st.proctoring !== "Off") {
+      if (!Number.isInteger(st.warningThreshold) || st.warningThreshold < 1 || st.warningThreshold > 50) e.warningThreshold = "Between 1 and 50.";
+      if (!Number.isInteger(st.autoSubmitAfterIncidents) || st.autoSubmitAfterIncidents < 0 || st.autoSubmitAfterIncidents > 50) e.autoSubmitAfterIncidents = "Between 0 (never) and 50.";
+      if (st.proctoring === "Webcam" && st.snapshotIntervalSeconds !== 0 && (st.snapshotIntervalSeconds < 30 || st.snapshotIntervalSeconds > 900))
+        e.snapshotIntervalSeconds = "0 (no photos) or 30 to 900 seconds.";
+      if (!Number.isInteger(st.evidenceRetentionDays) || st.evidenceRetentionDays < 7 || st.evidenceRetentionDays > 365) e.evidenceRetentionDays = "Between 7 and 365 days.";
+    }
   }
   if (step === 3) {
     const bad = s.questions.findIndex((q) => Object.keys(validateQuestion(q.content)).length > 0);
@@ -191,6 +215,8 @@ export function publishBlockers(s: WizardState, assignedCount: number): string[]
   const list: string[] = [];
   if (s.questions.length === 0) list.push("Add at least one question.");
   const total = totalMarks(s);
+  const pool = poolProblem(s);
+  if (pool) list.push(pool);
   if (s.settings.passingMarks > total) list.push(`Passing marks (${s.settings.passingMarks}) are more than the total (${total}).`);
   if (assignedCount === 0) list.push("No students are selected.");
   const w = windowUtc(s);

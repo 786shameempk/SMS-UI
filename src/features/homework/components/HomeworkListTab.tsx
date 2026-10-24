@@ -17,7 +17,9 @@ import HomeworkFormDialog from "./HomeworkFormDialog";
 import SubmissionsPanel from "./SubmissionsPanel";
 import { RowActions } from "@/components/ui/row-actions";
 
+import { useTranslation } from "react-i18next";
 export default function HomeworkListTab() {
+  const { t: tr } = useTranslation("homework");
   const queryClient = useQueryClient();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -41,31 +43,31 @@ export default function HomeworkListTab() {
     mutationFn: createHomework,
     onSuccess: () => {
       invalidate();
-      toast.success("Homework created");
+      toast.success(tr("Homework created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create homework"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : tr("Could not create homework")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: HomeworkFormValues }) => updateHomework(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Homework updated");
+      toast.success(tr("Homework updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update homework"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : tr("Could not update homework")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteHomework,
     onSuccess: () => {
       invalidate();
-      toast.success("Homework deleted");
+      toast.success(tr("Homework deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete homework"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : tr("Could not delete homework")),
   });
 
   if (gradingTarget) {
@@ -75,9 +77,9 @@ export default function HomeworkListTab() {
   const columns: ColumnDef<Homework, unknown>[] = [
     {
       accessorKey: "title",
-      header: "Title",
+      header: tr("Title"),
       cell: ({ row }) => (
-        <button type="button" onClick={() => setGradingTarget(row.original)} className="text-left cursor-pointer group">
+        <button type="button" onClick={() => setGradingTarget(row.original)} className="text-start cursor-pointer group">
           <p className="text-sm font-medium text-foreground group-hover:text-primary-text transition-colors">{row.original.title}</p>
           <p className="text-xs text-muted-foreground truncate max-w-xs">{row.original.description}</p>
         </button>
@@ -85,7 +87,7 @@ export default function HomeworkListTab() {
     },
     {
       id: "class",
-      header: "Class",
+      header: tr("Class"),
       cell: ({ row }) => {
         const cls = classById.get(row.original.classId);
         const section = sections.find((s) => s.id === row.original.sectionId);
@@ -94,12 +96,12 @@ export default function HomeworkListTab() {
     },
     {
       id: "subject",
-      header: "Subject",
+      header: tr("Subject"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{subjectById.get(row.original.subjectId)?.name ?? "—"}</span>,
     },
     {
       id: "teacher",
-      header: "Assigned by",
+      header: tr("Assigned by"),
       cell: ({ row }) => {
         const t = teacherById.get(row.original.staffId);
         return <span className="text-sm text-secondary-foreground">{t ? `${t.firstName} ${t.lastName}` : "—"}</span>;
@@ -107,12 +109,12 @@ export default function HomeworkListTab() {
     },
     {
       accessorKey: "dueDate",
-      header: "Due",
+      header: tr("Due"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.dueDate).toLocaleDateString()}</span>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: tr("Status"),
       cell: ({ row }) => (
         <StatusBadge status={row.original.status} label={HOMEWORK_STATUSES.find((s) => s.value === row.original.status)?.label} />
       ),
@@ -126,7 +128,7 @@ export default function HomeworkListTab() {
           <RowActions>
             <DropdownMenuItem onClick={() => setGradingTarget(hw)}>
               <ClipboardCheck className="w-3.5 h-3.5" />
-              View / grade submissions
+              {tr("View / grade submissions")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -135,11 +137,11 @@ export default function HomeworkListTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {tr("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(hw)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {tr("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -150,7 +152,7 @@ export default function HomeworkListTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Click a title to view or grade its submissions.</p>
+        <p className="text-sm text-muted-foreground">{tr("Click a title to view or grade its submissions.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -158,11 +160,11 @@ export default function HomeworkListTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New homework
+          {tr("New homework")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={homework} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No homework assigned yet." />
+      <DataTable searchable columns={columns} data={homework} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={tr("No homework assigned yet.")} />
 
       <HomeworkFormDialog
         open={formOpen}
@@ -185,9 +187,9 @@ export default function HomeworkListTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete homework"
-        description={`Delete "${deleteTarget?.title}"? This also removes all of its student submissions.`}
-        confirmLabel="Delete"
+        title={tr("Delete homework")}
+        description={tr("Delete \"{{title}}\"? This also removes all of its student submissions.", { title: deleteTarget?.title })}
+        confirmLabel={tr("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

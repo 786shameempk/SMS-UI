@@ -8,23 +8,25 @@ import ClassCapacityTab from "../components/ClassCapacityTab";
 import AcademicCalendarTab from "../components/AcademicCalendarTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
+import { useTranslation } from "react-i18next";
 export default function AcademicManagementPage() {
+  const { t } = useTranslation("academics");
   return (
     <PageContainer>
       <PageHeader
-        title="Academic management"
-        description="Foundational master data — academic years, terms, departments, classes, sections, and subjects — used across attendance, timetable, and examinations."
+        title={t("Academic management")}
+        description={t("Foundational master data — academic years, terms, departments, classes, sections, and subjects — used across attendance, timetable, and examinations.")}
       />
 
       <Tabs defaultValue="academic-years">
         <TabsList variant="line">
-          <TabsTrigger value="academic-years">Academic Years</TabsTrigger>
-          <TabsTrigger value="terms">Terms</TabsTrigger>
-          <TabsTrigger value="departments">Departments</TabsTrigger>
-          <TabsTrigger value="classes-sections">Classes &amp; Sections</TabsTrigger>
-          <TabsTrigger value="subjects">Subjects</TabsTrigger>
-          <TabsTrigger value="capacity">Class Capacity</TabsTrigger>
-          <TabsTrigger value="calendar">Academic Calendar</TabsTrigger>
+          <TabsTrigger value="academic-years">{t("Academic Years")}</TabsTrigger>
+          <TabsTrigger value="terms">{t("Terms")}</TabsTrigger>
+          <TabsTrigger value="departments">{t("Departments")}</TabsTrigger>
+          <TabsTrigger value="classes-sections">{t("Classes & Sections")}</TabsTrigger>
+          <TabsTrigger value="subjects">{t("Subjects")}</TabsTrigger>
+          <TabsTrigger value="capacity">{t("Class Capacity")}</TabsTrigger>
+          <TabsTrigger value="calendar">{t("Academic Calendar")}</TabsTrigger>
         </TabsList>
         <TabsContent value="academic-years">
           <AcademicYearsTab />

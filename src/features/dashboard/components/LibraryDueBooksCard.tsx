@@ -1,4 +1,5 @@
 import { BookOpen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
@@ -6,14 +7,15 @@ import { formatRelativeDay } from "@/utils/format";
 import type { LibraryDueItem } from "../types";
 
 export default function LibraryDueBooksCard({ books }: { books: LibraryDueItem[] }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
-        <CardTitle>Library books due</CardTitle>
-        <CardDescription>Issued copies due back soon or overdue.</CardDescription>
+        <CardTitle>{t("Library books due")}</CardTitle>
+        <CardDescription>{t("Issued copies due back soon or overdue.")}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-2">
-        {books.length === 0 && <EmptyState bare size="sm" icon={BookOpen} title="No books due" description="Nothing is due back at the library." className="h-full py-6" />}
+        {books.length === 0 && <EmptyState bare size="sm" icon={BookOpen} title={t("No books due")} description={t("Nothing is due back at the library.")} className="h-full py-6" />}
         {books.map((book) => (
           <div key={book.id} className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="min-w-0">

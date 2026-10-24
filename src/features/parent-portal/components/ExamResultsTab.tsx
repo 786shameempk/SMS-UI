@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listExamResults } from "../api";
 
+import { useTranslation } from "react-i18next";
 export default function ExamResultsTab({ studentId }: { studentId: string }) {
+  const { t } = useTranslation("parent-portal");
   const { data: results = [], isLoading } = useQuery({
     queryKey: ["parent-portal", "exams", studentId],
     queryFn: () => listExamResults(studentId),
@@ -15,11 +17,11 @@ export default function ExamResultsTab({ studentId }: { studentId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Exam results</CardTitle>
-        <CardDescription>Scores from recent exams and unit tests.</CardDescription>
+        <CardTitle>{t("Exam results")}</CardTitle>
+        <CardDescription>{t("Scores from recent exams and unit tests.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading results…</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading results…")}</p>}
         {!isLoading && results.length > 0 && (
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -42,9 +44,7 @@ export default function ExamResultsTab({ studentId }: { studentId: string }) {
             <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground">{r.subject}</p>
-                <p className="text-xs text-muted-foreground">
-                  {r.examName} &middot; {new Date(r.date).toLocaleDateString()}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("{{examName}} · {{v1}}", { examName: r.examName, v1: new Date(r.date).toLocaleDateString() })}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-sm font-semibold text-foreground tabular-nums">

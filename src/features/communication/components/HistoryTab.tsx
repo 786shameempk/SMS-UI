@@ -13,7 +13,9 @@ import type { BroadcastMessage } from "../types";
 import MessageDetailDialog from "./MessageDetailDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
+import { useTranslation } from "react-i18next";
 export default function HistoryTab() {
+  const { t } = useTranslation("communication");
   const queryClient = useQueryClient();
   const [detailTarget, setDetailTarget] = useState<BroadcastMessage | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -28,35 +30,35 @@ export default function HistoryTab() {
     onSuccess: (message) => {
       invalidate();
       if (message.channels.includes("in-app")) queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("Message sent");
+      toast.success(t("Message sent"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not send message"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not send message")),
   });
 
   const cancelMutation = useMutation({
     mutationFn: cancelScheduledMessage,
     onSuccess: () => {
       invalidate();
-      toast.success("Message cancelled");
+      toast.success(t("Message cancelled"));
       setCancelTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not cancel message"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not cancel message")),
   });
 
   const columns: ColumnDef<BroadcastMessage, unknown>[] = [
     {
       id: "subject",
-      header: "Message",
+      header: t("Message"),
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium text-foreground">{row.original.subject || "(no subject)"}</p>
+          <p className="text-sm font-medium text-foreground">{row.original.subject || t("(no subject)")}</p>
           <p className="text-xs text-muted-foreground line-clamp-1">{row.original.body}</p>
         </div>
       ),
     },
     {
       id: "channels",
-      header: "Channels",
+      header: t("Channels"),
       cell: ({ row }) => (
         <div className="flex flex-wrap gap-1">
           {row.original.channels.map((c) => (
@@ -69,28 +71,28 @@ export default function HistoryTab() {
     },
     {
       id: "recipients",
-      header: "Recipients",
+      header: t("Recipients"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.recipientCount}</span>,
     },
     {
       id: "when",
-      header: "When",
+      header: t("When"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.sentAt
             ? new Date(row.original.sentAt).toLocaleString()
             : row.original.scheduledAt
-              ? `Scheduled ${new Date(row.original.scheduledAt).toLocaleString()}`
+              ? t("Scheduled {{v1}}", { v1: new Date(row.original.scheduledAt).toLocaleString() })
               : "—"}
         </span>
       ),
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = MESSAGE_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -107,17 +109,17 @@ export default function HistoryTab() {
               }}
             >
               <Eye className="w-3.5 h-3.5" />
-              View details
+              {t("View details")}
             </DropdownMenuItem>
             {message.status === "scheduled" && (
               <>
                 <DropdownMenuItem onClick={() => sendNowMutation.mutate(message.id)}>
                   <Send className="w-3.5 h-3.5" />
-                  Send now
+                  {t("Send now")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setCancelTarget(message)}>
                   <XCircle className="w-3.5 h-3.5" />
-                  Cancel
+                  {t("Cancel")}
                 </DropdownMenuItem>
               </>
             )}
@@ -130,10 +132,10 @@ export default function HistoryTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Sent and scheduled broadcasts.</p>
+        <p className="text-sm text-muted-foreground">{t("Sent and scheduled broadcasts.")}</p>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={messages} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No messages yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={messages} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No messages yet.")} pageSize={10} />
 
       <MessageDetailDialog
         open={detailOpen}
@@ -147,9 +149,9 @@ export default function HistoryTab() {
       <ConfirmDialog
         open={Boolean(cancelTarget)}
         onOpenChange={(v) => !v && setCancelTarget(null)}
-        title="Cancel scheduled message"
-        description={`Cancel "${cancelTarget?.subject || "this message"}"? It will not be sent.`}
-        confirmLabel="Cancel message"
+        title={t("Cancel scheduled message")}
+        description={t("Cancel \"{{v1}}\"? It will not be sent.", { v1: cancelTarget?.subject || "this message" })}
+        confirmLabel={t("Cancel message")}
         confirmVariant="destructive"
         submitting={cancelMutation.isPending}
         onConfirm={() => {

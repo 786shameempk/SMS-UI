@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,6 +61,7 @@ export default function PreApprovedVisitFormDialog({
   submitting: boolean;
   onSubmit: (values: PreApprovedVisitFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("visitors");
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
@@ -82,8 +84,8 @@ export default function PreApprovedVisitFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>Schedule a pre-approved visit</DialogTitle>
-          <DialogDescription>Front desk can check the visitor in on arrival against this appointment.</DialogDescription>
+          <DialogTitle>{t("Schedule a pre-approved visit")}</DialogTitle>
+          <DialogDescription>{t("Front desk can check the visitor in on arrival against this appointment.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -99,20 +101,20 @@ export default function PreApprovedVisitFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="pre-name">Visitor name</Label>
+              <Label htmlFor="pre-name">{t("Visitor name")}</Label>
               <Input id="pre-name" aria-invalid={errors.visitorName ? true : undefined} {...register("visitorName")} />
-              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitorName.message}</p>}
+              {errors.visitorName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.visitorName.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pre-phone">Phone</Label>
+              <Label htmlFor="pre-phone">{t("Phone")}</Label>
               <Input id="pre-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
-              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
+              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.phone.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="pre-purpose">Purpose</Label>
+              <Label htmlFor="pre-purpose">{t("Purpose")}</Label>
               <Controller
                 control={control}
                 name="purpose"
@@ -124,7 +126,7 @@ export default function PreApprovedVisitFormDialog({
                     <SelectContent>
                       {PURPOSE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -133,19 +135,19 @@ export default function PreApprovedVisitFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pre-scheduledAt">Scheduled for</Label>
+              <Label htmlFor="pre-scheduledAt">{t("Scheduled for")}</Label>
               <Input id="pre-scheduledAt" type="datetime-local" aria-invalid={errors.scheduledAt ? true : undefined} {...register("scheduledAt")} />
-              {errors.scheduledAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.scheduledAt.message}</p>}
+              {errors.scheduledAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.scheduledAt.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="pre-notes" optional>Notes</Label>
+            <Label htmlFor="pre-notes" optional>{t("Notes")}</Label>
             <Textarea id="pre-notes" rows={2} {...register("purposeNotes")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="pre-hostType">Here to see</Label>
+            <Label htmlFor="pre-hostType">{t("Here to see")}</Label>
             <Controller
               control={control}
               name="hostType"
@@ -155,9 +157,9 @@ export default function PreApprovedVisitFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="staff">A staff member</SelectItem>
-                    <SelectItem value="student">A student</SelectItem>
-                    <SelectItem value="other">Somewhere else (office, event, etc.)</SelectItem>
+                    <SelectItem value="staff">{t("A staff member")}</SelectItem>
+                    <SelectItem value="student">{t("A student")}</SelectItem>
+                    <SelectItem value="other">{t("Somewhere else (office, event, etc.)")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -166,14 +168,14 @@ export default function PreApprovedVisitFormDialog({
 
           {hostType === "staff" && (
             <div className="space-y-1.5">
-              <Label htmlFor="pre-hostStaffId">Staff member</Label>
+              <Label htmlFor="pre-hostStaffId">{t("Staff member")}</Label>
               <Controller
                 control={control}
                 name="hostStaffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="pre-hostStaffId">
-                      <SelectValue placeholder="Select staff member" />
+                      <SelectValue placeholder={t("Select staff member")} />
                     </SelectTrigger>
                     <SelectContent>
                       {staff.map((s) => (
@@ -185,20 +187,20 @@ export default function PreApprovedVisitFormDialog({
                   </Select>
                 )}
               />
-              {errors.hostStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStaffId.message}</p>}
+              {errors.hostStaffId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostStaffId.message ?? "")}</p>}
             </div>
           )}
 
           {hostType === "student" && (
             <div className="space-y-1.5">
-              <Label htmlFor="pre-hostStudentId">Student</Label>
+              <Label htmlFor="pre-hostStudentId">{t("Student")}</Label>
               <Controller
                 control={control}
                 name="hostStudentId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="pre-hostStudentId">
-                      <SelectValue placeholder="Select student" />
+                      <SelectValue placeholder={t("Select student")} />
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
@@ -210,24 +212,24 @@ export default function PreApprovedVisitFormDialog({
                   </Select>
                 )}
               />
-              {errors.hostStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostStudentId.message}</p>}
+              {errors.hostStudentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostStudentId.message ?? "")}</p>}
             </div>
           )}
 
           {hostType === "other" && (
             <div className="space-y-1.5">
-              <Label htmlFor="pre-hostOtherLabel">Where / department</Label>
-              <Input id="pre-hostOtherLabel" placeholder="e.g. Front Office, School Auditorium" aria-invalid={errors.hostOtherLabel ? true : undefined} {...register("hostOtherLabel")} />
-              {errors.hostOtherLabel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostOtherLabel.message}</p>}
+              <Label htmlFor="pre-hostOtherLabel">{t("Where / department")}</Label>
+              <Input id="pre-hostOtherLabel" placeholder={t("e.g. Front Office, School Auditorium")} aria-invalid={errors.hostOtherLabel ? true : undefined} {...register("hostOtherLabel")} />
+              {errors.hostOtherLabel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostOtherLabel.message ?? "")}</p>}
             </div>
           )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Schedule visit
+              {t("Schedule visit")}
             </Button>
           </DialogFooter>
         </form>

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { GraduationCap, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
+import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,7 @@ export default function ResetPasswordPage() {
   const email = searchParams.get("email") ?? "";
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useTranslation("authentication");
 
   const {
     register,
@@ -39,10 +41,10 @@ export default function ResetPasswordPage() {
     setSubmitting(true);
     try {
       await resetPassword(email, token, values.password);
-      toast.success("Password reset — please sign in");
+      toast.success(t("Password reset — please sign in"));
       navigate("/login", { replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Reset failed");
+      toast.error(err instanceof Error ? err.message : t("Reset failed"));
     } finally {
       setSubmitting(false);
     }
@@ -55,32 +57,32 @@ export default function ResetPasswordPage() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary bg-brand-gradient text-primary-foreground shadow-brand">
             <GraduationCap className="h-5 w-5" aria-hidden="true" />
           </div>
-          <h1 className="text-page-title">Set a new password</h1>
+          <h1 className="text-page-title">{t("Set a new password")}</h1>
         </div>
 
         <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-lg sm:p-8">
           {!token || !email ? (
             <p className="text-sm text-muted-foreground text-center">
-              This link is invalid or incomplete. Please request a new one from the{" "}
-              <Link to="/forgot-password" className="text-primary-text font-medium">
-                forgot password
-              </Link>{" "}
-              page.
+              <Trans
+                t={t}
+                i18nKey="This link is invalid or incomplete. Please request a new one from the <0>forgot password</0> page."
+                components={[<Link key="0" to="/forgot-password" className="text-primary-text font-medium" />]}
+              />
             </p>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="password">New password</Label>
+                <Label htmlFor="password">{t("New password")}</Label>
                 <Input id="password" type="password" autoComplete="new-password" aria-invalid={errors.password ? true : undefined} {...register("password")} />
-                {errors.password && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.password.message}</p>}
+                {errors.password && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.password.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <Label htmlFor="confirmPassword">{t("Confirm password")}</Label>
                 <Input id="confirmPassword" type="password" autoComplete="new-password" aria-invalid={errors.confirmPassword ? true : undefined} {...register("confirmPassword")} />
-                {errors.confirmPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.confirmPassword.message}</p>}
+                {errors.confirmPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.confirmPassword.message ?? "")}</p>}
               </div>
               <Button type="submit" className="w-full" loading={submitting}>
-                Reset password
+                {t("Reset password")}
               </Button>
             </form>
           )}
@@ -90,7 +92,7 @@ export default function ResetPasswordPage() {
             className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to sign in
+            {t("Back to sign in")}
           </Link>
         </div>
       </div>

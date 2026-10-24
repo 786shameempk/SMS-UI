@@ -16,6 +16,7 @@ import { meetingKeys, useNow } from "../hooks";
 import type { JoinTicket } from "../types";
 import MeetingChatPanel from "../components/MeetingChatPanel";
 
+import { useTranslation } from "react-i18next";
 function Stage() {
   const tracks = useTracks(
     [
@@ -55,6 +56,7 @@ function elapsed(fromIso: string | null | undefined, now: number) {
  * are never put in the URL).
  */
 export default function MeetingRoomPage() {
+  const { t: tr } = useTranslation("meetings");
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -96,7 +98,7 @@ export default function MeetingRoomPage() {
   // The meeting ending (host or schedule) closes the room for everyone; send them back to the class page.
   useEffect(() => {
     if (meeting && (meeting.summary.status === "Completed" || meeting.summary.status === "Cancelled")) {
-      toast(meeting.summary.status === "Completed" ? "The class has ended." : "The class was cancelled.");
+      toast(meeting.summary.status === "Completed" ? tr("The class has ended.") : tr("The class was cancelled."));
       navigate(`/online-classes/${id}`, { replace: true });
     }
   }, [meeting, id, navigate]);
@@ -113,7 +115,7 @@ export default function MeetingRoomPage() {
     mutationFn: () => (recordingNow ? stopRecording(id) : startRecording(id)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: meetingKeys.part(id, "recordings") });
-      toast.success(recordingNow ? "Recording stopped. It'll appear under Recordings shortly." : "Recording started");
+      toast.success(recordingNow ? tr("Recording stopped. It'll appear under Recordings shortly.") : tr("Recording started"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -123,9 +125,9 @@ export default function MeetingRoomPage() {
   if (join.isError) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-slate-950 p-6 text-center text-white">
-        <p className="text-lg font-semibold">You can't join right now</p>
+        <p className="text-lg font-semibold">{tr("You can't join right now")}</p>
         <p className="max-w-sm text-sm text-white/70">{(join.error as Error).message}</p>
-        <Button asChild variant="secondary"><Link to={`/online-classes/${id}`}>Back to the class</Link></Button>
+        <Button asChild variant="secondary"><Link to={`/online-classes/${id}`}>{tr("Back to the class")}</Link></Button>
       </div>
     );
   }
@@ -133,7 +135,7 @@ export default function MeetingRoomPage() {
   if (!ticket?.token || !ticket.serverUrl) {
     return (
       <div className="flex min-h-dvh items-center justify-center gap-3 bg-slate-950 text-white">
-        <Loader2 className="h-5 w-5 animate-spin" /> Getting your seat ready…
+        <Loader2 className="h-5 w-5 animate-spin" /> {tr("Getting your seat ready…")}
       </div>
     );
   }
@@ -147,23 +149,23 @@ export default function MeetingRoomPage() {
       video={false}
       data-lk-theme="default"
       onDisconnected={leave}
-      onError={(e) => toast.error(`Video connection problem: ${e.message}`)}
+      onError={(e) => toast.error(tr("Video connection problem: {{message}}", { message: e.message }))}
       className="bg-slate-950 text-white"
       // LiveKit's stylesheet is unlayered, so it beats Tailwind's layered utilities - size the room inline.
       style={{ height: "100dvh", display: "flex", flexDirection: "column" }}
     >
       <header className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2 sm:px-4" style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}>
         <div className="flex min-w-0 items-center gap-3">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white" onClick={leave} aria-label="Leave">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white" onClick={leave} aria-label={tr("Leave")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{ticket.title}{meeting?.summary.classLabel && <span className="font-normal text-white/60"> · {meeting.summary.classLabel}</span>}</p>
             <p className="flex items-center gap-2 text-xs text-white/60">
               {meeting?.summary.status === "Live" ? (
-                <span className="inline-flex items-center gap-1 text-green-400"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" /> Live</span>
+                <span className="inline-flex items-center gap-1 text-green-400"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" /> {tr("Live")}</span>
               ) : (
-                <span className="text-amber-300">Waiting for the host</span>
+                <span className="text-amber-300">{tr("Waiting for the host")}</span>
               )}
               <span className="tabular-nums">{elapsed(meeting?.actualStartUtc ?? meeting?.summary.startUtc, now)}</span>
             </p>
@@ -175,15 +177,15 @@ export default function MeetingRoomPage() {
             <Button size="sm" variant="ghost" onClick={() => record.mutate()} disabled={record.isPending}
               className={cn("text-white hover:bg-white/10 hover:text-white", recordingNow && "text-red-400")}>
               <Circle className={cn("h-3.5 w-3.5", recordingNow && "fill-red-500 text-red-500 animate-pulse")} />
-              <span className="hidden sm:inline">{recordingNow ? "Stop recording" : "Record"}</span>
+              <span className="hidden sm:inline">{recordingNow ? tr("Stop recording") : tr("Record")}</span>
             </Button>
           )}
           <Button size="sm" variant="ghost" className={cn("text-white hover:bg-white/10 hover:text-white", chatOpen && "bg-white/10")} onClick={() => setChatOpen((o) => !o)} aria-pressed={chatOpen}>
-            <MessageSquare className="h-4 w-4" /> <span className="hidden sm:inline">Chat</span>
+            <MessageSquare className="h-4 w-4" /> <span className="hidden sm:inline">{tr("Chat")}</span>
           </Button>
           {ticket.isHost && (
             <Button size="sm" variant="destructive" onClick={() => setConfirmEnd(true)}>
-              <Square className="h-3.5 w-3.5" /> <span className="hidden sm:inline">End class</span>
+              <Square className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{tr("End class")}</span>
             </Button>
           )}
         </div>
@@ -195,7 +197,7 @@ export default function MeetingRoomPage() {
           <ControlBar controls={{ chat: false, leave: true, screenShare: ticket.isHost }} variation="minimal" className="justify-center border-t border-white/10 py-2" />
         </main>
         {chatOpen && (
-          <div className="absolute inset-0 z-20 lg:static lg:w-80 lg:border-l lg:border-white/10">
+          <div className="absolute inset-0 z-20 lg:static lg:w-80 lg:border-s lg:border-white/10">
             <MeetingChatPanel meetingId={id} isHost={ticket.isHost} canChat={ticket.canChat} onClose={() => setChatOpen(false)} />
           </div>
         )}
@@ -205,9 +207,9 @@ export default function MeetingRoomPage() {
       <ConfirmDialog
         open={confirmEnd}
         onOpenChange={setConfirmEnd}
-        title="End the class for everyone?"
-        description="Everyone is disconnected and attendance becomes final."
-        confirmLabel="End class"
+        title={tr("End the class for everyone?")}
+        description={tr("Everyone is disconnected and attendance becomes final.")}
+        confirmLabel={tr("End class")}
         confirmVariant="destructive"
         submitting={end.isPending}
         onConfirm={() => end.mutate()}

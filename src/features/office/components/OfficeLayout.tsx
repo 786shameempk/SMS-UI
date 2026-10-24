@@ -101,7 +101,7 @@ export default function OfficeLayout() {
             <Menu className="h-5 w-5" aria-hidden="true" />
           </Button>
           <div className="min-w-0 flex-1" />
-          <div className="hidden min-w-0 text-right sm:block">
+          <div className="hidden min-w-0 text-end sm:block">
             <p className="truncate text-sm font-medium text-foreground">{user.displayName}</p>
             <p className="truncate text-xs text-muted-foreground">{user.role}</p>
           </div>

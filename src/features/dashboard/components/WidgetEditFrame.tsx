@@ -1,4 +1,5 @@
 import type { DragEvent, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, EyeOff, GripVertical, Lock, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +49,8 @@ export default function WidgetEditFrame({
   handlers: WidgetEditHandlers;
   children: ReactNode;
 }) {
+  const { t } = useTranslation("dashboard");
+  const name = t(config.name);
   const movable = config.configurable;
   const drag = movable
     ? {
@@ -86,50 +89,50 @@ export default function WidgetEditFrame({
         ) : (
           <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         )}
-        <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">{config.name}</span>
+        <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">{name}</span>
         {movable ? (
           <>
             <span className="hidden text-[11px] tabular-nums text-muted-foreground sm:inline">
-              {WIDTH_LABEL[item.w]} · {HEIGHT_LABEL[item.h]}
+              {t(WIDTH_LABEL[item.w])} · {t(HEIGHT_LABEL[item.h])}
             </span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={position === 0} onClick={() => handlers.onMove(-1)} aria-label={`Move ${config.name} earlier`}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={position === 0} onClick={() => handlers.onMove(-1)} aria-label={t("Move {{name}} earlier", { name })}>
               <ArrowUp className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={position === count - 1} onClick={() => handlers.onMove(1)} aria-label={`Move ${config.name} later`}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={position === count - 1} onClick={() => handlers.onMove(1)} aria-label={t("Move {{name}} later", { name })}>
               <ArrowDown className="h-3.5 w-3.5" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Resize ${config.name}`}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t("Resize {{name}}", { name })}>
                   <Maximize2 className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel>Width</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("Width")}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup value={String(item.w)} onValueChange={(v) => handlers.onResize({ w: Number(v) as WidgetWidth })}>
                   {WIDGET_WIDTHS.map((w) => (
                     <DropdownMenuRadioItem key={w} value={String(w)}>
-                      {WIDTH_LABEL[w]}
+                      {t(WIDTH_LABEL[w])}
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Height</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("Height")}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup value={String(item.h)} onValueChange={(v) => handlers.onResize({ h: Number(v) as WidgetHeight })}>
                   {WIDGET_HEIGHTS.map((h) => (
                     <DropdownMenuRadioItem key={h} value={String(h)}>
-                      {HEIGHT_LABEL[h]}
+                      {t(HEIGHT_LABEL[h])}
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlers.onHide} aria-label={`Hide ${config.name}`}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlers.onHide} aria-label={t("Hide {{name}}", { name })}>
               <EyeOff className="h-3.5 w-3.5" />
             </Button>
           </>
         ) : (
-          <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Fixed</span>
+          <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t("Fixed")}</span>
         )}
       </div>
       {/* The real widget, as a preview: inert so arranging never follows a link or presses a button inside it. */}

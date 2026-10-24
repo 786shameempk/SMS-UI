@@ -101,7 +101,7 @@ export default function AzureLayout() {
                   <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {item.label}
                   {item.to.endsWith("/alerts") && alerts > 0 && (
-                    <Badge variant="danger" className="ml-auto px-1.5">{alerts}</Badge>
+                    <Badge variant="danger" className="ms-auto px-1.5">{alerts}</Badge>
                   )}
                 </NavLink>
               ))}

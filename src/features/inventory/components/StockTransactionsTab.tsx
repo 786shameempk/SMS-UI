@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowDownCircle, ArrowUpCircle, SlidersHorizontal } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +17,7 @@ import StockOutDialog from "./StockOutDialog";
 import StockAdjustmentDialog from "./StockAdjustmentDialog";
 
 export default function StockTransactionsTab() {
+  const { t } = useTranslation("inventory");
   const queryClient = useQueryClient();
   const { data: transactions = [], isLoading, isError, refetch } = useQuery({ queryKey: ["inventory", "transactions"], queryFn: () => listTransactions() });
   const { data: items = [] } = useQuery({ queryKey: ["inventory", "items"], queryFn: listItems });
@@ -32,41 +34,41 @@ export default function StockTransactionsTab() {
     mutationFn: recordPurchase,
     onSuccess: () => {
       invalidate();
-      toast.success("Stock in recorded");
+      toast.success(t("Stock in recorded"));
       setStockInOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not record stock in"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not record stock in")),
   });
 
   const issueMutation = useMutation({
     mutationFn: recordIssue,
     onSuccess: () => {
       invalidate();
-      toast.success("Stock issued");
+      toast.success(t("Stock issued"));
       setStockOutOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not issue stock"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not issue stock")),
   });
 
   const adjustMutation = useMutation({
     mutationFn: recordAdjustment,
     onSuccess: () => {
       invalidate();
-      toast.success("Adjustment recorded");
+      toast.success(t("Adjustment recorded"));
       setAdjustOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not record adjustment"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not record adjustment")),
   });
 
   const filtered = useMemo(
-    () => (typeFilter === "all" ? transactions : transactions.filter((t) => t.type === typeFilter)),
+    () => (typeFilter === "all" ? transactions : transactions.filter((tx) => tx.type === typeFilter)),
     [transactions, typeFilter],
   );
 
   const columns: ColumnDef<StockTransactionRow, unknown>[] = [
     {
       id: "item",
-      header: "Item",
+      header: t("Item"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.item.name}</p>
@@ -76,15 +78,15 @@ export default function StockTransactionsTab() {
     },
     {
       accessorKey: "type",
-      header: "Type",
+      header: t("Type"),
       cell: ({ row }) => {
         const config = TRANSACTION_TYPE_CONFIG[row.original.type];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
       id: "quantity",
-      header: "Quantity",
+      header: t("Quantity"),
       cell: ({ row }) => {
         const delta = row.original.quantityDelta;
         return (
@@ -96,17 +98,17 @@ export default function StockTransactionsTab() {
     },
     {
       id: "detail",
-      header: "Detail",
+      header: t("Detail"),
       cell: ({ row }) => {
-        const t = row.original;
-        if (t.type === "purchase") return <span className="text-sm text-secondary-foreground">{t.vendor?.name ?? "—"}</span>;
-        if (t.type === "issue") return <span className="text-sm text-secondary-foreground">{t.issuedTo}</span>;
-        return <span className="text-sm text-secondary-foreground truncate max-w-xs block">{t.reason}</span>;
+        const tx = row.original;
+        if (tx.type === "purchase") return <span className="text-sm text-secondary-foreground">{tx.vendor?.name ?? "—"}</span>;
+        if (tx.type === "issue") return <span className="text-sm text-secondary-foreground">{tx.issuedTo}</span>;
+        return <span className="text-sm text-secondary-foreground truncate max-w-xs block">{tx.reason}</span>;
       },
     },
     {
       accessorKey: "date",
-      header: "Date",
+      header: t("Date"),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatRelativeDay(row.original.date)}</span>,
     },
   ];
@@ -116,32 +118,32 @@ export default function StockTransactionsTab() {
       <DataTableToolbar>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Type" />
+            <SelectValue placeholder={t("Type")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            <SelectItem value="purchase">Purchase</SelectItem>
-            <SelectItem value="issue">Issue</SelectItem>
-            <SelectItem value="adjustment">Adjustment</SelectItem>
+            <SelectItem value="all">{t("All types")}</SelectItem>
+            <SelectItem value="purchase">{t("Purchase")}</SelectItem>
+            <SelectItem value="issue">{t("Issue")}</SelectItem>
+            <SelectItem value="adjustment">{t("Adjustment")}</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setAdjustOpen(true)}>
             <SlidersHorizontal className="w-4 h-4" />
-            Adjust stock
+            {t("Adjust stock")}
           </Button>
           <Button variant="outline" onClick={() => setStockOutOpen(true)}>
             <ArrowUpCircle className="w-4 h-4" />
-            Issue stock
+            {t("Issue stock")}
           </Button>
           <Button onClick={() => setStockInOpen(true)}>
             <ArrowDownCircle className="w-4 h-4" />
-            Stock in
+            {t("Stock in")}
           </Button>
         </div>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No stock transactions yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No stock transactions yet.")} pageSize={10} />
 
       <StockInDialog
         open={stockInOpen}

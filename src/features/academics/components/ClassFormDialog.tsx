@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AcademicYear, Department, SchoolClass, SchoolClassFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const NO_DEPARTMENT = "none";
 
 const classFormSchema = z.object({
@@ -39,6 +40,7 @@ export default function ClassFormDialog({
   onSubmit: (values: SchoolClassFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("academics");
   const isEdit = Boolean(schoolClass);
   const {
     register,
@@ -74,25 +76,25 @@ export default function ClassFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit class" : "New class"}</DialogTitle>
-          <DialogDescription>Classes belong to an academic year and, optionally, a department or stream.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit class") : t("New class")}</DialogTitle>
+          <DialogDescription>{t("Classes belong to an academic year and, optionally, a department or stream.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Name</Label>
-            <Input id="name" placeholder="e.g. Grade 8" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            <Label htmlFor="name" required>{t("Name")}</Label>
+            <Input id="name" placeholder={t("e.g. Grade 8")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
             {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="academicYearId" required>Academic year</Label>
+            <Label htmlFor="academicYearId" required>{t("Academic year")}</Label>
             <Controller
               control={control}
               name="academicYearId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="academicYearId">
-                    <SelectValue placeholder="Select an academic year" />
+                    <SelectValue placeholder={t("Select an academic year")} />
                   </SelectTrigger>
                   <SelectContent>
                     {academicYears.map((y) => (
@@ -108,7 +110,7 @@ export default function ClassFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="departmentId" optional>Department / stream</Label>
+            <Label htmlFor="departmentId" optional>{t("Department / stream")}</Label>
             <Controller
               control={control}
               name="departmentId"
@@ -118,7 +120,7 @@ export default function ClassFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NO_DEPARTMENT}>None</SelectItem>
+                    <SelectItem value={NO_DEPARTMENT}>{t("None")}</SelectItem>
                     {departments.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
                         {d.name}
@@ -132,10 +134,10 @@ export default function ClassFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create class"}
+              {isEdit ? t("Save changes") : t("Create class")}
             </Button>
           </DialogFooter>
         </form>

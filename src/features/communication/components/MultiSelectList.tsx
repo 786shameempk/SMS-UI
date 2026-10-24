@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 
+import { useTranslation } from "react-i18next";
 export interface MultiSelectOption {
   id: string;
   label: string;
@@ -24,6 +25,7 @@ export default function MultiSelectList({
   searchPlaceholder?: string;
   emptyMessage?: string;
 }) {
+  const { t } = useTranslation("communication");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -42,7 +44,7 @@ export default function MultiSelectList({
       {label && (
         <div className="flex items-center justify-between">
           <Label>{label}</Label>
-          <span className="text-xs text-muted-foreground">{selected.length} selected</span>
+          <span className="text-xs text-muted-foreground">{t("{{length}} selected", { length: selected.length })}</span>
         </div>
       )}
       <SearchInput value={search} onValueChange={setSearch} placeholder={searchPlaceholder} containerClassName="sm:w-full" className="h-8 text-sm" />
@@ -52,7 +54,7 @@ export default function MultiSelectList({
           <label key={option.id} className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-secondary/40">
             <Checkbox checked={selectedSet.has(option.id)} onCheckedChange={() => toggle(option.id)} />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm text-foreground truncate">{option.label}</span>
+              <span className="block text-sm text-foreground truncate">{t(option.label)}</span>
               {option.sublabel && <span className="block text-xs text-muted-foreground truncate">{option.sublabel}</span>}
             </span>
           </label>

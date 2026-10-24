@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Pencil, Trash2, Plus } from "lucide-react";
@@ -16,6 +17,7 @@ import BranchFormDialog from "./BranchFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function BranchesTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const { data: branches = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
 
@@ -29,31 +31,31 @@ export default function BranchesTab() {
     mutationFn: createBranch,
     onSuccess: () => {
       invalidate();
-      toast.success("Branch added");
+      toast.success(t("Branch added"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add branch"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add branch")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: BranchFormValues }) => updateBranch(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Branch updated");
+      toast.success(t("Branch updated"));
       setFormOpen(false);
       setEditingBranch(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update branch"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update branch")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteBranch(id),
     onSuccess: () => {
       invalidate();
-      toast.success(`${deleteTarget?.name} deleted`);
+      toast.success(t("{{name}} deleted", { name: deleteTarget?.name }));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete branch"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete branch")),
   });
 
   const mainBranchId = defaultBranchIdForTenant(getCurrentTenantId());
@@ -61,20 +63,20 @@ export default function BranchesTab() {
   const columns: ColumnDef<Branch, unknown>[] = [
     {
       accessorKey: "name",
-      header: "Branch",
+      header: t("Branch"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">{row.original.name}</span>
-          {row.original.id === mainBranchId && <Badge variant="info">Main campus</Badge>}
+          {row.original.id === mainBranchId && <Badge variant="info">{t("Main campus")}</Badge>}
         </div>
       ),
     },
-    { accessorKey: "code", header: "Code", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.code}</span> },
-    { accessorKey: "address", header: "Address", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.address || "—"}</span> },
+    { accessorKey: "code", header: t("Code"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.code}</span> },
+    { accessorKey: "address", header: t("Address"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.address || "—"}</span> },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => <StatusBadge status={row.original.status === "active" ? "active" : "inactive"} />,
     },
     {
@@ -92,7 +94,7 @@ export default function BranchesTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit branch
+              {t("Edit branch")}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={isMain}
@@ -100,7 +102,7 @@ export default function BranchesTab() {
               variant="destructive" className="data-[disabled]:text-muted-foreground/70"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Delete branch
+              {t("Delete branch")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -111,7 +113,7 @@ export default function BranchesTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">{branches.length} branch{branches.length === 1 ? "" : "es"}</p>
+        <p className="text-sm text-muted-foreground">{branches.length === 1 ? t("{{count}} branch", { count: branches.length }) : t("{{count}} branches", { count: branches.length })}</p>
         <Button
           onClick={() => {
             setEditingBranch(null);
@@ -119,11 +121,11 @@ export default function BranchesTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          Add branch
+          {t("Add branch")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={branches} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No branches yet." />
+      <DataTable searchable columns={columns} data={branches} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No branches yet.")} />
 
       <BranchFormDialog
         open={formOpen}
@@ -142,9 +144,9 @@ export default function BranchesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete branch"
-        description={`This will permanently remove the "${deleteTarget?.name}" branch. Records already assigned to it are not moved or deleted.`}
-        confirmLabel="Delete"
+        title={t("Delete branch")}
+        description={t("This will permanently remove the \"{{name}}\" branch. Records already assigned to it are not moved or deleted.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

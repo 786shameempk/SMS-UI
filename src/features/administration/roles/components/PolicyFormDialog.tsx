@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,6 +34,7 @@ interface PolicyFormDialogProps {
 }
 
 export default function PolicyFormDialog({ open, onOpenChange, policy, roles, onSubmit, submitting }: PolicyFormDialogProps) {
+  const { t } = useTranslation("administration");
   const isEdit = Boolean(policy);
   const { data: scope } = useQuery({ queryKey: MATRIX_MODULES_QUERY_KEY, queryFn: getMatrixModules, enabled: open });
   // Plan modules only - but an existing policy keeps showing its own module even if the plan dropped it.
@@ -71,53 +73,53 @@ export default function PolicyFormDialog({ open, onOpenChange, policy, roles, on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit policy" : "Add policy"}</DialogTitle>
-          <DialogDescription>Define an attribute-based rule that layers on top of role permissions.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit policy") : t("Add policy")}</DialogTitle>
+          <DialogDescription>{t("Define an attribute-based rule that layers on top of role permissions.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Policy name</Label>
+            <Label htmlFor="name" required>{t("Policy name")}</Label>
             <Input id="name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description" required>Description</Label>
+            <Label htmlFor="description" required>{t("Description")}</Label>
             <Textarea id="description" rows={2} aria-invalid={errors.description ? true : undefined} {...register("description")} />
-            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
+            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.description.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="module" required>Module</Label>
+            <Label htmlFor="module" required>{t("Module")}</Label>
             <Controller
               control={control}
               name="module"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="module">
-                    <SelectValue placeholder="Select a module" />
+                    <SelectValue placeholder={t("Select a module")} />
                   </SelectTrigger>
                   <SelectContent>
                     {moduleOptions.map((m) => (
                       <SelectItem key={m} value={m}>
-                        {m}
+                        {t(m)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.module && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.module.message}</p>}
+            {errors.module && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.module.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="condition" required>Condition expression</Label>
-            <Input id="condition" placeholder="e.g. resource.ownerId == user.id" className="font-mono text-xs" aria-invalid={errors.condition ? true : undefined} {...register("condition")} />
-            {errors.condition && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.condition.message}</p>}
+            <Label htmlFor="condition" required>{t("Condition expression")}</Label>
+            <Input id="condition" placeholder={t("e.g. resource.ownerId == user.id")} className="font-mono text-xs" aria-invalid={errors.condition ? true : undefined} {...register("condition")} />
+            {errors.condition && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.condition.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label>Applies to roles</Label>
+            <Label>{t("Applies to roles")}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg border border-border p-3">
               {roles.map((role) => (
                 <label key={role.id} className="flex items-center gap-2 cursor-pointer select-none">
@@ -129,15 +131,15 @@ export default function PolicyFormDialog({ open, onOpenChange, policy, roles, on
                 </label>
               ))}
             </div>
-            {errors.roleIds && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.roleIds.message}</p>}
+            {errors.roleIds && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.roleIds.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create policy"}
+              {isEdit ? t("Save changes") : t("Create policy")}
             </Button>
           </DialogFooter>
         </form>

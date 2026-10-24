@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +42,7 @@ export default function MemberFormDialog({
   submitting: boolean;
   onSubmit: (values: LibraryMemberFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("library");
   const isEdit = Boolean(member);
   const {
     handleSubmit,
@@ -77,12 +79,12 @@ export default function MemberFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit member" : "New library member"}</DialogTitle>
-          <DialogDescription>Members are linked to an existing student or staff record, not duplicated.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit member") : t("New library member")}</DialogTitle>
+          <DialogDescription>{t("Members are linked to an existing student or staff record, not duplicated.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="mem-personType" required>Person type</Label>
+            <Label htmlFor="mem-personType" required>{t("Person type")}</Label>
             <Controller
               control={control}
               name="personType"
@@ -100,7 +102,7 @@ export default function MemberFormDialog({
                   <SelectContent>
                     {PERSON_TYPE_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -110,14 +112,14 @@ export default function MemberFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="mem-personId" required>{personType === "student" ? "Student" : "Staff member"}</Label>
+            <Label htmlFor="mem-personId" required>{personType === "student" ? t("Student") : t("Staff member")}</Label>
             <Controller
               control={control}
               name="personId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange} disabled={isEdit}>
                   <SelectTrigger id="mem-personId">
-                    <SelectValue placeholder="Search and select a person" />
+                    <SelectValue placeholder={t("Search and select a person")} />
                   </SelectTrigger>
                   <SelectContent>
                     {personOptions.map((o) => (
@@ -129,11 +131,11 @@ export default function MemberFormDialog({
                 </Select>
               )}
             />
-            {errors.personId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.personId.message}</p>}
+            {errors.personId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.personId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="mem-status" required>Status</Label>
+            <Label htmlFor="mem-status" required>{t("Status")}</Label>
             <Controller
               control={control}
               name="status"
@@ -143,8 +145,8 @@ export default function MemberFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
+                    <SelectItem value="active">{t("Active")}</SelectItem>
+                    <SelectItem value="suspended">{t("Suspended")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -153,10 +155,10 @@ export default function MemberFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Add member"}
+              {isEdit ? t("Save changes") : t("Add member")}
             </Button>
           </DialogFooter>
         </form>

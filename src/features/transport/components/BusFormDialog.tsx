@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,6 +44,7 @@ export default function BusFormDialog({
   submitting: boolean;
   onSubmit: (values: BusFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("transport");
   const isEdit = Boolean(bus);
   const {
     register,
@@ -72,8 +74,8 @@ export default function BusFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit bus" : "New bus"}</DialogTitle>
-          <DialogDescription>Fleet vehicles used to run transport routes.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit bus") : t("New bus")}</DialogTitle>
+          <DialogDescription>{t("Fleet vehicles used to run transport routes.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -83,37 +85,37 @@ export default function BusFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bus-regNumber" required>Registration number</Label>
-              <Input id="bus-regNumber" placeholder="e.g. KA-05-AB-1234" aria-invalid={errors.regNumber ? true : undefined} {...register("regNumber")} />
-              {errors.regNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.regNumber.message}</p>}
+              <Label htmlFor="bus-regNumber" required>{t("Registration number")}</Label>
+              <Input id="bus-regNumber" placeholder={t("e.g. KA-05-AB-1234")} aria-invalid={errors.regNumber ? true : undefined} {...register("regNumber")} />
+              {errors.regNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.regNumber.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bus-model" required>Model</Label>
-              <Input id="bus-model" placeholder="e.g. Tata Starbus 40-seater" aria-invalid={errors.model ? true : undefined} {...register("model")} />
-              {errors.model && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.model.message}</p>}
+              <Label htmlFor="bus-model" required>{t("Model")}</Label>
+              <Input id="bus-model" placeholder={t("e.g. Tata Starbus 40-seater")} aria-invalid={errors.model ? true : undefined} {...register("model")} />
+              {errors.model && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.model.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bus-capacity" required>Seating capacity</Label>
+              <Label htmlFor="bus-capacity" required>{t("Seating capacity")}</Label>
               <Input id="bus-capacity" type="number" min="1" step="1" aria-invalid={errors.capacity ? true : undefined} {...register("capacity")} />
-              {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.capacity.message}</p>}
+              {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.capacity.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bus-manufactureYear" required>Manufacture year</Label>
+              <Label htmlFor="bus-manufactureYear" required>{t("Manufacture year")}</Label>
               <Input id="bus-manufactureYear" type="number" step="1" aria-invalid={errors.manufactureYear ? true : undefined} {...register("manufactureYear")} />
-              {errors.manufactureYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.manufactureYear.message}</p>}
+              {errors.manufactureYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.manufactureYear.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bus-gpsDeviceId" optional>GPS device ID</Label>
-              <Input id="bus-gpsDeviceId" placeholder="e.g. GPS-TRK-1001" {...register("gpsDeviceId")} />
+              <Label htmlFor="bus-gpsDeviceId" optional>{t("GPS device ID")}</Label>
+              <Input id="bus-gpsDeviceId" placeholder={t("e.g. GPS-TRK-1001")} {...register("gpsDeviceId")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bus-status" required>Status</Label>
+              <Label htmlFor="bus-status" required>{t("Status")}</Label>
               <Controller
                 control={control}
                 name="status"
@@ -123,9 +125,9 @@ export default function BusFormDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="active">{t("Active")}</SelectItem>
+                      <SelectItem value="maintenance">{t("Maintenance")}</SelectItem>
+                      <SelectItem value="inactive">{t("Inactive")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
@@ -135,10 +137,10 @@ export default function BusFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Add bus"}
+              {isEdit ? t("Save changes") : t("Add bus")}
             </Button>
           </DialogFooter>
         </form>

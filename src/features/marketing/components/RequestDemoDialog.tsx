@@ -3,6 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CalendarCheck, CheckCircle2, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 export default function RequestDemoDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation("marketing");
 
   const {
     register,
@@ -88,12 +90,12 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-600">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            <DialogTitle className="mt-5 text-xl">Your demo request is in!</DialogTitle>
+            <DialogTitle className="mt-5 text-xl">{t("Your demo request is in!")}</DialogTitle>
             <DialogDescription className="mt-2 max-w-sm">
-              Our team will reach out within one business day to confirm a time that works for you.
+              {t("Our team will reach out within one business day to confirm a time that works for you.")}
             </DialogDescription>
             <Button className="mt-6" onClick={() => onOpenChange(false)}>
-              Done
+              {t("Done")}
             </Button>
           </div>
         ) : (
@@ -101,17 +103,17 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
             <DialogHeader>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand-600">
                 <Sparkles className="h-3.5 w-3.5" />
-                Free personalised demo
+                {t("Free personalised demo")}
               </div>
-              <DialogTitle className="text-xl">Request a demo</DialogTitle>
-              <DialogDescription>See how School Sphere fits your school — we'll tailor the walkthrough to what you share.</DialogDescription>
+              <DialogTitle className="text-xl">{t("Request a demo")}</DialogTitle>
+              <DialogDescription>{t("See how School Sphere fits your school — we'll tailor the walkthrough to what you share.")}</DialogDescription>
             </DialogHeader>
 
             <ul className="space-y-2 rounded-xl border border-brand-100 bg-brand-50/60 p-4 dark:border-border dark:bg-secondary">
               {DEMO_HIGHLIGHTS.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm text-foreground">
                   <CalendarCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
-                  {item}
+                  {t(item)}
                 </li>
               ))}
             </ul>
@@ -119,19 +121,19 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="demo-name">Full name *</Label>
+                  <Label htmlFor="demo-name">{t("Full name *")}</Label>
                   <Input id="demo-name" autoComplete="name" {...register("name")} />
-                  {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+                  {errors.name && <p className="text-xs text-red-600">{t(errors.name.message ?? "")}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="demo-email">Work email *</Label>
+                  <Label htmlFor="demo-email">{t("Work email *")}</Label>
                   <Input id="demo-email" type="email" autoComplete="email" {...register("email")} />
-                  {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+                  {errors.email && <p className="text-xs text-red-600">{t(errors.email.message ?? "")}</p>}
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="demo-phone">Phone *</Label>
+                <Label htmlFor="demo-phone">{t("Phone *")}</Label>
                 <div className="flex h-9 overflow-hidden rounded-md border border-input bg-card shadow-sm focus-within:ring-2 focus-within:ring-ring">
                   <Controller
                     control={control}
@@ -139,8 +141,8 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
                     render={({ field }) => (
                       <select
                         {...field}
-                        aria-label="Country code"
-                        className="cursor-pointer border-r border-input bg-secondary/60 pl-2 pr-1 text-sm text-foreground outline-none"
+                        aria-label={t("Country code")}
+                        className="cursor-pointer border-e border-input bg-secondary/60 ps-2 pe-1 text-sm text-foreground outline-none"
                       >
                         {COUNTRY_CODES.map((c) => (
                           <option key={c.code} value={c.dial}>
@@ -159,62 +161,62 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
                     {...register("phone")}
                   />
                 </div>
-                {errors.phone && <p className="text-xs text-red-600">{errors.phone.message}</p>}
+                {errors.phone && <p className="text-xs text-red-600">{t(errors.phone.message ?? "")}</p>}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="demo-school">School name *</Label>
+                  <Label htmlFor="demo-school">{t("School name *")}</Label>
                   <Input id="demo-school" autoComplete="organization" {...register("schoolName")} />
-                  {errors.schoolName && <p className="text-xs text-red-600">{errors.schoolName.message}</p>}
+                  {errors.schoolName && <p className="text-xs text-red-600">{t(errors.schoolName.message ?? "")}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="demo-size">Number of students *</Label>
+                  <Label htmlFor="demo-size">{t("Number of students *")}</Label>
                   <Controller
                     control={control}
                     name="studentCount"
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger id="demo-size">
-                          <SelectValue placeholder="Select size" />
+                          <SelectValue placeholder={t("Select size")} />
                         </SelectTrigger>
                         <SelectContent>
                           {STUDENT_COUNT_OPTIONS.map((o) => (
                             <SelectItem key={o} value={o}>
-                              {o}
+                              {t(o)}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.studentCount && <p className="text-xs text-red-600">{errors.studentCount.message}</p>}
+                  {errors.studentCount && <p className="text-xs text-red-600">{t(errors.studentCount.message ?? "")}</p>}
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="demo-date">Preferred date (optional)</Label>
+                <Label htmlFor="demo-date">{t("Preferred date (optional)")}</Label>
                 <Input id="demo-date" type="date" min={todayIso()} {...register("preferredDate")} />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="demo-message">What would you like to see? (optional)</Label>
+                <Label htmlFor="demo-message">{t("What would you like to see? (optional)")}</Label>
                 <Textarea
                   id="demo-message"
                   rows={3}
-                  placeholder="e.g. fee collection across two branches, parent app, exam report cards…"
+                  placeholder={t("e.g. fee collection across two branches, parent app, exam report cards…")}
                   {...register("message")}
                 />
               </div>
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-red-600">{t(error)}</p>}
 
               <DialogFooter className="mt-auto">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
+                  {t("Cancel")}
                 </Button>
                 <Button type="submit" loading={isSubmitting}>
-                  Request demo
+                  {t("Request demo")}
                 </Button>
               </DialogFooter>
             </form>

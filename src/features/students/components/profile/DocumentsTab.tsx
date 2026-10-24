@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -11,6 +12,7 @@ import { deleteStudentDocument, uploadStudentDocument } from "../../api";
 import type { DocumentCategory, Student, StudentDocument } from "../../types";
 
 export default function DocumentsTab({ student }: { student: Student }) {
+  const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState<DocumentCategory>("other");
@@ -26,7 +28,7 @@ export default function DocumentsTab({ student }: { student: Student }) {
       uploadStudentDocument(student.id, doc),
     onSuccess: () => {
       invalidate();
-      toast.success("Document uploaded");
+      toast.success(t("Document uploaded"));
     },
   });
 
@@ -34,7 +36,7 @@ export default function DocumentsTab({ student }: { student: Student }) {
     mutationFn: (documentId: string) => deleteStudentDocument(student.id, documentId),
     onSuccess: () => {
       invalidate();
-      toast.success("Document removed");
+      toast.success(t("Document removed"));
       setDeleteTarget(null);
     },
   });
@@ -52,13 +54,16 @@ export default function DocumentsTab({ student }: { student: Student }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const categoryLabel = (value: DocumentCategory) => DOCUMENT_CATEGORIES.find((c) => c.value === value)?.label ?? value;
+  const categoryLabel = (value: DocumentCategory) => {
+    const label = DOCUMENT_CATEGORIES.find((c) => c.value === value)?.label;
+    return label ? t(label) : value;
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Documents</CardTitle>
-        <CardDescription>Birth certificate, transfer certificate, ID proof, and other records on file.</CardDescription>
+        <CardTitle>{t("Documents")}</CardTitle>
+        <CardDescription>{t("Birth certificate, transfer certificate, ID proof, and other records on file.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2">
@@ -69,20 +74,20 @@ export default function DocumentsTab({ student }: { student: Student }) {
             <SelectContent>
               {DOCUMENT_CATEGORIES.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
-                  {c.label}
+                  {t(c.label)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Button onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
             {uploadMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            Upload document
+            {t("Upload document")}
           </Button>
           <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
         </div>
 
         <div className="space-y-2">
-          {student.documents.length === 0 && <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>}
+          {student.documents.length === 0 && <p className="text-sm text-muted-foreground">{t("No documents uploaded yet.")}</p>}
           {student.documents.map((doc) => (
             <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -113,9 +118,9 @@ export default function DocumentsTab({ student }: { student: Student }) {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete document"
-        description={`Remove "${deleteTarget?.name}" from this student's record?`}
-        confirmLabel="Delete"
+        title={t("Delete document")}
+        description={t('Remove "{{name}}" from this student\'s record?', { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

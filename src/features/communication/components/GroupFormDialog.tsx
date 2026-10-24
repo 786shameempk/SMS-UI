@@ -14,6 +14,7 @@ import { AUDIENCE_TYPE_OPTIONS } from "../constants";
 import type { AudienceType, ContactGroup, ContactGroupFormValues } from "../types";
 import MultiSelectList from "./MultiSelectList";
 
+import { useTranslation } from "react-i18next";
 const groupSchema = z.object({
   name: z.string().min(1, "Group name is required"),
   description: z.string().optional(),
@@ -42,6 +43,7 @@ export default function GroupFormDialog({
   submitting: boolean;
   onSubmit: (values: ContactGroupFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("communication");
   const isEdit = Boolean(group);
   const {
     register,
@@ -79,27 +81,27 @@ export default function GroupFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit group" : "New group"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("Edit group") : t("New group")}</DialogTitle>
           <DialogDescription>
             {audienceType === "parents"
-              ? "Members are students — messages sent to this group reach their parents/guardians."
-              : "A named list of recipients you can target quickly when composing a broadcast."}
+              ? t("Members are students — messages sent to this group reach their parents/guardians.")
+              : t("A named list of recipients you can target quickly when composing a broadcast.")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, description: values.description?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="grp-name" required>Group name</Label>
-            <Input id="grp-name" placeholder="e.g. Grade 10 Parents" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            <Label htmlFor="grp-name" required>{t("Group name")}</Label>
+            <Input id="grp-name" placeholder={t("e.g. Grade 10 Parents")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
             {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="grp-description" optional>Description</Label>
-            <Input id="grp-description" placeholder="e.g. Parents/guardians of all Grade 10 students" {...register("description")} />
+            <Label htmlFor="grp-description" optional>{t("Description")}</Label>
+            <Input id="grp-description" placeholder={t("e.g. Parents/guardians of all Grade 10 students")} {...register("description")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="grp-audienceType" required>Audience</Label>
+            <Label htmlFor="grp-audienceType" required>{t("Audience")}</Label>
             <Controller
               control={control}
               name="audienceType"
@@ -117,7 +119,7 @@ export default function GroupFormDialog({
                   <SelectContent>
                     {AUDIENCE_TYPE_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -131,7 +133,7 @@ export default function GroupFormDialog({
             name="memberIds"
             render={({ field }) => (
               <MultiSelectList
-                label={audienceType === "staff" ? "Staff members" : "Students"}
+                label={audienceType === "staff" ? t("Staff members") : t("Students")}
                 options={memberOptions}
                 selected={field.value}
                 onChange={field.onChange}
@@ -143,10 +145,10 @@ export default function GroupFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create group"}
+              {isEdit ? t("Save changes") : t("Create group")}
             </Button>
           </DialogFooter>
         </form>

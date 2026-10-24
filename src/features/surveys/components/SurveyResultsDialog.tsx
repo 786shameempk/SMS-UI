@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Star, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -27,24 +28,25 @@ function Bar({ label, count, total }: { label: string; count: number; total: num
 }
 
 function QuestionResultCard({ result }: { result: QuestionResult }) {
+  const { t } = useTranslation("surveys");
   return (
     <div className="rounded-lg border border-border p-3 space-y-2.5">
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-foreground">{result.questionText}</p>
         <Badge variant="info" className="shrink-0">
-          {QUESTION_TYPE_CONFIG[result.type].label}
+          {t(QUESTION_TYPE_CONFIG[result.type].label)}
         </Badge>
       </div>
-      <p className="text-xs text-muted-foreground">{result.answeredCount} response{result.answeredCount === 1 ? "" : "s"}</p>
+      <p className="text-xs text-muted-foreground">{result.answeredCount === 1 ? t("{{count}} response", { count: result.answeredCount }) : t("{{count}} responses", { count: result.answeredCount })}</p>
 
       {result.type === "rating" && result.ratingDistribution && (
         <div className="space-y-2">
           <p className="text-sm font-semibold text-foreground flex items-center gap-1">
             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            {result.ratingAverage ?? 0} average
+            {t("{{value}} average", { value: result.ratingAverage ?? 0 })}
           </p>
           {result.ratingDistribution.map((d) => (
-            <Bar key={d.value} label={`${d.value} star${d.value === 1 ? "" : "s"}`} count={d.count} total={result.answeredCount} />
+            <Bar key={d.value} label={d.value === 1 ? t("{{count}} star", { count: d.value }) : t("{{count}} stars", { count: d.value })} count={d.count} total={result.answeredCount} />
           ))}
         </div>
       )}
@@ -59,14 +61,14 @@ function QuestionResultCard({ result }: { result: QuestionResult }) {
 
       {result.type === "yes_no" && (
         <div className="space-y-2">
-          <Bar label="Yes" count={result.yesCount ?? 0} total={result.answeredCount} />
-          <Bar label="No" count={result.noCount ?? 0} total={result.answeredCount} />
+          <Bar label={t("Yes")} count={result.yesCount ?? 0} total={result.answeredCount} />
+          <Bar label={t("No")} count={result.noCount ?? 0} total={result.answeredCount} />
         </div>
       )}
 
       {result.type === "text" && (
         <div className="space-y-1.5">
-          {(result.textResponses ?? []).length === 0 && <p className="text-sm text-muted-foreground">No responses yet.</p>}
+          {(result.textResponses ?? []).length === 0 && <p className="text-sm text-muted-foreground">{t("No responses yet.")}</p>}
           {result.textResponses?.map((text, i) => (
             <p key={i} className="text-sm text-foreground rounded-md bg-secondary/50 px-2.5 py-1.5">
               "{text}"
@@ -79,6 +81,7 @@ function QuestionResultCard({ result }: { result: QuestionResult }) {
 }
 
 export default function SurveyResultsDialog({ surveyId, open, onOpenChange }: { surveyId: string | null; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useTranslation("surveys");
   const queryClient = useQueryClient();
   const { data: summary } = useQuery({ queryKey: ["surveys", "results", surveyId], queryFn: () => getSurveyResults(surveyId!), enabled: Boolean(surveyId) && open });
   const { data: respondents = [] } = useQuery({ queryKey: ["surveys", "responses", surveyId], queryFn: () => listResponses(surveyId!), enabled: Boolean(surveyId) && open });
@@ -87,7 +90,7 @@ export default function SurveyResultsDialog({ surveyId, open, onOpenChange }: { 
     mutationFn: deleteResponse,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      toast.success("Response deleted");
+      toast.success(t("Response deleted"));
     },
   });
 
@@ -96,7 +99,7 @@ export default function SurveyResultsDialog({ surveyId, open, onOpenChange }: { 
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Loading…</DialogTitle>
+            <DialogTitle>{t("Loading…")}</DialogTitle>
           </DialogHeader>
         </DialogContent>
       </Dialog>
@@ -109,9 +112,9 @@ export default function SurveyResultsDialog({ surveyId, open, onOpenChange }: { 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             {summary.survey.title}
-            <Badge variant={SURVEY_STATUS_CONFIG[summary.survey.status].variant}>{SURVEY_STATUS_CONFIG[summary.survey.status].label}</Badge>
+            <Badge variant={SURVEY_STATUS_CONFIG[summary.survey.status].variant}>{t(SURVEY_STATUS_CONFIG[summary.survey.status].label)}</Badge>
           </DialogTitle>
-          <DialogDescription>{summary.responseCount} response{summary.responseCount === 1 ? "" : "s"} collected.</DialogDescription>
+          <DialogDescription>{summary.responseCount === 1 ? t("{{count}} response collected.", { count: summary.responseCount }) : t("{{count}} responses collected.", { count: summary.responseCount })}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -122,8 +125,8 @@ export default function SurveyResultsDialog({ surveyId, open, onOpenChange }: { 
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Respondents</p>
-            {respondents.length === 0 && <p className="text-sm text-muted-foreground">No responses yet.</p>}
+            <p className="text-sm font-medium text-foreground">{t("Respondents")}</p>
+            {respondents.length === 0 && <p className="text-sm text-muted-foreground">{t("No responses yet.")}</p>}
             {respondents.map((r) => (
               <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
                 <div className="min-w-0">

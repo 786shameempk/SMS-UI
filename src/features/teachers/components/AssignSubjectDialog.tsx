@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,7 @@ export default function AssignSubjectDialog({
   onSubmit: (values: AssignSubjectFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("teachers");
   const {
     handleSubmit,
     reset,
@@ -55,19 +57,19 @@ export default function AssignSubjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign subject</DialogTitle>
-          <DialogDescription>Link a subject and class to this teacher.</DialogDescription>
+          <DialogTitle>{t("Assign subject")}</DialogTitle>
+          <DialogDescription>{t("Link a subject and class to this teacher.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="assign-classId" required>Class</Label>
+            <Label htmlFor="assign-classId" required>{t("Class")}</Label>
             <Controller
               control={control}
               name="classId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="assign-classId">
-                    <SelectValue placeholder="Select a class" />
+                    <SelectValue placeholder={t("Select a class")} />
                   </SelectTrigger>
                   <SelectContent>
                     {classes.map((c) => (
@@ -79,18 +81,18 @@ export default function AssignSubjectDialog({
                 </Select>
               )}
             />
-            {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
+            {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.classId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="assign-subjectId" required>Subject</Label>
+            <Label htmlFor="assign-subjectId" required>{t("Subject")}</Label>
             <Controller
               control={control}
               name="subjectId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="assign-subjectId">
-                    <SelectValue placeholder="Select a subject" />
+                    <SelectValue placeholder={t("Select a subject")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSubjects.map((s) => (
@@ -102,15 +104,15 @@ export default function AssignSubjectDialog({
                 </Select>
               )}
             />
-            {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.subjectId.message}</p>}
+            {errors.subjectId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.subjectId.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Assign
+              {t("Assign")}
             </Button>
           </DialogFooter>
         </form>

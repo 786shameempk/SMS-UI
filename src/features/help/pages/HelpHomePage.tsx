@@ -1,5 +1,6 @@
 import { lazy, Suspense, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { BookOpenCheck, Clock, Compass, Users } from "lucide-react";
 import { HELP_ROLES, ROLE_LABELS, type HelpRole } from "@/app/routeRegistry";
 import { PageContainer, PageHeader } from "@/components/ui/page";
@@ -34,6 +35,7 @@ export default function HelpHomePage() {
   const viewer = useViewer();
   const userRole = useAuthStore((s) => s.user?.role);
   const [params, setParams] = useSearchParams();
+  const { t } = useTranslation("help");
   const q = params.get("q") ?? "";
 
   const readable = useMemo(() => visibleArticles(helpCatalog.articles, viewer), [viewer]);
@@ -64,8 +66,8 @@ export default function HelpHomePage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Help Center"
-        description="Step-by-step guides for every part of School Sphere. Search, browse by module or role, or ask School AI."
+        title={t("Help Center")}
+        description={t("Step-by-step guides for every part of School Sphere. Search, browse by module or role, or ask School AI.")}
         actions={
           <>
             <ManualDownload />
@@ -78,8 +80,8 @@ export default function HelpHomePage() {
         <SearchInput
           value={q}
           onValueChange={(v) => setParams(v ? { q: v } : {}, { replace: true })}
-          placeholder="Search for a task, for example “add a student”"
-          aria-label="Search the Help Center"
+          placeholder={t("Search for a task, for example “add a student”")}
+          aria-label={t("Search the Help Center")}
           containerClassName="sm:w-full"
           className="h-11"
           autoFocus={!q}
@@ -88,13 +90,13 @@ export default function HelpHomePage() {
 
       {q.trim() ? (
         <section aria-live="polite" className="space-y-3">
-          <h2 className="text-base font-semibold text-foreground">Search results</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("Search results")}</h2>
           <SearchResults hits={hits} query={q} />
         </section>
       ) : (
         <>
           {recent.length > 0 && (
-            <Section icon={Clock} title="Recently viewed">
+            <Section icon={Clock} title={t("Recently viewed")}>
               <ul className="grid gap-2 md:grid-cols-2">
                 {recent.map((a) => (
                   <li key={a.id}>
@@ -106,7 +108,7 @@ export default function HelpHomePage() {
           )}
 
           {startHere.length > 0 && (
-            <Section icon={BookOpenCheck} title={userRole ? "Common tasks for you" : "Common tasks"}>
+            <Section icon={BookOpenCheck} title={userRole ? t("Common tasks for you") : t("Common tasks")}>
               <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                 {startHere.map((a) => (
                   <li key={a.id}>
@@ -117,9 +119,9 @@ export default function HelpHomePage() {
             </Section>
           )}
 
-          <Section icon={Compass} title="Browse by module">
+          <Section icon={Compass} title={t("Browse by module")}>
             {groups.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No articles are available to you yet.</p>
+              <p className="text-sm text-muted-foreground">{t("No articles are available to you yet.")}</p>
             ) : (
               <div className="space-y-5">
                 {groups.map(({ group, modules }) => (
@@ -135,7 +137,7 @@ export default function HelpHomePage() {
                             <span className="font-semibold text-foreground">{m.title}</span>
                             <span className="mt-0.5 line-clamp-3 flex-1 text-sm text-muted-foreground">{m.purpose}</span>
                             <span className="mt-2 text-xs text-muted-foreground">
-                              {count} article{count === 1 ? "" : "s"}
+                              {count === 1 ? t("{{count}} article", { count }) : t("{{count}} articles", { count })}
                             </span>
                           </Link>
                         </li>
@@ -147,12 +149,12 @@ export default function HelpHomePage() {
             )}
           </Section>
 
-          <Section icon={Users} title="Browse by role">
+          <Section icon={Users} title={t("Browse by role")}>
             <ul className="flex flex-wrap gap-2">
               {SCHOOL_ROLES.map((r) => (
                 <li key={r}>
                   <Link to={roleHref(r)} className="inline-flex rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium text-foreground shadow-xs transition-colors hover:border-primary/30 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    {ROLE_LABELS[r]}
+                    {t(ROLE_LABELS[r])}
                   </Link>
                 </li>
               ))}

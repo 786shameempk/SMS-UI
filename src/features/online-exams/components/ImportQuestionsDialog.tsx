@@ -171,7 +171,7 @@ export default function ImportQuestionsDialog({ open, onOpenChange, mode, subjec
                   <AlertTriangle className="h-4 w-4" />
                   {checked.problems.length} row{checked.problems.length === 1 ? "" : "s"} will be skipped
                 </p>
-                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+                <ul className="mt-1 list-disc space-y-0.5 ps-5 text-xs">
                   {checked.problems.slice(0, 20).map((p) => (
                     <li key={p}>{p}</li>
                   ))}

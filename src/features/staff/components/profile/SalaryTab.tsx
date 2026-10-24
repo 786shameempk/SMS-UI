@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Wallet } from "lucide-react";
 import toast from "react-hot-toast";
@@ -16,6 +17,7 @@ function currentMonthKey(): string {
 }
 
 export default function SalaryTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["staff"] });
@@ -32,7 +34,7 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
     mutationFn: (values: SalaryDetails) => updateSalary(staff.id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Salary structure saved");
+      toast.success(t("Salary structure saved"));
     },
   });
 
@@ -40,7 +42,7 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
     mutationFn: () => recordSalaryPayment(staff.id, currentMonthKey()),
     onSuccess: () => {
       invalidate();
-      toast.success("Payment recorded");
+      toast.success(t("Payment recorded"));
     },
   });
 
@@ -53,39 +55,39 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wallet className="w-4 h-4 text-muted-foreground" />
-            Salary structure
+            {t("Salary structure")}
           </CardTitle>
-          <CardDescription>Net monthly salary: {formatCurrency(net)}</CardDescription>
+          <CardDescription>{t("Net monthly salary: {{amount}}", { amount: formatCurrency(net) })}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit((values) => salaryMutation.mutate(values))} className="space-y-4 max-w-lg">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
-                <Label htmlFor="basic">Basic</Label>
+                <Label htmlFor="basic">{t("Basic")}</Label>
                 <Input id="basic" type="number" {...register("basic", { valueAsNumber: true })} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="allowances">Allowances</Label>
+                <Label htmlFor="allowances">{t("Allowances")}</Label>
                 <Input id="allowances" type="number" {...register("allowances", { valueAsNumber: true })} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="deductions">Deductions</Label>
+                <Label htmlFor="deductions">{t("Deductions")}</Label>
                 <Input id="deductions" type="number" {...register("deductions", { valueAsNumber: true })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="bankName">Bank name</Label>
+                <Label htmlFor="bankName">{t("Bank name")}</Label>
                 <Input id="bankName" {...register("bankName")} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="bankAccountNumber">Account number</Label>
+                <Label htmlFor="bankAccountNumber">{t("Account number")}</Label>
                 <Input id="bankAccountNumber" {...register("bankAccountNumber")} />
               </div>
             </div>
             <Button type="submit" size="sm" disabled={!isDirty || salaryMutation.isPending}>
               {salaryMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Save salary structure
+              {t("Save salary structure")}
             </Button>
           </form>
         </CardContent>
@@ -94,21 +96,21 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Payment history</CardTitle>
-            <CardDescription>Monthly salary payments on record.</CardDescription>
+            <CardTitle>{t("Payment history")}</CardTitle>
+            <CardDescription>{t("Monthly salary payments on record.")}</CardDescription>
           </div>
           <Button size="sm" disabled={alreadyPaidThisMonth || paymentMutation.isPending} onClick={() => paymentMutation.mutate()}>
             {paymentMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-            {alreadyPaidThisMonth ? "Paid this month" : "Record this month's payment"}
+            {alreadyPaidThisMonth ? t("Paid this month") : t("Record this month's payment")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-2">
-          {staff.salaryHistory.length === 0 && <p className="text-sm text-muted-foreground">No payments recorded yet.</p>}
+          {staff.salaryHistory.length === 0 && <p className="text-sm text-muted-foreground">{t("No payments recorded yet.")}</p>}
           {staff.salaryHistory.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <p className="text-sm font-medium text-foreground">{p.month}</p>
               <p className="text-sm text-secondary-foreground tabular-nums">
-                {formatCurrency(p.amountPaid)} &middot; paid {new Date(p.paidOn).toLocaleDateString()}
+                {t("{{amount}} · paid {{date}}", { amount: formatCurrency(p.amountPaid), date: new Date(p.paidOn).toLocaleDateString() })}
               </p>
             </div>
           ))}

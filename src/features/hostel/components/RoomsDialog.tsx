@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +38,7 @@ export default function RoomsDialog({
   onOpenChange: (open: boolean) => void;
   hostel: Hostel | null;
 }) {
+  const { t } = useTranslation("hostel");
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Room | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -74,31 +76,31 @@ export default function RoomsDialog({
     mutationFn: (values: RoomFormValues) => addRoom(hostel!.id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Room added");
+      toast.success(t("Room added"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add room"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add room")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: RoomFormValues }) => updateRoom(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Room updated");
+      toast.success(t("Room updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update room"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update room")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteRoom,
     onSuccess: () => {
       invalidate();
-      toast.success("Room removed");
+      toast.success(t("Room removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove room"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not remove room")),
   });
 
   return (
@@ -115,8 +117,8 @@ export default function RoomsDialog({
       >
         <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
           <DialogHeader>
-            <DialogTitle>Rooms — {hostel?.name}</DialogTitle>
-            <DialogDescription>Capacity sets the number of beds; occupancy updates as students are allocated.</DialogDescription>
+            <DialogTitle>{t("Rooms — {{hostel}}", { hostel: hostel?.name })}</DialogTitle>
+            <DialogDescription>{t("Capacity sets the number of beds; occupancy updates as students are allocated.")}</DialogDescription>
           </DialogHeader>
 
           {!formOpen && (
@@ -129,11 +131,11 @@ export default function RoomsDialog({
                 }}
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add room
+                {t("Add room")}
               </Button>
 
-              {isLoading && <p className="text-sm text-muted-foreground">Loading rooms…</p>}
-              {!isLoading && rooms.length === 0 && <p className="text-sm text-muted-foreground">No rooms in this hostel yet.</p>}
+              {isLoading && <p className="text-sm text-muted-foreground">{t("Loading rooms…")}</p>}
+              {!isLoading && rooms.length === 0 && <p className="text-sm text-muted-foreground">{t("No rooms in this hostel yet.")}</p>}
 
               <ul className="space-y-2">
                 {rooms.map((room) => {
@@ -148,7 +150,7 @@ export default function RoomsDialog({
                           {room.roomType} · {room.occupiedBeds}/{room.capacity} beds occupied
                         </p>
                       </div>
-                      <Badge variant={config.variant}>{config.label}</Badge>
+                      <Badge variant={config.variant}>{t(config.label)}</Badge>
                       <div className="flex items-center gap-0.5 shrink-0">
                         <Button
                           variant="ghost"
@@ -182,25 +184,25 @@ export default function RoomsDialog({
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-roomNumber" required>Room number</Label>
+                  <Label htmlFor="room-roomNumber" required>{t("Room number")}</Label>
                   <Input id="room-roomNumber" placeholder="e.g. 1-101" aria-invalid={errors.roomNumber ? true : undefined} {...register("roomNumber")} />
-                  {errors.roomNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.roomNumber.message}</p>}
+                  {errors.roomNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.roomNumber.message ?? "")}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-floor" required>Floor</Label>
-                  <Input id="room-floor" placeholder="e.g. 1st Floor" aria-invalid={errors.floor ? true : undefined} {...register("floor")} />
-                  {errors.floor && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.floor.message}</p>}
+                  <Label htmlFor="room-floor" required>{t("Floor")}</Label>
+                  <Input id="room-floor" placeholder={t("e.g. 1st Floor")} aria-invalid={errors.floor ? true : undefined} {...register("floor")} />
+                  {errors.floor && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.floor.message ?? "")}</p>}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-capacity" required>Capacity (beds)</Label>
+                  <Label htmlFor="room-capacity" required>{t("Capacity (beds)")}</Label>
                   <Input id="room-capacity" type="number" min="1" step="1" aria-invalid={errors.capacity ? true : undefined} {...register("capacity")} />
-                  {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.capacity.message}</p>}
+                  {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.capacity.message ?? "")}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="room-roomType" required>Room type</Label>
+                  <Label htmlFor="room-roomType" required>{t("Room type")}</Label>
                   <Controller
                     control={control}
                     name="roomType"
@@ -212,7 +214,7 @@ export default function RoomsDialog({
                         <SelectContent>
                           {ROOM_TYPE_OPTIONS.map((o) => (
                             <SelectItem key={o.value} value={o.value}>
-                              {o.label}
+                              {t(o.label)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -223,7 +225,7 @@ export default function RoomsDialog({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="room-status" required>Status</Label>
+                <Label htmlFor="room-status" required>{t("Status")}</Label>
                 <Controller
                   control={control}
                   name="status"
@@ -233,8 +235,8 @@ export default function RoomsDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="active">{t("Active")}</SelectItem>
+                        <SelectItem value="maintenance">{t("Maintenance")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -250,11 +252,11 @@ export default function RoomsDialog({
                     setEditing(null);
                   }}
                 >
-                  Cancel
+                  {t("Cancel")}
                 </Button>
                 <Button type="submit" disabled={addMutation.isPending || updateMutation.isPending}>
                   {(addMutation.isPending || updateMutation.isPending) && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {editing ? "Save changes" : "Add room"}
+                  {editing ? t("Save changes") : t("Add room")}
                 </Button>
               </div>
             </form>
@@ -265,9 +267,9 @@ export default function RoomsDialog({
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove room"
-        description={`Remove room "${deleteTarget?.roomNumber}"? This cannot be undone.`}
-        confirmLabel="Remove"
+        title={t("Remove room")}
+        description={t("Remove room \"{{room}}\"? This cannot be undone.", { room: deleteTarget?.roomNumber })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

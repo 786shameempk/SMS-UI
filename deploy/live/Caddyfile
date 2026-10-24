@@ -80,6 +80,16 @@ http://127.0.0.1:9123 {
 		reverse_proxy apigateway:8080
 	}
 
+	# Biometric terminals speaking ZKTeco ADMS (push) post to /iclock/* and identify themselves only by serial number.
+	# Off by default. To enable, uncomment and replace the addresses with the school sites' public IPs (never leave it open):
+	# @adms {
+	# 	path /iclock/*
+	# 	remote_ip 203.0.113.10/32 198.51.100.0/28
+	# }
+	# handle @adms {
+	# 	reverse_proxy academicservice:8080
+	# }
+
 	# LiveKit signalling (WebSocket). The prefix is stripped, so wss://APP_DOMAIN/livekit/rtc reaches LiveKit's /rtc.
 	# Media doesn't come through here: it goes straight to LiveKit on 7881/tcp, 7882/udp and 3478/udp.
 	handle_path /livekit/* {

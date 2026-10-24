@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowRight, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ export default function WidgetCard({
   description,
   icon,
   href,
-  hrefLabel = "View all",
+  hrefLabel,
   isEmpty = false,
   emptyTitle,
   emptyDescription,
@@ -29,6 +30,7 @@ export default function WidgetCard({
   emptyDescription?: string;
   children: ReactNode;
 }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card className="flex h-full flex-col">
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
@@ -41,13 +43,13 @@ export default function WidgetCard({
             to={href}
             className="inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-medium text-primary-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {hrefLabel}
+            {hrefLabel ?? t("View all")}
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         )}
       </CardHeader>
       <CardContent className="flex-1">
-        {isEmpty ? <EmptyState bare size="sm" icon={icon} title={emptyTitle ?? "Nothing to show"} description={emptyDescription} className="h-full py-6" /> : children}
+        {isEmpty ? <EmptyState bare size="sm" icon={icon} title={emptyTitle ?? t("Nothing to show")} description={emptyDescription} className="h-full py-6" /> : children}
       </CardContent>
     </Card>
   );

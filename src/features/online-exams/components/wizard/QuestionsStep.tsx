@@ -152,7 +152,7 @@ export default function QuestionsStep({ state, update, subjectName, error }: Que
                         const marks = e.target.value === "" ? NaN : Number(e.target.value);
                         setQuestions((qs) => qs.map((x, j) => (j === i ? { ...x, content: { ...x.content, marks } } : x)));
                       }}
-                      className="h-8 w-16 text-right tabular-nums"
+                      className="h-8 w-16 text-end tabular-nums"
                       aria-label={`Marks for question ${i + 1}`}
                     />
                   </label>

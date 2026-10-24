@@ -149,19 +149,25 @@ describe("fees api", () => {
     expect(calls.find((c) => c.url === "/api/refunds" && c.method === "POST")?.body).toEqual({ feeInvoiceId: "i1", amount: 500, reason: "Duplicate" });
   });
 
-  it("online payment with Razorpay", async () => {
+  it("online payment: any gateway, with the payer's details and a provider", async () => {
     const calls = stubClient(financeHttpClient, {
-      "GET /api/payments/config": { enabled: true, keyId: "rzp_test", currency: "INR" },
-      "POST /api/payments/razorpay/orders": { orderId: "order_1", keyId: "rzp_test", amountPaise: 700000, currency: "INR", invoiceId: "i1", description: "" },
-      "POST /api/payments/razorpay/verify": { status: "Paid", invoice: invoice({ status: "Paid" }), receipt: null },
+      "GET /api/payments/config": { enabled: true, keyId: "rzp_test", currency: "INR", gateways: [{ provider: "razorpay", displayName: "Razorpay", mode: "Test", isDefault: true, payerFields: [] }], defaultProvider: "razorpay" },
+      "POST /api/payments/orders": { orderId: "order_1", keyId: "rzp_test", amountPaise: 700000, currency: "INR", invoiceId: "i1", description: "", provider: "razorpay", mode: "Test", checkoutKind: "razorpay", checkoutUrl: null, checkoutFields: null },
+      "POST /api/payments/verify": { status: "paid", invoice: invoice({ status: "Paid" }), receipt: null },
     });
 
-    expect((await fees.getPaymentConfig()).enabled).toBe(true);
+    const config = await fees.getPaymentConfig();
+    expect([config.enabled, config.gateways[0].provider, config.defaultProvider]).toEqual([true, "razorpay", "razorpay"]);
+    expect((await fees.createOnlinePaymentOrder("i1", "cashfree", { name: "Asha", phone: "9876543210" })).orderId).toBe("order_1");
     expect((await fees.createRazorpayOrder("i1")).orderId).toBe("order_1");
-    const verified = await fees.verifyRazorpayPayment({ orderId: "order_1", paymentId: "pay_1", signature: "sig" });
+    const verified = await fees.verifyOnlinePayment({ provider: "stripe", orderId: "cs_1" });
+    const legacy = await fees.verifyRazorpayPayment({ orderId: "order_1", paymentId: "pay_1", signature: "sig" });
 
-    expect([verified.invoice.status, verified.receipt]).toEqual(["paid", null]);
-    expect(calls[1].body).toEqual({ invoiceId: "i1" });
+    expect([verified.invoice.status, verified.receipt, legacy.invoice.status]).toEqual(["paid", null, "paid"]);
+    expect(calls[1].body).toEqual({ invoiceId: "i1", provider: "cashfree", payerName: "Asha", payerEmail: null, payerPhone: "9876543210" });
+    expect(calls[2].body).toMatchObject({ invoiceId: "i1", provider: "razorpay" });
+    expect(calls[3].body).toEqual({ provider: "stripe", orderId: "cs_1" });
+    expect(calls[4].body).toEqual({ provider: "razorpay", orderId: "order_1", paymentId: "pay_1", signature: "sig" });
   });
 
   it("wraps failures in a readable error", async () => {

@@ -27,7 +27,7 @@ export default function ChildSwitcher({
             type="button"
             onClick={() => onSelect(child.id)}
             className={cn(
-              "flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border transition-colors cursor-pointer",
+              "flex items-center gap-2 ps-1.5 pe-3 py-1.5 rounded-full border transition-colors cursor-pointer",
               active ? "border-primary/40 bg-brand-500/10 shadow-sm" : "border-border bg-card hover:bg-secondary",
             )}
           >

@@ -18,6 +18,7 @@ import type { ComposeMessageFormValues } from "../types";
 import ChannelSelector from "./ChannelSelector";
 import MultiSelectList from "./MultiSelectList";
 
+import { useTranslation } from "react-i18next";
 const NONE = "__none__";
 const channelEnum = z.enum(["email", "sms", "push", "whatsapp", "in-app"]);
 
@@ -36,8 +37,11 @@ type FormValues = z.infer<typeof composeSchema>;
 const emptyValues: FormValues = { subject: "", body: "", channels: ["email"], groupIds: [], studentIds: [], staffIds: [], scheduledAt: "" };
 
 export default function ComposeTab() {
+  const { t: tr } = useTranslation("communication");
   const queryClient = useQueryClient();
   const [templateId, setTemplateId] = useState(NONE);
+  // One key per message being written: a double click or a retried request cannot send it twice.
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   const { data: groups = [] } = useQuery({ queryKey: ["communication", "groups"], queryFn: listGroups });
   const { data: templates = [] } = useQuery({ queryKey: ["communication", "templates"], queryFn: listTemplates });
@@ -85,11 +89,12 @@ export default function ComposeTab() {
     onSuccess: (message) => {
       queryClient.invalidateQueries({ queryKey: ["communication", "messages"] });
       if (message.channels.includes("in-app")) queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success(message.status === "scheduled" ? "Message scheduled" : "Message sent");
+      toast.success(message.status === "scheduled" ? tr("Message scheduled") : tr("Message sent"));
       reset(emptyValues);
       setTemplateId(NONE);
+      setIdempotencyKey(crypto.randomUUID());
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not send message"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : tr("Could not send message")),
   });
 
   const applyTemplate = (id: string) => {
@@ -113,6 +118,8 @@ export default function ComposeTab() {
           studentIds: values.studentIds,
           staffIds: values.staffIds,
           scheduledAt: values.scheduledAt || undefined,
+          templateId: templateId === NONE ? undefined : templateId,
+          idempotencyKey,
         };
         composeMutation.mutate(payload);
       })}
@@ -120,17 +127,17 @@ export default function ComposeTab() {
     >
       <Card>
         <CardHeader>
-          <CardTitle>Message</CardTitle>
+          <CardTitle>{tr("Message")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="cmp-template" optional>Start from a template</Label>
+            <Label htmlFor="cmp-template" optional>{tr("Start from a template")}</Label>
             <Select value={templateId} onValueChange={applyTemplate}>
               <SelectTrigger id="cmp-template">
-                <SelectValue placeholder="None" />
+                <SelectValue placeholder={tr("None")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NONE}>None</SelectItem>
+                <SelectItem value={NONE}>{tr("None")}</SelectItem>
                 {templates.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
@@ -141,18 +148,18 @@ export default function ComposeTab() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cmp-subject">Subject (optional, used for email)</Label>
-            <Input id="cmp-subject" placeholder="e.g. Fee payment reminder" {...register("subject")} />
+            <Label htmlFor="cmp-subject">{tr("Subject (optional, used for email)")}</Label>
+            <Input id="cmp-subject" placeholder={tr("e.g. Fee payment reminder")} {...register("subject")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cmp-body" required>Message</Label>
-            <Textarea id="cmp-body" rows={6} placeholder="Write your message…" aria-invalid={errors.body ? true : undefined} {...register("body")} />
+            <Label htmlFor="cmp-body" required>{tr("Message")}</Label>
+            <Textarea id="cmp-body" rows={6} placeholder={tr("Write your message…")} aria-invalid={errors.body ? true : undefined} {...register("body")} />
             {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label>Channels</Label>
+            <Label>{tr("Channels")}</Label>
             <Controller control={control} name="channels" render={({ field }) => <ChannelSelector value={field.value} onChange={field.onChange} />} />
             {errors.channels && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.channels.message}</p>}
           </div>
@@ -160,17 +167,17 @@ export default function ComposeTab() {
           <div className="space-y-1.5">
             <Label htmlFor="cmp-scheduledAt" className="flex items-center gap-1.5">
               <CalendarClock className="w-3.5 h-3.5" />
-              Schedule for later (optional)
+              {tr("Schedule for later (optional)")}
             </Label>
             <Input id="cmp-scheduledAt" type="datetime-local" {...register("scheduledAt")} />
-            <p className="text-xs text-muted-foreground">Leave blank to send immediately.</p>
+            <p className="text-xs text-muted-foreground">{tr("Leave blank to send immediately.")}</p>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Recipients</CardTitle>
+          <CardTitle>{tr("Recipients")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Controller
@@ -178,12 +185,12 @@ export default function ComposeTab() {
             name="groupIds"
             render={({ field }) => (
               <MultiSelectList
-                label="Groups"
+                label={tr("Groups")}
                 options={groupOptions}
                 selected={field.value}
                 onChange={field.onChange}
                 searchPlaceholder="Search groups…"
-                emptyMessage="No groups yet — create one in the Groups tab."
+                emptyMessage={tr("No groups yet — create one in the Groups tab.")}
               />
             )}
           />
@@ -191,24 +198,24 @@ export default function ComposeTab() {
             control={control}
             name="studentIds"
             render={({ field }) => (
-              <MultiSelectList label="Individual students" options={studentOptions} selected={field.value} onChange={field.onChange} searchPlaceholder="Search students…" />
+              <MultiSelectList label={tr("Individual students")} options={studentOptions} selected={field.value} onChange={field.onChange} searchPlaceholder="Search students…" />
             )}
           />
           <Controller
             control={control}
             name="staffIds"
             render={({ field }) => (
-              <MultiSelectList label="Individual staff" options={staffOptions} selected={field.value} onChange={field.onChange} searchPlaceholder="Search staff…" />
+              <MultiSelectList label={tr("Individual staff")} options={staffOptions} selected={field.value} onChange={field.onChange} searchPlaceholder="Search staff…" />
             )}
           />
 
           <div className="rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-foreground">
-            <span className="font-semibold">{recipientCount}</span> recipient{recipientCount === 1 ? "" : "s"} will receive this message.
+            <span className="font-semibold">{recipientCount}</span> {tr("recipient")}{recipientCount === 1 ? "" : "s"} {tr("will receive this message.")}
           </div>
 
           <Button type="submit" className="w-full" disabled={composeMutation.isPending}>
             {composeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            {scheduledAt ? "Schedule message" : "Send now"}
+            {scheduledAt ? tr("Schedule message") : tr("Send now")}
           </Button>
         </CardContent>
       </Card>

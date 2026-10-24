@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { CalendarCheck2, Check, CircleUserRound, HardDrive, Lock, MessageSquareQuote, Sparkles, UserRoundCog, Users, type LucideIcon } from "lucide-react";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const NOTICE_TONE: Record<Exclude<SubscriptionNoticeLevel, "ok">, string> = {
 const TIER_PLAN: Record<NonNullable<Subscription["tier"]>, string> = { Starter: "Starter", Growth: "Professional", Enterprise: "Enterprise" };
 
 function UsageMeter({ icon: Icon, label, used, max, unit }: { icon: LucideIcon; label: string; used: number | null; max: number | null; unit: string }) {
+  const { t } = useTranslation("settings");
   const pct = used != null && max ? Math.min(100, Math.round((used / max) * 100)) : null;
   const tone = pct == null ? "bg-primary" : pct >= 95 ? "bg-destructive" : pct >= 80 ? "bg-warning" : "bg-primary";
   return (
@@ -45,15 +47,15 @@ function UsageMeter({ icon: Icon, label, used, max, unit }: { icon: LucideIcon; 
       </div>
       <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
         {used == null ? "—" : used.toLocaleString("en-IN")}
-        <span className="text-sm font-normal text-muted-foreground"> {max ? `of ${max.toLocaleString("en-IN")} ${unit}` : unit}</span>
+        <span className="text-sm font-normal text-muted-foreground"> {max ? t("of {{max}} {{unit}}", { max: max.toLocaleString("en-IN"), unit }) : unit}</span>
       </p>
       {pct != null && (
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-label={`${label} used`} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-label={t("{{label}} used", { label })} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
           <div className={cn("h-full rounded-full transition-all", tone)} style={{ width: `${pct}%` }} />
         </div>
       )}
-      {pct != null && pct >= 80 && <p className="mt-2 text-xs text-warning-strong">Nearing your plan's limit.</p>}
-      {max == null && <p className="mt-2 text-xs text-muted-foreground">No limit on your plan.</p>}
+      {pct != null && pct >= 80 && <p className="mt-2 text-xs text-warning-strong">{t("Nearing your plan's limit.")}</p>}
+      {max == null && <p className="mt-2 text-xs text-muted-foreground">{t("No limit on your plan.")}</p>}
     </div>
   );
 }
@@ -77,6 +79,7 @@ export default function SubscriptionTab() {
   const [contactOpen, setContactOpen] = useState(false);
   const subscription = useQuery({ queryKey: ["settings", "subscription", tenantId], queryFn: getSubscription });
   const usage = useQuery({ queryKey: ["settings", "plan-usage", tenantId], queryFn: getPlanUsage });
+  const { t } = useTranslation("settings");
 
   if (subscription.isLoading) {
     return (
@@ -93,7 +96,7 @@ export default function SubscriptionTab() {
   if (subscription.isError || !subscription.data) {
     return (
       <ErrorState
-        title="Couldn't load your subscription"
+        title={t("Couldn't load your subscription")}
         description={subscription.error instanceof Error ? subscription.error.message : undefined}
         onRetry={() => subscription.refetch()}
         retrying={subscription.isRefetching}
@@ -103,7 +106,7 @@ export default function SubscriptionTab() {
 
   const s = subscription.data;
   const status = STATUS[s.status];
-  const planName = s.tier ? TIER_PLAN[s.tier] : (s.planName ?? "Full access");
+  const planName = s.tier ? TIER_PLAN[s.tier] : (s.planName ?? t("Full access"));
   const highlights = PLAN_SOLUTIONS.find((p) => p.key === planName);
 
   return (
@@ -117,39 +120,45 @@ export default function SubscriptionTab() {
                 {highlights ? <highlights.icon className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
               </span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current Plan</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("Current Plan")}</p>
                 <h2 className="mt-0.5 text-2xl font-bold text-foreground">{planName}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{highlights?.subtitle ?? "Every module is enabled for your school."}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{highlights?.subtitle ?? t("Every module is enabled for your school.")}</p>
               </div>
             </div>
             <Badge variant={status.tone} dot className="w-fit">
-              {status.label}
+              {t(status.label)}
             </Badge>
           </div>
-          <p className="mt-4 text-sm text-secondary-foreground">{status.note}</p>
+          <p className="mt-4 text-sm text-secondary-foreground">{t(status.note)}</p>
           {s.managedByOffice && s.notice && s.noticeLevel && s.noticeLevel !== "ok" && (
             <p role="status" className={cn("mt-3 rounded-lg border px-3 py-2 text-sm", NOTICE_TONE[s.noticeLevel])}>
               {s.notice}
             </p>
           )}
           <dl className="mt-5 grid gap-4 border-t border-border/70 pt-5 sm:grid-cols-3">
-            <Detail label="Subscribed since">
+            <Detail label={t("Subscribed since")}>
               <span className="flex items-center gap-1.5">
                 <CalendarCheck2 className="h-3.5 w-3.5 text-muted-foreground" />
                 {formatDate(s.subscribedSince)}
               </span>
             </Detail>
             {s.managedByOffice && s.endDate ? (
-              <Detail label={s.subscriptionState === "Trial" ? "Trial ends" : "Current term ends"}>
+              <Detail label={s.subscriptionState === "Trial" ? t("Trial ends") : t("Current term ends")}>
                 {formatDate(s.endDate)}
                 {s.daysLeft != null && (
-                  <span className="block text-xs font-normal text-muted-foreground">{s.daysLeft < 0 ? `${-s.daysLeft} days ago` : s.daysLeft === 0 ? "today" : `in ${s.daysLeft} day${s.daysLeft === 1 ? "" : "s"}`}</span>
+                  <span className="block text-xs font-normal text-muted-foreground">{s.daysLeft < 0
+                      ? t("{{count}} days ago", { count: -s.daysLeft })
+                      : s.daysLeft === 0
+                        ? t("today")
+                        : s.daysLeft === 1
+                          ? t("in {{count}} day", { count: s.daysLeft })
+                          : t("in {{count}} days", { count: s.daysLeft })}</span>
                 )}
               </Detail>
             ) : (
-              <Detail label="Renewal">Arranged with your School Sphere account team</Detail>
+              <Detail label={t("Renewal")}>{t("Arranged with your School Sphere account team")}</Detail>
             )}
-            <Detail label="Billing contact">
+            <Detail label={t("Billing contact")}>
               <span className="flex items-center gap-1.5">
                 <CircleUserRound className="h-3.5 w-3.5 text-muted-foreground" />
                 {s.billingContactName}
@@ -163,26 +172,26 @@ export default function SubscriptionTab() {
       {/* Usage */}
       <Card>
         <CardHeader>
-          <CardTitle>Usage</CardTitle>
-          <CardDescription>Students and staff counted against your plan, across every branch.</CardDescription>
+          <CardTitle>{t("Usage")}</CardTitle>
+          <CardDescription>{t("Students and staff counted against your plan, across every branch.")}</CardDescription>
         </CardHeader>
         <CardContent>
           {usage.isError ? (
-            <ErrorState title="Couldn't load usage" onRetry={() => usage.refetch()} retrying={usage.isRefetching} />
+            <ErrorState title={t("Couldn't load usage")} onRetry={() => usage.refetch()} retrying={usage.isRefetching} />
           ) : (
             <div className="grid gap-4 sm:grid-cols-3">
-              <UsageMeter icon={Users} label="Students" used={usage.data?.studentCount ?? null} max={s.maxStudents} unit="students" />
-              <UsageMeter icon={UserRoundCog} label="Staff" used={usage.data?.staffCount ?? null} max={s.maxStaff} unit="staff" />
+              <UsageMeter icon={Users} label={t("Students")} used={usage.data?.studentCount ?? null} max={s.maxStudents} unit={t("students")} />
+              <UsageMeter icon={UserRoundCog} label={t("Staff")} used={usage.data?.staffCount ?? null} max={s.maxStaff} unit={t("staff")} />
               <div className="rounded-xl border border-border/80 p-4">
                 <span className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <HardDrive className="h-4 w-4 text-muted-foreground" />
-                  Document storage
+                  {t("Document storage")}
                 </span>
                 <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
                   {s.storageGb ? `${s.storageGb} GB` : "—"}
-                  <span className="text-sm font-normal text-muted-foreground"> included</span>
+                  <span className="text-sm font-normal text-muted-foreground"> {t("included")}</span>
                 </p>
-                <p className="mt-2 text-xs text-muted-foreground">For documents, study materials and uploads.</p>
+                <p className="mt-2 text-xs text-muted-foreground">{t("For documents, study materials and uploads.")}</p>
               </div>
             </div>
           )}
@@ -193,9 +202,11 @@ export default function SubscriptionTab() {
         {/* Included modules */}
         <Card>
           <CardHeader>
-            <CardTitle>Included modules</CardTitle>
+            <CardTitle>{t("Included modules")}</CardTitle>
             <CardDescription>
-              {s.includedModules.length} module{s.includedModules.length === 1 ? "" : "s"} enabled for your school. Roles & Permissions decides who can use each one.
+              {s.includedModules.length === 1
+                ? t("{{count}} module enabled for your school. Roles & Permissions decides who can use each one.", { count: s.includedModules.length })
+                : t("{{count}} modules enabled for your school. Roles & Permissions decides who can use each one.", { count: s.includedModules.length })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -217,8 +228,8 @@ export default function SubscriptionTab() {
           {highlights && (
             <Card>
               <CardHeader>
-                <CardTitle>Enabled features</CardTitle>
-                <CardDescription>What your {planName} plan includes.</CardDescription>
+                <CardTitle>{t("Enabled features")}</CardTitle>
+                <CardDescription>{t("What your {{plan}} plan includes.", { plan: planName })}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
@@ -236,12 +247,12 @@ export default function SubscriptionTab() {
           {/* Available additional modules */}
           <Card>
             <CardHeader>
-              <CardTitle>Available additional modules</CardTitle>
-              <CardDescription>Modules offered on other plans that your school doesn't have yet.</CardDescription>
+              <CardTitle>{t("Available additional modules")}</CardTitle>
+              <CardDescription>{t("Modules offered on other plans that your school doesn't have yet.")}</CardDescription>
             </CardHeader>
             <CardContent>
               {s.availableModules.length === 0 ? (
-                <EmptyState bare size="sm" icon={Sparkles} title="You have every module" description="Your plan already includes the full School Sphere suite." />
+                <EmptyState bare size="sm" icon={Sparkles} title={t("You have every module")} description={t("Your plan already includes the full School Sphere suite.")} />
               ) : (
                 <ul className="flex flex-wrap gap-2">
                   {s.availableModules.map((m) => (
@@ -265,12 +276,12 @@ export default function SubscriptionTab() {
               <MessageSquareQuote className="h-5 w-5" />
             </span>
             <div>
-              <p className="font-semibold text-foreground">Looking for additional features?</p>
-              <p className="text-sm text-muted-foreground">Plans are tailored to your requirements. Reach out and our team will walk you through the options.</p>
+              <p className="font-semibold text-foreground">{t("Looking for additional features?")}</p>
+              <p className="text-sm text-muted-foreground">{t("Plans are tailored to your requirements. Reach out and our team will walk you through the options.")}</p>
             </div>
           </div>
           <Button onClick={() => setContactOpen(true)} className="shrink-0">
-            Contact Administrator
+            {t("Contact Administrator")}
           </Button>
         </CardContent>
       </Card>

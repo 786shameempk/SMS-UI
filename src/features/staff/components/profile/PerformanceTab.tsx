@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,6 +45,7 @@ function ReviewStars({ rating }: { rating: number }) {
 }
 
 export default function PerformanceTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
 
@@ -63,7 +65,7 @@ export default function PerformanceTab({ staff }: { staff: StaffMember }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       queryClient.invalidateQueries({ queryKey: ["staff", staff.id] });
-      toast.success("Performance review added");
+      toast.success(t("Performance review added"));
       setFormOpen(false);
       reset();
     },
@@ -73,16 +75,16 @@ export default function PerformanceTab({ staff }: { staff: StaffMember }) {
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <div>
-          <CardTitle>Performance reviews</CardTitle>
-          <CardDescription>Periodic performance evaluations for this staff member.</CardDescription>
+          <CardTitle>{t("Performance reviews")}</CardTitle>
+          <CardDescription>{t("Periodic performance evaluations for this staff member.")}</CardDescription>
         </div>
         <Button size="sm" onClick={() => setFormOpen(true)}>
           <Plus className="w-3.5 h-3.5" />
-          Add review
+          {t("Add review")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        {staff.performanceReviews.length === 0 && <p className="text-sm text-muted-foreground">No reviews on file yet.</p>}
+        {staff.performanceReviews.length === 0 && <p className="text-sm text-muted-foreground">{t("No reviews on file yet.")}</p>}
         {staff.performanceReviews.map((r) => (
           <div key={r.id} className="rounded-lg border border-border p-3 space-y-1.5">
             <div className="flex items-center justify-between">
@@ -98,30 +100,30 @@ export default function PerformanceTab({ staff }: { staff: StaffMember }) {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add performance review</DialogTitle>
-            <DialogDescription>Record a new evaluation for {staff.firstName}.</DialogDescription>
+            <DialogTitle>{t("Add performance review")}</DialogTitle>
+            <DialogDescription>{t("Record a new evaluation for {{name}}.", { name: staff.firstName })}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit((values) => addMutation.mutate(values))} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="reviewerName" required>Reviewer</Label>
+              <Label htmlFor="reviewerName" required>{t("Reviewer")}</Label>
               <Input id="reviewerName" aria-invalid={errors.reviewerName ? true : undefined} {...register("reviewerName")} />
-              {errors.reviewerName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reviewerName.message}</p>}
+              {errors.reviewerName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.reviewerName.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>Rating</Label>
+              <Label>{t("Rating")}</Label>
               <Controller control={control} name="rating" render={({ field }) => <StarRating value={field.value} onChange={field.onChange} />} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="comments" required>Comments</Label>
+              <Label htmlFor="comments" required>{t("Comments")}</Label>
               <Textarea id="comments" rows={3} aria-invalid={errors.comments ? true : undefined} {...register("comments")} />
-              {errors.comments && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.comments.message}</p>}
+              {errors.comments && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.comments.message ?? "")}</p>}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button type="submit" loading={addMutation.isPending}>
-                Add review
+                {t("Add review")}
               </Button>
             </DialogFooter>
           </form>

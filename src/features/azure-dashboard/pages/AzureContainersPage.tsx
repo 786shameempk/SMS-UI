@@ -37,7 +37,7 @@ export default function AzureContainersPage() {
                       <TableRow>
                         <TableHead>Repository</TableHead>
                         <TableHead>Latest tag</TableHead>
-                        <TableHead className="text-right">Tags</TableHead>
+                        <TableHead className="text-end">Tags</TableHead>
                         <TableHead>Last updated</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -46,7 +46,7 @@ export default function AzureContainersPage() {
                         <TableRow key={repo.name}>
                           <TableCell className="font-medium">{repo.name}</TableCell>
                           <TableCell>{repo.latestTag ? <Badge variant="neutral">{repo.latestTag}</Badge> : "—"}</TableCell>
-                          <TableCell className="text-right tabular-nums">{repo.tagCount ?? "—"}</TableCell>
+                          <TableCell className="text-end tabular-nums">{repo.tagCount ?? "—"}</TableCell>
                           <TableCell className="text-muted-foreground">{repo.lastUpdated ? formatDateTime(repo.lastUpdated) : "—"}</TableCell>
                         </TableRow>
                       ))}

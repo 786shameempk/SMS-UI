@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { LayoutGrid, Pencil, RotateCcw } from "lucide-react";
 import { extractApiErrorMessage } from "@/lib/httpClient";
 import { Badge } from "@/components/ui/badge";
@@ -47,15 +49,17 @@ const toInput = (w: AdminWidgetSetting): AdminWidgetSettingInput => ({
 /** The roles that actually get a widget in this school. */
 const rolesOf = (w: AdminWidgetSetting): UserRole[] => w.allowedRoles ?? w.catalogRoles ?? ASSIGNABLE_ROLES;
 
-function refreshLabel(seconds: number): string {
-  if (seconds === 0) return "No auto-refresh";
-  if (seconds < 60) return `Refreshes every ${seconds}s`;
-  if (seconds < 3600) return `Refreshes every ${Math.round(seconds / 60)} min`;
-  return `Refreshes every ${Math.round(seconds / 3600)} h`;
+function refreshLabel(seconds: number, t: TFunction): string {
+  if (seconds === 0) return t("No auto-refresh");
+  if (seconds < 60) return t("Refreshes every {{seconds}}s", { seconds });
+  if (seconds < 3600) return t("Refreshes every {{minutes}} min", { minutes: Math.round(seconds / 60) });
+  return t("Refreshes every {{hours}} h", { hours: Math.round(seconds / 3600) });
 }
 
 function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidgetSetting; onEdit: () => void; onToggle: (enabled: boolean) => void; toggling: boolean }) {
+  const { t } = useTranslation("dashboard");
   const roles = rolesOf(widget);
+  const name = t(widget.name);
   return (
     <li className={cn("flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center", !widget.enabled && "bg-muted/40")}>
       <div className={cn("hidden h-14 w-28 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/60 sm:flex", !widget.enabled && "opacity-50 grayscale")}>
@@ -63,27 +67,27 @@ function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidget
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <p className={cn("text-sm font-semibold", widget.enabled ? "text-foreground" : "text-muted-foreground")}>{widget.name}</p>
-          {widget.customized && <Badge variant="brand">Customized</Badge>}
-          {!widget.enabled && <Badge variant="neutral">Off</Badge>}
-          {!widget.configurable && widget.enabled && <Badge variant="info">Locked</Badge>}
+          <p className={cn("text-sm font-semibold", widget.enabled ? "text-foreground" : "text-muted-foreground")}>{name}</p>
+          {widget.customized && <Badge variant="brand">{t("Customized")}</Badge>}
+          {!widget.enabled && <Badge variant="neutral">{t("Off")}</Badge>}
+          {!widget.configurable && widget.enabled && <Badge variant="info">{t("Locked")}</Badge>}
         </div>
-        <p className="truncate text-xs text-muted-foreground">{WIDGETS_BY_ID.get(widget.id)?.description}</p>
+        <p className="truncate text-xs text-muted-foreground">{t(WIDGETS_BY_ID.get(widget.id)?.description ?? "")}</p>
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">{roles.length === ASSIGNABLE_ROLES.length ? "Every role" : roles.map((r) => ROLE_NAME[r]).join(", ")}</span>
+          <span className="font-medium text-foreground">{roles.length === ASSIGNABLE_ROLES.length ? t("Every role") : roles.map((r) => t(ROLE_NAME[r])).join(", ")}</span>
           {" · "}
-          {WIDTH_LABEL[widget.defaultWidth]}, {HEIGHT_LABEL[widget.defaultHeight].toLowerCase()}
+          {t(WIDTH_LABEL[widget.defaultWidth])}, {t(HEIGHT_LABEL[widget.defaultHeight]).toLowerCase()}
           {" · "}
-          {widget.defaultVisible ? "Shown by default" : "Hidden by default"}
+          {widget.defaultVisible ? t("Shown by default") : t("Hidden by default")}
           {" · "}
-          {refreshLabel(widget.refreshInterval)}
+          {refreshLabel(widget.refreshInterval, t)}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-2 self-end sm:self-center">
-        <Switch checked={widget.enabled} disabled={toggling} onCheckedChange={onToggle} aria-label={`${widget.name} available in this school`} />
-        <Button variant="outline" size="sm" onClick={onEdit} aria-label={`Edit ${widget.name}`}>
+        <Switch checked={widget.enabled} disabled={toggling} onCheckedChange={onToggle} aria-label={t("{{name}} available in this school", { name })} />
+        <Button variant="outline" size="sm" onClick={onEdit} aria-label={t("Edit {{name}}", { name })}>
           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-          Edit
+          {t("Edit")}
         </Button>
       </div>
     </li>
@@ -91,25 +95,33 @@ function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidget
 }
 
 function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useTranslation("dashboard");
   const [role, setRole] = useState<UserRole>("teacher");
   const reset = useMutation({
     mutationFn: () => resetRoleDashboards(role),
     onSuccess: (count) => {
-      toast.success(count ? `Reset ${count} ${ROLE_NAME[role].toLowerCase()} dashboard${count === 1 ? "" : "s"}.` : `No ${ROLE_NAME[role].toLowerCase()} had customized their dashboard.`);
+      const roleName = t(ROLE_NAME[role]).toLowerCase();
+      toast.success(
+        count
+          ? count === 1
+            ? t("Reset {{n}} {{role}} dashboard.", { n: count, role: roleName })
+            : t("Reset {{n}} {{role}} dashboards.", { n: count, role: roleName })
+          : t("No {{role}} had customized their dashboard.", { role: roleName }),
+      );
       onOpenChange(false);
     },
-    onError: (err) => toast.error(extractApiErrorMessage(err, "Couldn't reset those dashboards.")),
+    onError: (err) => toast.error(extractApiErrorMessage(err, t("Couldn't reset those dashboards."))),
   });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Reset a role&apos;s dashboards</DialogTitle>
+          <DialogTitle>{t("Reset a role's dashboards")}</DialogTitle>
           <DialogDescription>
-            Everyone in this school with the role goes back to the default dashboard on their next visit. Their own arrangement is discarded.
+            {t("Everyone in this school with the role goes back to the default dashboard on their next visit. Their own arrangement is discarded.")}
           </DialogDescription>
         </DialogHeader>
-        <FormField label="Role" htmlFor="reset-role">
+        <FormField label={t("Role")} htmlFor="reset-role">
           <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
             <SelectTrigger id="reset-role">
               <SelectValue />
@@ -117,7 +129,7 @@ function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
             <SelectContent>
               {SCHOOL_ROLES.map((r) => (
                 <SelectItem key={r} value={r}>
-                  {ROLE_NAME[r]}
+                  {t(ROLE_NAME[r])}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -125,10 +137,10 @@ function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
         </FormField>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button variant="destructive" loading={reset.isPending} onClick={() => reset.mutate()}>
-            Reset dashboards
+            {t("Reset dashboards")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -141,6 +153,7 @@ function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
  * starts from. The server enforces all of it (a role can only be narrowed, never widened past the catalog).
  */
 export default function WidgetManagementTab() {
+  const { t } = useTranslation("dashboard");
   const queryClient = useQueryClient();
   const widgets = useQuery({ queryKey: QUERY_KEY, queryFn: listAdminWidgetSettings });
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
@@ -159,18 +172,18 @@ export default function WidgetManagementTab() {
     onSuccess: (updated) => {
       afterChange(updated);
       setEditing(null);
-      toast.success(`${updated.name} saved.`);
+      toast.success(t("{{name}} saved.", { name: t(updated.name) }));
     },
-    onError: (err) => toast.error(extractApiErrorMessage(err, "Couldn't save the widget settings.")),
+    onError: (err) => toast.error(extractApiErrorMessage(err, t("Couldn't save the widget settings."))),
   });
   const reset = useMutation({
     mutationFn: resetAdminWidgetSetting,
     onSuccess: (updated) => {
       afterChange(updated);
       setEditing(null);
-      toast.success(`${updated.name} is back to its defaults.`);
+      toast.success(t("{{name}} is back to its defaults.", { name: t(updated.name) }));
     },
-    onError: (err) => toast.error(extractApiErrorMessage(err, "Couldn't reset the widget.")),
+    onError: (err) => toast.error(extractApiErrorMessage(err, t("Couldn't reset the widget."))),
   });
 
   const visible = useMemo(() => {
@@ -195,55 +208,57 @@ export default function WidgetManagementTab() {
     <Card>
       <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <CardTitle>Dashboard widgets</CardTitle>
+          <CardTitle>{t("Dashboard widgets")}</CardTitle>
           <CardDescription>
-            Choose which widgets each role gets and how their default dashboard looks. People can still personalise any widget you leave customizable.
+            {t("Choose which widgets each role gets and how their default dashboard looks. People can still personalise any widget you leave customizable.")}
             {widgets.data && (
               <span className="mt-1 block">
-                {enabledCount} of {widgets.data.length} widgets on{customizedCount ? ` · ${customizedCount} customized for this school` : ""}.
+                {customizedCount
+                  ? t("{{enabled}} of {{total}} widgets on · {{customized}} customized for this school.", { enabled: enabledCount, total: widgets.data.length, customized: customizedCount })
+                  : t("{{enabled}} of {{total}} widgets on.", { enabled: enabledCount, total: widgets.data.length })}
               </span>
             )}
           </CardDescription>
         </div>
         <Button variant="outline" size="sm" onClick={() => setResetOpen(true)} className="shrink-0">
           <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-          Reset a role&apos;s dashboards
+          {t("Reset a role's dashboards")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <SearchInput value={search} onValueChange={setSearch} placeholder="Search widgets" aria-label="Search widgets" containerClassName="lg:w-64" />
-          <div role="group" aria-label="Show widgets for role" className="flex flex-wrap gap-1.5">
+          <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search widgets")} aria-label={t("Search widgets")} containerClassName="lg:w-64" />
+          <div role="group" aria-label={t("Show widgets for role")} className="flex flex-wrap gap-1.5">
             <ToggleChip pressed={roleFilter === "all"} onClick={() => setRoleFilter("all")}>
-              All roles
+              {t("All roles")}
             </ToggleChip>
             {ASSIGNABLE_ROLES.map((r) => (
               <ToggleChip key={r} pressed={roleFilter === r} onClick={() => setRoleFilter(r)}>
-                {ROLE_NAME[r]}
+                {t(ROLE_NAME[r])}
               </ToggleChip>
             ))}
           </div>
         </div>
 
         {widgets.isLoading ? (
-          <div className="space-y-2" aria-busy="true" aria-label="Loading widgets">
+          <div className="space-y-2" aria-busy="true" aria-label={t("Loading widgets")}>
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-20 rounded-xl" />
             ))}
           </div>
         ) : widgets.isError ? (
           <ErrorState
-            title="Couldn't load the widget settings"
-            description={extractApiErrorMessage(widgets.error, "Check your connection and try again.")}
+            title={t("Couldn't load the widget settings")}
+            description={extractApiErrorMessage(widgets.error, t("Check your connection and try again."))}
             onRetry={() => widgets.refetch()}
             retrying={widgets.isRefetching}
           />
         ) : grouped.length === 0 ? (
-          <EmptyState icon={LayoutGrid} title="No widgets match" description="Try another role or search term." />
+          <EmptyState icon={LayoutGrid} title={t("No widgets match")} description={t("Try another role or search term.")} />
         ) : (
           grouped.map((g) => (
-            <section key={g.category} aria-label={WIDGET_CATEGORY_LABEL[g.category]} className="space-y-2">
-              <h3 className="text-overline">{WIDGET_CATEGORY_LABEL[g.category]}</h3>
+            <section key={g.category} aria-label={t(WIDGET_CATEGORY_LABEL[g.category])} className="space-y-2">
+              <h3 className="text-overline">{t(WIDGET_CATEGORY_LABEL[g.category])}</h3>
               <ul className="space-y-2">
                 {g.items.map((w) => (
                   <WidgetRow

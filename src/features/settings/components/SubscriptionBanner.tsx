@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CalendarClock, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 import { getSubscription } from "../api";
 import type { SubscriptionNoticeLevel } from "../types";
 
@@ -32,6 +33,7 @@ export default function SubscriptionBanner() {
   const role = useAuthStore((s) => s.user?.role);
   const tenantId = useAuthStore((s) => s.activeTenantId);
   const [, bump] = useState(0);
+  const { t } = useTranslation("settings");
   const query = useQuery({ queryKey: ["settings", "subscription", tenantId], queryFn: getSubscription, enabled: role === "admin", staleTime: 5 * 60_000, retry: false });
 
   const s = query.data;
@@ -46,13 +48,13 @@ export default function SubscriptionBanner() {
       <p className="min-w-0 flex-1">
         {s.notice}{" "}
         <Link to="/admin/settings?tab=subscription" className="font-medium underline underline-offset-2">
-          View subscription
+          {t("View subscription")}
         </Link>
       </p>
       {s.noticeLevel === "notice" && (
         <button
           type="button"
-          aria-label="Dismiss"
+          aria-label={t("Dismiss")}
           className="rounded p-0.5 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onClick={() => {
             try {

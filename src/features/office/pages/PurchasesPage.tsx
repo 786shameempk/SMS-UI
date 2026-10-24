@@ -64,7 +64,7 @@ export default function PurchasesPage() {
                   <Link className="font-medium text-primary hover:underline" to={`/office/schools/${p.schoolId}`}>{p.schoolName}</Link>
                   <StatusBadge status={p.status} />
                   <Link className="text-sm text-muted-foreground hover:underline" to={`/office/quotations/${p.quotationId}`}>{p.quotationNumber}</Link>
-                  <span className="ml-auto text-sm tabular-nums">{money(p.paid, p.currency)} of {money(p.totalAmount, p.currency)} paid</span>
+                  <span className="ms-auto text-sm tabular-nums">{money(p.paid, p.currency)} of {money(p.totalAmount, p.currency)} paid</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Confirmed by {p.confirmedByName} · {dateTime(p.confirmedAt)} · set-up rule: {p.activationRule}
@@ -78,18 +78,18 @@ export default function PurchasesPage() {
                       <TableHead>Invoice</TableHead>
                       <TableHead>Due</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-right">Outstanding</TableHead>
+                      <TableHead className="text-end">Total</TableHead>
+                      <TableHead className="text-end">Outstanding</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {p.invoices.map((i) => (
                       <TableRow key={i.id}>
                         <TableCell><Link className="text-primary hover:underline" to={`/office/invoices?id=${i.id}`}>{i.number}</Link>{i.label ? <span className="text-xs text-muted-foreground"> · {i.label}</span> : null}</TableCell>
-                        <TableCell>{day(i.dueDate)}{i.overdue ? <span className="ml-1 text-xs text-destructive-strong">{i.daysOverdue}d late</span> : null}</TableCell>
+                        <TableCell>{day(i.dueDate)}{i.overdue ? <span className="ms-1 text-xs text-destructive-strong">{i.daysOverdue}d late</span> : null}</TableCell>
                         <TableCell><StatusBadge status={i.status} /></TableCell>
-                        <TableCell className="text-right tabular-nums">{money(i.total, i.currency)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{money(i.outstanding, i.currency)}</TableCell>
+                        <TableCell className="text-end tabular-nums">{money(i.total, i.currency)}</TableCell>
+                        <TableCell className="text-end tabular-nums">{money(i.outstanding, i.currency)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

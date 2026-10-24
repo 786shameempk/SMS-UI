@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,6 +31,7 @@ interface BranchFormDialogProps {
 }
 
 export default function BranchFormDialog({ open, onOpenChange, branch, onSubmit, submitting }: BranchFormDialogProps) {
+  const { t } = useTranslation("administration");
   const isEdit = Boolean(branch);
   const {
     register,
@@ -51,62 +53,62 @@ export default function BranchFormDialog({ open, onOpenChange, branch, onSubmit,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit branch" : "Add branch"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("Edit branch") : t("Add branch")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "Update this campus's details." : "Add a new campus for this school."}
+            {isEdit ? t("Update this campus's details.") : t("Add a new campus for this school.")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Branch name</Label>
-            <Input id="name" placeholder="North Campus" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="name" required>{t("Branch name")}</Label>
+            <Input id="name" placeholder={t("North Campus")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="code" required>Short code</Label>
+            <Label htmlFor="code" required>{t("Short code")}</Label>
             <Input id="code" placeholder="NORTH" aria-invalid={errors.code ? true : undefined} {...register("code")} />
-            {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
+            {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.code.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="address" optional>Address</Label>
+            <Label htmlFor="address" optional>{t("Address")}</Label>
             <Input id="address" {...register("address")} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone" optional>Phone</Label>
+            <Label htmlFor="phone" optional>{t("Phone")}</Label>
             <Input id="phone" {...register("phone")} />
           </div>
           <div className="space-y-1.5">
-            <Label>Status</Label>
+            <Label>{t("Status")}</Label>
             <Controller
               control={control}
               name="status"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t("Select status")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="active">{t("Active")}</SelectItem>
+                    <SelectItem value="inactive">{t("Inactive")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="teacherClassScope">Classes teachers see in the mobile app</Label>
+            <Label htmlFor="teacherClassScope">{t("Classes teachers see in the mobile app")}</Label>
             <Controller
               control={control}
               name="teacherClassScope"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="teacherClassScope">
-                    <SelectValue placeholder="Select what teachers see" />
+                    <SelectValue placeholder={t("Select what teachers see")} />
                   </SelectTrigger>
                   <SelectContent>
                     {TEACHER_CLASS_SCOPE_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -114,15 +116,15 @@ export default function BranchFormDialog({ open, onOpenChange, branch, onSubmit,
               )}
             />
             <p className="text-xs text-muted-foreground">
-              {TEACHER_CLASS_SCOPE_OPTIONS.find((o) => o.value === scope)?.description}
+              {t(TEACHER_CLASS_SCOPE_OPTIONS.find((o) => o.value === scope)?.description ?? "")}
             </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Add branch"}
+              {isEdit ? t("Save changes") : t("Add branch")}
             </Button>
           </DialogFooter>
         </form>

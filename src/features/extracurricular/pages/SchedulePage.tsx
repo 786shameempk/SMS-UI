@@ -12,6 +12,7 @@ import { AttendanceDialog, CancelSessionDialog, SessionFormDialog } from "../com
 import { SelectField, formatDate, formatTime, useApiMutation, useExtracurricularAccess } from "../shared";
 import type { Session } from "../types";
 
+import { useTranslation } from "react-i18next";
 type View = "list" | "week" | "attendance";
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -19,6 +20,7 @@ const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), 
 const startOfWeek = (d: Date) => addDays(d, -((d.getDay() + 6) % 7));
 
 export default function SchedulePage() {
+  const { t } = useTranslation("extracurricular");
   const access = useExtracurricularAccess();
   const [view, setView] = useState<View>("week");
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
@@ -99,28 +101,28 @@ export default function SchedulePage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedControl
-          aria-label="Schedule view"
+          aria-label={t("Schedule view")}
           value={view}
           onValueChange={setView}
           options={[
-            { value: "week", label: "Week" },
-            { value: "list", label: "Upcoming" },
-            ...(access.isFamily ? [] : [{ value: "attendance" as const, label: "Attendance summary" }]),
+            { value: "week", label: t("Week") },
+            { value: "list", label: t("Upcoming") },
+            ...(access.isFamily ? [] : [{ value: "attendance" as const, label: t("Attendance summary") }]),
           ]}
         />
         {view === "week" && (
           <div className="flex items-center gap-1">
-            <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Previous week" onClick={() => setWeekStart(addDays(weekStart, -7))}>
+            <Button size="icon" variant="outline" className="h-8 w-8" aria-label={t("Previous week")} onClick={() => setWeekStart(addDays(weekStart, -7))}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="min-w-40 text-center text-sm">
               {formatDate(iso(weekStart))} – {formatDate(iso(addDays(weekStart, 6)))}
             </span>
-            <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Next week" onClick={() => setWeekStart(addDays(weekStart, 7))}>
+            <Button size="icon" variant="outline" className="h-8 w-8" aria-label={t("Next week")} onClick={() => setWeekStart(addDays(weekStart, 7))}>
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setWeekStart(startOfWeek(new Date()))}>
-              Today
+              {t("Today")}
             </Button>
           </div>
         )}
@@ -131,12 +133,12 @@ export default function SchedulePage() {
         )}
         {!access.isFamily && view !== "attendance" && (
           <Button variant={mineOnly ? "default" : "outline"} aria-pressed={mineOnly} onClick={() => setMineOnly(!mineOnly)}>
-            My sessions
+            {t("My sessions")}
           </Button>
         )}
         {access.canManage && (
-          <Button className="ml-auto" onClick={() => { setEditing(null); setFormOpen(true); }}>
-            <CalendarPlus className="h-4 w-4" /> New session
+          <Button className="ms-auto" onClick={() => { setEditing(null); setFormOpen(true); }}>
+            <CalendarPlus className="h-4 w-4" /> {t("New session")}
           </Button>
         )}
       </div>
@@ -154,14 +156,14 @@ export default function SchedulePage() {
                 <p className={`text-xs font-semibold uppercase tracking-wide ${today ? "text-primary" : "text-muted-foreground"}`}>
                   {d.toLocaleDateString(undefined, { weekday: "short" })} {d.getDate()}
                 </p>
-                {daySessions.length === 0 ? <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Free</p> : daySessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                {daySessions.length === 0 ? <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">{t("Free")}</p> : daySessions.map((s) => <SessionCard key={s.id} s={s} />)}
               </div>
             );
           })}
         </div>
       )}
 
-      {view === "list" && sessions.data && (items.length === 0 ? <EmptyState title="Nothing in the next 60 days" description={access.canManage ? "Create a session to get started." : undefined} /> : (
+      {view === "list" && sessions.data && (items.length === 0 ? <EmptyState title={t("Nothing in the next 60 days")} description={access.canManage ? t("Create a session to get started.") : undefined} /> : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {items.map((s) => (
             <div key={s.id} className="space-y-1">
@@ -177,33 +179,33 @@ export default function SchedulePage() {
           <CardContent className="p-0">
             {summary.isLoading && <Skeleton className="m-4 h-32" />}
             {summary.isError && <ErrorState onRetry={() => summary.refetch()} retrying={summary.isFetching} />}
-            {summary.data && summary.data.length === 0 && <EmptyState bare title="No attendance recorded yet" description="Take a register from a session and the totals appear here." />}
+            {summary.data && summary.data.length === 0 && <EmptyState bare title={t("No attendance recorded yet")} description={t("Take a register from a session and the totals appear here.")} />}
             {summary.data && summary.data.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="border-b border-border bg-secondary/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <thead className="border-b border-border bg-secondary/50 text-start text-xs uppercase tracking-wide text-muted-foreground">
                     <tr>
-                      <th className="px-3 py-2">Student</th>
-                      <th className="px-3 py-2 text-right">Sessions</th>
-                      <th className="px-3 py-2 text-right">Present</th>
-                      <th className="px-3 py-2 text-right">Late</th>
-                      <th className="px-3 py-2 text-right">Excused</th>
-                      <th className="px-3 py-2 text-right">Absent</th>
-                      <th className="px-3 py-2 text-right">Attendance</th>
-                      <th className="px-3 py-2 text-right">Hours</th>
+                      <th className="px-3 py-2">{t("Student")}</th>
+                      <th className="px-3 py-2 text-end">{t("Sessions")}</th>
+                      <th className="px-3 py-2 text-end">{t("Present")}</th>
+                      <th className="px-3 py-2 text-end">{t("Late")}</th>
+                      <th className="px-3 py-2 text-end">{t("Excused")}</th>
+                      <th className="px-3 py-2 text-end">{t("Absent")}</th>
+                      <th className="px-3 py-2 text-end">{t("Attendance")}</th>
+                      <th className="px-3 py-2 text-end">{t("Hours")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {summary.data.map((r) => (
                       <tr key={r.studentId}>
                         <td className="px-3 py-2 font-medium">{r.studentName}</td>
-                        <td className="px-3 py-2 text-right">{r.sessions}</td>
-                        <td className="px-3 py-2 text-right">{r.present}</td>
-                        <td className="px-3 py-2 text-right">{r.late}</td>
-                        <td className="px-3 py-2 text-right">{r.excused}</td>
-                        <td className="px-3 py-2 text-right">{r.absent}</td>
-                        <td className={`px-3 py-2 text-right font-medium ${r.percentage < 75 ? "text-destructive-strong" : ""}`}>{r.percentage}%</td>
-                        <td className="px-3 py-2 text-right">{r.hours}</td>
+                        <td className="px-3 py-2 text-end">{r.sessions}</td>
+                        <td className="px-3 py-2 text-end">{r.present}</td>
+                        <td className="px-3 py-2 text-end">{r.late}</td>
+                        <td className="px-3 py-2 text-end">{r.excused}</td>
+                        <td className="px-3 py-2 text-end">{r.absent}</td>
+                        <td className={`px-3 py-2 text-end font-medium ${r.percentage < 75 ? "text-destructive-strong" : ""}`}>{r.percentage}%</td>
+                        <td className="px-3 py-2 text-end">{r.hours}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -213,7 +215,7 @@ export default function SchedulePage() {
           </CardContent>
         </Card>
       )}
-      {view === "attendance" && <p className="text-xs text-muted-foreground">Excused absences do not count against a student. Hours count the sessions a student was present or late for.</p>}
+      {view === "attendance" && <p className="text-xs text-muted-foreground">{t("Excused absences do not count against a student. Hours count the sessions a student was present or late for.")}</p>}
 
       <SessionFormDialog
         open={formOpen}

@@ -14,6 +14,7 @@ import { getLessonPlan, planCalendar, rescheduleLessonPlan } from "../api";
 import { FilterBar, PROGRESS_STATUS, StatusBadge, addDays, formatDay, mondayOf, todayIso, toIso, useApiMutation, usePortionAccess, useReferenceData } from "../shared";
 import type { CalendarDay, CalendarLesson, PortionFilters } from "../types";
 
+import { useTranslation } from "react-i18next";
 type View = "week" | "month";
 
 function rangeFor(view: View, anchor: string): { from: string; to: string; label: string } {
@@ -35,6 +36,7 @@ const step = (view: View, anchor: string, dir: 1 | -1) => {
 };
 
 export default function PlanCalendarPage() {
+  const { t } = useTranslation("lesson-portions");
   const access = usePortionAccess();
   const data = useReferenceData({ teachers: access.seesAll });
   const [view, setView] = useState<View>("week");
@@ -65,20 +67,20 @@ export default function PlanCalendarPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
-          <Button size="icon-sm" variant="outline" aria-label="Previous" onClick={() => setAnchor(step(view, anchor, -1))}>
+          <Button size="icon-sm" variant="outline" aria-label={t("Previous")} onClick={() => setAnchor(step(view, anchor, -1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button size="sm" variant="outline" onClick={() => setAnchor(todayIso())}>
-            Today
+            {t("Today")}
           </Button>
-          <Button size="icon-sm" variant="outline" aria-label="Next" onClick={() => setAnchor(step(view, anchor, 1))}>
+          <Button size="icon-sm" variant="outline" aria-label={t("Next")} onClick={() => setAnchor(step(view, anchor, 1))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <h2 className="ml-2 text-base font-semibold" aria-live="polite">
+          <h2 className="ms-2 text-base font-semibold" aria-live="polite">
             {label}
           </h2>
         </div>
-        <SegmentedControl<View> aria-label="Calendar view" value={view} onValueChange={setView} options={[{ value: "week", label: "Week" }, { value: "month", label: "Month" }]} />
+        <SegmentedControl<View> aria-label={t("Calendar view")} value={view} onValueChange={setView} options={[{ value: "week", label: t("Week") }, { value: "month", label: t("Month") }]} />
       </div>
 
       {query.isLoading ? (
@@ -87,7 +89,7 @@ export default function PlanCalendarPage() {
         <ErrorState onRetry={() => query.refetch()} retrying={query.isFetching} />
       ) : (
         <>
-          {lessonCount === 0 && <EmptyState icon={CalendarDays} title="No lessons planned in this period" description="Lessons appear on the dates set in lesson plans. Holidays and examination days from the school calendar are marked." />}
+          {lessonCount === 0 && <EmptyState icon={CalendarDays} title={t("No lessons planned in this period")} description={t("Lessons appear on the dates set in lesson plans. Holidays and examination days from the school calendar are marked.")} />}
 
           {/* Desktop: a grid of days. */}
           <div className="hidden md:block">
@@ -122,6 +124,7 @@ export default function PlanCalendarPage() {
 }
 
 function DayCell({ day, compact, canMove, onMove }: { day: CalendarDay; compact?: boolean; canMove: boolean; onMove: (l: CalendarLesson) => void }) {
+  const { t } = useTranslation("lesson-portions");
   const isToday = day.date === todayIso();
   const off = Boolean(day.noTeachingReason);
   const shown = compact ? day.lessons.slice(0, 3) : day.lessons;
@@ -145,7 +148,7 @@ function DayCell({ day, compact, canMove, onMove }: { day: CalendarDay; compact?
               type="button"
               disabled={!canMove}
               onClick={() => onMove(l)}
-              className="w-full rounded-md bg-accent/60 px-1.5 py-1 text-left hover:bg-accent disabled:cursor-default disabled:hover:bg-accent/60"
+              className="w-full rounded-md bg-accent/60 px-1.5 py-1 text-start hover:bg-accent disabled:cursor-default disabled:hover:bg-accent/60"
               title={`${l.topicTitle} · ${l.subjectName} · ${l.className}${l.teacherName ? ` · ${l.teacherName}` : ""}`}
             >
               <span className="block truncate font-medium">{l.topicTitle}</span>
@@ -159,12 +162,13 @@ function DayCell({ day, compact, canMove, onMove }: { day: CalendarDay; compact?
           </li>
         ))}
       </ul>
-      {compact && day.lessons.length > shown.length && <p className="mt-1 text-muted-foreground">+{day.lessons.length - shown.length} more</p>}
+      {compact && day.lessons.length > shown.length && <p className="mt-1 text-muted-foreground">{t("+{{v1}} more", { v1: day.lessons.length - shown.length })}</p>}
     </section>
   );
 }
 
 function MoveDialog({ lesson, onClose }: { lesson: CalendarLesson | null; onClose: () => void }) {
+  const { t: tr } = useTranslation("lesson-portions");
   const plan = useQuery({ queryKey: ["portions", "lesson-plan", lesson?.lessonPlanId], queryFn: () => getLessonPlan(lesson!.lessonPlanId), enabled: Boolean(lesson) });
   const [date, setDate] = useState("");
   const [reason, setReason] = useState("");
@@ -188,9 +192,9 @@ function MoveDialog({ lesson, onClose }: { lesson: CalendarLesson | null; onClos
     <Dialog open={Boolean(lesson)} onOpenChange={(open) => !open && !save.isPending && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Move lesson</DialogTitle>
+          <DialogTitle>{tr("Move lesson")}</DialogTitle>
           <DialogDescription>
-            {lesson?.topicTitle} · {lesson?.subjectName} · {lesson?.className} {lesson?.sectionName ?? ""}. Saved as a revision of the plan with your reason.
+            {lesson?.topicTitle} · {lesson?.subjectName} · {lesson?.className} {lesson?.sectionName ?? ""}{tr(". Saved as a revision of the plan with your reason.")}
           </DialogDescription>
         </DialogHeader>
         {plan.isLoading ? (
@@ -199,20 +203,20 @@ function MoveDialog({ lesson, onClose }: { lesson: CalendarLesson | null; onClos
           <ErrorState onRetry={() => plan.refetch()} retrying={plan.isFetching} />
         ) : (
           <div className="space-y-4">
-            <FormField label="New date" htmlFor="mv-date" required error={outside ? `Pick a date between ${p?.plannedStartDate} and ${p?.plannedEndDate}` : undefined} hint={p?.plannedStartDate ? `The plan runs ${formatDay(p.plannedStartDate)} – ${formatDay(p.plannedEndDate ?? p.plannedStartDate)}. Change the plan's dates from My plan.` : undefined}>
+            <FormField label={tr("New date")} htmlFor="mv-date" required error={outside ? `Pick a date between ${p?.plannedStartDate} and ${p?.plannedEndDate}` : undefined} hint={p?.plannedStartDate ? tr("The plan runs {{v1}} – {{v2}}. Change the plan's dates from My plan.", { v1: formatDay(p.plannedStartDate), v2: formatDay(p.plannedEndDate ?? p.plannedStartDate) }) : undefined}>
               <Input id="mv-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </FormField>
-            <FormField label="Reason" htmlFor="mv-reason" required>
+            <FormField label={tr("Reason")} htmlFor="mv-reason" required>
               <Textarea id="mv-reason" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={900} />
             </FormField>
           </div>
         )}
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={save.isPending}>
-            Cancel
+            {tr("Cancel")}
           </Button>
           <Button onClick={() => save.mutate(undefined)} disabled={invalid} loading={save.isPending}>
-            Move lesson
+            {tr("Move lesson")}
           </Button>
         </DialogFooter>
       </DialogContent>

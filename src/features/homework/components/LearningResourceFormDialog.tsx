@@ -16,6 +16,7 @@ import AttachmentField from "@/features/attachments/AttachmentField";
 import { attachmentChange, toAttachmentRef, type AttachmentRef } from "@/features/attachments/api";
 import type { LearningResource, LearningResourceFormValues, ResourceType } from "../types";
 
+import { useTranslation } from "react-i18next";
 const FORM_RESOURCE_TYPES = RESOURCE_TYPES.filter((t) => t.value !== "quiz");
 
 const resourceSchema = z.object({
@@ -59,6 +60,7 @@ export default function LearningResourceFormDialog({
   submitting: boolean;
   onSubmit: (values: LearningResourceFormValues) => Promise<void>;
 }) {
+  const { t: tr } = useTranslation("homework");
   const isEdit = Boolean(resource);
   // A file can be uploaded instead of (or as well as) a link: text, Word or PDF.
   const [attachment, setAttachment] = useState<AttachmentRef | null>(null);
@@ -98,8 +100,8 @@ export default function LearningResourceFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit resource" : "New learning resource"}</DialogTitle>
-          <DialogDescription>Share a video, notes, PDF, slide deck, or discussion topic with a class.</DialogDescription>
+          <DialogTitle>{isEdit ? tr("Edit resource") : tr("New learning resource")}</DialogTitle>
+          <DialogDescription>{tr("Share a video, notes, PDF, slide deck, or discussion topic with a class.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -114,14 +116,14 @@ export default function LearningResourceFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="res-classId" required>Class</Label>
+              <Label htmlFor="res-classId" required>{tr("Class")}</Label>
               <Controller
                 control={control}
                 name="classId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="res-classId">
-                      <SelectValue placeholder="Select a class" />
+                      <SelectValue placeholder={tr("Select a class")} />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map((c) => (
@@ -136,14 +138,14 @@ export default function LearningResourceFormDialog({
               {errors.classId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classId.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="res-subjectId" required>Subject</Label>
+              <Label htmlFor="res-subjectId" required>{tr("Subject")}</Label>
               <Controller
                 control={control}
                 name="subjectId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="res-subjectId">
-                      <SelectValue placeholder="Select a subject" />
+                      <SelectValue placeholder={tr("Select a subject")} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableSubjects.map((s) => (
@@ -160,14 +162,14 @@ export default function LearningResourceFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="res-title" required>Title</Label>
+            <Label htmlFor="res-title" required>{tr("Title")}</Label>
             <Input id="res-title" aria-invalid={errors.title ? true : undefined} {...register("title")} />
             {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="res-type" required>Type</Label>
+              <Label htmlFor="res-type" required>{tr("Type")}</Label>
               <Controller
                 control={control}
                 name="type"
@@ -179,7 +181,7 @@ export default function LearningResourceFormDialog({
                     <SelectContent>
                       {FORM_RESOURCE_TYPES.map((t) => (
                         <SelectItem key={t.value} value={t.value}>
-                          {t.label}
+                          {tr(t.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -188,14 +190,14 @@ export default function LearningResourceFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="res-createdByStaffId" required>Shared by</Label>
+              <Label htmlFor="res-createdByStaffId" required>{tr("Shared by")}</Label>
               <Controller
                 control={control}
                 name="createdByStaffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="res-createdByStaffId">
-                      <SelectValue placeholder="Select a teacher" />
+                      <SelectValue placeholder={tr("Select a teacher")} />
                     </SelectTrigger>
                     <SelectContent>
                       {teachers.map((t) => (
@@ -213,24 +215,24 @@ export default function LearningResourceFormDialog({
 
           {type !== "discussion" && (
             <div className="space-y-1.5">
-              <Label htmlFor="res-url">Link (video / drive / document URL)</Label>
-              <Input id="res-url" placeholder="https://…" {...register("url")} />
+              <Label htmlFor="res-url">{tr("Link (video / drive / document URL)")}</Label>
+              <Input id="res-url" placeholder={tr("https://…")} {...register("url")} />
             </div>
           )}
 
-          {type !== "discussion" && <AttachmentField label="Or upload a file" kind="document" value={attachment} onChange={setAttachment} />}
+          {type !== "discussion" && <AttachmentField label={tr("Or upload a file")} kind="document" value={attachment} onChange={setAttachment} />}
 
           <div className="space-y-1.5">
-            <Label htmlFor="res-description" optional>Description</Label>
+            <Label htmlFor="res-description" optional>{tr("Description")}</Label>
             <Textarea id="res-description" rows={2} {...register("description")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Share resource"}
+              {isEdit ? tr("Save changes") : tr("Share resource")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, BadgeCheck, FileDown, Search, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,19 +14,21 @@ import type { SearchHit } from "../search";
 
 /** The review state of an article, in words a reader understands. */
 export function ReviewBadge({ article }: { article: HelpArticle }) {
+  const { t } = useTranslation("help");
   if (article.status === "verified") {
     return (
       <Badge variant="success">
         <BadgeCheck className="h-3 w-3" aria-hidden="true" />
-        Verified{article.verifiedOn ? ` ${article.verifiedOn}` : ""}
+        {article.verifiedOn ? t("Verified {{date}}", { date: article.verifiedOn }) : t("Verified")}
       </Badge>
     );
   }
-  if (article.status === "reviewed") return <Badge variant="info">Checked against the app</Badge>;
-  return <Badge variant="neutral">Draft</Badge>;
+  if (article.status === "reviewed") return <Badge variant="info">{t("Checked against the app")}</Badge>;
+  return <Badge variant="neutral">{t("Draft")}</Badge>;
 }
 
 export function ArticleRow({ article, snippet, showModule = true }: { article: HelpArticle; snippet?: string; showModule?: boolean }) {
+  const { t } = useTranslation("help");
   return (
     <Link
       to={articleHref(article.id)}
@@ -34,7 +37,7 @@ export function ArticleRow({ article, snippet, showModule = true }: { article: H
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="font-semibold text-foreground">{article.title}</span>
-          <Badge variant="neutral">{KIND_LABEL[article.kind]}</Badge>
+          <Badge variant="neutral">{t(KIND_LABEL[article.kind])}</Badge>
         </div>
         <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">{snippet ?? article.summary}</p>
         {showModule && <p className="mt-1 text-xs text-muted-foreground">{moduleTitle(article.module)}</p>}
@@ -45,18 +48,19 @@ export function ArticleRow({ article, snippet, showModule = true }: { article: H
 }
 
 export function SearchResults({ hits, query }: { hits: SearchHit[]; query: string }) {
+  const { t } = useTranslation("help");
   if (hits.length === 0) {
     return (
       <div role="status" className="rounded-xl border border-dashed border-border p-8 text-center">
         <Search className="mx-auto h-6 w-6 text-muted-foreground" aria-hidden="true" />
-        <p className="mt-2 font-medium text-foreground">No articles match “{query}”</p>
-        <p className="mt-1 text-sm text-muted-foreground">Try fewer or different words, browse by module, or ask School AI.</p>
+        <p className="mt-2 font-medium text-foreground">{t("No articles match “{{query}}”", { query })}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("Try fewer or different words, browse by module, or ask School AI.")}</p>
         <AskAiButton className="mt-3" />
       </div>
     );
   }
   return (
-    <ul className="space-y-2" aria-label={`${hits.length} result${hits.length === 1 ? "" : "s"} for ${query}`}>
+    <ul className="space-y-2" aria-label={hits.length === 1 ? t("{{count}} result for {{query}}", { count: hits.length, query }) : t("{{count}} results for {{query}}", { count: hits.length, query })}>
       {hits.map((h) => (
         <li key={h.article.id}>
           <ArticleRow article={h.article} snippet={h.snippet} />
@@ -69,20 +73,22 @@ export function SearchResults({ hits, query }: { hits: SearchHit[]; query: strin
 /** Opens the Ask School AI panel; the assistant answers from this same documentation. */
 export function AskAiButton({ className }: { className?: string }) {
   const setOpen = useAskAi((s) => s.setOpen);
+  const { t } = useTranslation("help");
   return (
     <Button type="button" variant="outline" size="sm" className={className} onClick={() => setOpen(true)}>
       <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-      Ask School AI
+      {t("Ask School AI")}
     </Button>
   );
 }
 
 export function ManualDownload({ className }: { className?: string }) {
+  const { t } = useTranslation("help");
   return (
     <Button asChild variant="outline" size="sm" className={className}>
       <a href={MANUAL_PDF_URL} download>
         <FileDown className="h-3.5 w-3.5" aria-hidden="true" />
-        Download the PDF manual
+        {t("Download the PDF manual")}
       </a>
     </Button>
   );
@@ -90,27 +96,28 @@ export function ManualDownload({ className }: { className?: string }) {
 
 export function Feedback({ articleId }: { articleId: string }) {
   const [answer, setAnswer] = useState<Helpful | null>(() => getFeedback(articleId));
+  const { t } = useTranslation("help");
   const choose = (value: Helpful) => {
     saveFeedback(articleId, value);
     setAnswer(value);
   };
   return (
-    <section aria-label="Feedback" className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+    <section aria-label={t("Feedback")} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
       {answer ? (
         <p role="status" className="text-sm text-muted-foreground">
-          {answer === "yes" ? "Thanks, glad it helped." : "Thanks for telling us. You can also ask School AI, or ask your school administrator."}
+          {answer === "yes" ? t("Thanks, glad it helped.") : t("Thanks for telling us. You can also ask School AI, or ask your school administrator.")}
         </p>
       ) : (
         <>
-          <p className="text-sm font-medium text-foreground">Was this helpful?</p>
+          <p className="text-sm font-medium text-foreground">{t("Was this helpful?")}</p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => choose("yes")} aria-label="Yes, this was helpful">
+            <Button type="button" variant="outline" size="sm" onClick={() => choose("yes")} aria-label={t("Yes, this was helpful")}>
               <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
-              Yes
+              {t("Yes")}
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => choose("no")} aria-label="No, this was not helpful">
+            <Button type="button" variant="outline" size="sm" onClick={() => choose("no")} aria-label={t("No, this was not helpful")}>
               <ThumbsDown className="h-3.5 w-3.5" aria-hidden="true" />
-              No
+              {t("No")}
             </Button>
           </div>
         </>

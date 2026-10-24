@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowUpRight, Info, Lightbulb, ShieldAlert } from "lucide-react";
 import { getRoute } from "@/app/routeRegistry";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,11 @@ import { useViewer } from "../useViewer";
 export function RouteLink({ id, children, asButton }: { id: string; children: React.ReactNode; asButton?: boolean }) {
   const viewer = useViewer();
   const route = getRoute(id);
+  const { t } = useTranslation("help");
   if (!route || !route.deepLink) return <>{children}</>;
   if (!canOpenRoute(route, viewer)) {
     return (
-      <span className="text-muted-foreground" title="This screen is not available to your account">
+      <span className="text-muted-foreground" title={t("This screen is not available to your account")}>
         {children}
       </span>
     );
@@ -101,12 +103,13 @@ const CALLOUT: Record<CalloutKind, { icon: typeof Info; label: string; box: stri
 
 function Screenshot({ shot, alt, caption, file }: { shot: string; alt: string; caption: string; file: string | null }) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation("help");
   // A screenshot that has not been captured yet leaves no gap or placeholder for readers; the coverage report tracks it.
   if (!file) return null;
   const url = screenshotUrl(file);
   return (
     <figure className="my-4" data-shot={shot}>
-      <button type="button" onClick={() => setOpen(true)} className="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border bg-card text-left shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Enlarge screenshot: ${alt}`}>
+      <button type="button" onClick={() => setOpen(true)} className="group block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border bg-card text-start shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("Enlarge screenshot: {{alt}}", { alt })}>
         <img src={url} alt={alt} loading="lazy" className="w-full transition-transform duration-200 group-hover:scale-[1.01]" />
       </button>
       {caption && <figcaption className="mt-1.5 text-center text-xs text-muted-foreground">{caption}</figcaption>}
@@ -129,6 +132,7 @@ function soleRoute(inline: Inline[]): Extract<Inline, { t: "route" }> | null {
 }
 
 export function ArticleBlocks({ blocks }: { blocks: Block[] }) {
+  const { t: tr } = useTranslation("help");
   return (
     <div className="space-y-4 text-[15px] leading-7 text-secondary-foreground">
       {blocks.map((b, i) => {
@@ -168,7 +172,7 @@ export function ArticleBlocks({ blocks }: { blocks: Block[] }) {
                         <InlineText nodes={item.inline} />
                       </p>
                       {item.notes.length > 0 && (
-                        <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                        <ul className="mt-1 list-disc space-y-1 ps-5 text-sm text-muted-foreground">
                           {item.notes.map((note, k) => (
                             <li key={k}>
                               <InlineText nodes={note} />
@@ -183,7 +187,7 @@ export function ArticleBlocks({ blocks }: { blocks: Block[] }) {
             );
           case "list":
             return (
-              <ul key={i} className="list-disc space-y-1.5 pl-6 marker:text-muted-foreground">
+              <ul key={i} className="list-disc space-y-1.5 ps-6 marker:text-muted-foreground">
                 {b.items.map((item, n) => (
                   <li key={n}>
                     <InlineText nodes={item} />
@@ -194,7 +198,7 @@ export function ArticleBlocks({ blocks }: { blocks: Block[] }) {
           case "table":
             return (
               <div key={i} className="overflow-x-auto rounded-xl border border-border">
-                <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
+                <table className="w-full min-w-[28rem] border-collapse text-start text-sm">
                   <thead className="bg-muted/60 text-foreground">
                     <tr>
                       {b.head.map((h, n) => (
@@ -225,7 +229,7 @@ export function ArticleBlocks({ blocks }: { blocks: Block[] }) {
               <div key={i} role="note" className={cn("flex gap-3 rounded-xl border px-4 py-3 text-sm leading-6", meta.box)}>
                 <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <p>
-                  <strong className="font-semibold">{meta.label}: </strong>
+                  <strong className="font-semibold">{tr("{{label}}:", { label: tr(meta.label) })} </strong>
                   <InlineText nodes={b.inline} />
                 </p>
               </div>

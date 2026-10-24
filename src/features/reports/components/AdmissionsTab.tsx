@@ -6,6 +6,7 @@ import { CATEGORICAL_COLORS, CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, C
 import { getAdmissionsReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 const STATUS_LABEL: Record<string, string> = {
   inquiry: "Inquiry",
   registration: "Registration",
@@ -19,17 +20,18 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function AdmissionsTab() {
+  const { t } = useTranslation("reports");
   const { data, isLoading } = useQuery({ queryKey: ["reports", "admissions"], queryFn: getAdmissionsReport });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatTile label="Total applications" value={String(data.totalApplications)} icon={FileText} />
-        <StatTile label="Enrollment rate" value={`${data.approvalRate}%`} icon={Percent} />
+        <StatTile label={t("Total applications")} value={String(data.totalApplications)} icon={FileText} />
+        <StatTile label={t("Enrollment rate")} value={`${data.approvalRate}%`} icon={Percent} />
         <StatTile
-          label="Enrolled"
+          label={t("Enrolled")}
           value={String(data.statusBreakdown.find((s) => s.status === "enrolled")?.count ?? 0)}
           icon={CheckCircle2}
         />
@@ -38,8 +40,8 @@ export default function AdmissionsTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card>
           <CardHeader>
-            <CardTitle>Applications by status</CardTitle>
-            <CardDescription>Current breakdown of every admission application.</CardDescription>
+            <CardTitle>{t("Applications by status")}</CardTitle>
+            <CardDescription>{t("Current breakdown of every admission application.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-64 w-full">
@@ -63,8 +65,8 @@ export default function AdmissionsTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Applications received</CardTitle>
-            <CardDescription>New admission applications over the last 6 months.</CardDescription>
+            <CardTitle>{t("Applications received")}</CardTitle>
+            <CardDescription>{t("New admission applications over the last 6 months.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-64 w-full">

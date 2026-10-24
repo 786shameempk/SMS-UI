@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 interface LabelProps extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> {
   /** Appends a red asterisk (and "required" for screen readers). */
@@ -25,11 +26,16 @@ const Label = React.forwardRef<React.ComponentRef<typeof LabelPrimitive.Root>, L
           *
         </span>
       )}
-      {required && <span className="sr-only">(required)</span>}
-      {optional && <span className="text-xs font-normal text-muted-foreground">(optional)</span>}
+      {required && <span className="sr-only"><LabelNote text="(required)" /></span>}
+      {optional && <span className="text-xs font-normal text-muted-foreground"><LabelNote text="(optional)" /></span>}
     </LabelPrimitive.Root>
   ),
 );
 Label.displayName = LabelPrimitive.Root.displayName;
+
+function LabelNote({ text }: { text: "(required)" | "(optional)" }) {
+  const { t } = useTranslation("common");
+  return text === "(required)" ? t("(required)") : t("(optional)");
+}
 
 export { Label };

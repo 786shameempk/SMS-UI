@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ export default function VendorFormDialog({
   submitting: boolean;
   onSubmit: (values: VendorFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("inventory");
   const isEdit = Boolean(vendor);
   const {
     register,
@@ -61,8 +63,8 @@ export default function VendorFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit vendor" : "New vendor"}</DialogTitle>
-          <DialogDescription>Suppliers you purchase inventory from.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit vendor") : t("New vendor")}</DialogTitle>
+          <DialogDescription>{t("Suppliers you purchase inventory from.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -77,35 +79,35 @@ export default function VendorFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="ven-name" required>Vendor name</Label>
+            <Label htmlFor="ven-name" required>{t("Vendor name")}</Label>
             <Input id="ven-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="ven-contactPerson">Contact person</Label>
+              <Label htmlFor="ven-contactPerson">{t("Contact person")}</Label>
               <Input id="ven-contactPerson" {...register("contactPerson")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ven-phone">Phone</Label>
+              <Label htmlFor="ven-phone">{t("Phone")}</Label>
               <Input id="ven-phone" {...register("phone")} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ven-email">Email</Label>
+            <Label htmlFor="ven-email">{t("Email")}</Label>
             <Input id="ven-email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
-            {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.email.message}</p>}
+            {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.email.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="ven-address">Address</Label>
+            <Label htmlFor="ven-address">{t("Address")}</Label>
             <Input id="ven-address" {...register("address")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Add vendor"}
+              {isEdit ? t("Save changes") : t("Add vendor")}
             </Button>
           </DialogFooter>
         </form>

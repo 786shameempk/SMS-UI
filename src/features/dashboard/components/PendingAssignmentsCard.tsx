@@ -1,18 +1,20 @@
 import { ClipboardCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
+import { useTranslation } from "react-i18next";
 import { formatRelativeDay } from "@/utils/format";
 import type { PendingAssignment } from "../types";
 
 export default function PendingAssignmentsCard({ assignments }: { assignments: PendingAssignment[] }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
-        <CardTitle>Pending assignments</CardTitle>
-        <CardDescription>Work due soon.</CardDescription>
+        <CardTitle>{t("Pending assignments")}</CardTitle>
+        <CardDescription>{t("Work due soon.")}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-3">
-        {assignments.length === 0 && <EmptyState bare size="sm" icon={ClipboardCheck} title="All caught up" description="No assignments are due soon." className="h-full py-6" />}
+        {assignments.length === 0 && <EmptyState bare size="sm" icon={ClipboardCheck} title={t("All caught up")} description={t("No assignments are due soon.")} className="h-full py-6" />}
         {assignments.map((assignment) => {
           const pct =
             assignment.totalCount && assignment.submittedCount !== undefined
@@ -33,7 +35,7 @@ export default function PendingAssignmentsCard({ assignments }: { assignments: P
                     <div className="h-full bg-brand-500" style={{ width: `${pct}%` }} />
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    {assignment.submittedCount}/{assignment.totalCount} submitted
+                    {t("{{submitted}}/{{total}} submitted", { submitted: assignment.submittedCount, total: assignment.totalCount })}
                   </p>
                 </div>
               )}

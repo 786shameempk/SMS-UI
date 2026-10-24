@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,6 +56,7 @@ export default function InfirmaryVisitFormDialog({
   submitting: boolean;
   onSubmit: (values: InfirmaryVisitFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("health");
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: listStaff });
 
@@ -76,8 +78,8 @@ export default function InfirmaryVisitFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>Log an infirmary visit</DialogTitle>
-          <DialogDescription>Sick-bay visit — symptoms, treatment given, and outcome.</DialogDescription>
+          <DialogTitle>{t("Log an infirmary visit")}</DialogTitle>
+          <DialogDescription>{t("Sick-bay visit — symptoms, treatment given, and outcome.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -91,14 +93,14 @@ export default function InfirmaryVisitFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-studentId" required>Student</Label>
+              <Label htmlFor="visit-studentId" required>{t("Student")}</Label>
               <Controller
                 control={control}
                 name="studentId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="visit-studentId">
-                      <SelectValue placeholder="Select a student" />
+                      <SelectValue placeholder={t("Select a student")} />
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((s) => (
@@ -110,42 +112,42 @@ export default function InfirmaryVisitFormDialog({
                   </Select>
                 )}
               />
-              {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
+              {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentId.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-visitedAt" required>Visit date/time</Label>
+              <Label htmlFor="visit-visitedAt" required>{t("Visit date/time")}</Label>
               <Input id="visit-visitedAt" type="datetime-local" aria-invalid={errors.visitedAt ? true : undefined} {...register("visitedAt")} />
-              {errors.visitedAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.visitedAt.message}</p>}
+              {errors.visitedAt && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.visitedAt.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-symptoms" required>Symptoms</Label>
-              <Input id="visit-symptoms" placeholder="e.g. Headache, mild fever" aria-invalid={errors.symptoms ? true : undefined} {...register("symptoms")} />
-              {errors.symptoms && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.symptoms.message}</p>}
+              <Label htmlFor="visit-symptoms" required>{t("Symptoms")}</Label>
+              <Input id="visit-symptoms" placeholder={t("e.g. Headache, mild fever")} aria-invalid={errors.symptoms ? true : undefined} {...register("symptoms")} />
+              {errors.symptoms && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.symptoms.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-temperature" optional>Temperature °C</Label>
+              <Label htmlFor="visit-temperature" optional>{t("Temperature °C")}</Label>
               <Input id="visit-temperature" type="number" min="30" max="45" step="0.1" aria-invalid={errors.temperatureC ? true : undefined} {...register("temperatureC")} />
-              {errors.temperatureC && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.temperatureC.message}</p>}
+              {errors.temperatureC && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.temperatureC.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="visit-treatment">Treatment given</Label>
+            <Label htmlFor="visit-treatment">{t("Treatment given")}</Label>
             <Textarea id="visit-treatment" rows={2} aria-invalid={errors.treatmentGiven ? true : undefined} {...register("treatmentGiven")} />
-            {errors.treatmentGiven && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.treatmentGiven.message}</p>}
+            {errors.treatmentGiven && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.treatmentGiven.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="visit-medicine" optional>Medicine given</Label>
+            <Label htmlFor="visit-medicine" optional>{t("Medicine given")}</Label>
             <Input id="visit-medicine" {...register("medicineGiven")} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="visit-outcome" required>Outcome</Label>
+              <Label htmlFor="visit-outcome" required>{t("Outcome")}</Label>
               <Controller
                 control={control}
                 name="outcome"
@@ -157,7 +159,7 @@ export default function InfirmaryVisitFormDialog({
                     <SelectContent>
                       {VISIT_OUTCOME_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -166,14 +168,14 @@ export default function InfirmaryVisitFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="visit-attendedBy" optional>Attended by</Label>
+              <Label htmlFor="visit-attendedBy" optional>{t("Attended by")}</Label>
               <Controller
                 control={control}
                 name="attendedByStaffId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="visit-attendedBy">
-                      <SelectValue placeholder="Select staff" />
+                      <SelectValue placeholder={t("Select staff")} />
                     </SelectTrigger>
                     <SelectContent>
                       {staff.map((s) => (
@@ -190,15 +192,15 @@ export default function InfirmaryVisitFormDialog({
 
           <label className="flex items-center gap-2 cursor-pointer">
             <Checkbox checked={watch("parentNotified")} onCheckedChange={(v) => setValue("parentNotified", v === true)} />
-            <span className="text-sm text-secondary-foreground">Parent/guardian notified</span>
+            <span className="text-sm text-secondary-foreground">{t("Parent/guardian notified")}</span>
           </label>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Log visit
+              {t("Log visit")}
             </Button>
           </DialogFooter>
         </form>

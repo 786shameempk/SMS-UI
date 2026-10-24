@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { PageContainer } from "@/components/ui/page";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
 
 export default function StaffProfilePage() {
+  const { t } = useTranslation("staff");
   const { staffId } = useParams<{ staffId: string }>();
   const role = useAuthStore((s) => s.user?.role);
   const canLinkLogins = role === "admin" || role === "superAdmin";
@@ -43,12 +45,12 @@ export default function StaffProfilePage() {
       <PageContainer>
         <EmptyState
           icon={SearchX}
-          title="Record not found"
-          description="That staff record could not be found. It may have been removed, or you may not have access to it."
+          title={t("Record not found")}
+          description={t("That staff record could not be found. It may have been removed, or you may not have access to it.")}
           action={
             <Button variant="outline" size="sm" onClick={() => navigate("/staff")}>
               <ArrowLeft className="w-3.5 h-3.5" />
-              Back to staff
+              {t("Back to staff")}
             </Button>
           }
         />
@@ -59,9 +61,9 @@ export default function StaffProfilePage() {
   return (
     <PageContainer>
       <div>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/staff")} className="-ml-2 mb-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/staff")} className="-ms-2 mb-2">
           <ArrowLeft className="w-3.5 h-3.5" />
-          Back to staff
+          {t("Back to staff")}
         </Button>
         <div className="flex items-center gap-2.5 flex-wrap">
           <h1 className="text-page-title">
@@ -70,19 +72,19 @@ export default function StaffProfilePage() {
           <StaffStatusBadge status={staff.status} />
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          {staff.designation} &middot; {staff.department} &middot; {staff.employeeId}
+          {t(staff.designation)} &middot; {staff.department} &middot; {staff.employeeId}
         </p>
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList variant="line">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="qualifications">Qualifications &amp; Experience</TabsTrigger>
-          <TabsTrigger value="salary">Salary</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          {canLinkLogins && <TabsTrigger value="logins">Login</TabsTrigger>}
+          <TabsTrigger value="overview">{t("Overview")}</TabsTrigger>
+          <TabsTrigger value="qualifications">{t("Qualifications & Experience")}</TabsTrigger>
+          <TabsTrigger value="salary">{t("Salary")}</TabsTrigger>
+          <TabsTrigger value="attendance">{t("Attendance")}</TabsTrigger>
+          <TabsTrigger value="performance">{t("Performance")}</TabsTrigger>
+          <TabsTrigger value="documents">{t("Documents")}</TabsTrigger>
+          {canLinkLogins && <TabsTrigger value="logins">{t("Login")}</TabsTrigger>}
         </TabsList>
         <TabsContent value="overview">
           <StaffOverviewTab staff={staff} />

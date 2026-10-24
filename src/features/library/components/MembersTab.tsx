@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2, Users } from "lucide-react";
@@ -18,6 +19,7 @@ import MemberFormDialog from "./MemberFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function MembersTab() {
+  const { t } = useTranslation("library");
   const queryClient = useQueryClient();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -35,10 +37,10 @@ export default function MembersTab() {
   const personName = (member: LibraryMember): string => {
     if (member.personType === "student") {
       const s = studentById.get(member.personId);
-      return s ? `${s.firstName} ${s.lastName}` : "Unknown student";
+      return s ? `${s.firstName} ${s.lastName}` : t("Unknown student");
     }
     const s = staffById.get(member.personId);
-    return s ? `${s.firstName} ${s.lastName}` : "Unknown staff";
+    return s ? `${s.firstName} ${s.lastName}` : t("Unknown staff");
   };
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["library"] });
@@ -47,10 +49,10 @@ export default function MembersTab() {
     mutationFn: createMember,
     onSuccess: () => {
       invalidate();
-      toast.success("Member added");
+      toast.success(t("Member added"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add member"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add member")),
   });
 
   const bulkMutation = useMutation({
@@ -59,8 +61,12 @@ export default function MembersTab() {
       invalidate();
       toast.success(
         result.alreadyMembers > 0
-          ? `Added ${result.created} ${result.created === 1 ? "member" : "members"} (${result.alreadyMembers} already members)`
-          : `Added ${result.created} ${result.created === 1 ? "member" : "members"}`,
+          ? result.created === 1
+            ? t("Added {{count}} member ({{already}} already members)", { count: result.created, already: result.alreadyMembers })
+            : t("Added {{count}} members ({{already}} already members)", { count: result.created, already: result.alreadyMembers })
+          : result.created === 1
+            ? t("Added {{count}} member", { count: result.created })
+            : t("Added {{count}} members", { count: result.created }),
       );
       setBulkOpen(false);
     },
@@ -71,42 +77,42 @@ export default function MembersTab() {
     mutationFn: ({ id, values }: { id: string; values: LibraryMemberFormValues }) => updateMember(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Member updated");
+      toast.success(t("Member updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update member"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update member")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteMember,
     onSuccess: () => {
       invalidate();
-      toast.success("Member removed");
+      toast.success(t("Member removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove member"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not remove member")),
   });
 
   const columns: ColumnDef<LibraryMember, unknown>[] = [
-    { accessorKey: "membershipId", header: "Membership ID", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.membershipId}</span> },
-    { id: "name", header: "Name", cell: ({ row }) => <span className="text-sm text-foreground">{personName(row.original)}</span> },
+    { accessorKey: "membershipId", header: t("Membership ID"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.membershipId}</span> },
+    { id: "name", header: t("Name"), cell: ({ row }) => <span className="text-sm text-foreground">{personName(row.original)}</span> },
     {
       id: "personType",
-      header: "Type",
-      cell: ({ row }) => <Badge variant="neutral">{row.original.personType === "student" ? "Student" : "Staff"}</Badge>,
+      header: t("Type"),
+      cell: ({ row }) => <Badge variant="neutral">{row.original.personType === "student" ? t("Student") : t("Staff")}</Badge>,
     },
     {
       id: "joinedOn",
-      header: "Joined",
+      header: t("Joined"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.joinedOn).toLocaleDateString()}</span>,
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = MEMBER_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -123,11 +129,11 @@ export default function MembersTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(member)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Remove
+              {t("Remove")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -138,11 +144,11 @@ export default function MembersTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Borrowers linked to existing student and staff records.</p>
+        <p className="text-sm text-muted-foreground">{t("Borrowers linked to existing student and staff records.")}</p>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => setBulkOpen(true)}>
             <Users className="w-4 h-4" />
-            Add in bulk
+            {t("Add in bulk")}
           </Button>
           <Button
             onClick={() => {
@@ -151,12 +157,12 @@ export default function MembersTab() {
             }}
           >
             <Plus className="w-4 h-4" />
-            New member
+            {t("New member")}
           </Button>
         </div>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={members} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No library members yet." />
+      <DataTable searchable columns={columns} data={members} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No library members yet.")} />
 
       <MemberFormDialog
         open={formOpen}
@@ -190,9 +196,9 @@ export default function MembersTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove member"
-        description={`Remove "${deleteTarget ? personName(deleteTarget) : ""}" from library membership? This cannot be undone.`}
-        confirmLabel="Remove"
+        title={t("Remove member")}
+        description={t('Remove "{{name}}" from library membership? This cannot be undone.', { name: deleteTarget ? personName(deleteTarget) : "" })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

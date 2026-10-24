@@ -14,13 +14,14 @@ export const STAFF_ATTENDANCE_STATUSES: { value: StaffAttendanceStatus; label: s
   { value: "late", label: "Late" },
 ];
 
-export const CAPTURE_MODES: { value: CaptureMode; label: string; simulated: boolean }[] = [
-  { value: "manual", label: "Manual", simulated: false },
-  { value: "qr", label: "QR Code", simulated: true },
-  { value: "rfid", label: "RFID Card", simulated: true },
-  { value: "biometric", label: "Biometric", simulated: true },
-  { value: "face", label: "Face Recognition", simulated: true },
-  { value: "mobile", label: "Mobile App", simulated: true },
+/** How a record was captured. Device modes are only ever set by the server from real scans. */
+export const CAPTURE_MODES: { value: CaptureMode; label: string }[] = [
+  { value: "manual", label: "Manual" },
+  { value: "qr", label: "QR pass" },
+  { value: "rfid", label: "RFID card" },
+  { value: "biometric", label: "Biometric" },
+  { value: "face", label: "Face recognition" },
+  { value: "mobile", label: "Mobile app" },
 ];
 
 export function attendanceStatusBadgeVariant(status: AttendanceStatus): "success" | "danger" | "warning" | "info" | "neutral" {

@@ -9,6 +9,7 @@ import { getMyChildren } from "../api";
 import ChildSwitcher from "../components/ChildSwitcher";
 import OverviewTab from "../components/OverviewTab";
 import AttendanceTab from "../components/AttendanceTab";
+import FaceConsentCard from "../components/FaceConsentCard";
 import HomeworkTab from "../components/HomeworkTab";
 import ExamResultsTab from "../components/ExamResultsTab";
 import FeesTab from "../components/FeesTab";
@@ -22,6 +23,7 @@ import { useAiCapabilities } from "@/features/ai/capabilities";
 import AssistantChat from "@/features/ai/components/AssistantChat";
 import LearningProfilePanel from "@/features/ai/components/learning/LearningProfilePanel";
 
+import { useTranslation } from "react-i18next";
 const CHILD_SCOPED_TABS = new Set(["attendance", "homework", "exams", "fees", "messages", "leave", "track-bus", "ask-ai", "learning"]);
 
 const TABS: { value: string; label: string; icon: LucideIcon }[] = [
@@ -43,9 +45,14 @@ function initialsOf(first: string, last: string) {
 }
 
 export default function ParentPortalPage() {
+  const { t: tr } = useTranslation("parent-portal");
   const user = useAuthStore((s) => s.user);
   const modulePermissions = useAuthStore((s) => s.modulePermissions);
-  const [activeTab, setActiveTab] = useState("overview");
+  // A gateway sends the payer back here with ?tab=fees (see FinanceService Payments:ReturnPath).
+  const [activeTab, setActiveTab] = useState(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    return TABS.some((t) => t.value === requested) ? requested! : "overview";
+  });
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const ai = useAiCapabilities();
 
@@ -76,16 +83,16 @@ export default function ParentPortalPage() {
 
   const quickActions: QuickAction[] = [
     ...(can("meetings")
-      ? [{ label: "Online Classes", hint: "Join live classes & meetings", icon: Video, to: "/online-classes" }]
+      ? [{ label: tr("Online Classes"), hint: "Join live classes & meetings", icon: Video, to: "/online-classes" }]
       : []),
     ...(can("talents")
-      ? [{ label: "Talent Showcase", hint: "Share & cheer on talents", icon: Star, to: "/talents" }]
+      ? [{ label: tr("Talent Showcase"), hint: "Share & cheer on talents", icon: Star, to: "/talents" }]
       : []),
-    { label: "Track bus", hint: "See where the school bus is", icon: Bus, onClick: () => setActiveTab("track-bus") },
-    { label: "Pay fees", hint: "Invoices & online payment", icon: Wallet, onClick: () => setActiveTab("fees") },
-    { label: "Apply for leave", hint: "Request a day off", icon: CalendarOff, onClick: () => setActiveTab("leave") },
-    { label: "Message teacher", hint: "Talk to the class teacher", icon: MessageSquareText, onClick: () => setActiveTab("messages") },
-    ...(askAi ? [{ label: "Ask School AI", hint: "Attendance, homework, results & fees", icon: Sparkles, onClick: () => setActiveTab("ask-ai") }] : []),
+    { label: tr("Track bus"), hint: "See where the school bus is", icon: Bus, onClick: () => setActiveTab("track-bus") },
+    { label: tr("Pay fees"), hint: "Invoices & online payment", icon: Wallet, onClick: () => setActiveTab("fees") },
+    { label: tr("Apply for leave"), hint: "Request a day off", icon: CalendarOff, onClick: () => setActiveTab("leave") },
+    { label: tr("Message teacher"), hint: "Talk to the class teacher", icon: MessageSquareText, onClick: () => setActiveTab("messages") },
+    ...(askAi ? [{ label: tr("Ask School AI"), hint: "Attendance, homework, results & fees", icon: Sparkles, onClick: () => setActiveTab("ask-ai") }] : []),
   ];
 
   return (
@@ -94,7 +101,7 @@ export default function ParentPortalPage() {
       <WelcomeHero
         eyebrow="Parent portal"
         title={`${timeOfDayGreeting()}${firstName ? `, ${firstName}` : ""}`}
-        subtitle={`Everything about your ${children.length === 1 ? "child's" : "children's"} school day in one place — attendance, homework, results, fees and more.`}
+        subtitle={tr("Everything about your {{v1}} school day in one place — attendance, homework, results, fees and more.", { v1: children.length === 1 ? "child's" : "children's" })}
         aside={
           children.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -106,13 +113,13 @@ export default function ParentPortalPage() {
                     setSelectedChildId(child.id);
                     setActiveTab("attendance");
                   }}
-                  className="flex items-center gap-2.5 rounded-xl border border-border bg-card py-1.5 pl-1.5 pr-3.5 shadow-xs transition-colors hover:border-input hover:bg-muted cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex items-center gap-2.5 rounded-xl border border-border bg-card py-1.5 ps-1.5 pe-3.5 shadow-xs transition-colors hover:border-input hover:bg-muted cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Avatar className="h-8 w-8">
                     {child.photoUrl && <AvatarImage src={child.photoUrl} alt={child.firstName} />}
                     <AvatarFallback className="text-xs">{initialsOf(child.firstName, child.lastName)}</AvatarFallback>
                   </Avatar>
-                  <span className="text-left">
+                  <span className="text-start">
                     <span className="block text-sm font-medium leading-tight text-foreground">{child.firstName}</span>
                     <span className="block text-[11px] leading-tight text-muted-foreground">
                       {child.className} - {child.section}
@@ -132,7 +139,7 @@ export default function ParentPortalPage() {
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               <tab.icon className="h-4 w-4" aria-hidden="true" />
-              {tab.label}
+              {tr(tab.label)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -156,7 +163,10 @@ export default function ParentPortalPage() {
         {selectedChild ? (
           <>
             <TabsContent value="attendance">
-              <AttendanceTab studentId={selectedChild.id} />
+              <div className="space-y-4">
+                <AttendanceTab studentId={selectedChild.id} />
+                <FaceConsentCard studentId={selectedChild.id} />
+              </div>
             </TabsContent>
             <TabsContent value="homework">
               <HomeworkTab studentId={selectedChild.id} />
@@ -188,7 +198,7 @@ export default function ParentPortalPage() {
             )}
           </>
         ) : (
-          CHILD_SCOPED_TABS.has(activeTab) && <p className="text-sm text-muted-foreground mt-4">No children linked to this account.</p>
+          CHILD_SCOPED_TABS.has(activeTab) && <p className="text-sm text-muted-foreground mt-4">{tr("No children linked to this account.")}</p>
         )}
 
         <TabsContent value="notifications">

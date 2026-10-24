@@ -1,7 +1,9 @@
+import axios from "axios";
 import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import type {
   AttendanceRecord,
   AttendanceRecordFilters,
+  AttendanceRegister,
   AttendanceStatus,
   CaptureMode,
   DailySectionSummary,
@@ -247,20 +249,87 @@ export async function getAttendanceForSectionDate(sectionId: string, date: strin
   return records.map(mapRecord);
 }
 
-export async function saveAttendance(params: SaveAttendanceParams): Promise<AttendanceRecord[]> {
-  const records = await unwrap(
-    academicHttpClient.post<ApiAttendanceRecord[]>("/api/attendance", {
-      sectionId: params.sectionId,
-      date: params.date,
-      captureMode: CAPTURE_MODE_TO_API[params.captureMode],
-      entries: params.entries.map((e) => ({
-        studentId: e.studentId,
-        status: ATTENDANCE_STATUS_TO_API[e.status],
-        remarks: e.remarks ?? null,
-      })),
-    }),
+/** The day's register with the version a later save should be based on (offline edits use it to detect clashes). */
+export async function getAttendanceRegister(sectionId: string, date: string): Promise<AttendanceRegister> {
+  const register = await unwrap(
+    academicHttpClient.get<{ version: string; records: ApiAttendanceRecord[] }>(`/api/attendance/sections/${sectionId}/date/${date}/register`),
   );
-  return records.map(mapRecord);
+  return { version: register.version, records: register.records.map(mapRecord) };
+}
+
+/** Someone else saved this register after the version the caller edited. `current` is what the server holds now. */
+export class AttendanceConflictError extends Error {
+  readonly currentVersion: string;
+  readonly current: AttendanceRecord[];
+
+  constructor(currentVersion: string, current: AttendanceRecord[]) {
+    super("This register was changed by someone else after you loaded it.");
+    this.currentVersion = currentVersion;
+    this.current = current;
+  }
+}
+
+/** The server could not be reached (offline, timeout, or a gateway error): the request may be sent again later. */
+export class NetworkUnavailableError extends Error {
+  constructor() {
+    super("You're offline or the school server can't be reached.");
+  }
+}
+
+/** The server refused the save (locked past day, no access, invalid data); sending it again will not help. */
+export class SaveRejectedError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** True for failures that say nothing about the request itself: no response at all, or a gateway/server outage. */
+export function isRetryableFailure(err: unknown): boolean {
+  if (err instanceof NetworkUnavailableError) return true;
+  if (!axios.isAxiosError(err)) return false;
+  const status = err.response?.status;
+  return status === undefined || status === 502 || status === 503 || status === 504 || status === 408;
+}
+
+export async function saveAttendance(params: SaveAttendanceParams): Promise<AttendanceRecord[]> {
+  try {
+    const { data } = await academicHttpClient.post<ApiAttendanceRecord[]>(
+      "/api/attendance",
+      {
+        sectionId: params.sectionId,
+        date: params.date,
+        captureMode: CAPTURE_MODE_TO_API[params.captureMode],
+        entries: params.entries.map((e) => ({
+          studentId: e.studentId,
+          status: ATTENDANCE_STATUS_TO_API[e.status],
+          remarks: e.remarks ?? null,
+        })),
+        // Only sent when the caller can resend or check for clashes; a plain save is exactly as before.
+        ...(params.operationId ? { operationId: params.operationId } : {}),
+        ...(params.baseVersion ? { baseVersion: params.baseVersion } : {}),
+        ...(params.force ? { force: true } : {}),
+      },
+      {
+        // An offline save sent later still belongs to the school and branch it was taken in.
+        headers: {
+          ...(params.tenantId ? { "X-Tenant-Id": params.tenantId } : {}),
+          ...(params.branchId ? { "X-Branch-Id": params.branchId } : {}),
+        },
+        silentErrors: true,
+      },
+    );
+    return data.map(mapRecord);
+  } catch (err) {
+    if (isRetryableFailure(err)) throw new NetworkUnavailableError();
+    if (axios.isAxiosError(err) && err.response?.status === 409) {
+      const body = err.response.data as { currentVersion?: string; current?: ApiAttendanceRecord[] } | undefined;
+      if (body?.currentVersion && body.current) throw new AttendanceConflictError(body.currentVersion, body.current.map(mapRecord));
+    }
+    throw new SaveRejectedError(extractApiErrorMessage(err), axios.isAxiosError(err) ? (err.response?.status ?? 0) : 0);
+  }
 }
 
 export async function listAttendanceRecords(filters?: AttendanceRecordFilters): Promise<AttendanceRecord[]> {

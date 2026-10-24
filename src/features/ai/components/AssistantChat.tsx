@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { History, Loader2, Plus, RotateCw, Send, Sparkles, Square } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,6 +47,7 @@ interface Props {
  * child switcher for parents. Shared by the AI page, the floating launcher and the Parent Portal.
  */
 export default function AssistantChat({ studentId, page, compact, mode = "chat" }: Props) {
+  const { t } = useTranslation("ai");
   const user = useAuthStore((s) => s.user);
   const role = user?.role;
   const viewer = useViewer();
@@ -100,7 +102,7 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
       );
       setHistoryOpen(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not open that conversation.");
+      toast.error(e instanceof Error ? e.message : t("Could not open that conversation."));
     } finally {
       setOpening(false);
     }
@@ -142,7 +144,7 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
       } else {
         const partial = err instanceof AssistantStreamError ? err.partial : text;
         if (err instanceof AssistantStreamError && err.conversationId) setConversationId(err.conversationId);
-        patch(replyId, { content: partial, pending: false, error: true, errorText: err instanceof Error ? err.message : "Something went wrong. Please try again.", retry: message });
+        patch(replyId, { content: partial, pending: false, error: true, errorText: err instanceof Error ? err.message : t("Something went wrong. Please try again."), retry: message });
       }
     } finally {
       abort.current = null;
@@ -193,11 +195,11 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setHistoryOpen((o) => !o)} aria-expanded={historyOpen}>
             {opening ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <History className="h-3.5 w-3.5" />}
-            History
+            {t("History")}
           </Button>
           <Button variant="outline" size="sm" onClick={startNew} disabled={messages.length === 0 || busy}>
             <Plus className="h-3.5 w-3.5" />
-            New chat
+            {t("New chat")}
           </Button>
         </div>
       )}
@@ -221,18 +223,18 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
           }}
         />
       )}
-      <div className={cn("space-y-3 overflow-y-auto", compact ? "min-h-48 max-h-[50vh]" : "min-h-64 max-h-[28rem]")} role="log" aria-live="polite" aria-label="Conversation">
+      <div className={cn("space-y-3 overflow-y-auto", compact ? "min-h-48 max-h-[50vh]" : "min-h-64 max-h-[28rem]")} role="log" aria-live="polite" aria-label={t("Conversation")}>
         {messages.length === 0 ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               {mode === "analytics"
-                ? "Ask about fee collection, attendance, exam results by class, admissions or at-risk students. Figures come from the school system and cover only what your account can see."
-                : "Ask about timetable, attendance, fees, exams or notices. Answers use only the data your account can access."}
+                ? t("Ask about fee collection, attendance, exam results by class, admissions or at-risk students. Figures come from the school system and cover only what your account can see.")
+                : t("Ask about timetable, attendance, fees, exams or notices. Answers use only the data your account can access.")}
             </p>
             <div className="flex flex-wrap gap-2">
               {suggestedPrompts(role, mode).map((p) => (
-                <Button key={p} variant="outline" size="sm" onClick={() => send(p)}>
-                  {p}
+                <Button key={p} variant="outline" size="sm" onClick={() => send(t(p))}>
+                  {t(p)}
                 </Button>
               ))}
             </div>
@@ -250,19 +252,19 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
                 {m.content && <p className="whitespace-pre-wrap">{m.content}</p>}
                 {m.pending && !m.content && (
                   <span className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> {lookup ? `Checking ${lookup.toLowerCase()}…` : "Thinking…"}
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> {lookup ? t("Checking {{source}}…", { source: t(lookup).toLowerCase() }) : t("Thinking…")}
                   </span>
                 )}
-                {m.pending && m.content && <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-sm bg-foreground/60 align-middle" aria-hidden="true" />}
+                {m.pending && m.content && <span className="ms-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-sm bg-foreground/60 align-middle" aria-hidden="true" />}
                 {voiceOut && m.role === "assistant" && !m.pending && !m.error && m.content && <ReadAloudButton text={m.content} />}
-                {m.demo && <p className="mt-1 text-xs text-muted-foreground">Demo mode</p>}
-                {m.stopped && <p className="mt-1 text-xs text-muted-foreground">Stopped. This answer is incomplete.</p>}
+                {m.demo && <p className="mt-1 text-xs text-muted-foreground">{t("Demo mode")}</p>}
+                {m.stopped && <p className="mt-1 text-xs text-muted-foreground">{t("Stopped. This answer is incomplete.")}</p>}
                 {m.error && (
                   <div className="mt-1 space-y-1.5">
                     <p className="text-xs text-destructive">{m.errorText}</p>
                     {m.retry && (
                       <Button type="button" size="sm" variant="outline" onClick={() => retry(m)} disabled={busy}>
-                        <RotateCw className="h-3.5 w-3.5" /> Retry
+                        <RotateCw className="h-3.5 w-3.5" /> {t("Retry")}
                       </Button>
                     )}
                   </div>
@@ -280,10 +282,10 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
                 {m.actions?.map((a) => <ActionCard key={a.id} action={a} />)}
                 {m.sources && m.sources.length > 0 && (
                   <div className="mt-2 flex flex-wrap items-center gap-1">
-                    <span className="text-xs text-muted-foreground">Based on:</span>
+                    <span className="text-xs text-muted-foreground">{t("Based on:")}</span>
                     {m.sources.map((s) => (
                       <Badge key={s} variant="neutral">
-                        {SOURCE_LABELS[s]}
+                        {t(SOURCE_LABELS[s])}
                       </Badge>
                     ))}
                   </div>
@@ -303,7 +305,7 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
         }}
       >
         <Textarea
-          aria-label="Message"
+          aria-label={t("Message")}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -312,24 +314,24 @@ export default function AssistantChat({ studentId, page, compact, mode = "chat" 
               send(draft);
             }
           }}
-          placeholder={mode === "analytics" ? "Ask about school analytics…" : "Ask School AI…"}
+          placeholder={mode === "analytics" ? t("Ask about school analytics…") : t("Ask School AI…")}
           rows={2}
         />
-        {voiceIn && !busy && <VoiceInputButton onText={(t) => setDraft((d) => (d.trim() ? `${d.trim()} ${t}` : t))} />}
+        {voiceIn && !busy && <VoiceInputButton onText={(text) => setDraft((d) => (d.trim() ? `${d.trim()} ${text}` : text))} />}
         {busy ? (
           <Button type="button" variant="outline" onClick={() => abort.current?.abort()}>
             <Square className="h-4 w-4" />
-            Stop
+            {t("Stop")}
           </Button>
         ) : (
           <Button type="submit" disabled={!draft.trim()}>
             <Send className="h-4 w-4" />
-            Send
+            {t("Send")}
           </Button>
         )}
       </form>
       <p className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Sparkles className="h-3 w-3" /> AI can make mistakes. Check important details with the school office.
+        <Sparkles className="h-3 w-3" /> {t("AI can make mistakes. Check important details with the school office.")}
       </p>
     </div>
   );

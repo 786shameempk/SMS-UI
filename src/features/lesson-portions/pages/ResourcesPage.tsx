@@ -22,7 +22,9 @@ import { createResource, deleteResource, getSyllabus, listResources, listSyllabi
 import { RESOURCE_KIND_LABEL, SelectField, guardedClose, options, useApiMutation, usePortionAccess } from "../shared";
 import type { Resource, ResourceKind, SyllabusSummary } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function ResourcesPage() {
+  const { t } = useTranslation("lesson-portions");
   const access = usePortionAccess();
   const canEdit = access.canManage || access.canPlan || access.canProgress;
   const [syllabusId, setSyllabusId] = useState<string | undefined>();
@@ -37,7 +39,7 @@ export default function ResourcesPage() {
   const columns: ColumnDef<Resource, unknown>[] = [
     {
       id: "title",
-      header: "Resource",
+      header: t("Resource"),
       accessorFn: (r) => r.title,
       cell: ({ row }) => (
         <div className="min-w-0">
@@ -46,25 +48,25 @@ export default function ResourcesPage() {
         </div>
       ),
     },
-    { id: "kind", header: "Type", accessorFn: (r) => RESOURCE_KIND_LABEL[r.kind], cell: ({ row }) => <Badge variant="info">{RESOURCE_KIND_LABEL[row.original.kind]}</Badge> },
-    { id: "syllabus", header: "Syllabus", accessorFn: (r) => nameOf(r.syllabusPlanId), cell: ({ row }) => <span className="text-sm">{nameOf(row.original.syllabusPlanId)}</span> },
+    { id: "kind", header: t("Type"), accessorFn: (r) => RESOURCE_KIND_LABEL[r.kind], cell: ({ row }) => <Badge variant="info">{RESOURCE_KIND_LABEL[row.original.kind]}</Badge> },
+    { id: "syllabus", header: t("Syllabus"), accessorFn: (r) => nameOf(r.syllabusPlanId), cell: ({ row }) => <span className="text-sm">{nameOf(row.original.syllabusPlanId)}</span> },
     {
       id: "source",
-      header: "Opens",
+      header: t("Opens"),
       enableSorting: false,
       accessorFn: (r) => r.url ?? (r.studyMaterialId ? "Study material" : ""),
       cell: ({ row }) =>
         row.original.url ? (
           <a href={row.original.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-            Open link <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("Open link")} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           </a>
         ) : (
           <Link to="/study-materials" className="text-sm text-primary hover:underline">
-            In Study Materials
+            {t("In Study Materials")}
           </Link>
         ),
     },
-    { id: "families", header: "Families", accessorFn: (r) => (r.visibleToFamilies ? "Visible" : "Hidden"), cell: ({ row }) => <Badge variant={row.original.visibleToFamilies ? "success" : "neutral"}>{row.original.visibleToFamilies ? "Visible" : "Staff only"}</Badge> },
+    { id: "families", header: t("Families"), accessorFn: (r) => (r.visibleToFamilies ? "Visible" : "Hidden"), cell: ({ row }) => <Badge variant={row.original.visibleToFamilies ? "success" : "neutral"}>{row.original.visibleToFamilies ? t("Visible") : t("Staff only")}</Badge> },
     ...(canEdit
       ? [
           {
@@ -72,12 +74,12 @@ export default function ResourcesPage() {
             header: "",
             enableSorting: false,
             cell: ({ row }) => (
-              <RowActions label={`Actions for ${row.original.title}`}>
+              <RowActions label={t("Actions for {{title}}", { title: row.original.title })}>
                 <DropdownMenuItem onClick={() => setForm({ open: true, editing: row.original })}>
-                  <Pencil /> Edit
+                  <Pencil /> {t("Edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive" onClick={() => setToDelete(row.original)}>
-                  <Trash2 /> Remove
+                  <Trash2 /> {t("Remove")}
                 </DropdownMenuItem>
               </RowActions>
             ),
@@ -90,11 +92,11 @@ export default function ResourcesPage() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Link textbooks, reference notes, presentations and worksheets to a syllabus, chapter or topic. Files are uploaded in{" "}
+        {t("Link textbooks, reference notes, presentations and worksheets to a syllabus, chapter or topic. Files are uploaded in")}{" "}
         <Link to="/study-materials" className="text-primary hover:underline">
-          Study Materials
+          {t("Study Materials")}
         </Link>{" "}
-        and attached here, so there is one place for files and one set of access rules.
+        {t("and attached here, so there is one place for files and one set of access rules.")}
       </p>
       <DataTable
         searchable
@@ -106,17 +108,17 @@ export default function ResourcesPage() {
         onRetry={() => list.refetch()}
         exportFileName="lesson-resources"
         pageSize={10}
-        empty={{ icon: FolderOpen, title: "No resources yet", description: canEdit ? "Add a link or attach a study material to a syllabus." : "Nothing has been attached to the syllabus yet." }}
+        empty={{ icon: FolderOpen, title: t("No resources yet"), description: canEdit ? "Add a link or attach a study material to a syllabus." : "Nothing has been attached to the syllabus yet." }}
         filters={
           <>
-            <SelectField aria-label="Syllabus" value={syllabusId} onChange={setSyllabusId} allLabel="All syllabus plans" items={(syllabi.data?.items ?? []).map((s) => ({ value: s.id, label: `${s.title} (${s.className})` }))} className="w-64" />
-            <SelectField aria-label="Type" value={kind} onChange={setKind} allLabel="All types" items={options(RESOURCE_KIND_LABEL)} className="w-40" />
+            <SelectField aria-label={t("Syllabus")} value={syllabusId} onChange={setSyllabusId} allLabel="All syllabus plans" items={(syllabi.data?.items ?? []).map((s) => ({ value: s.id, label: `${s.title} (${s.className})` }))} className="w-64" />
+            <SelectField aria-label={t("Type")} value={kind} onChange={setKind} allLabel="All types" items={options(RESOURCE_KIND_LABEL)} className="w-40" />
           </>
         }
         actions={
           canEdit && (
             <Button onClick={() => setForm({ open: true, editing: null })}>
-              <Plus className="h-4 w-4" /> Add resource
+              <Plus className="h-4 w-4" /> {t("Add resource")}
             </Button>
           )
         }
@@ -125,9 +127,9 @@ export default function ResourcesPage() {
       <ConfirmDialog
         open={Boolean(toDelete)}
         onOpenChange={(open) => !open && setToDelete(null)}
-        title="Remove this resource?"
-        description="It is detached from the syllabus. Any file in Study Materials stays there."
-        confirmLabel="Remove"
+        title={t("Remove this resource?")}
+        description={t("It is detached from the syllabus. Any file in Study Materials stays there.")}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => { if (toDelete) remove.mutate(toDelete.id); }}
@@ -163,6 +165,7 @@ const resourceSchema = z
 type ResourceForm = z.infer<typeof resourceSchema>;
 
 function ResourceDialog({ open, editing, onOpenChange, syllabi, defaultSyllabus }: { open: boolean; editing: Resource | null; onOpenChange: (o: boolean) => void; syllabi: SyllabusSummary[]; defaultSyllabus?: string }) {
+  const { t: tr } = useTranslation("lesson-portions");
   const { register, handleSubmit, control, reset, watch, setValue, formState } = useForm<ResourceForm>({ resolver: zodResolver(resourceSchema) });
   const { errors, isDirty } = formState;
   useEffect(() => {
@@ -195,42 +198,42 @@ function ResourceDialog({ open, editing, onOpenChange, syllabi, defaultSyllabus 
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit resource" : "Add resource"}</DialogTitle>
-          <DialogDescription>Attach to a whole syllabus, or narrow it to a chapter or topic.</DialogDescription>
+          <DialogTitle>{editing ? tr("Edit resource") : tr("Add resource")}</DialogTitle>
+          <DialogDescription>{tr("Attach to a whole syllabus, or narrow it to a chapter or topic.")}</DialogDescription>
         </DialogHeader>
         <form id="resource-form" onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4 overflow-y-auto" noValidate>
-          <FormField label="Syllabus" htmlFor="rs-syllabus" required error={errors.syllabusPlanId?.message}>
-            <Controller control={control} name="syllabusPlanId" render={({ field }) => <SelectField id="rs-syllabus" value={field.value || undefined} onChange={(v) => { field.onChange(v ?? ""); setValue("syllabusChapterId", ""); setValue("syllabusTopicId", ""); }} items={syllabi.filter((s) => !s.isTemplate && s.status !== "Archived").map((s) => ({ value: s.id, label: `${s.title} (${s.className})` }))} placeholder="Choose" className="w-full" invalid={Boolean(errors.syllabusPlanId)} />} />
+          <FormField label={tr("Syllabus")} htmlFor="rs-syllabus" required error={errors.syllabusPlanId?.message}>
+            <Controller control={control} name="syllabusPlanId" render={({ field }) => <SelectField id="rs-syllabus" value={field.value || undefined} onChange={(v) => { field.onChange(v ?? ""); setValue("syllabusChapterId", ""); setValue("syllabusTopicId", ""); }} items={syllabi.filter((s) => !s.isTemplate && s.status !== "Archived").map((s) => ({ value: s.id, label: `${s.title} (${s.className})` }))} placeholder={tr("Choose")} className="w-full" invalid={Boolean(errors.syllabusPlanId)} />} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Chapter" htmlFor="rs-chapter" optional>
+            <FormField label={tr("Chapter")} htmlFor="rs-chapter" optional>
               <Controller control={control} name="syllabusChapterId" render={({ field }) => <SelectField id="rs-chapter" value={field.value || undefined} onChange={(v) => { field.onChange(v ?? ""); setValue("syllabusTopicId", ""); }} allLabel="Whole syllabus" disabled={!syllabusId} items={chapters.map((c) => ({ value: c.id, label: c.title }))} className="w-full" />} />
             </FormField>
-            <FormField label="Topic" htmlFor="rs-topic" optional>
+            <FormField label={tr("Topic")} htmlFor="rs-topic" optional>
               <Controller control={control} name="syllabusTopicId" render={({ field }) => <SelectField id="rs-topic" value={field.value || undefined} onChange={(v) => field.onChange(v ?? "")} allLabel="Whole chapter" disabled={!chapterId} items={topics.map((t) => ({ value: t.id, label: t.title }))} className="w-full" />} />
             </FormField>
           </div>
           <div className="grid gap-4 sm:grid-cols-[1fr_12rem]">
-            <FormField label="Title" htmlFor="rs-title" required error={errors.title?.message}>
+            <FormField label={tr("Title")} htmlFor="rs-title" required error={errors.title?.message}>
               <Input id="rs-title" {...register("title")} aria-invalid={errors.title ? true : undefined} />
             </FormField>
-            <FormField label="Type" htmlFor="rs-kind" required>
+            <FormField label={tr("Type")} htmlFor="rs-kind" required>
               <Controller control={control} name="kind" render={({ field }) => <SelectField id="rs-kind" value={field.value} onChange={(v) => field.onChange(v ?? "Other")} items={options(RESOURCE_KIND_LABEL)} className="w-full" />} />
             </FormField>
           </div>
-          <FormField label="Where is it?" htmlFor="rs-source" required>
-            <Controller control={control} name="source" render={({ field }) => <SelectField id="rs-source" value={field.value} onChange={(v) => field.onChange(v ?? "link")} items={[{ value: "link", label: "A web link" }, { value: "material", label: "A study material from this school" }]} className="w-full" />} />
+          <FormField label={tr("Where is it?")} htmlFor="rs-source" required>
+            <Controller control={control} name="source" render={({ field }) => <SelectField id="rs-source" value={field.value} onChange={(v) => field.onChange(v ?? "link")} items={[{ value: "link", label: tr("A web link") }, { value: "material", label: tr("A study material from this school") }]} className="w-full" />} />
           </FormField>
           {source === "link" ? (
-            <FormField label="Web link" htmlFor="rs-url" required error={errors.url?.message}>
-              <Input id="rs-url" type="url" inputMode="url" placeholder="https://" {...register("url")} aria-invalid={errors.url ? true : undefined} />
+            <FormField label={tr("Web link")} htmlFor="rs-url" required error={errors.url?.message}>
+              <Input id="rs-url" type="url" inputMode="url" placeholder={tr("https://")} {...register("url")} aria-invalid={errors.url ? true : undefined} />
             </FormField>
           ) : (
-            <FormField label="Study material" htmlFor="rs-material" required error={errors.studyMaterialId?.message} hint="Upload new files in Study Materials, then attach them here.">
-              <Controller control={control} name="studyMaterialId" render={({ field }) => <SelectField id="rs-material" value={field.value || undefined} onChange={(v) => field.onChange(v ?? "")} placeholder={materials.isLoading ? "Loading…" : "Choose"} items={(materials.data ?? []).map((m) => ({ value: m.id, label: m.title }))} className="w-full" invalid={Boolean(errors.studyMaterialId)} />} />
+            <FormField label={tr("Study material")} htmlFor="rs-material" required error={errors.studyMaterialId?.message} hint={tr("Upload new files in Study Materials, then attach them here.")}>
+              <Controller control={control} name="studyMaterialId" render={({ field }) => <SelectField id="rs-material" value={field.value || undefined} onChange={(v) => field.onChange(v ?? "")} placeholder={materials.isLoading ? tr("Loading…") : tr("Choose")} items={(materials.data ?? []).map((m) => ({ value: m.id, label: m.title }))} className="w-full" invalid={Boolean(errors.studyMaterialId)} />} />
             </FormField>
           )}
-          <FormField label="Note" htmlFor="rs-note" optional error={errors.note?.message}>
+          <FormField label={tr("Note")} htmlFor="rs-note" optional error={errors.note?.message}>
             <Textarea id="rs-note" rows={2} {...register("note")} />
           </FormField>
           <Controller
@@ -239,20 +242,20 @@ function ResourceDialog({ open, editing, onOpenChange, syllabi, defaultSyllabus 
             render={({ field }) => (
               <label className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
                 <span>
-                  Show to students and parents
-                  <span className="block text-xs text-muted-foreground">Only when your school turns the family view on and the syllabus is published.</span>
+                  {tr("Show to students and parents")}
+                  <span className="block text-xs text-muted-foreground">{tr("Only when your school turns the family view on and the syllabus is published.")}</span>
                 </span>
-                <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Show to students and parents" />
+                <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={tr("Show to students and parents")} />
               </label>
             )}
           />
         </form>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => close(false)}>
-            Cancel
+            {tr("Cancel")}
           </Button>
           <Button type="submit" form="resource-form" loading={save.isPending}>
-            {editing ? "Save changes" : "Add resource"}
+            {editing ? tr("Save changes") : tr("Add resource")}
           </Button>
         </DialogFooter>
       </DialogContent>

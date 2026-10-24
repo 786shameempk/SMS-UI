@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ export default function StockOutDialog({
   submitting: boolean;
   onSubmit: (values: StockOutFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("inventory");
   const {
     register,
     handleSubmit,
@@ -58,63 +60,63 @@ export default function StockOutDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Issue stock</DialogTitle>
-          <DialogDescription>Take items out of inventory for use by a department or class.</DialogDescription>
+          <DialogTitle>{t("Issue stock")}</DialogTitle>
+          <DialogDescription>{t("Take items out of inventory for use by a department or class.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, issuedTo: values.issuedTo.trim(), reason: values.reason?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="so-itemId" required>Item</Label>
+            <Label htmlFor="so-itemId" required>{t("Item")}</Label>
             <Controller
               control={control}
               name="itemId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="so-itemId">
-                    <SelectValue placeholder="Select an item" />
+                    <SelectValue placeholder={t("Select an item")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableItems.map((i) => (
                       <SelectItem key={i.id} value={i.id}>
-                        {i.code} · {i.name} ({i.quantityInStock} in stock)
+                        {t("{{code}} · {{name}} ({{quantity}} in stock)", { code: i.code, name: i.name, quantity: i.quantityInStock })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.itemId.message}</p>}
+            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.itemId.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="so-quantity" required>Quantity</Label>
+              <Label htmlFor="so-quantity" required>{t("Quantity")}</Label>
               <Input id="so-quantity" type="number" min="1" step="1" max={selectedItem?.quantityInStock} aria-invalid={errors.quantity ? true : undefined} {...register("quantity")} />
-              {errors.quantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.quantity.message}</p>}
+              {errors.quantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.quantity.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="so-date" required>Date</Label>
+              <Label htmlFor="so-date" required>{t("Date")}</Label>
               <Input id="so-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
-              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.date.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="so-issuedTo" required>Issued to</Label>
-            <Input id="so-issuedTo" placeholder="e.g. Science department, Grade 8 - A" aria-invalid={errors.issuedTo ? true : undefined} {...register("issuedTo")} />
-            {errors.issuedTo && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.issuedTo.message}</p>}
+            <Label htmlFor="so-issuedTo" required>{t("Issued to")}</Label>
+            <Input id="so-issuedTo" placeholder={t("e.g. Science department, Grade 8 - A")} aria-invalid={errors.issuedTo ? true : undefined} {...register("issuedTo")} />
+            {errors.issuedTo && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.issuedTo.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="so-reason" optional>Purpose</Label>
-            <Input id="so-reason" placeholder="e.g. Term 2 lab practicals" {...register("reason")} />
+            <Label htmlFor="so-reason" optional>{t("Purpose")}</Label>
+            <Input id="so-reason" placeholder={t("e.g. Term 2 lab practicals")} {...register("reason")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Issue stock
+              {t("Issue stock")}
             </Button>
           </DialogFooter>
         </form>

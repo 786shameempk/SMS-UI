@@ -7,6 +7,7 @@ import { ACCEPT_ATTRIBUTE, MEDIA_LIMITS } from "../constants";
 import type { ComposerMedia } from "../media";
 import { formatDuration } from "../hooks";
 
+import { useTranslation } from "react-i18next";
 const TYPE_ICON = { image: ImageIcon, video: Film, audio: Music } as const;
 
 export default function MediaDropzone({
@@ -24,6 +25,7 @@ export default function MediaDropzone({
   onCaption: (key: string, caption: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation("talents");
   const input = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -46,16 +48,14 @@ export default function MediaDropzone({
           disabled && "opacity-60",
         )}
       >
-        <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-brand-500/10 blur-2xl" />
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-brand-500/10 blur-2xl" />
+        <div className="absolute -top-10 -start-10 w-40 h-40 rounded-full bg-brand-500/10 blur-2xl" />
+        <div className="absolute -bottom-10 -end-10 w-40 h-40 rounded-full bg-brand-500/10 blur-2xl" />
         <div className="relative">
           <div className="mx-auto w-14 h-14 rounded-2xl cc-gradient-bg flex items-center justify-center shadow-lg shadow-brand-900/25 cc-float">
             <CloudUpload className="w-7 h-7 text-white" />
           </div>
-          <p className="cc-display mt-4 text-lg font-bold text-foreground">Drop your photos, videos or recordings</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Images up to {MEDIA_LIMITS.image.maxMb} MB · Videos up to {MEDIA_LIMITS.video.maxMb} MB · Audio up to {MEDIA_LIMITS.audio.maxMb} MB · Max {MEDIA_LIMITS.maxFiles} files
-          </p>
+          <p className="cc-display mt-4 text-lg font-bold text-foreground">{t("Drop your photos, videos or recordings")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("Images up to {{maxMb}} MB · Videos up to {{maxMb1}} MB · Audio up to {{maxMb2}} MB · Max {{maxFiles}} files", { maxMb: MEDIA_LIMITS.image.maxMb, maxMb1: MEDIA_LIMITS.video.maxMb, maxMb2: MEDIA_LIMITS.audio.maxMb, maxFiles: MEDIA_LIMITS.maxFiles })}</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
@@ -64,7 +64,7 @@ export default function MediaDropzone({
               className="inline-flex items-center gap-2 rounded-full cc-gradient-bg px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-95 cursor-pointer disabled:cursor-not-allowed"
             >
               <CloudUpload className="w-4 h-4" />
-              Choose files
+              {t("Choose files")}
             </button>
             <VoiceRecorder disabled={disabled} onRecorded={(file) => onAdd([file])} />
           </div>
@@ -102,7 +102,7 @@ export default function MediaDropzone({
                     <Mic className="w-6 h-6 text-white" />
                   </div>
                 )}
-                {i === 0 && <span className="absolute top-1 left-1 rounded-md bg-black/55 px-1.5 text-[10px] font-semibold text-white">Cover</span>}
+                {i === 0 && <span className="absolute top-1 start-1 rounded-md bg-black/55 px-1.5 text-[10px] font-semibold text-white">{t("Cover")}</span>}
               </div>
               <div className="min-w-0 flex-1 space-y-1">
                 <p className="flex items-center gap-1.5 text-sm font-medium text-foreground truncate">
@@ -110,28 +110,28 @@ export default function MediaDropzone({
                   <span className="truncate">{item.name}</span>
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {(item.sizeBytes / (1024 * 1024)).toFixed(1)} MB
+                  {(item.sizeBytes / (1024 * 1024)).toFixed(1)} {t("MB")}
                   {item.durationSeconds ? ` · ${formatDuration(item.durationSeconds)}` : ""}
-                  {!item.serverId && <span className="ml-1.5 text-brand-600 dark:text-brand-300">· ready to upload</span>}
+                  {!item.serverId && <span className="ms-1.5 text-brand-600 dark:text-brand-300">{t("· ready to upload")}</span>}
                 </p>
                 <input
                   value={item.caption}
                   onChange={(e) => onCaption(item.key, e.target.value)}
                   maxLength={300}
                   disabled={disabled}
-                  placeholder="Add a caption (optional)"
+                  placeholder={t("Add a caption (optional)")}
                   className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 border-b border-transparent focus:border-brand-400 outline-none py-0.5"
                 />
               </div>
               <div className="flex flex-col gap-1 shrink-0">
-                <IconBtn label="Move up" disabled={disabled || i === 0} onClick={() => onMove(item.key, -1)}>
+                <IconBtn label={t("Move up")} disabled={disabled || i === 0} onClick={() => onMove(item.key, -1)}>
                   <ArrowUp className="w-3.5 h-3.5" />
                 </IconBtn>
-                <IconBtn label="Move down" disabled={disabled || i === items.length - 1} onClick={() => onMove(item.key, 1)}>
+                <IconBtn label={t("Move down")} disabled={disabled || i === items.length - 1} onClick={() => onMove(item.key, 1)}>
                   <ArrowDown className="w-3.5 h-3.5" />
                 </IconBtn>
               </div>
-              <IconBtn label="Remove" disabled={disabled} onClick={() => onRemove(item)} danger>
+              <IconBtn label={t("Remove")} disabled={disabled} onClick={() => onRemove(item)} danger>
                 <Trash2 className="w-4 h-4" />
               </IconBtn>
             </motion.div>
@@ -162,6 +162,7 @@ function IconBtn({ label, onClick, disabled, danger, children }: { label: string
 
 /** Records a voice clip in the browser (MediaRecorder → audio/webm) and hands it over as a File. */
 function VoiceRecorder({ onRecorded, disabled }: { onRecorded: (file: File) => void; disabled?: boolean }) {
+  const { t: tr } = useTranslation("talents");
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const recorder = useRef<MediaRecorder | null>(null);
@@ -191,7 +192,7 @@ function VoiceRecorder({ onRecorded, disabled }: { onRecorded: (file: File) => v
       setRecording(true);
       timer.current = window.setInterval(() => setSeconds((s) => s + 1), 1000);
     } catch {
-      toast.error("Microphone access was blocked. Allow it in your browser to record.");
+      toast.error(tr("Microphone access was blocked. Allow it in your browser to record."));
     }
   };
 
@@ -207,7 +208,7 @@ function VoiceRecorder({ onRecorded, disabled }: { onRecorded: (file: File) => v
         <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 animate-ping" />
         <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-white" />
       </span>
-      Recording {formatDuration(seconds)}
+      {tr("Recording")} {formatDuration(seconds)}
       <Square className="w-3.5 h-3.5 fill-current" />
     </button>
   ) : (
@@ -218,7 +219,7 @@ function VoiceRecorder({ onRecorded, disabled }: { onRecorded: (file: File) => v
       className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary cursor-pointer disabled:cursor-not-allowed"
     >
       <Mic className="w-4 h-4 text-rose-500" />
-      Record voice
+      {tr("Record voice")}
     </button>
   );
 }

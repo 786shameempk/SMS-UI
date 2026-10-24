@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, MessageSquare, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
@@ -31,6 +32,7 @@ export default function ConversationHistory({
   /** Which assistant's conversations to list. */
   feature?: AssistantMode;
 }) {
+  const { t } = useTranslation("ai");
   const queryClient = useQueryClient();
   const [toDelete, setToDelete] = useState<ConversationSummary | null>(null);
   const conversations = useQuery({ queryKey: [...CONVERSATIONS_KEY, feature], queryFn: () => listConversations(30, feature) });
@@ -41,7 +43,7 @@ export default function ConversationHistory({
       queryClient.invalidateQueries({ queryKey: CONVERSATIONS_KEY });
       onDeleted(id);
       setToDelete(null);
-      toast.success("Conversation deleted");
+      toast.success(t("Conversation deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -50,29 +52,29 @@ export default function ConversationHistory({
     <div className="rounded-lg border border-border">
       {conversations.isLoading ? (
         <p className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading conversations…
+          <Loader2 className="h-4 w-4 animate-spin" /> {t("Loading conversations…")}
         </p>
       ) : conversations.isError ? (
         <p className="p-3 text-sm text-destructive">{(conversations.error as Error).message}</p>
       ) : !conversations.data?.length ? (
-        <p className="p-3 text-sm text-muted-foreground">No earlier conversations yet.</p>
+        <p className="p-3 text-sm text-muted-foreground">{t("No earlier conversations yet.")}</p>
       ) : (
-        <ul className="max-h-60 divide-y divide-border overflow-y-auto" aria-label="Earlier conversations">
+        <ul className="max-h-60 divide-y divide-border overflow-y-auto" aria-label={t("Earlier conversations")}>
           {conversations.data.map((c) => {
             const child = c.studentId ? childName?.(c.studentId) : undefined;
             return (
               <li key={c.id} className={cn("flex items-center gap-2 px-3 py-2", c.id === activeId && "bg-accent")}>
-                <button type="button" className="flex min-w-0 flex-1 items-start gap-2 text-left" onClick={() => onOpen(c)} aria-current={c.id === activeId ? "true" : undefined}>
+                <button type="button" className="flex min-w-0 flex-1 items-start gap-2 text-start" onClick={() => onOpen(c)} aria-current={c.id === activeId ? "true" : undefined}>
                   <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm">{c.title || "Untitled conversation"}</span>
+                    <span className="block truncate text-sm">{c.title || t("Untitled conversation")}</span>
                     <span className="block text-xs text-muted-foreground">
                       {when(c.updatedAt)}
                       {child && ` · ${child}`}
                     </span>
                   </span>
                 </button>
-                <Button variant="ghost" size="icon-sm" aria-label={`Delete conversation: ${c.title}`} onClick={() => setToDelete(c)}>
+                <Button variant="ghost" size="icon-sm" aria-label={t("Delete conversation: {{title}}", { title: c.title })} onClick={() => setToDelete(c)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </li>
@@ -84,9 +86,9 @@ export default function ConversationHistory({
       <ConfirmDialog
         open={Boolean(toDelete)}
         onOpenChange={(v) => !v && setToDelete(null)}
-        title="Delete conversation"
-        description={`"${toDelete?.title}" and all its messages will be deleted.`}
-        confirmLabel="Delete"
+        title={t("Delete conversation")}
+        description={t("\"{{title}}\" and all its messages will be deleted.", { title: toDelete?.title })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {

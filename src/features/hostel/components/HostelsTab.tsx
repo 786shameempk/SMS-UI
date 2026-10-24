@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -16,6 +17,7 @@ import RoomsDialog from "./RoomsDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function HostelsTab() {
+  const { t } = useTranslation("hostel");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<HostelRow | null>(null);
@@ -35,59 +37,59 @@ export default function HostelsTab() {
     mutationFn: createHostel,
     onSuccess: () => {
       invalidate();
-      toast.success("Hostel created");
+      toast.success(t("Hostel created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create hostel"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create hostel")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: HostelFormValues }) => updateHostel(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Hostel updated");
+      toast.success(t("Hostel updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update hostel"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update hostel")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteHostel,
     onSuccess: () => {
       invalidate();
-      toast.success("Hostel deleted");
+      toast.success(t("Hostel deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete hostel"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete hostel")),
   });
 
   const columns: ColumnDef<HostelRow, unknown>[] = [
     {
       accessorKey: "name",
-      header: "Hostel",
+      header: t("Hostel"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.name}</p>
           <p className="text-xs text-muted-foreground">
-            {HOSTEL_TYPE_OPTIONS.find((o) => o.value === row.original.type)?.label ?? row.original.type} ·{" "}
-            {row.original.address ?? "No address on file"}
+            {t(HOSTEL_TYPE_OPTIONS.find((o) => o.value === row.original.type)?.label ?? row.original.type)} ·{" "}
+            {row.original.address ?? t("No address on file")}
           </p>
         </div>
       ),
     },
     {
       id: "warden",
-      header: "Warden",
+      header: t("Warden"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
-          {row.original.warden ? `${row.original.warden.firstName} ${row.original.warden.lastName}` : "Unassigned"}
+          {row.original.warden ? `${row.original.warden.firstName} ${row.original.warden.lastName}` : t("Unassigned")}
         </span>
       ),
     },
     {
       id: "occupancy",
-      header: "Occupancy",
+      header: t("Occupancy"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.occupiedCount} / {row.original.bedCount} beds · {row.original.roomCount} rooms
@@ -96,10 +98,10 @@ export default function HostelsTab() {
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = HOSTEL_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -116,7 +118,7 @@ export default function HostelsTab() {
               }}
             >
               <BedDouble className="w-3.5 h-3.5" />
-              Manage rooms
+              {t("Manage rooms")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -125,11 +127,11 @@ export default function HostelsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(hostel)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -140,7 +142,7 @@ export default function HostelsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Manage hostel buildings, their warden, and rooms.</p>
+        <p className="text-sm text-muted-foreground">{t("Manage hostel buildings, their warden, and rooms.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -148,11 +150,11 @@ export default function HostelsTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New hostel
+          {t("New hostel")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={hostels} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No hostels yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={hostels} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No hostels yet.")} pageSize={8} />
 
       <HostelFormDialog
         open={formOpen}
@@ -181,9 +183,9 @@ export default function HostelsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete hostel"
-        description={`Delete "${deleteTarget?.name}"? All of its rooms will be removed too. This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete hostel")}
+        description={t("Delete \"{{name}}\"? All of its rooms will be removed too. This cannot be undone.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

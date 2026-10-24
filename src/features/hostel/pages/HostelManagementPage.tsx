@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AllocationsTab from "../components/AllocationsTab";
 import HostelAttendanceTab from "../components/HostelAttendanceTab";
@@ -8,21 +9,22 @@ import VisitorRegisterTab from "../components/VisitorRegisterTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function HostelManagementPage() {
+  const { t } = useTranslation("hostel");
   return (
     <PageContainer>
       <PageHeader
-        title="Hostel management"
-        description="Manage hostels, rooms and beds, student allocation, the visitor register, hostel attendance, fees, and the mess menu."
+        title={t("Hostel management")}
+        description={t("Manage hostels, rooms and beds, student allocation, the visitor register, hostel attendance, fees, and the mess menu.")}
       />
 
       <Tabs defaultValue="hostels">
         <TabsList variant="line">
-          <TabsTrigger value="hostels">Hostels & Rooms</TabsTrigger>
-          <TabsTrigger value="allocations">Student Allocation</TabsTrigger>
-          <TabsTrigger value="visitors">Visitor Register</TabsTrigger>
-          <TabsTrigger value="attendance">Hostel Attendance</TabsTrigger>
-          <TabsTrigger value="fees">Hostel Fees</TabsTrigger>
-          <TabsTrigger value="mess">Mess Menu</TabsTrigger>
+          <TabsTrigger value="hostels">{t("Hostels & Rooms")}</TabsTrigger>
+          <TabsTrigger value="allocations">{t("Student Allocation")}</TabsTrigger>
+          <TabsTrigger value="visitors">{t("Visitor Register")}</TabsTrigger>
+          <TabsTrigger value="attendance">{t("Hostel Attendance")}</TabsTrigger>
+          <TabsTrigger value="fees">{t("Hostel Fees")}</TabsTrigger>
+          <TabsTrigger value="mess">{t("Mess Menu")}</TabsTrigger>
         </TabsList>
         <TabsContent value="hostels">
           <HostelsTab />

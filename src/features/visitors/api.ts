@@ -18,6 +18,7 @@ import type {
   VisitPurpose,
   WatchlistEntry,
   WatchlistEntryFormValues,
+  VisitorScan,
 } from "./types";
 
 // ── Enum translation ────────────────────────────────────────────────────────
@@ -86,6 +87,8 @@ interface ApiVisitorEntry extends ApiHostFields {
   checkOutAt: string | null;
   status: string;
   preApprovalId: string | null;
+  passToken?: string | null;
+  passExpiresAt?: string | null;
 }
 
 interface ApiPreApprovedVisit extends ApiHostFields {
@@ -95,6 +98,8 @@ interface ApiPreApprovedVisit extends ApiHostFields {
   scheduledAt: string;
   status: string;
   visitorEntryId: string | null;
+  passToken?: string | null;
+  passExpiresAt?: string | null;
 }
 
 interface ApiWatchlistEntry {
@@ -134,6 +139,8 @@ function mapEntry(dto: ApiVisitorEntry): VisitorEntry {
     checkOutAt: dto.checkOutAt ?? undefined,
     status: STATUS_FROM_API[dto.status] ?? "checked-in",
     preApprovalId: dto.preApprovalId ?? undefined,
+    passToken: dto.passToken ?? undefined,
+    passExpiresAt: dto.passExpiresAt ?? undefined,
   };
 }
 
@@ -146,6 +153,8 @@ function mapPreApproval(dto: ApiPreApprovedVisit): PreApprovedVisit {
     scheduledAt: dto.scheduledAt,
     status: PRE_APPROVAL_STATUS_FROM_API[dto.status] ?? "scheduled",
     visitorEntryId: dto.visitorEntryId ?? undefined,
+    passToken: dto.passToken ?? undefined,
+    passExpiresAt: dto.passExpiresAt ?? undefined,
   };
 }
 
@@ -263,6 +272,46 @@ export async function checkInVisitor(values: VisitorCheckInFormValues): Promise<
 export async function checkInFromPreApproval(preApprovalId: string): Promise<VisitorEntry> {
   const dto = await unwrap(campusHttpClient.post<ApiVisitorEntry>(`/api/visitorentries/from-pre-approval/${preApprovalId}`));
   return mapEntry(dto);
+}
+
+const SCAN_RESULT_FROM_API: Record<string, VisitorScan["result"]> = {
+  Inside: "inside",
+  AlreadyLeft: "already-left",
+  Expired: "expired",
+  ArrivalExpected: "arrival-expected",
+  PreApprovalClosed: "pre-approval-closed",
+  NotToday: "not-today",
+  Unknown: "unknown",
+};
+
+/** Security scans a badge or invitation QR code (or types its code). Records the scan and says what it is; checks nobody in or out. */
+export async function scanVisitorPass(token: string): Promise<VisitorScan> {
+  const dto = await unwrap(
+    campusHttpClient.post<{
+      result: string;
+      message: string;
+      visitorName: string | null;
+      badgeNumber: string | null;
+      purpose: string | null;
+      checkInAt: string | null;
+      checkOutAt: string | null;
+      scheduledAt: string | null;
+      visitorEntryId: string | null;
+      preApprovalId: string | null;
+    }>("/api/visitorentries/scan", { token }),
+  );
+  return {
+    result: SCAN_RESULT_FROM_API[dto.result] ?? "unknown",
+    message: dto.message,
+    visitorName: dto.visitorName ?? undefined,
+    badgeNumber: dto.badgeNumber ?? undefined,
+    purpose: dto.purpose ? (PURPOSE_FROM_API[dto.purpose] ?? "other") : undefined,
+    checkInAt: dto.checkInAt ?? undefined,
+    checkOutAt: dto.checkOutAt ?? undefined,
+    scheduledAt: dto.scheduledAt ?? undefined,
+    visitorEntryId: dto.visitorEntryId ?? undefined,
+    preApprovalId: dto.preApprovalId ?? undefined,
+  };
 }
 
 export async function checkOutVisitor(id: string): Promise<VisitorEntry> {

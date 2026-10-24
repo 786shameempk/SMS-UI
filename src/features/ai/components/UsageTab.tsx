@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, Coins, Gauge, Timer } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,25 +41,26 @@ function fillDays(from: string, to: string, days: UsageBucket[]) {
 }
 
 function BucketTable({ caption, rows, label }: { caption: string; rows: UsageBucket[]; label: (key: string) => string }) {
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground">No requests in this period.</p>;
+  const { t } = useTranslation("ai");
+  if (rows.length === 0) return <p className="text-sm text-muted-foreground">{t("No requests in this period.")}</p>;
   return (
     <Table density="compact">
       <caption className="sr-only">{caption}</caption>
       <TableHeader>
         <TableRow>
           <TableHead>{caption}</TableHead>
-          <TableHead className="text-right">Requests</TableHead>
-          <TableHead className="text-right">Tokens</TableHead>
-          <TableHead className="text-right">Est. cost</TableHead>
+          <TableHead className="text-end">{t("Requests")}</TableHead>
+          <TableHead className="text-end">{t("Tokens")}</TableHead>
+          <TableHead className="text-end">{t("Est. cost")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.map((r) => (
           <TableRow key={r.key}>
             <TableCell className="max-w-[14rem] truncate">{label(r.key)}</TableCell>
-            <TableCell className="text-right tabular-nums">{number(r.requests)}</TableCell>
-            <TableCell className="text-right tabular-nums">{number(r.tokens)}</TableCell>
-            <TableCell className="text-right tabular-nums">{money(r.cost)}</TableCell>
+            <TableCell className="text-end tabular-nums">{number(r.requests)}</TableCell>
+            <TableCell className="text-end tabular-nums">{number(r.tokens)}</TableCell>
+            <TableCell className="text-end tabular-nums">{money(r.cost)}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -68,6 +70,7 @@ function BucketTable({ caption, rows, label }: { caption: string; rows: UsageBuc
 
 /** School AI usage for admins: volume, tokens, estimated cost, the monthly allowance, and who uses which feature. */
 export default function UsageTab() {
+  const { t } = useTranslation("ai");
   const [range, setRange] = useState<Range>("30");
   const { from, to } = useMemo(() => rangeDates(range), [range]);
 
@@ -76,7 +79,7 @@ export default function UsageTab() {
   const users = useQuery({ queryKey: ["administration", "users"], queryFn: listUsers, retry: false });
   const userLabel = (id: string) => {
     const u = users.data?.find((x) => x.id === id);
-    return u ? `${u.name} (${u.email})` : `User ${id.slice(0, 8)}`;
+    return u ? `${u.name} (${u.email})` : t("User {{id}}", { id: id.slice(0, 8) });
   };
 
   const u = usage.data;
@@ -88,43 +91,43 @@ export default function UsageTab() {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Select value={range} onValueChange={(v) => setRange(v as Range)}>
-          <SelectTrigger className="w-48" aria-label="Period">
+          <SelectTrigger className="w-48" aria-label={t("Period")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="month">This month</SelectItem>
+            <SelectItem value="7">{t("Last 7 days")}</SelectItem>
+            <SelectItem value="30">{t("Last 30 days")}</SelectItem>
+            <SelectItem value="month">{t("This month")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {usage.isLoading ? (
-        <LoadingState label="Loading AI usage…" />
+        <LoadingState label={t("Loading AI usage…")} />
       ) : usage.isError || !u ? (
-        <ErrorState title="Couldn't load AI usage" description={usage.error instanceof Error ? usage.error.message : undefined} onRetry={() => usage.refetch()} />
+        <ErrorState title={t("Couldn't load AI usage")} description={usage.error instanceof Error ? usage.error.message : undefined} onRetry={() => usage.refetch()} />
       ) : (
         <>
           <StatGrid columns={4}>
-            <StatCard label="AI requests" value={number(u.requests)} icon={Activity} tone="brand" hint={u.failed ? `${number(u.failed)} failed` : "none failed"} />
-            <StatCard label="Tokens" value={number(u.totalTokens)} icon={Gauge} tone="info" hint={`${number(u.inputTokens)} in · ${number(u.outputTokens)} out`} />
-            <StatCard label="Estimated cost (USD)" value={money(u.estimatedCost)} icon={Coins} tone="warning" hint="From the configured model prices" />
-            <StatCard label="Average response" value={`${(u.averageDurationMs / 1000).toFixed(1)} s`} icon={Timer} tone="neutral" />
+            <StatCard label={t("AI requests")} value={number(u.requests)} icon={Activity} tone="brand" hint={u.failed ? t("{{count}} failed", { count: number(u.failed) }) : t("none failed")} />
+            <StatCard label={t("Tokens")} value={number(u.totalTokens)} icon={Gauge} tone="info" hint={t("{{input}} in · {{output}} out", { input: number(u.inputTokens), output: number(u.outputTokens) })} />
+            <StatCard label={t("Estimated cost (USD)")} value={money(u.estimatedCost)} icon={Coins} tone="warning" hint={t("From the configured model prices")} />
+            <StatCard label={t("Average response")} value={t("{{seconds}} s", { seconds: (u.averageDurationMs / 1000).toFixed(1) })} icon={Timer} tone="neutral" />
           </StatGrid>
 
           {limits && (
             <Card>
               <CardHeader>
-                <CardTitle>Monthly allowance</CardTitle>
+                <CardTitle>{t("Monthly allowance")}</CardTitle>
                 <CardDescription>
-                  School tokens used this month. Each user may also make up to {number(limits.dailyRequestsPerUser)} AI requests a day and {number(limits.requestsPerMinutePerUser)} a minute.
+                  {t("School tokens used this month. Each user may also make up to {{daily}} AI requests a day and {{perMinute}} a minute.", { daily: number(limits.dailyRequestsPerUser), perMinute: number(limits.requestsPerMinutePerUser) })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div
                   className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
                   role="progressbar"
-                  aria-label="Monthly tokens used"
+                  aria-label={t("Monthly tokens used")}
                   aria-valuenow={Math.round(monthPct)}
                   aria-valuemin={0}
                   aria-valuemax={100}
@@ -132,8 +135,8 @@ export default function UsageTab() {
                   <div className={monthPct >= 90 ? "h-full bg-destructive" : monthPct >= 75 ? "h-full bg-warning" : "h-full bg-primary"} style={{ width: `${monthPct}%` }} />
                 </div>
                 <p className="text-sm tabular-nums">
-                  {number(limits.monthTokensUsed)} of {number(limits.monthlyTokenLimitPerSchool)} tokens ({Math.round(monthPct)}%)
-                  {monthPct >= 90 && <span className="ml-2 text-destructive">AI requests stop at 100% until next month.</span>}
+                  {t("{{used}} of {{limit}} tokens ({{percent}}%)", { used: number(limits.monthTokensUsed), limit: number(limits.monthlyTokenLimitPerSchool), percent: Math.round(monthPct) })}
+                  {monthPct >= 90 && <span className="ms-2 text-destructive">{t("AI requests stop at 100% until next month.")}</span>}
                 </p>
               </CardContent>
             </Card>
@@ -141,14 +144,14 @@ export default function UsageTab() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Requests per day</CardTitle>
+              <CardTitle>{t("Requests per day")}</CardTitle>
               <CardDescription>
-                {from} to {to}
+                {t("{{from}} to {{to}}", { from, to })}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {u.requests === 0 ? (
-                <EmptyState bare size="sm" icon={Activity} title="No AI requests in this period" className="h-56" />
+                <EmptyState bare size="sm" icon={Activity} title={t("No AI requests in this period")} className="h-56" />
               ) : (
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -156,7 +159,7 @@ export default function UsageTab() {
                       <CartesianGrid {...CHART_GRID} />
                       <XAxis dataKey="day" tick={CHART_TICK} tickLine={false} axisLine={false} minTickGap={12} />
                       <YAxis allowDecimals={false} tick={CHART_TICK} tickLine={false} axisLine={false} width={32} />
-                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)" }} formatter={(v) => [v, "Requests"]} />
+                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)" }} formatter={(v) => [v, t("Requests")]} />
                       <Bar dataKey="requests" fill="var(--color-brand-500)" radius={[4, 4, 0, 0]} maxBarSize={28} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -168,19 +171,19 @@ export default function UsageTab() {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>By feature</CardTitle>
+                <CardTitle>{t("By feature")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <BucketTable caption="Feature" rows={u.byFeature} label={featureLabel} />
+                <BucketTable caption={t("Feature")} rows={u.byFeature} label={(key) => t(featureLabel(key))} />
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Top users</CardTitle>
-                <CardDescription>The 20 users with the most tokens in this period.</CardDescription>
+                <CardTitle>{t("Top users")}</CardTitle>
+                <CardDescription>{t("The 20 users with the most tokens in this period.")}</CardDescription>
               </CardHeader>
               <CardContent>
-                <BucketTable caption="User" rows={u.byUser} label={userLabel} />
+                <BucketTable caption={t("User")} rows={u.byUser} label={userLabel} />
               </CardContent>
             </Card>
           </div>

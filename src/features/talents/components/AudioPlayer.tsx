@@ -7,6 +7,7 @@ import type { TalentCategory, TalentMedia } from "../types";
 import { MusicNote, Sparkle } from "./Decor";
 import { waveform } from "../media";
 
+import { useTranslation } from "react-i18next";
 const BARS = 56;
 
 /**
@@ -26,6 +27,7 @@ export default function AudioPlayer({
   category: TalentCategory;
   onMeaningfulPlay?: () => void;
 }) {
+  const { t } = useTranslation("talents");
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -86,7 +88,7 @@ export default function AudioPlayer({
 
       <div className="flex flex-col sm:flex-row items-center gap-5">
         {/* Disc */}
-        <button type="button" onClick={toggle} className="relative shrink-0 w-28 h-28 sm:w-32 sm:h-32 cursor-pointer" aria-label={playing ? "Pause" : "Play"}>
+        <button type="button" onClick={toggle} className="relative shrink-0 w-28 h-28 sm:w-32 sm:h-32 cursor-pointer" aria-label={playing ? t("Pause") : t("Play")}>
           <span
             className={cn("absolute inset-0 rounded-full bg-gradient-to-br shadow-2xl shadow-brand-900/60", gradient)}
             style={{ animation: playing ? "spin 6s linear infinite" : undefined }}
@@ -96,9 +98,9 @@ export default function AudioPlayer({
             <MusicNote className="absolute top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-white/50" />
           </span>
           <span className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-[var(--cc-navy)] border-2 border-white/30 flex items-center justify-center">
-            {playing ? <Pause className="w-5 h-5 text-white fill-white" /> : <Play className="w-5 h-5 text-white fill-white ml-0.5" />}
+            {playing ? <Pause className="w-5 h-5 text-white fill-white" /> : <Play className="w-5 h-5 text-white fill-white ms-0.5" />}
           </span>
-          <Sparkle className="cc-sparkle absolute -top-1 -right-1 w-4 h-4 text-amber-300" />
+          <Sparkle className="cc-sparkle absolute -top-1 -end-1 w-4 h-4 text-amber-300" />
         </button>
 
         <div className="flex-1 w-full min-w-0">
@@ -120,7 +122,7 @@ export default function AudioPlayer({
           <div
             className="relative mt-4 h-14 flex items-center gap-[2px] cursor-pointer select-none"
             role="slider"
-            aria-label="Seek"
+            aria-label={t("Seek")}
             aria-valuemin={0}
             aria-valuemax={Math.round(duration)}
             aria-valuenow={Math.round(time)}
@@ -153,16 +155,16 @@ export default function AudioPlayer({
           <div className="mt-2 flex items-center justify-between text-xs text-white/75">
             <span className="tabular-nums">{formatDuration(time)}</span>
             <div className="flex items-center gap-1">
-              <button type="button" onClick={() => skip(-10)} className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label="Back 10 seconds">
+              <button type="button" onClick={() => skip(-10)} className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label={t("Back 10 seconds")}>
                 <RotateCcw className="w-4 h-4" />
               </button>
-              <button type="button" onClick={toggle} className="w-10 h-10 rounded-full bg-white text-[var(--cc-ink)] flex items-center justify-center cursor-pointer shadow-lg" aria-label={playing ? "Pause" : "Play"}>
-                {playing ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+              <button type="button" onClick={toggle} className="w-10 h-10 rounded-full bg-white text-[var(--cc-ink)] flex items-center justify-center cursor-pointer shadow-lg" aria-label={playing ? t("Pause") : t("Play")}>
+                {playing ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ms-0.5" />}
               </button>
-              <button type="button" onClick={() => skip(10)} className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label="Forward 10 seconds">
+              <button type="button" onClick={() => skip(10)} className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label={t("Forward 10 seconds")}>
                 <RotateCw className="w-4 h-4" />
               </button>
-              <button type="button" onClick={cycleRate} className="ml-1 rounded-full px-2 py-1 hover:bg-white/10 font-semibold tabular-nums cursor-pointer" aria-label="Playback speed">
+              <button type="button" onClick={cycleRate} className="ms-1 rounded-full px-2 py-1 hover:bg-white/10 font-semibold tabular-nums cursor-pointer" aria-label={t("Playback speed")}>
                 {rate}×
               </button>
             </div>

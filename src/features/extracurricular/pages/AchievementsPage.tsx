@@ -18,7 +18,9 @@ import { ACHIEVEMENT_STATUS_LABEL, LEVELS } from "../constants";
 import { SelectField, formatDate, options, todayIso, useAcademicYears, useApiMutation, useExtracurricularAccess, useStudentOptions } from "../shared";
 import type { Achievement, AchievementStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function AchievementsPage() {
+  const { t } = useTranslation("extracurricular");
   const access = useExtracurricularAccess();
   const years = useAcademicYears();
   const [status, setStatus] = useState<AchievementStatus | undefined>();
@@ -45,8 +47,8 @@ export default function AchievementsPage() {
           <SelectField value={year} onChange={setYear} allLabel="Any year" items={years.names.map((n) => ({ value: n, label: n }))} />
         </div>
         {!access.isFamily && (
-          <Button className="ml-auto" onClick={() => { setEditing(null); setFormOpen(true); }}>
-            <Plus className="h-4 w-4" /> Record an achievement
+          <Button className="ms-auto" onClick={() => { setEditing(null); setFormOpen(true); }}>
+            <Plus className="h-4 w-4" /> {t("Record an achievement")}
           </Button>
         )}
       </div>
@@ -54,7 +56,7 @@ export default function AchievementsPage() {
       {achievements.isError && <ErrorState onRetry={() => achievements.refetch()} retrying={achievements.isFetching} />}
       {achievements.isLoading && <Skeleton className="h-40 w-full" />}
       {achievements.data && items.length === 0 && (
-        <EmptyState icon={Award} title="No achievements yet" description={access.isFamily ? "Published awards and certificates appear here." : "Record medals, trophies and recognitions. They stay private until someone approves them."} />
+        <EmptyState icon={Award} title={t("No achievements yet")} description={access.isFamily ? t("Published awards and certificates appear here.") : t("Record medals, trophies and recognitions. They stay private until someone approves them.")} />
       )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -76,23 +78,23 @@ export default function AchievementsPage() {
               {a.description && <p className="line-clamp-3 text-sm text-secondary-foreground">{a.description}</p>}
               {a.evidenceUrl && (
                 <a href={a.evidenceUrl} target="_blank" rel="noreferrer noopener" className="text-xs text-primary hover:underline">
-                  View supporting document
+                  {t("View supporting document")}
                 </a>
               )}
               {!access.isFamily && (
                 <div className="flex flex-wrap gap-1 pt-1">
                   {access.canApprove && a.status !== "Published" && (
-                    <Button size="sm" onClick={() => decide.mutate({ id: a.id, status: "Published" })}><Check className="h-3.5 w-3.5" /> Publish</Button>
+                    <Button size="sm" onClick={() => decide.mutate({ id: a.id, status: "Published" })}><Check className="h-3.5 w-3.5" /> {t("Publish")}</Button>
                   )}
                   {access.canApprove && a.status === "Pending" && (
-                    <Button size="sm" variant="outline" onClick={() => decide.mutate({ id: a.id, status: "Rejected" })}><X className="h-3.5 w-3.5" /> Reject</Button>
+                    <Button size="sm" variant="outline" onClick={() => decide.mutate({ id: a.id, status: "Rejected" })}><X className="h-3.5 w-3.5" /> {t("Reject")}</Button>
                   )}
                   {access.canApprove && a.status === "Published" && (
-                    <Button size="sm" variant="outline" onClick={() => decide.mutate({ id: a.id, status: "Pending" })}>Unpublish</Button>
+                    <Button size="sm" variant="outline" onClick={() => decide.mutate({ id: a.id, status: "Pending" })}>{t("Unpublish")}</Button>
                   )}
-                  {a.status !== "Published" && <Button size="sm" variant="ghost" onClick={() => { setEditing(a); setFormOpen(true); }}>Edit</Button>}
+                  {a.status !== "Published" && <Button size="sm" variant="ghost" onClick={() => { setEditing(a); setFormOpen(true); }}>{t("Edit")}</Button>}
                   {access.canManage && a.status !== "Published" && (
-                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Delete ${a.title}`} onClick={() => setRemoving(a)}><Trash2 className="h-3.5 w-3.5 text-destructive-strong" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={t("Delete {{title}}", { title: a.title })} onClick={() => setRemoving(a)}><Trash2 className="h-3.5 w-3.5 text-destructive-strong" /></Button>
                   )}
                 </div>
               )}
@@ -105,9 +107,9 @@ export default function AchievementsPage() {
       <ConfirmDialog
         open={Boolean(removing)}
         onOpenChange={(v) => !v && setRemoving(null)}
-        title="Delete achievement"
-        description={`Delete "${removing?.title}" for ${removing?.studentName}?`}
-        confirmLabel="Delete"
+        title={t("Delete achievement")}
+        description={t("Delete \"{{title}}\" for {{studentName}}?", { title: removing?.title, studentName: removing?.studentName })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {
@@ -119,6 +121,7 @@ export default function AchievementsPage() {
 }
 
 function AchievementFormDialog({ open, onOpenChange, achievement, years, currentYear }: { open: boolean; onOpenChange: (o: boolean) => void; achievement: Achievement | null; years: string[]; currentYear: string }) {
+  const { t } = useTranslation("extracurricular");
   const students = useStudentOptions(open);
   const [v, setV] = useState({ studentId: "", title: "", awardType: "", level: "", date: todayIso(), description: "", evidenceUrl: "", academicYear: currentYear });
   const [touched, setTouched] = useState(false);
@@ -139,29 +142,29 @@ function AchievementFormDialog({ open, onOpenChange, achievement, years, current
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{achievement ? "Edit achievement" : "Record an achievement"}</DialogTitle>
-          <DialogDescription>Medals, trophies, certificates and participation recognition.</DialogDescription>
+          <DialogTitle>{achievement ? t("Edit achievement") : t("Record an achievement")}</DialogTitle>
+          <DialogDescription>{t("Medals, trophies, certificates and participation recognition.")}</DialogDescription>
         </DialogHeader>
         <form className="space-y-4" noValidate onSubmit={(e) => { e.preventDefault(); setTouched(true); if (Object.values(errors).some(Boolean)) return; save.mutate({ id: achievement?.id, studentId: v.studentId, title: v.title.trim(), awardType: v.awardType.trim() || null, level: v.level || null, date: v.date, activityId: achievement?.activityId ?? null, eventId: achievement?.eventId ?? null, description: v.description.trim() || null, evidenceUrl: v.evidenceUrl.trim() || null, academicYear: v.academicYear }); }}>
-          <FormField label="Student" htmlFor="ach-student" required error={touched ? errors.studentId : undefined}>
-            <Combobox aria-label="Student" value={v.studentId || null} onValueChange={(x) => set("studentId", x)} options={students.options} placeholder={students.isLoading ? "Loading…" : "Choose a student"} disabled={Boolean(achievement)} />
+          <FormField label={t("Student")} htmlFor="ach-student" required error={touched ? errors.studentId : undefined}>
+            <Combobox aria-label={t("Student")} value={v.studentId || null} onValueChange={(x) => set("studentId", x)} options={students.options} placeholder={students.isLoading ? t("Loading…") : t("Choose a student")} disabled={Boolean(achievement)} />
           </FormField>
-          <FormField label="Title" htmlFor="ach-title" required error={touched ? errors.title : undefined}>
+          <FormField label={t("Title")} htmlFor="ach-title" required error={touched ? errors.title : undefined}>
             <Input id="ach-title" value={v.title} onChange={(e) => set("title", e.target.value)} aria-invalid={touched && errors.title ? true : undefined} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Award" htmlFor="ach-type" optional hint="Gold medal, Trophy, Certificate…"><Input id="ach-type" value={v.awardType} onChange={(e) => set("awardType", e.target.value)} /></FormField>
-            <FormField label="Level" htmlFor="ach-level" optional><SelectField id="ach-level" value={v.level || undefined} onChange={(x) => set("level", x ?? "")} allLabel="Not set" items={LEVELS.map((l) => ({ value: l, label: l }))} /></FormField>
-            <FormField label="Date" htmlFor="ach-date"><Input id="ach-date" type="date" value={v.date} onChange={(e) => set("date", e.target.value)} /></FormField>
-            <FormField label="Academic year" htmlFor="ach-year"><SelectField id="ach-year" value={v.academicYear} onChange={(x) => x && set("academicYear", x)} items={years.map((y) => ({ value: y, label: y }))} /></FormField>
+            <FormField label={t("Award")} htmlFor="ach-type" optional hint={t("Gold medal, Trophy, Certificate…")}><Input id="ach-type" value={v.awardType} onChange={(e) => set("awardType", e.target.value)} /></FormField>
+            <FormField label={t("Level")} htmlFor="ach-level" optional><SelectField id="ach-level" value={v.level || undefined} onChange={(x) => set("level", x ?? "")} allLabel="Not set" items={LEVELS.map((l) => ({ value: l, label: l }))} /></FormField>
+            <FormField label={t("Date")} htmlFor="ach-date"><Input id="ach-date" type="date" value={v.date} onChange={(e) => set("date", e.target.value)} /></FormField>
+            <FormField label={t("Academic year")} htmlFor="ach-year"><SelectField id="ach-year" value={v.academicYear} onChange={(x) => x && set("academicYear", x)} items={years.map((y) => ({ value: y, label: y }))} /></FormField>
           </div>
-          <FormField label="Description" htmlFor="ach-desc" optional><Textarea id="ach-desc" rows={3} value={v.description} onChange={(e) => set("description", e.target.value)} /></FormField>
-          <FormField label="Supporting document link" htmlFor="ach-evidence" optional error={touched ? errors.evidenceUrl : undefined} hint="A photo or certificate stored in the school's files">
+          <FormField label={t("Description")} htmlFor="ach-desc" optional><Textarea id="ach-desc" rows={3} value={v.description} onChange={(e) => set("description", e.target.value)} /></FormField>
+          <FormField label={t("Supporting document link")} htmlFor="ach-evidence" optional error={touched ? errors.evidenceUrl : undefined} hint={t("A photo or certificate stored in the school's files")}>
             <Input id="ach-evidence" value={v.evidenceUrl} onChange={(e) => set("evidenceUrl", e.target.value)} aria-invalid={touched && errors.evidenceUrl ? true : undefined} />
           </FormField>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" loading={save.isPending}>{achievement ? "Save changes" : "Record"}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("Cancel")}</Button>
+            <Button type="submit" loading={save.isPending}>{achievement ? t("Save changes") : t("Record")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

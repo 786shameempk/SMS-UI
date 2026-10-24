@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Lock, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
@@ -30,6 +31,7 @@ const LOCKED_ROLES = ["admin", "superAdmin"];
  * app shows at each user's next page load; what a role may do is still decided by the matrix, staff actions and the services.
  */
 export default function SubMenusTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const roles = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
   const grants = useQuery({ queryKey: ["admin", "role-permissions"], queryFn: getRolePermissions });
@@ -67,12 +69,12 @@ export default function SubMenusTab() {
   };
   const save = useMutation({
     mutationFn: () => setRoleSubMenus(selectedId, [...hidden]),
-    onSuccess: () => done("Sub-menus saved. They apply when each user next opens a page."),
+    onSuccess: () => done(t("Sub-menus saved. They apply when each user next opens a page.")),
     onError: (e: Error) => toast.error(e.message),
   });
   const reset = useMutation({
     mutationFn: () => resetRoleSubMenus(selectedId),
-    onSuccess: () => done("Every tab is visible again."),
+    onSuccess: () => done(t("Every tab is visible again.")),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -102,8 +104,7 @@ export default function SubMenusTab() {
   return (
     <div className="space-y-4">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Choose which sub-menus (the tabs inside a module&apos;s pages) each role sees. Only modules the role can open are listed; opening a module is set in the
-        Permission matrix. Everything is visible until you untick it.
+        {t("Choose which sub-menus (the tabs inside a module's pages) each role sees. Only modules the role can open are listed; opening a module is set in the Permission matrix. Everything is visible until you untick it.")}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Select
@@ -113,8 +114,8 @@ export default function SubMenusTab() {
             setDraft(null);
           }}
         >
-          <SelectTrigger className="w-60" aria-label="Role">
-            <SelectValue placeholder="Choose a role" />
+          <SelectTrigger className="w-60" aria-label={t("Role")}>
+            <SelectValue placeholder={t("Choose a role")} />
           </SelectTrigger>
           <SelectContent>
             {roles.data?.map((r) => (
@@ -124,21 +125,21 @@ export default function SubMenusTab() {
             ))}
           </SelectContent>
         </Select>
-        {stored && !locked && <Badge variant={stored.configured ? "info" : "neutral"}>{stored.configured ? "Customised for this school" : "Every tab visible"}</Badge>}
+        {stored && !locked && <Badge variant={stored.configured ? "info" : "neutral"}>{stored.configured ? t("Customised for this school") : t("Every tab visible")}</Badge>}
       </div>
 
       {locked && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Lock className="h-4 w-4" /> Administrators always see every tab, so the school can&apos;t be locked out of its own settings.
+          <Lock className="h-4 w-4" /> {t("Administrators always see every tab, so the school can't be locked out of its own settings.")}
         </p>
       )}
       {!locked && byModule.length === 0 && (
-        <p className="text-sm text-muted-foreground">This role can&apos;t open any module with sub-menus yet. Turn on a module&apos;s Menu cell for it in the Permission matrix first.</p>
+        <p className="text-sm text-muted-foreground">{t("This role can't open any module with sub-menus yet. Turn on a module's Menu cell for it in the Permission matrix first.")}</p>
       )}
 
       {byModule.map(([module, modulePages]) => (
         <div key={module} className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{module}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t(module)}</p>
           {modulePages.map((page) => {
             const shown = page.tabs.filter((tab) => !hidden.has(tabKey(page.routeId, tab.value))).length;
             return (
@@ -146,15 +147,15 @@ export default function SubMenusTab() {
                 <CardContent className="space-y-3 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">
-                      {page.title} <span className="text-xs font-normal text-muted-foreground">· {shown} of {page.tabs.length} tabs shown</span>
+                      {t(page.title)} <span className="text-xs font-normal text-muted-foreground">· {t("{{shown}} of {{total}} tabs shown", { shown, total: page.tabs.length })}</span>
                     </p>
                     {!locked && (
                       <div className="flex gap-1">
                         <Button type="button" variant="ghost" size="sm" onClick={() => setAll(page, true)} disabled={shown === page.tabs.length}>
-                          Show all
+                          {t("Show all")}
                         </Button>
                         <Button type="button" variant="ghost" size="sm" onClick={() => setAll(page, false)} disabled={shown === 0}>
-                          Hide all
+                          {t("Hide all")}
                         </Button>
                       </div>
                     )}
@@ -165,13 +166,13 @@ export default function SubMenusTab() {
                       const id = `submenu-${key.replace(/[^a-z0-9]+/gi, "-")}`;
                       return (
                         <label key={key} htmlFor={id} className="flex items-center gap-2 text-sm text-foreground">
-                          <Checkbox id={id} checked={locked || !hidden.has(key)} disabled={locked} onCheckedChange={(v) => toggle(key, v === true)} aria-label={`${page.title}: ${tab.label}`} />
-                          {tab.label}
+                          <Checkbox id={id} checked={locked || !hidden.has(key)} disabled={locked} onCheckedChange={(v) => toggle(key, v === true)} aria-label={`${t(page.title)}: ${t(tab.label)}`} />
+                          {t(tab.label)}
                         </label>
                       );
                     })}
                   </div>
-                  {shown === 0 && !locked && <p className="text-xs text-warning-strong">Every tab is hidden, so this role will see an empty page. Keep at least one tab, or turn the module off in the Permission matrix.</p>}
+                  {shown === 0 && !locked && <p className="text-xs text-warning-strong">{t("Every tab is hidden, so this role will see an empty page. Keep at least one tab, or turn the module off in the Permission matrix.")}</p>}
                 </CardContent>
               </Card>
             );
@@ -182,11 +183,11 @@ export default function SubMenusTab() {
       {!locked && (
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
-            {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save
+            {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t("Save")}
           </Button>
           {stored?.configured && (
             <Button variant="outline" onClick={() => reset.mutate()} disabled={reset.isPending}>
-              <RotateCcw className="h-4 w-4" /> Show every tab
+              <RotateCcw className="h-4 w-4" /> {t("Show every tab")}
             </Button>
           )}
         </div>

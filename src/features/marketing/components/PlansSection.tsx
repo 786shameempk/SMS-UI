@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Check, MessageSquareQuote } from "lucide-react";
+import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { PLAN_ASSURANCES, PLAN_SOLUTIONS } from "../data";
@@ -13,15 +14,16 @@ import Reveal from "./Reveal";
  */
 export default function PlansSection() {
   const { openQuote } = useLeadCapture();
+  const { t } = useTranslation("marketing");
 
   return (
     <section id="plans" className="scroll-mt-16 border-t border-slate-200/70 bg-slate-50/70 py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <SectionHeading
-            eyebrow="Plans & Solutions"
-            title="School Management Software Plans for Every School"
-            description="Flexible plans for schools of every size, with more capabilities as you grow. Tailored to your requirements, with custom solutions available."
+            eyebrow={t("Plans & Solutions")}
+            title={t("School Management Software Plans for Every School")}
+            description={t("Flexible plans for schools of every size, with more capabilities as you grow. Tailored to your requirements, with custom solutions available.")}
           />
         </Reveal>
 
@@ -43,7 +45,7 @@ export default function PlansSection() {
             >
               {plan.highlighted && (
                 <span className="bg-brand-gradient absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-primary-foreground shadow-md shadow-brand-600/30">
-                  Most Popular
+                  {t("Most Popular")}
                 </span>
               )}
 
@@ -58,19 +60,19 @@ export default function PlansSection() {
                 </span>
                 <div>
                   <h3 id={`plan-${plan.key}`} className="text-xl font-bold text-slate-900">
-                    {plan.key}
+                    {t(plan.key)}
                   </h3>
-                  <p className="text-sm text-slate-500">{plan.subtitle}</p>
+                  <p className="text-sm text-slate-500">{t(plan.subtitle)}</p>
                 </div>
               </div>
 
               {/* In place of a price: a quiet note that terms are tailored. */}
               <p className="mt-6 flex items-center gap-2 border-b border-slate-200/70 pb-6 text-sm font-semibold text-brand-700">
                 <MessageSquareQuote className="h-4 w-4" />
-                {plan.pricingNote}
+                {t(plan.pricingNote)}
               </p>
 
-              <ul className="mt-6 flex-1 space-y-3" aria-label={`${plan.key} includes`}>
+              <ul className="mt-6 flex-1 space-y-3" aria-label={t("{{plan}} includes", { plan: t(plan.key) })}>
                 {plan.features.map((feature, i) => {
                   const inherits = i === 0 && feature.startsWith("Everything in");
                   return (
@@ -78,14 +80,14 @@ export default function PlansSection() {
                       <span className={cn("mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full", inherits ? "bg-brand-500" : "bg-brand-100")}>
                         <Check className={cn("h-2.5 w-2.5", inherits ? "text-white" : "text-brand-700")} strokeWidth={3} />
                       </span>
-                      {feature}
+                      {t(feature)}
                     </li>
                   );
                 })}
               </ul>
 
               <Button size="lg" variant={plan.highlighted ? "default" : "outline"} className="group mt-8" onClick={() => openQuote(plan.key)}>
-                {plan.cta}
+                {t(plan.cta)}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
             </motion.article>
@@ -99,8 +101,8 @@ export default function PlansSection() {
                 <item.icon className="h-4 w-4" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                <p className="mt-0.5 text-sm text-slate-600">{item.description}</p>
+                <p className="text-sm font-semibold text-slate-900">{t(item.title)}</p>
+                <p className="mt-0.5 text-sm text-slate-600">{t(item.description)}</p>
               </div>
             </div>
           ))}
@@ -108,11 +110,13 @@ export default function PlansSection() {
 
         <Reveal className="mt-10 text-center">
           <p className="text-sm text-slate-600">
-            Not sure which plan fits?{" "}
-            <button type="button" onClick={() => openQuote()} className="cursor-pointer font-semibold text-brand-700 underline-offset-4 hover:underline">
-              Contact us for pricing
-            </button>{" "}
-            and we'll recommend the right setup for your school.
+            <Trans
+              t={t}
+              i18nKey="Not sure which plan fits? <quote>Contact us for pricing</quote> and we'll recommend the right setup for your school."
+              components={{
+                quote: <button type="button" onClick={() => openQuote()} className="cursor-pointer font-semibold text-brand-700 underline-offset-4 hover:underline" />,
+              }}
+            />
           </p>
         </Reveal>
       </div>

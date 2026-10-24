@@ -113,7 +113,7 @@ function PlansTab() {
                   <TableHead>Plan</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Live version</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-end">Price</TableHead>
                   <TableHead>Billing</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
@@ -145,13 +145,13 @@ function PlanRow({ plan, onOpen }: { plan: PlanListItem; onOpen: () => void }) {
       <TableCell>
         <Badge variant={STATUS[plan.status]}>{plan.status}</Badge>
         {plan.hasDraft && plan.status !== "Draft" && (
-          <Badge variant="warning" className="ml-1">
+          <Badge variant="warning" className="ms-1">
             Draft pending
           </Badge>
         )}
       </TableCell>
       <TableCell>{plan.publishedVersion ? `v${plan.publishedVersion}` : <span className="text-muted-foreground">Not published</span>}</TableCell>
-      <TableCell className="text-right tabular-nums">{plan.basePrice === null ? "—" : formatCurrency(plan.basePrice, plan.currencyCode ?? "INR")}</TableCell>
+      <TableCell className="text-end tabular-nums">{plan.basePrice === null ? "—" : formatCurrency(plan.basePrice, plan.currencyCode ?? "INR")}</TableCell>
       <TableCell>{plan.billingCycle ?? "—"}</TableCell>
       <TableCell>
         <Button variant="ghost" size="sm" onClick={onOpen} aria-label={`Open ${plan.name}`}>
@@ -335,7 +335,7 @@ function PlanDialog({ planId, onClose }: { planId: string; onClose: () => void }
               <div className="space-y-4">
                 <p className="text-sm font-medium">
                   Version {open.versionNumber} · {open.status}
-                  {open.status !== "Draft" && <span className="ml-2 font-normal text-muted-foreground">Published versions are frozen; create a new version to change them.</span>}
+                  {open.status !== "Draft" && <span className="ms-2 font-normal text-muted-foreground">Published versions are frozen; create a new version to change them.</span>}
                 </p>
                 <PlanVersionForm value={form} onChange={setForm} catalog={catalog.data} disabled={open.status !== "Draft" || !canManage} />
                 <div className="flex gap-2">
@@ -420,7 +420,7 @@ function AddonsTab() {
                 <TableHead>Add-on</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Pricing</TableHead>
-                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-end">Price</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-16" />
               </TableRow>
@@ -434,7 +434,7 @@ function AddonsTab() {
                   </TableCell>
                   <TableCell>{a.kind}</TableCell>
                   <TableCell>{a.pricing === "PerStudent" ? "Per student" : a.pricing === "OneTime" ? "One-time" : "Per cycle"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(a.unitPrice)}</TableCell>
+                  <TableCell className="text-end tabular-nums">{formatCurrency(a.unitPrice)}</TableCell>
                   <TableCell>
                     <Badge variant={a.isActive ? "success" : "neutral"}>{a.isActive ? "Active" : "Inactive"}</Badge>
                   </TableCell>

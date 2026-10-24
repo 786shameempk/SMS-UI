@@ -114,7 +114,7 @@ export default function SchoolsPage() {
                   <TableHead>Stage</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead>Subscription</TableHead>
-                  <TableHead className="text-right">Open tasks</TableHead>
+                  <TableHead className="text-end">Open tasks</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -142,7 +142,7 @@ export default function SchoolsPage() {
                         <span className="text-muted-foreground">None</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">{s.openTasks}</TableCell>
+                    <TableCell className="text-end tabular-nums">{s.openTasks}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CalendarCheck, CheckCircle2, Clock, GraduationCap, Plus, UserCheck, UserPlus, Users, Wallet, X } from "lucide-react";
@@ -38,6 +39,7 @@ import { RowActions } from "@/components/ui/row-actions";
 type DialogKey = "create" | "register" | "exam" | "interview" | "decision" | "fee";
 
 export default function AdmissionsTab() {
+  const { t } = useTranslation("students");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: applications = [], isLoading, isError, refetch } = useQuery({ queryKey: ["students", "admissions"], queryFn: listAdmissions });
@@ -56,76 +58,76 @@ export default function AdmissionsTab() {
     mutationFn: createAdmission,
     onSuccess: () => {
       invalidate();
-      toast.success("Application submitted");
+      toast.success(t("Application submitted"));
       setOpenDialog(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not submit application"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not submit application")),
   });
 
   const registerMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof registerAdmission>[1] }) => registerAdmission(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Application registered");
+      toast.success(t("Application registered"));
       setOpenDialog(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not register application"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not register application")),
   });
 
   const examMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof updateAdmissionExam>[1] }) => updateAdmissionExam(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Entrance exam updated");
+      toast.success(t("Entrance exam updated"));
       setOpenDialog(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update exam details"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update exam details")),
   });
 
   const interviewMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof updateAdmissionInterview>[1] }) => updateAdmissionInterview(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Interview updated");
+      toast.success(t("Interview updated"));
       setOpenDialog(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update interview details"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update interview details")),
   });
 
   const decisionMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof decideAdmission>[1] }) => decideAdmission(id, values),
     onSuccess: (app) => {
       invalidate();
-      toast.success(`Marked as ${ADMISSION_STAGE_CONFIG[app.stage].label.toLowerCase()}`);
+      toast.success(t("Marked as {{stage}}", { stage: t(ADMISSION_STAGE_CONFIG[app.stage].label).toLowerCase() }));
       setOpenDialog(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not record decision"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not record decision")),
   });
 
   const feeMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof recordAdmissionFeePayment>[1] }) => recordAdmissionFeePayment(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Fee payment recorded");
+      toast.success(t("Fee payment recorded"));
       setOpenDialog(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not record payment"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not record payment")),
   });
 
   const promoteMutation = useMutation({
     mutationFn: promoteFromWaitlist,
     onSuccess: () => {
       invalidate();
-      toast.success("Promoted from waitlist to fee collection");
+      toast.success(t("Promoted from waitlist to fee collection"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not promote applicant"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not promote applicant")),
   });
 
   const rejectMutation = useMutation({
     mutationFn: (id: string) => rejectAdmission(id),
     onSuccess: () => {
       invalidate();
-      toast.success("Application rejected");
+      toast.success(t("Application rejected"));
       setConfirmTarget(null);
     },
   });
@@ -134,7 +136,7 @@ export default function AdmissionsTab() {
     mutationFn: withdrawAdmission,
     onSuccess: () => {
       invalidate();
-      toast.success("Application withdrawn");
+      toast.success(t("Application withdrawn"));
       setConfirmTarget(null);
     },
   });
@@ -146,23 +148,23 @@ export default function AdmissionsTab() {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       setConfirmTarget(null);
       toast.success(
-        (t) => (
+        (toastItem) => (
           <span className="flex items-center gap-2">
-            {application.applicantFirstName} enrolled as {student.admissionNumber}
+            {t("{{name}} enrolled as {{admissionNumber}}", { name: application.applicantFirstName, admissionNumber: student.admissionNumber })}
             <button
               className="underline font-medium"
               onClick={() => {
-                toast.dismiss(t.id);
+                toast.dismiss(toastItem.id);
                 navigate(`/students/${student.id}`);
               }}
             >
-              View
+              {t("View")}
             </button>
           </span>
         ),
       );
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not enroll applicant"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not enroll applicant")),
   });
 
   const filtered = useMemo(
@@ -178,7 +180,7 @@ export default function AdmissionsTab() {
   const columns: ColumnDef<AdmissionApplication, unknown>[] = [
     {
       id: "applicant",
-      header: "Applicant",
+      header: t("Applicant"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -192,12 +194,12 @@ export default function AdmissionsTab() {
     },
     {
       accessorKey: "appliedClass",
-      header: "Applied class",
+      header: t("Applied class"),
       cell: ({ row }) => <span className="text-sm text-foreground">{row.original.appliedClass}</span>,
     },
     {
       accessorKey: "submittedAt",
-      header: "Submitted",
+      header: t("Submitted"),
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5" />
@@ -207,10 +209,10 @@ export default function AdmissionsTab() {
     },
     {
       accessorKey: "stage",
-      header: "Stage",
+      header: t("Stage"),
       cell: ({ row }) => {
         const config = ADMISSION_STAGE_CONFIG[row.original.stage];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -225,31 +227,31 @@ export default function AdmissionsTab() {
             {app.stage === "inquiry" && (
               <Button size="sm" variant="outline" onClick={() => openFor("register", app)}>
                 <UserPlus className="w-3.5 h-3.5" />
-                Register
+                {t("Register")}
               </Button>
             )}
             {app.stage === "registration" && (
               <Button size="sm" variant="outline" onClick={() => openFor("exam", app)}>
                 <CalendarCheck className="w-3.5 h-3.5" />
-                Entrance exam
+                {t("Entrance exam")}
               </Button>
             )}
             {app.stage === "entrance_exam" && (
               <Button size="sm" variant="outline" onClick={() => openFor("interview", app)}>
                 <Users className="w-3.5 h-3.5" />
-                Interview
+                {t("Interview")}
               </Button>
             )}
             {app.stage === "interview" && (
               <Button size="sm" variant="outline" onClick={() => openFor("decision", app)}>
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Decide
+                {t("Decide")}
               </Button>
             )}
             {app.stage === "fee_collection" && !app.admissionFeePaid && (
               <Button size="sm" variant="outline" onClick={() => openFor("fee", app)}>
                 <Wallet className="w-3.5 h-3.5" />
-                Record fee
+                {t("Record fee")}
               </Button>
             )}
             {app.stage === "fee_collection" && app.admissionFeePaid && (
@@ -260,18 +262,18 @@ export default function AdmissionsTab() {
                 onClick={() => setConfirmTarget({ app, action: "enroll" })}
               >
                 <GraduationCap className="w-3.5 h-3.5" />
-                Enroll
+                {t("Enroll")}
               </Button>
             )}
             {app.stage === "waitlisted" && (
               <Button size="sm" variant="outline" onClick={() => promoteMutation.mutate(app.id)} disabled={promoteMutation.isPending}>
                 <UserCheck className="w-3.5 h-3.5" />
-                Promote
+                {t("Promote")}
               </Button>
             )}
             {app.stage === "enrolled" && app.studentId && (
               <Button size="sm" variant="outline" onClick={() => navigate(`/students/${app.studentId}`)}>
-                View student
+                {t("View student")}
               </Button>
             )}
 
@@ -280,13 +282,13 @@ export default function AdmissionsTab() {
                 {app.stage === "entrance_exam" && (
                   <DropdownMenuItem onClick={() => openFor("exam", app)}>
                     <CalendarCheck className="w-3.5 h-3.5" />
-                    Edit exam details
+                    {t("Edit exam details")}
                   </DropdownMenuItem>
                 )}
                 {app.stage === "interview" && (
                   <DropdownMenuItem onClick={() => openFor("interview", app)}>
                     <Users className="w-3.5 h-3.5" />
-                    Edit interview details
+                    {t("Edit interview details")}
                   </DropdownMenuItem>
                 )}
                 {canRejectOrWithdraw && (
@@ -296,10 +298,10 @@ export default function AdmissionsTab() {
                       variant="destructive"
                     >
                       <X className="w-3.5 h-3.5" />
-                      Reject
+                      {t("Reject")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setConfirmTarget({ app, action: "withdraw" })}>
-                      Withdraw
+                      {t("Withdraw")}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -312,9 +314,9 @@ export default function AdmissionsTab() {
                   variant="destructive"
                 >
                   <X className="w-3.5 h-3.5" />
-                  Reject
+                  {t("Reject")}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setConfirmTarget({ app, action: "withdraw" })}>Withdraw</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setConfirmTarget({ app, action: "withdraw" })}>{t("Withdraw")}</DropdownMenuItem>
               </RowActions>
             )}
           </div>
@@ -330,24 +332,24 @@ export default function AdmissionsTab() {
       <DataTableToolbar>
         <Select value={stageFilter} onValueChange={setStageFilter}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Stage" />
+            <SelectValue placeholder={t("Stage")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All stages</SelectItem>
+            <SelectItem value="all">{t("All stages")}</SelectItem>
             {(Object.keys(ADMISSION_STAGE_CONFIG) as AdmissionStage[]).map((stage) => (
               <SelectItem key={stage} value={stage}>
-                {ADMISSION_STAGE_CONFIG[stage].label}
+                {t(ADMISSION_STAGE_CONFIG[stage].label)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Button onClick={() => setOpenDialog("create")}>
           <Plus className="w-4 h-4" />
-          New inquiry
+          {t("New inquiry")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No admission applications." />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No admission applications.")} />
 
       <AdmissionFormDialog
         open={openDialog === "create"}
@@ -411,9 +413,9 @@ export default function AdmissionsTab() {
       <ConfirmDialog
         open={confirmTarget?.action === "reject"}
         onOpenChange={(v) => !v && setConfirmTarget(null)}
-        title="Reject application"
-        description={`Reject the application for "${confirmTarget?.app.applicantFirstName} ${confirmTarget?.app.applicantLastName}"? This cannot be undone.`}
-        confirmLabel="Reject"
+        title={t("Reject application")}
+        description={t('Reject the application for "{{name}}"? This cannot be undone.', { name: `${confirmTarget?.app.applicantFirstName} ${confirmTarget?.app.applicantLastName}` })}
+        confirmLabel={t("Reject")}
         confirmVariant="destructive"
         submitting={rejectMutation.isPending}
         onConfirm={() => {
@@ -424,9 +426,9 @@ export default function AdmissionsTab() {
       <ConfirmDialog
         open={confirmTarget?.action === "withdraw"}
         onOpenChange={(v) => !v && setConfirmTarget(null)}
-        title="Withdraw application"
-        description={`Mark "${confirmTarget?.app.applicantFirstName} ${confirmTarget?.app.applicantLastName}"'s application as withdrawn? This cannot be undone.`}
-        confirmLabel="Withdraw"
+        title={t("Withdraw application")}
+        description={t('Mark "{{name}}"\'s application as withdrawn? This cannot be undone.', { name: `${confirmTarget?.app.applicantFirstName} ${confirmTarget?.app.applicantLastName}` })}
+        confirmLabel={t("Withdraw")}
         confirmVariant="destructive"
         submitting={withdrawMutation.isPending}
         onConfirm={() => {
@@ -437,9 +439,9 @@ export default function AdmissionsTab() {
       <ConfirmDialog
         open={confirmTarget?.action === "enroll"}
         onOpenChange={(v) => !v && setConfirmTarget(null)}
-        title="Enroll applicant"
-        description={`Create a student record for "${confirmTarget?.app.applicantFirstName} ${confirmTarget?.app.applicantLastName}" in ${confirmTarget?.app.appliedClass}?`}
-        confirmLabel="Enroll"
+        title={t("Enroll applicant")}
+        description={t('Create a student record for "{{name}}" in {{className}}?', { name: `${confirmTarget?.app.applicantFirstName} ${confirmTarget?.app.applicantLastName}`, className: confirmTarget?.app.appliedClass })}
+        confirmLabel={t("Enroll")}
         submitting={enrollMutation.isPending}
         onConfirm={() => {
           if (confirmTarget) enrollMutation.mutate(confirmTarget.app.id);

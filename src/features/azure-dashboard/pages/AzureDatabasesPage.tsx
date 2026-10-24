@@ -66,10 +66,10 @@ export default function AzureDatabasesPage() {
                     <TableHead>Tier</TableHead>
                     <TableHead>Pool</TableHead>
                     <TableHead className="min-w-44">Storage</TableHead>
-                    <TableHead className="text-right">CPU</TableHead>
-                    <TableHead className="text-right">Data IO</TableHead>
-                    <TableHead className="text-right">Log IO</TableHead>
-                    <TableHead className="text-right">Cost</TableHead>
+                    <TableHead className="text-end">CPU</TableHead>
+                    <TableHead className="text-end">Data IO</TableHead>
+                    <TableHead className="text-end">Log IO</TableHead>
+                    <TableHead className="text-end">Cost</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -80,10 +80,10 @@ export default function AzureDatabasesPage() {
                       <TableCell>{d.tier ?? d.sku ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{d.elasticPool ?? "—"}</TableCell>
                       <TableCell><UsageBar value={usagePercent(d.storageUsedGb, d.storageLimitGb)} detail={`${gb(d.storageUsedGb)} / ${gb(d.storageLimitGb)}`} /></TableCell>
-                      <TableCell className="text-right tabular-nums">{percent(d.cpuPercent)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{percent(d.dataIoPercent)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{percent(d.logIoPercent)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{money(d.monthCost, currency)}</TableCell>
+                      <TableCell className="text-end tabular-nums">{percent(d.cpuPercent)}</TableCell>
+                      <TableCell className="text-end tabular-nums">{percent(d.dataIoPercent)}</TableCell>
+                      <TableCell className="text-end tabular-nums">{percent(d.logIoPercent)}</TableCell>
+                      <TableCell className="text-end tabular-nums">{money(d.monthCost, currency)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -98,8 +98,8 @@ export default function AzureDatabasesPage() {
                   <TableHead>Server</TableHead>
                   <TableHead>Region</TableHead>
                   <TableHead>State</TableHead>
-                  <TableHead className="text-right">Databases</TableHead>
-                  <TableHead className="text-right">Pools</TableHead>
+                  <TableHead className="text-end">Databases</TableHead>
+                  <TableHead className="text-end">Pools</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -108,8 +108,8 @@ export default function AzureDatabasesPage() {
                     <TableCell className="font-medium">{s.name}</TableCell>
                     <TableCell className="text-muted-foreground">{s.location ?? "—"}</TableCell>
                     <TableCell>{s.state ?? "—"}</TableCell>
-                    <TableCell className="text-right tabular-nums">{s.databaseCount}</TableCell>
-                    <TableCell className="text-right tabular-nums">{s.poolCount}</TableCell>
+                    <TableCell className="text-end tabular-nums">{s.databaseCount}</TableCell>
+                    <TableCell className="text-end tabular-nums">{s.poolCount}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
 import { CORE_NAV_ITEMS, NAV_SECTIONS, type NavAudience, type NavItem } from "@/constants/nav";
 import type { UserRole } from "@/types/auth";
@@ -15,13 +16,16 @@ function matchesAudience(audience: NavAudience | undefined, role: UserRole | und
 export function useVisibleNav() {
   const modulePermissions = useAuthStore((s) => s.modulePermissions);
   const role = useAuthStore((s) => s.user?.role);
+  const { t } = useTranslation("nav");
   const hasPermission = (key?: NavItem["permissionKey"]) => !key || !modulePermissions || modulePermissions[key];
   const visible = (item: NavItem) =>
     hasPermission(item.permissionKey) && matchesAudience(item.audience, role) && (!item.superAdminOnly || role === "superAdmin");
 
-  const coreItems = CORE_NAV_ITEMS.filter(visible);
+  // Labels and titles come back in the interface language; routes and icons are unchanged.
+  const translate = (item: NavItem): NavItem => ({ ...item, label: t(item.label) });
+  const coreItems = CORE_NAV_ITEMS.filter(visible).map(translate);
   const sections = NAV_SECTIONS.filter((section) => hasPermission(section.permissionKey))
-    .map((section) => ({ ...section, items: section.items.filter(visible) }))
+    .map((section) => ({ ...section, title: t(section.title), items: section.items.filter(visible).map(translate) }))
     .filter((section) => section.items.length > 0);
 
   return { coreItems, sections };

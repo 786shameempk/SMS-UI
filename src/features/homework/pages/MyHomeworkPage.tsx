@@ -7,7 +7,9 @@ import MyHomeworkListTab from "../components/MyHomeworkListTab";
 import MyResourcesTab from "../components/MyResourcesTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
+import { useTranslation } from "react-i18next";
 export default function MyHomeworkPage() {
+  const { t } = useTranslation("homework");
   const { data: students = [], isLoading } = useQuery({ queryKey: ["students"], queryFn: listStudents });
   const activeStudents = useMemo(() => students.filter((s) => s.status === "active"), [students]);
   const [studentId, setStudentId] = useState<string>("");
@@ -19,14 +21,14 @@ export default function MyHomeworkPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="My homework"
-        description="Assigned homework, learning resources, and quizzes for the selected student."
+        title={t("My homework")}
+        description={t("Assigned homework, learning resources, and quizzes for the selected student.")}
         actions={
           <>
             <div className="w-56">
               <Select value={studentId} onValueChange={setStudentId} disabled={isLoading || activeStudents.length === 0}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a student" />
+                  <SelectValue placeholder={t("Select a student")} />
                 </SelectTrigger>
                 <SelectContent>
                   {activeStudents.map((s) => (
@@ -44,8 +46,8 @@ export default function MyHomeworkPage() {
       {studentId ? (
         <Tabs defaultValue="homework">
           <TabsList variant="line">
-            <TabsTrigger value="homework">My Homework</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="homework">{t("My Homework")}</TabsTrigger>
+            <TabsTrigger value="resources">{t("Resources")}</TabsTrigger>
           </TabsList>
           <TabsContent value="homework">
             <MyHomeworkListTab studentId={studentId} />
@@ -55,7 +57,7 @@ export default function MyHomeworkPage() {
           </TabsContent>
         </Tabs>
       ) : (
-        !isLoading && <p className="text-sm text-muted-foreground">No students found.</p>
+        !isLoading && <p className="text-sm text-muted-foreground">{t("No students found.")}</p>
       )}
     </PageContainer>
   );

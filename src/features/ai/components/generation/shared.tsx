@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Check, Loader2, RefreshCw, Sparkles, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,16 +23,17 @@ export function ClassSubjectFields({
   onChange: (next: { classId: string; subjectId: string }) => void;
   idPrefix: string;
 }) {
+  const { t } = useTranslation("ai");
   const { data: classes = [] } = useQuery({ queryKey: ["classes"], queryFn: listClasses });
   const { data: subjects = [] } = useQuery({ queryKey: ["subjects"], queryFn: listSubjects });
   const forClass = subjects.filter((s) => !classId || s.classIds.length === 0 || s.classIds.includes(classId));
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <FormField label="Class" htmlFor={`${idPrefix}-class`}>
+      <FormField label={t("Class")} htmlFor={`${idPrefix}-class`}>
         <Select value={classId} onValueChange={(v) => onChange({ classId: v, subjectId: "" })}>
           <SelectTrigger id={`${idPrefix}-class`}>
-            <SelectValue placeholder="Select class" />
+            <SelectValue placeholder={t("Select class")} />
           </SelectTrigger>
           <SelectContent>
             {classes.map((c) => (
@@ -42,10 +44,10 @@ export function ClassSubjectFields({
           </SelectContent>
         </Select>
       </FormField>
-      <FormField label="Subject" htmlFor={`${idPrefix}-subject`}>
+      <FormField label={t("Subject")} htmlFor={`${idPrefix}-subject`}>
         <Select value={subjectId} onValueChange={(v) => onChange({ classId, subjectId: v })}>
           <SelectTrigger id={`${idPrefix}-subject`}>
-            <SelectValue placeholder="Select subject" />
+            <SelectValue placeholder={t("Select subject")} />
           </SelectTrigger>
           <SelectContent>
             {forClass.map((s) => (
@@ -82,31 +84,32 @@ export function DraftBar({
   canApprove?: boolean;
   children?: React.ReactNode;
 }) {
+  const { t } = useTranslation("ai");
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="info" dot>
-          <Sparkles className="mr-1 h-3 w-3" />
-          AI generated
+          <Sparkles className="me-1 h-3 w-3" />
+          {t("AI generated")}
         </Badge>
         <Badge variant={published ? "success" : "warning"} dot>
-          {published ? (publishedLabel ?? "Approved") : "Draft — review before use"}
+          {published ? (publishedLabel ?? t("Approved")) : t("Draft — review before use")}
         </Badge>
       </div>
       <div className="flex flex-wrap gap-2">
         {onApprove && (
           <Button onClick={onApprove} disabled={!canApprove || busy || published}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            {approveLabel ?? "Approve"}
+            {approveLabel ?? t("Approve")}
           </Button>
         )}
         <Button variant="outline" onClick={onRegenerate} disabled={busy || published}>
           <RefreshCw className="h-4 w-4" />
-          Regenerate
+          {t("Regenerate")}
         </Button>
         <Button variant="ghost" onClick={onReject} disabled={busy}>
           <X className="h-4 w-4" />
-          {published ? "Close" : "Reject"}
+          {published ? t("Close") : t("Reject")}
         </Button>
         {children}
       </div>
@@ -119,13 +122,15 @@ export function QuestionReviewList({
   questions,
   onChange,
   disabled,
-  labelPrefix = "Question",
+  labelPrefix: labelPrefixProp,
 }: {
   questions: GeneratedQuestion[];
   onChange: (next: GeneratedQuestion[]) => void;
   disabled?: boolean;
   labelPrefix?: string;
 }) {
+  const { t } = useTranslation("ai");
+  const labelPrefix = labelPrefixProp ?? t("Question");
   const update = (index: number, patch: Partial<GeneratedQuestion>) => onChange(questions.map((q, i) => (i === index ? { ...q, ...patch } : q)));
 
   return (
@@ -134,14 +139,14 @@ export function QuestionReviewList({
         <div key={i} className="space-y-2 rounded-lg border border-border p-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">
-              {labelPrefix} {i + 1}
+              {t("{{prefix}} {{n}}", { prefix: labelPrefix, n: i + 1 })}
             </span>
-            <Badge variant="neutral">{KIND_LABEL[q.type] ?? q.type}</Badge>
-            <Badge variant={DIFFICULTY_TONE[q.difficulty] ?? "neutral"}>{q.difficulty}</Badge>
-            <label className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-              Marks
+            <Badge variant="neutral">{KIND_LABEL[q.type] ? t(KIND_LABEL[q.type]) : q.type}</Badge>
+            <Badge variant={DIFFICULTY_TONE[q.difficulty] ?? "neutral"}>{t(q.difficulty)}</Badge>
+            <label className="ms-auto flex items-center gap-1 text-xs text-muted-foreground">
+              {t("Marks")}
               <Input
-                aria-label={`${labelPrefix} ${i + 1} marks`}
+                aria-label={t("{{prefix}} {{n}} marks", { prefix: labelPrefix, n: i + 1 })}
                 type="number"
                 min={0.5}
                 step={0.5}
@@ -151,24 +156,24 @@ export function QuestionReviewList({
                 onChange={(e) => update(i, { marks: Number(e.target.value) })}
               />
             </label>
-            <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${labelPrefix.toLowerCase()} ${i + 1}`} disabled={disabled} onClick={() => onChange(questions.filter((_, j) => j !== i))}>
+            <Button type="button" variant="ghost" size="icon" aria-label={t("Remove {{prefix}} {{n}}", { prefix: labelPrefix.toLowerCase(), n: i + 1 })} disabled={disabled} onClick={() => onChange(questions.filter((_, j) => j !== i))}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <Textarea aria-label={`${labelPrefix} ${i + 1} text`} rows={2} value={q.question} disabled={disabled} onChange={(e) => update(i, { question: e.target.value })} />
+          <Textarea aria-label={t("{{prefix}} {{n}} text", { prefix: labelPrefix, n: i + 1 })} rows={2} value={q.question} disabled={disabled} onChange={(e) => update(i, { question: e.target.value })} />
           {q.type === "MCQ" && (
             <ul className="space-y-1">
               {q.options.map((o, j) => (
                 <li key={j} className="flex items-center gap-2">
                   <input
                     type="radio"
-                    aria-label={`${labelPrefix} ${i + 1} correct option ${j + 1}`}
+                    aria-label={t("{{prefix}} {{n}} correct option {{option}}", { prefix: labelPrefix, n: i + 1, option: j + 1 })}
                     checked={o.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()}
                     disabled={disabled}
                     onChange={() => update(i, { correctAnswer: o })}
                   />
                   <Input
-                    aria-label={`${labelPrefix} ${i + 1} option ${j + 1}`}
+                    aria-label={t("{{prefix}} {{n}} option {{option}}", { prefix: labelPrefix, n: i + 1, option: j + 1 })}
                     value={o}
                     disabled={disabled}
                     onChange={(e) => {
@@ -182,12 +187,12 @@ export function QuestionReviewList({
             </ul>
           )}
           {q.type !== "MCQ" && (
-            <FormField label="Answer" htmlFor={`${labelPrefix}-${i}-answer`}>
+            <FormField label={t("Answer")} htmlFor={`${labelPrefix}-${i}-answer`}>
               <Input id={`${labelPrefix}-${i}-answer`} value={q.correctAnswer} disabled={disabled} onChange={(e) => update(i, { correctAnswer: e.target.value })} />
             </FormField>
           )}
           <p className="text-xs text-muted-foreground">
-            Explanation: {q.explanation} · Objective: {q.learningObjective}
+            {t("Explanation: {{explanation}} · Objective: {{objective}}", { explanation: q.explanation, objective: q.learningObjective })}
           </p>
         </div>
       ))}
@@ -195,19 +200,22 @@ export function QuestionReviewList({
   );
 }
 
-export function GenerateButton({ busy, onClick, label = "Generate draft" }: { busy: boolean; onClick: () => void; label?: string }) {
+export function GenerateButton({ busy, onClick, label }: { busy: boolean; onClick: () => void; label?: string }) {
+  const { t } = useTranslation("ai");
   return (
     <Button onClick={onClick} disabled={busy}>
       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-      {label}
+      {label ?? t("Generate draft")}
     </Button>
   );
 }
 
 export function FormError({ message }: { message: string | null }) {
+  const { t } = useTranslation("ai");
+  // Local validation messages are English keys; anything else passes through unchanged.
   return message ? (
     <p role="alert" className="text-sm text-destructive">
-      {message}
+      {t(message)}
     </p>
   ) : null;
 }

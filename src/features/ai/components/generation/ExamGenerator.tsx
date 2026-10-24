@@ -3,6 +3,7 @@ import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { useMutation } from "@tanstack/react-query";
 import { Plus, Printer, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
@@ -16,6 +17,7 @@ import type { AiQuestionKind, ExamPaper, ExamRequest, ExamSectionRequest } from 
 import { ClassSubjectFields, DraftBar, FormError, GenerateButton, QuestionReviewList } from "./shared";
 
 export default function ExamGenerator() {
+  const { t } = useTranslation("ai");
   const branding = useTenantBranding();
   const [target, setTarget] = useState({ classId: "", subjectId: "" });
   const [chapters, setChapters] = useState("");
@@ -55,8 +57,8 @@ export default function ExamGenerator() {
     mutationFn: () => importQuestions(toQuestionBankInputs(paper!.sections.flatMap((s) => s.questions), target.subjectId, target.classId, chapters.split(",")[0]?.trim() || null)),
     onSuccess: (r) => {
       setPublished(true);
-      toast.success(`${r.imported} question${r.imported === 1 ? "" : "s"} added to the question bank. Build the exam from the Online Exams page.`);
-      if (r.errors.length) toast.error(`${r.errors.length} could not be imported: ${r.errors[0]}`);
+      toast.success(r.imported === 1 ? t("{{count}} question added to the question bank. Build the exam from the Online Exams page.", { count: r.imported }) : t("{{count}} questions added to the question bank. Build the exam from the Online Exams page.", { count: r.imported }));
+      if (r.errors.length) toast.error(t("{{count}} could not be imported: {{error}}", { count: r.errors.length, error: r.errors[0] }));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -77,37 +79,37 @@ export default function ExamGenerator() {
     <div className="max-w-3xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Exam paper generator</CardTitle>
-          <CardDescription>Builds a sectioned question paper with an answer key. A teacher reviews and approves it; nothing is published automatically.</CardDescription>
+          <CardTitle>{t("Exam paper generator")}</CardTitle>
+          <CardDescription>{t("Builds a sectioned question paper with an answer key. A teacher reviews and approves it; nothing is published automatically.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ClassSubjectFields idPrefix="eg" {...target} onChange={setTarget} />
-          <FormField label="Chapters (comma separated)" htmlFor="eg-chapters">
-            <Input id="eg-chapters" value={chapters} onChange={(e) => setChapters(e.target.value)} placeholder="Force and Pressure, Friction" />
+          <FormField label={t("Chapters (comma separated)")} htmlFor="eg-chapters">
+            <Input id="eg-chapters" value={chapters} onChange={(e) => setChapters(e.target.value)} placeholder={t("Force and Pressure, Friction")} />
           </FormField>
           <div className="grid gap-3 sm:grid-cols-2">
-            <FormField label="Duration (minutes)" htmlFor="eg-duration">
+            <FormField label={t("Duration (minutes)")} htmlFor="eg-duration">
               <Input id="eg-duration" type="number" min={10} value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
             </FormField>
-            <FormField label="Learning objectives" htmlFor="eg-objectives" optional>
+            <FormField label={t("Learning objectives")} htmlFor="eg-objectives" optional>
               <Input id="eg-objectives" value={objectives} onChange={(e) => setObjectives(e.target.value)} />
             </FormField>
           </div>
           <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">Difficulty split (%)</legend>
+            <legend className="text-sm font-medium">{t("Difficulty split (%)")}</legend>
             <div className="grid grid-cols-3 gap-3">
               {(["easy", "medium", "hard"] as const).map((k) => (
-                <FormField key={k} label={k[0].toUpperCase() + k.slice(1)} htmlFor={`eg-mix-${k}`}>
+                <FormField key={k} label={t(k[0].toUpperCase() + k.slice(1))} htmlFor={`eg-mix-${k}`}>
                   <Input id={`eg-mix-${k}`} type="number" min={0} max={100} value={mix[k]} onChange={(e) => setMix((m) => ({ ...m, [k]: Number(e.target.value) }))} />
                 </FormField>
               ))}
             </div>
           </fieldset>
           <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">Sections</legend>
+            <legend className="text-sm font-medium">{t("Sections")}</legend>
             {sections.map((s, i) => (
               <div key={i} className="grid grid-cols-[1fr_5rem_5rem_auto] items-end gap-2">
-                <FormField label={`Section ${String.fromCharCode(65 + i)} type`} htmlFor={`eg-type-${i}`}>
+                <FormField label={t("Section {{letter}} type", { letter: String.fromCharCode(65 + i) })} htmlFor={`eg-type-${i}`}>
                   <Select value={s.type} onValueChange={(v) => updateSection(i, { type: v as AiQuestionKind })}>
                     <SelectTrigger id={`eg-type-${i}`}>
                       <SelectValue />
@@ -115,29 +117,29 @@ export default function ExamGenerator() {
                     <SelectContent>
                       {AI_QUESTION_KINDS.map((k) => (
                         <SelectItem key={k} value={k}>
-                          {KIND_LABEL[k]}
+                          {t(KIND_LABEL[k])}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </FormField>
-                <FormField label="Count" htmlFor={`eg-count-${i}`}>
+                <FormField label={t("Count")} htmlFor={`eg-count-${i}`}>
                   <Input id={`eg-count-${i}`} type="number" min={1} value={s.count} onChange={(e) => updateSection(i, { count: Number(e.target.value) })} />
                 </FormField>
-                <FormField label="Marks each" htmlFor={`eg-marks-${i}`}>
+                <FormField label={t("Marks each")} htmlFor={`eg-marks-${i}`}>
                   <Input id={`eg-marks-${i}`} type="number" min={0.5} step={0.5} value={s.marksEach} onChange={(e) => updateSection(i, { marksEach: Number(e.target.value) })} />
                 </FormField>
-                <Button type="button" variant="ghost" size="icon" aria-label={`Remove section ${i + 1}`} onClick={() => setSections((x) => x.filter((_, j) => j !== i))}>
+                <Button type="button" variant="ghost" size="icon" aria-label={t("Remove section {{n}}", { n: i + 1 })} onClick={() => setSections((x) => x.filter((_, j) => j !== i))}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             ))}
             <Button type="button" variant="outline" size="sm" onClick={() => setSections((s) => [...s, { type: "MCQ", count: 5, marksEach: 1 }])}>
               <Plus className="h-4 w-4" />
-              Add section
+              {t("Add section")}
             </Button>
             <p className="text-xs text-muted-foreground">
-              {totalQuestions(sections)} questions · {totalMarks(sections)} marks
+              {t("{{questions}} questions · {{marks}} marks", { questions: totalQuestions(sections), marks: totalMarks(sections) })}
             </p>
           </fieldset>
           <FormError message={error} />
@@ -150,27 +152,27 @@ export default function ExamGenerator() {
           <CardHeader>
             <CardTitle>{paper.title}</CardTitle>
             <CardDescription>
-              {paper.totalMarks} marks · {paper.durationMinutes} minutes · {Object.entries(paper.difficultyCounts).map(([k, v]) => `${v} ${k}`).join(", ")}
+              {t("{{marks}} marks · {{minutes}} minutes · {{difficulty}}", { marks: paper.totalMarks, minutes: paper.durationMinutes, difficulty: Object.entries(paper.difficultyCounts).map(([k, v]) => `${v} ${t(k)}`).join(", ") })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <DraftBar
               published={published}
-              publishedLabel="Questions added to question bank"
+              publishedLabel={t("Questions added to question bank")}
               busy={publish.isPending || generate.isPending}
               onRegenerate={run}
               onReject={() => setPaper(null)}
               onApprove={() => publish.mutate()}
-              approveLabel="Approve & add questions to bank"
+              approveLabel={t("Approve & add questions to bank")}
               canApprove={paper.sections.every((s) => s.questions.length > 0 && s.questions.every((q) => q.question.trim() && q.correctAnswer.trim()))}
             >
-              <Button variant="outline" onClick={() => !printDocument(paper.title, examToHtml(paper, false), branding) && toast.error("Allow pop-ups to print or save as PDF.")}>
+              <Button variant="outline" onClick={() => !printDocument(paper.title, examToHtml(paper, false), branding) && toast.error(t("Allow pop-ups to print or save as PDF."))}>
                 <Printer className="h-4 w-4" />
-                Print / PDF
+                {t("Print / PDF")}
               </Button>
-              <Button variant="outline" onClick={() => !printDocument(`${paper.title} - answer key`, examToHtml(paper, true), branding) && toast.error("Allow pop-ups to print or save as PDF.")}>
+              <Button variant="outline" onClick={() => !printDocument(`${paper.title} - answer key`, examToHtml(paper, true), branding) && toast.error(t("Allow pop-ups to print or save as PDF."))}>
                 <Printer className="h-4 w-4" />
-                With answer key
+                {t("With answer key")}
               </Button>
             </DraftBar>
             {paper.sections.map((s, i) => (

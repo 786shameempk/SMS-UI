@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CALENDAR_EVENT_TYPES } from "../constants";
 import type { AcademicYear, CalendarEvent, CalendarEventFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const NO_YEAR = "none";
 
 const calendarEventFormSchema = z.object({
@@ -49,6 +50,7 @@ export default function CalendarEventFormDialog({
   onSubmit: (values: CalendarEventFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t: tr } = useTranslation("academics");
   const isEdit = Boolean(event);
   const {
     register,
@@ -90,19 +92,19 @@ export default function CalendarEventFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit calendar event" : "New calendar event"}</DialogTitle>
-          <DialogDescription>Term dates, exam windows, and holidays shown on the academic calendar.</DialogDescription>
+          <DialogTitle>{isEdit ? tr("Edit calendar event") : tr("New calendar event")}</DialogTitle>
+          <DialogDescription>{tr("Term dates, exam windows, and holidays shown on the academic calendar.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="title" required>Title</Label>
-            <Input id="title" placeholder="e.g. Winter break" aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            <Label htmlFor="title" required>{tr("Title")}</Label>
+            <Input id="title" placeholder={tr("e.g. Winter break")} aria-invalid={errors.title ? true : undefined} {...register("title")} />
             {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="type" required>Type</Label>
+              <Label htmlFor="type" required>{tr("Type")}</Label>
               <Controller
                 control={control}
                 name="type"
@@ -114,7 +116,7 @@ export default function CalendarEventFormDialog({
                     <SelectContent>
                       {CALENDAR_EVENT_TYPES.map((t) => (
                         <SelectItem key={t.value} value={t.value}>
-                          {t.label}
+                          {tr(t.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -123,7 +125,7 @@ export default function CalendarEventFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="academicYearId">Academic year</Label>
+              <Label htmlFor="academicYearId">{tr("Academic year")}</Label>
               <Controller
                 control={control}
                 name="academicYearId"
@@ -133,7 +135,7 @@ export default function CalendarEventFormDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NO_YEAR}>Unspecified</SelectItem>
+                      <SelectItem value={NO_YEAR}>{tr("Unspecified")}</SelectItem>
                       {academicYears.map((y) => (
                         <SelectItem key={y.id} value={y.id}>
                           {y.name}
@@ -148,27 +150,27 @@ export default function CalendarEventFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="startDate" required>Start date</Label>
+              <Label htmlFor="startDate" required>{tr("Start date")}</Label>
               <Input id="startDate" type="date" aria-invalid={errors.startDate ? true : undefined} {...register("startDate")} />
               {errors.startDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startDate.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endDate" optional>End date</Label>
+              <Label htmlFor="endDate" optional>{tr("End date")}</Label>
               <Input id="endDate" type="date" {...register("endDate")} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description" optional>Description</Label>
+            <Label htmlFor="description" optional>{tr("Description")}</Label>
             <Textarea id="description" rows={2} {...register("description")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Add event"}
+              {isEdit ? tr("Save changes") : tr("Add event")}
             </Button>
           </DialogFooter>
         </form>

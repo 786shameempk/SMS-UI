@@ -71,7 +71,7 @@ export default function AssignStep({ state, update, className, sections, student
             aria-checked={state.assignMode === m.value}
             onClick={() => setMode(m.value)}
             className={cn(
-              "flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "flex items-center gap-3 rounded-xl border p-3.5 text-start transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               state.assignMode === m.value ? "border-primary bg-accent/60 ring-1 ring-primary/30" : "border-border/80 hover:border-primary/40",
             )}
           >

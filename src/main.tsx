@@ -7,6 +7,11 @@ import App from "./app/App";
 import { clearCacheOnUserChange } from "./app/clearCacheOnUserChange";
 import { registerServiceWorker } from "./features/meetings/push";
 import "./index.css";
+import { applyLanguage, storedLanguage } from "./i18n";
+import { startOfflinePurge } from "./features/attendance/offline/purge";
+
+// Interface language (and text direction) before the first paint.
+void applyLanguage(storedLanguage());
 
 const queryClient = new QueryClient({
   // A failed *background* refresh leaves stale data on screen with no other signal, so say so once.
@@ -27,7 +32,10 @@ const queryClient = new QueryClient({
 // A different person signing in (or out) never sees the previous person's cached data.
 clearCacheOnUserChange(queryClient);
 
-// Installable PWA + Web Push for class reminders (public/sw.js). No offline caching.
+// Names and registers saved on this device for offline attendance belong to whoever is signed in, and go when they leave.
+startOfflinePurge();
+
+// Installable PWA + Web Push for class reminders + a cached app shell so the app opens offline (public/sw.js).
 registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
@@ -56,7 +64,7 @@ createRoot(document.getElementById("root")!).render(
                     type="button"
                     aria-label="Close notification"
                     onClick={() => toast.dismiss(t.id)}
-                    className="ml-1 shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                    className="ms-1 shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

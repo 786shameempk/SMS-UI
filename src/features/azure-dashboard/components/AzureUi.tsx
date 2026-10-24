@@ -117,7 +117,7 @@ export function UsageBar({ value, label, detail, className }: { value: number | 
     <div className={cn("space-y-1", className)}>
       <div className="flex items-baseline justify-between gap-2 text-xs">
         {label && <span className="text-muted-foreground">{label}</span>}
-        <span className={cn("ml-auto tabular-nums", level === "critical" ? "font-semibold text-destructive-strong" : level === "warning" ? "font-semibold text-warning-strong" : "text-foreground")}>
+        <span className={cn("ms-auto tabular-nums", level === "critical" ? "font-semibold text-destructive-strong" : level === "warning" ? "font-semibold text-warning-strong" : "text-foreground")}>
           {detail ?? percent(value)}
         </span>
       </div>

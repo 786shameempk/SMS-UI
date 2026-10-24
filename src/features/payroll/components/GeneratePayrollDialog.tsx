@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export default function GeneratePayrollDialog({
   submitting: boolean;
   onSubmit: (month: string) => Promise<void>;
 }) {
+  const { t } = useTranslation("payroll");
   const {
     register,
     handleSubmit,
@@ -41,25 +43,26 @@ export default function GeneratePayrollDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Generate payroll</DialogTitle>
+          <DialogTitle>{t("Generate payroll")}</DialogTitle>
           <DialogDescription>
-            Creates a draft payslip for every active or on-leave staff member who hasn't already been paid for this month,
-            using their current salary structure.
+            {t(
+              "Creates a draft payslip for every active or on-leave staff member who hasn't already been paid for this month, using their current salary structure.",
+            )}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values.month))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="pr-month" required>Month</Label>
+            <Label htmlFor="pr-month" required>{t("Month")}</Label>
             <Input id="pr-month" type="month" aria-invalid={errors.month ? true : undefined} {...register("month")} />
-            {errors.month && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.month.message}</p>}
+            {errors.month && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.month.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Generate
+              {t("Generate")}
             </Button>
           </DialogFooter>
         </form>

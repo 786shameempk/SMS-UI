@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +33,7 @@ export default function MessMenuCellDialog({
   submitting: boolean;
   onSubmit: (items: string) => Promise<void>;
 }) {
+  const { t } = useTranslation("hostel");
   const {
     register,
     handleSubmit,
@@ -50,21 +52,21 @@ export default function MessMenuCellDialog({
           <DialogTitle>
             {dayLabel} · {mealLabel}
           </DialogTitle>
-          <DialogDescription>Edit the menu items served for this meal.</DialogDescription>
+          <DialogDescription>{t("Edit the menu items served for this meal.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit(values.items.trim()))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="menu-items" required>Menu items</Label>
-            <Textarea id="menu-items" rows={3} placeholder="e.g. Idli & sambar" aria-invalid={errors.items ? true : undefined} {...register("items")} />
-            {errors.items && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.items.message}</p>}
+            <Label htmlFor="menu-items" required>{t("Menu items")}</Label>
+            <Textarea id="menu-items" rows={3} placeholder={t("e.g. Idli & sambar")} aria-invalid={errors.items ? true : undefined} {...register("items")} />
+            {errors.items && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.items.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save
+              {t("Save")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
@@ -27,6 +28,7 @@ const MODULE_TITLES: Record<string, string> = {
  * ticked list exact. Applies at each user's next sign-in.
  */
 export default function StaffActionsTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const roles = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
   const staff = useQuery({ queryKey: STAFF_PERMISSIONS_QUERY_KEY, queryFn: getStaffPermissions });
@@ -47,12 +49,12 @@ export default function StaffActionsTab() {
   };
   const save = useMutation({
     mutationFn: () => setRoleStaffPermissions(selectedId, [...keys]),
-    onSuccess: () => done("Staff actions saved. They apply at each user's next sign-in."),
+    onSuccess: () => done(t("Staff actions saved. They apply at each user's next sign-in.")),
     onError: (e: Error) => toast.error(e.message),
   });
   const reset = useMutation({
     mutationFn: () => resetRoleStaffPermissions(selectedId),
-    onSuccess: () => done("Back to the default staff actions."),
+    onSuccess: () => done(t("Back to the default staff actions.")),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -79,9 +81,7 @@ export default function StaffActionsTab() {
   return (
     <div className="space-y-4">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Choose what each role can do inside the modules it can see, such as issuing books or checking visitors in. Seeing a module is set in the permission
-        matrix; an action only works while its module is on for the role. These apply to the web app and the Staff mobile app, at each user&apos;s next
-        sign-in.
+        {t("Choose what each role can do inside the modules it can see, such as issuing books or checking visitors in. Seeing a module is set in the permission matrix; an action only works while its module is on for the role. These apply to the web app and the Staff mobile app, at each user's next sign-in.")}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Select
@@ -91,8 +91,8 @@ export default function StaffActionsTab() {
             setDraft(null);
           }}
         >
-          <SelectTrigger className="w-60" aria-label="Role">
-            <SelectValue placeholder="Choose a role" />
+          <SelectTrigger className="w-60" aria-label={t("Role")}>
+            <SelectValue placeholder={t("Choose a role")} />
           </SelectTrigger>
           <SelectContent>
             {roles.data?.map((r) => (
@@ -102,19 +102,19 @@ export default function StaffActionsTab() {
             ))}
           </SelectContent>
         </Select>
-        {current && <Badge variant={current.configured ? "info" : "neutral"}>{current.configured ? "Customised for this school" : "Using defaults"}</Badge>}
+        {current && <Badge variant={current.configured ? "info" : "neutral"}>{current.configured ? t("Customised for this school") : t("Using defaults")}</Badge>}
       </div>
 
-      {family && <p className="text-sm text-muted-foreground">Staff actions are only for school staff, so parents and students can&apos;t be given any.</p>}
+      {family && <p className="text-sm text-muted-foreground">{t("Staff actions are only for school staff, so parents and students can't be given any.")}</p>}
       {!family && modules.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          This role can&apos;t see any module that has staff actions yet. Turn on a module&apos;s Menu cell for it in the Permission matrix and its actions will appear here.
+          {t("This role can't see any module that has staff actions yet. Turn on a module's Menu cell for it in the Permission matrix and its actions will appear here.")}
         </p>
       )}
 
       {modules.map((module) => (
         <div key={module} className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{MODULE_TITLES[module] ?? module}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{MODULE_TITLES[module] ? t(MODULE_TITLES[module]) : module}</p>
           <Card>
             <CardContent className="divide-y divide-border p-0">
               {staff.data!.catalog
@@ -141,11 +141,11 @@ export default function StaffActionsTab() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending || family}>
-          {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save
+          {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {t("Save")}
         </Button>
         {current?.configured && (
           <Button variant="outline" onClick={() => reset.mutate()} disabled={reset.isPending}>
-            <RotateCcw className="h-4 w-4" /> Reset to defaults
+            <RotateCcw className="h-4 w-4" /> {t("Reset to defaults")}
           </Button>
         )}
       </div>

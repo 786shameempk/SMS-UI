@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { useAiCapabilities } from "@/features/ai/capabilities";
 import LearningProfilePanel from "@/features/ai/components/learning/LearningProfilePanel";
 
 export default function StudentProfilePage() {
+  const { t } = useTranslation("students");
   const { studentId } = useParams<{ studentId: string }>();
   const role = useAuthStore((s) => s.user?.role);
   const canLinkLogins = role === "admin" || role === "superAdmin";
@@ -48,12 +50,12 @@ export default function StudentProfilePage() {
       <PageContainer>
         <EmptyState
           icon={SearchX}
-          title="Record not found"
-          description="That student record could not be found. It may have been removed, or you may not have access to it."
+          title={t("Record not found")}
+          description={t("That student record could not be found. It may have been removed, or you may not have access to it.")}
           action={
             <Button variant="outline" size="sm" onClick={() => navigate("/students")}>
               <ArrowLeft className="w-3.5 h-3.5" />
-              Back to students
+              {t("Back to students")}
             </Button>
           }
         />
@@ -64,9 +66,9 @@ export default function StudentProfilePage() {
   return (
     <PageContainer>
       <div>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/students")} className="-ml-2 mb-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/students")} className="-ms-2 mb-2">
           <ArrowLeft className="w-3.5 h-3.5" />
-          Back to students
+          {t("Back to students")}
         </Button>
         <div className="flex items-center gap-2.5 flex-wrap">
           <h1 className="text-page-title">
@@ -75,20 +77,20 @@ export default function StudentProfilePage() {
           <StudentStatusBadge status={student.status} />
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          {student.className} - {student.section} &middot; Admission No. {student.admissionNumber}
+          {student.className} - {student.section} &middot; {t("Admission No. {{number}}", { number: student.admissionNumber })}
         </p>
       </div>
 
       <Tabs defaultValue="overview">
         <TabsList variant="line">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="guardian">Guardian &amp; Emergency</TabsTrigger>
-          <TabsTrigger value="medical">Medical</TabsTrigger>
-          <TabsTrigger value="transport">Transport &amp; Hostel</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="idcard">ID Card</TabsTrigger>
-          {showLearning && <TabsTrigger value="learning">Learning profile</TabsTrigger>}
-          {canLinkLogins && <TabsTrigger value="logins">Logins</TabsTrigger>}
+          <TabsTrigger value="overview">{t("Overview")}</TabsTrigger>
+          <TabsTrigger value="guardian">{t("Guardian & Emergency")}</TabsTrigger>
+          <TabsTrigger value="medical">{t("Medical")}</TabsTrigger>
+          <TabsTrigger value="transport">{t("Transport & Hostel")}</TabsTrigger>
+          <TabsTrigger value="documents">{t("Documents")}</TabsTrigger>
+          <TabsTrigger value="idcard">{t("ID Card")}</TabsTrigger>
+          {showLearning && <TabsTrigger value="learning">{t("Learning profile")}</TabsTrigger>}
+          {canLinkLogins && <TabsTrigger value="logins">{t("Logins")}</TabsTrigger>}
         </TabsList>
         <TabsContent value="overview">
           <ProfileOverviewTab student={student} />

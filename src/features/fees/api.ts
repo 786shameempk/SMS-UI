@@ -21,6 +21,7 @@ import type {
   Receipt,
   RecordPaymentParams,
   Refund,
+  GatewayRefundStatus,
   RefundFormValues,
   RefundStatus,
 } from "./types";
@@ -81,6 +82,7 @@ const PAYMENT_MODE_TO_API: Record<PaymentMode, string> = { cash: "Cash", card: "
 const PAYMENT_MODE_FROM_API: Record<string, PaymentMode> = { Cash: "cash", Card: "card", Online: "online", Cheque: "cheque" };
 
 const REFUND_STATUS_FROM_API: Record<string, RefundStatus> = { Pending: "pending", Processed: "processed" };
+const GATEWAY_REFUND_STATUS_FROM_API: Record<string, GatewayRefundStatus> = { NotSent: "not_sent", Initiated: "initiated", Succeeded: "succeeded", Failed: "failed" };
 
 // ── API response shapes (FinanceService DTOs) ───────────────────────────────
 
@@ -158,6 +160,11 @@ interface ApiRefund {
   reason: string;
   refundedOn: string;
   status: string;
+  onlinePaymentId?: string | null;
+  gatewayStatus?: string | null;
+  gatewayRefundId?: string | null;
+  gatewayError?: string | null;
+  gatewayUpdatedAt?: string | null;
 }
 
 // ── Mappers ──────────────────────────────────────────────────────────────────
@@ -242,6 +249,9 @@ function mapRefund(dto: ApiRefund): Refund {
     reason: dto.reason,
     refundedOn: dto.refundedOn,
     status: REFUND_STATUS_FROM_API[dto.status] ?? "pending",
+    gatewayStatus: GATEWAY_REFUND_STATUS_FROM_API[dto.gatewayStatus ?? ""] ?? "not_sent",
+    gatewayError: dto.gatewayError ?? undefined,
+    gatewayUpdatedAt: dto.gatewayUpdatedAt ?? undefined,
   };
 }
 
@@ -499,33 +509,78 @@ export async function processRefund(id: string): Promise<Refund> {
   return mapRefund(dto);
 }
 
-// ── Online payment (Razorpay) ──────────────────────────────────────────────
-// The invoice is only marked paid after FinanceService confirms the payment with Razorpay
-// (signed checkout result, or Razorpay's webhook). Parents can't record payments directly.
+// ── Online payment (Razorpay, Cashfree, PayU, Stripe) ───────────────────────
+// The invoice is only marked paid after FinanceService confirms the payment with the gateway
+// (signed checkout result, the payer returning, or the gateway's webhook). Parents can't record payments directly.
+
+/** Details a gateway wants from the payer before checkout opens. */
+export type PayerField = "name" | "email" | "phone";
+
+export interface PaymentGatewayOption {
+  provider: string;
+  displayName: string;
+  mode: string;
+  isDefault: boolean;
+  payerFields: PayerField[];
+}
 
 export interface PaymentConfig {
+  /** Razorpay only: kept for the mobile app and older builds. */
   enabled: boolean;
   keyId: string | null;
   currency: string;
+  gateways: PaymentGatewayOption[];
+  defaultProvider: string | null;
 }
 
-export interface RazorpayOrder {
+/** How to open checkout: Razorpay's checkout.js, Cashfree's JS SDK, a hosted page to go to, or a signed form to post. */
+export type CheckoutKind = "razorpay" | "cashfree" | "redirect" | "form";
+
+export interface OnlinePaymentOrder {
   orderId: string;
   keyId: string;
   amountPaise: number;
   currency: string;
   invoiceId: string;
   description: string;
+  provider: string;
+  mode: string;
+  checkoutKind: CheckoutKind;
+  checkoutUrl: string | null;
+  checkoutFields: Record<string, string> | null;
 }
+
+/** The order shape Razorpay checkout takes (the old name, still used by the Razorpay-only flow). */
+export type RazorpayOrder = OnlinePaymentOrder;
 
 export const getPaymentConfig = () => unwrap(financeHttpClient.get<PaymentConfig>("/api/payments/config"));
 
-export const createRazorpayOrder = (invoiceId: string) =>
-  unwrap(financeHttpClient.post<RazorpayOrder>("/api/payments/razorpay/orders", { invoiceId }));
+export interface PayerDetails {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
 
-export async function verifyRazorpayPayment(values: { orderId: string; paymentId: string; signature: string }): Promise<{ invoice: FeeInvoice; receipt: Receipt | null }> {
+/** Opens a checkout for an invoice with the chosen gateway (the school's default when none is given). */
+export const createOnlinePaymentOrder = (invoiceId: string, provider?: string, payer: PayerDetails = {}) =>
+  unwrap(
+    financeHttpClient.post<OnlinePaymentOrder>("/api/payments/orders", {
+      invoiceId,
+      provider: provider ?? null,
+      payerName: payer.name ?? null,
+      payerEmail: payer.email ?? null,
+      payerPhone: payer.phone ?? null,
+    }),
+  );
+
+export const createRazorpayOrder = (invoiceId: string) => createOnlinePaymentOrder(invoiceId, "razorpay");
+
+/** Asks FinanceService to confirm an order with its gateway, and returns the updated invoice and receipt. */
+export async function verifyOnlinePayment(values: { provider: string; orderId: string; paymentId?: string; signature?: string }): Promise<{ invoice: FeeInvoice; receipt: Receipt | null }> {
   const result = await unwrap(
-    financeHttpClient.post<{ status: string; invoice: ApiFeeInvoice; receipt: ApiReceipt | null }>("/api/payments/razorpay/verify", values),
+    financeHttpClient.post<{ status: string; invoice: ApiFeeInvoice; receipt: ApiReceipt | null }>("/api/payments/verify", values),
   );
   return { invoice: mapFeeInvoice(result.invoice), receipt: result.receipt ? mapReceipt(result.receipt) : null };
 }
+
+export const verifyRazorpayPayment = (values: { orderId: string; paymentId: string; signature: string }) => verifyOnlinePayment({ provider: "razorpay", ...values });

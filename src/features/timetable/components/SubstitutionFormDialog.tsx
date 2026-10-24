@@ -14,6 +14,7 @@ import type { StaffMember } from "@/features/staff/types";
 import { dateToDayOfWeek } from "../constants";
 import type { SubstitutionFormValues, TimetableSlot } from "../types";
 
+import { useTranslation } from "react-i18next";
 const substitutionFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
   sectionId: z.string().min(1, "Section is required"),
@@ -49,6 +50,7 @@ export default function SubstitutionFormDialog({
   onSubmit: (values: SubstitutionFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t: tr } = useTranslation("timetable");
   const {
     register,
     handleSubmit,
@@ -86,28 +88,28 @@ export default function SubstitutionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Assign substitute teacher</DialogTitle>
+          <DialogTitle>{tr("Assign substitute teacher")}</DialogTitle>
           <DialogDescription>
-            Covers a single date only — the recurring weekly timetable is left untouched.
+            {tr("Covers a single date only — the recurring weekly timetable is left untouched.")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="date" required>Date</Label>
+              <Label htmlFor="date" required>{tr("Date")}</Label>
               <Input id="date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
               {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
-              {dateVal && dayOfWeek === null && <p className="text-xs text-warning-strong">No periods run on Sundays.</p>}
+              {dateVal && dayOfWeek === null && <p className="text-xs text-warning-strong">{tr("No periods run on Sundays.")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="section">Section</Label>
+              <Label htmlFor="section">{tr("Section")}</Label>
               <Controller
                 control={control}
                 name="sectionId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="section">
-                      <SelectValue placeholder="Select section" />
+                      <SelectValue placeholder={tr("Select section")} />
                     </SelectTrigger>
                     <SelectContent>
                       {sections.map((s) => (
@@ -124,7 +126,7 @@ export default function SubstitutionFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="period">Scheduled period</Label>
+            <Label htmlFor="period">{tr("Scheduled period")}</Label>
             <Controller
               control={control}
               name="periodNumber"
@@ -135,7 +137,7 @@ export default function SubstitutionFormDialog({
                   disabled={availableSlots.length === 0}
                 >
                   <SelectTrigger id="period">
-                    <SelectValue placeholder={availableSlots.length === 0 ? "No scheduled periods" : "Select period"} />
+                    <SelectValue placeholder={availableSlots.length === 0 ? tr("No scheduled periods") : tr("Select period")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSlots.map((s) => {
@@ -143,7 +145,7 @@ export default function SubstitutionFormDialog({
                       const teacher = teachers.find((t) => t.id === s.staffId);
                       return (
                         <SelectItem key={s.periodNumber} value={String(s.periodNumber)}>
-                          Period {s.periodNumber} - {subject?.name ?? "Subject"} ({nameOf(teacher)})
+                          {tr("Period")} {s.periodNumber} - {subject?.name ?? tr("Subject")} ({nameOf(teacher)})
                         </SelectItem>
                       );
                     })}
@@ -155,14 +157,14 @@ export default function SubstitutionFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="substitute">Substitute teacher</Label>
+            <Label htmlFor="substitute">{tr("Substitute teacher")}</Label>
             <Controller
               control={control}
               name="substituteStaffId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange} disabled={!selectedSlot}>
                   <SelectTrigger id="substitute">
-                    <SelectValue placeholder={originalTeacher ? `Covering for ${nameOf(originalTeacher)}` : "Select a period first"} />
+                    <SelectValue placeholder={originalTeacher ? tr("Covering for {{v1}}", { v1: nameOf(originalTeacher) }) : tr("Select a period first")} />
                   </SelectTrigger>
                   <SelectContent>
                     {substituteOptions.map((t) => (
@@ -178,16 +180,16 @@ export default function SubstitutionFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="reason" optional>Reason</Label>
-            <Textarea id="reason" placeholder="e.g. Sick leave" {...register("reason")} />
+            <Label htmlFor="reason" optional>{tr("Reason")}</Label>
+            <Textarea id="reason" placeholder={tr("e.g. Sick leave")} {...register("reason")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Assign substitute
+              {tr("Assign substitute")}
             </Button>
           </DialogFooter>
         </form>

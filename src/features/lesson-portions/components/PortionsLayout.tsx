@@ -3,6 +3,7 @@ import { PageContainer, PageHeader } from "@/components/ui/page";
 import { cn } from "@/utils/cn";
 import { usePortionAccess, type PortionAccess } from "../shared";
 
+import { useTranslation } from "react-i18next";
 interface Section {
   to: string;
   label: string;
@@ -27,6 +28,7 @@ const SECTIONS: Section[] = [
 
 /** The module's frame: a title and a tab bar whose entries depend on what the signed-in user may do. Families get only their own view. */
 export default function PortionsLayout() {
+  const { t } = useTranslation("lesson-portions");
   const access = usePortionAccess();
   const { pathname } = useLocation();
   const familyPath = "/lesson-portions/family";
@@ -41,8 +43,8 @@ export default function PortionsLayout() {
 
   return (
     <PageContainer>
-      <PageHeader title="Lesson & Portions" description="Plan the syllabus, record what is taught, and see which classes and subjects are on track." />
-      <nav aria-label="Lesson and portion sections" className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px">
+      <PageHeader title={t("Lesson & Portions")} description={t("Plan the syllabus, record what is taught, and see which classes and subjects are on track.")} />
+      <nav aria-label={t("Lesson and portion sections")} className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px">
         {sections.map((s) => (
           <NavLink
             key={s.to}
@@ -55,7 +57,7 @@ export default function PortionsLayout() {
               )
             }
           >
-            {s.label}
+            {t(s.label)}
           </NavLink>
         ))}
       </nav>
@@ -65,9 +67,10 @@ export default function PortionsLayout() {
 }
 
 function FamilyFrame() {
+  const { t } = useTranslation("lesson-portions");
   return (
     <PageContainer>
-      <PageHeader title="Syllabus progress" description="What has been taught in each subject, what is coming next, and the portions for upcoming exams." />
+      <PageHeader title={t("Syllabus progress")} description={t("What has been taught in each subject, what is coming next, and the portions for upcoming exams.")} />
       <Outlet />
     </PageContainer>
   );

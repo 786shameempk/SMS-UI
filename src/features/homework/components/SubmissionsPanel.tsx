@@ -13,6 +13,7 @@ import { gradeSubmission, listSubmissionsForHomework, requestResubmission } from
 import { SUBMISSION_STATUS_CONFIG } from "../constants";
 import type { Homework, HomeworkSubmission } from "../types";
 
+import { useTranslation } from "react-i18next";
 // Stable fallback: an inline `= []` default is a new array every render, and the drafts effect
 // below depends on it — while loading (or forever, if the request fails) it would setState,
 // re-render, get another new [] and loop, freezing the page. See attendance/MarkAttendanceTab.
@@ -24,6 +25,7 @@ interface DraftRow {
 }
 
 export default function SubmissionsPanel({ homework, onBack }: { homework: Homework; onBack: () => void }) {
+  const { t } = useTranslation("homework");
   const queryClient = useQueryClient();
 
   const { data: submissions = NO_SUBMISSIONS, isLoading: submissionsLoading } = useQuery({
@@ -51,18 +53,18 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
       gradeSubmission(id, grade, feedback || undefined),
     onSuccess: () => {
       invalidate();
-      toast.success("Grade saved");
+      toast.success(t("Grade saved"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not save grade"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not save grade")),
   });
 
   const resubmitMutation = useMutation({
     mutationFn: ({ id, feedback }: { id: string; feedback: string }) => requestResubmission(id, feedback),
     onSuccess: () => {
       invalidate();
-      toast.success("Resubmission requested");
+      toast.success(t("Resubmission requested"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not request resubmission"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not request resubmission")),
   });
 
   const isLoading = submissionsLoading || studentsLoading;
@@ -76,11 +78,11 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
       <div className="flex items-center gap-3">
         <Button variant="outline" size="sm" onClick={onBack}>
           <ArrowLeft className="w-3.5 h-3.5" />
-          Back to homework
+          {t("Back to homework")}
         </Button>
         <div>
           <h2 className="text-base font-semibold text-foreground">{homework.title}</h2>
-          <p className="text-xs text-muted-foreground">Due {new Date(homework.dueDate).toLocaleDateString()}</p>
+          <p className="text-xs text-muted-foreground">{t("Due {{v1}}", { v1: new Date(homework.dueDate).toLocaleDateString() })}</p>
         </div>
       </div>
 
@@ -88,27 +90,27 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
         <Table stickyHeader>
           <TableHeader>
             <TableRow hover={false}>
-              <TableHead>Student</TableHead>
-              <TableHead>Submission</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Grade</TableHead>
-              <TableHead>Feedback</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t("Student")}</TableHead>
+              <TableHead>{t("Submission")}</TableHead>
+              <TableHead>{t("Status")}</TableHead>
+              <TableHead>{t("Grade")}</TableHead>
+              <TableHead>{t("Feedback")}</TableHead>
+              <TableHead>{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow hover={false}>
                 <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                  Loading submissions…
+                  <Loader2 className="w-4 h-4 animate-spin inline me-2" />
+                  {t("Loading submissions…")}
                 </TableCell>
               </TableRow>
             )}
             {!isLoading && submissions.length === 0 && (
               <TableRow hover={false}>
                 <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                  No students are eligible for this homework yet.
+                  {t("No students are eligible for this homework yet.")}
                 </TableCell>
               </TableRow>
             )}
@@ -125,19 +127,19 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
                       {hasContent ? (
                         <>
                           <p className="text-secondary-foreground line-clamp-2">{s.content}</p>
-                          {s.submittedAt && <p className="text-xs text-muted-foreground mt-1">Submitted {formatDateTime(s.submittedAt)}</p>}
+                          {s.submittedAt && <p className="text-xs text-muted-foreground mt-1">{t("Submitted {{v1}}", { v1: formatDateTime(s.submittedAt) })}</p>}
                         </>
                       ) : (
-                        <span className="text-muted-foreground">Not submitted yet</span>
+                        <span className="text-muted-foreground">{t("Not submitted yet")}</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={config.variant}>{config.label}</Badge>
+                      <Badge variant={config.variant}>{t(config.label)}</Badge>
                     </TableCell>
                     <TableCell>
                       <Input
                         className="w-24"
-                        placeholder="e.g. A / 85"
+                        placeholder={t("e.g. A / 85")}
                         disabled={!hasContent}
                         value={draft.grade}
                         onChange={(e) => setDrafts((prev) => ({ ...prev, [s.id]: { ...draft, grade: e.target.value } }))}
@@ -147,7 +149,7 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
                       <Textarea
                         className="w-56 min-h-[36px]"
                         rows={2}
-                        placeholder="Feedback for the student"
+                        placeholder={t("Feedback for the student")}
                         disabled={!hasContent}
                         value={draft.feedback}
                         onChange={(e) => setDrafts((prev) => ({ ...prev, [s.id]: { ...draft, feedback: e.target.value } }))}
@@ -161,7 +163,7 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
                           onClick={() => gradeMutation.mutate({ id: s.id, grade: draft.grade.trim(), feedback: draft.feedback.trim() })}
                         >
                           <Save className="w-3.5 h-3.5" />
-                          Save grade
+                          {t("Save grade")}
                         </Button>
                         <Button
                           size="sm"
@@ -170,7 +172,7 @@ export default function SubmissionsPanel({ homework, onBack }: { homework: Homew
                           onClick={() => resubmitMutation.mutate({ id: s.id, feedback: draft.feedback.trim() })}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          Request resubmit
+                          {t("Request resubmit")}
                         </Button>
                       </div>
                     </TableCell>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { listClasses, listSections, listSubjects } from "@/features/academics/api";
 import { createHomework } from "@/features/homework/api";
@@ -28,6 +29,7 @@ export default function AssignHomeworkButton({
   subjectId: string;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation("ai");
   const queryClient = useQueryClient();
   const email = useAuthStore((s) => s.user?.email);
   const [open, setOpen] = useState(false);
@@ -58,7 +60,7 @@ export default function AssignHomeworkButton({
     mutationFn: createHomework,
     onSuccess: (hw) => {
       queryClient.invalidateQueries({ queryKey: ["homework"] });
-      toast.success(hw.status === "published" ? "Homework published to the class" : "Saved as a homework draft. Publish it from Homework when ready.");
+      toast.success(hw.status === "published" ? t("Homework published to the class") : t("Saved as a homework draft. Publish it from Homework when ready."));
       setAssigned(true);
       setOpen(false);
     },
@@ -69,7 +71,7 @@ export default function AssignHomeworkButton({
     <>
       <Button variant="outline" onClick={openForm} disabled={disabled || assigned}>
         <ClipboardList className="h-4 w-4" />
-        {assigned ? "Assigned as homework" : "Assign as homework"}
+        {assigned ? t("Assigned as homework") : t("Assign as homework")}
       </Button>
       <HomeworkFormDialog
         open={open}

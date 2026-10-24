@@ -25,7 +25,9 @@ import DiscussionThread from "./DiscussionThread";
 import LearningResourceFormDialog from "./LearningResourceFormDialog";
 import QuizFormDialog from "./QuizFormDialog";
 
+import { useTranslation } from "react-i18next";
 export default function LearningResourcesTab() {
+  const { t: tr } = useTranslation("homework");
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
 
@@ -51,50 +53,50 @@ export default function LearningResourcesTab() {
     mutationFn: (values: LearningResourceFormValues) => createLearningResource(values),
     onSuccess: () => {
       invalidate();
-      toast.success("Resource shared");
+      toast.success(tr("Resource shared"));
       setResourceFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not share resource"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : tr("Could not share resource")),
   });
 
   const createQuizMutation = useMutation({
     mutationFn: ({ values, createdByStaffId }: { values: QuizFormValues; createdByStaffId: string }) => createQuiz(values, createdByStaffId),
     onSuccess: () => {
       invalidate();
-      toast.success("Quiz created");
+      toast.success(tr("Quiz created"));
       setQuizFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create quiz"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : tr("Could not create quiz")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (resource: LearningResource) => (resource.type === "quiz" && resource.quizId ? deleteQuiz(resource.quizId) : deleteLearningResource(resource.id)),
     onSuccess: () => {
       invalidate();
-      toast.success("Resource removed");
+      toast.success(tr("Resource removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove resource"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : tr("Could not remove resource")),
   });
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-sm text-muted-foreground">Videos, notes, documents, discussions, and quizzes shared with a class.</p>
+        <p className="text-sm text-muted-foreground">{tr("Videos, notes, documents, discussions, and quizzes shared with a class.")}</p>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setQuizFormOpen(true)}>
             <ListChecks className="w-4 h-4" />
-            New quiz
+            {tr("New quiz")}
           </Button>
           <Button onClick={() => setResourceFormOpen(true)}>
             <Plus className="w-4 h-4" />
-            New resource
+            {tr("New resource")}
           </Button>
         </div>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading resources…</p>}
-      {!isLoading && resources.length === 0 && <p className="text-sm text-muted-foreground">No learning resources shared yet.</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{tr("Loading resources…")}</p>}
+      {!isLoading && resources.length === 0 && <p className="text-sm text-muted-foreground">{tr("No learning resources shared yet.")}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {resources.map((resource) => {
@@ -120,22 +122,22 @@ export default function LearningResourcesTab() {
               <CardContent className="space-y-2.5 pt-0">
                 <Badge variant="neutral">{typeLabel}</Badge>
                 {resource.description && <p className="text-sm text-secondary-foreground line-clamp-2">{resource.description}</p>}
-                <p className="text-xs text-muted-foreground">Shared by {teacherById.get(resource.createdByStaffId)?.firstName ?? "Unknown"}</p>
+                <p className="text-xs text-muted-foreground">{tr("Shared by")} {teacherById.get(resource.createdByStaffId)?.firstName ?? tr("Unknown")}</p>
 
                 {resource.type === "discussion" && (
                   <Button variant="outline" size="sm" onClick={() => setDiscussionTarget(resource)}>
                     <MessageCircle className="w-3.5 h-3.5" />
-                    View discussion
+                    {tr("View discussion")}
                   </Button>
                 )}
-                {resource.type === "quiz" && quiz && <p className="text-xs text-muted-foreground">{quiz.questions.length} question(s)</p>}
+                {resource.type === "quiz" && quiz && <p className="text-xs text-muted-foreground">{tr("{{length}} question(s)", { length: quiz.questions.length })}</p>}
                 {resource.attachmentId && resource.attachmentFileName && (
                   <AttachmentLink id={resource.attachmentId} fileName={resource.attachmentFileName} className="text-xs" />
                 )}
                 {resource.url && (
                   <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary-text hover:underline">
                     <ExternalLink className="w-3 h-3" />
-                    Open link
+                    {tr("Open link")}
                   </a>
                 )}
               </CardContent>
@@ -182,9 +184,9 @@ export default function LearningResourcesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove resource"
-        description={`Remove "${deleteTarget?.title}"? This can't be undone.`}
-        confirmLabel="Remove"
+        title={tr("Remove resource")}
+        description={tr("Remove \"{{title}}\"? This can't be undone.", { title: deleteTarget?.title })}
+        confirmLabel={tr("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

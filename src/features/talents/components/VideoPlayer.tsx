@@ -5,11 +5,13 @@ import { VIEW_AFTER_PLAYBACK_SECONDS } from "../constants";
 import { formatDuration } from "../hooks";
 import type { TalentMedia } from "../types";
 
+import { useTranslation } from "react-i18next";
 /**
  * Custom-chrome video player. `onMeaningfulPlay` fires once, after VIEW_AFTER_PLAYBACK_SECONDS of actual
  * playback (accumulated real time, so scrubbing to the end doesn't count as watching).
  */
 export default function VideoPlayer({ media, onMeaningfulPlay, className }: { media: TalentMedia; onMeaningfulPlay?: () => void; className?: string }) {
+  const { t } = useTranslation("talents");
   const video = useRef<HTMLVideoElement>(null);
   const shell = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -93,10 +95,10 @@ export default function VideoPlayer({ media, onMeaningfulPlay, className }: { me
       />
 
       {!playing && (
-        <button type="button" onClick={toggle} className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/50 to-transparent cursor-pointer" aria-label={ended ? "Replay" : "Play video"}>
+        <button type="button" onClick={toggle} className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/50 to-transparent cursor-pointer" aria-label={ended ? t("Replay") : t("Play video")}>
           <span className="relative w-20 h-20 rounded-full cc-gradient-bg flex items-center justify-center shadow-2xl shadow-brand-900/50">
             <span className="absolute inset-0 rounded-full animate-ping bg-brand-400/30" />
-            {ended ? <RotateCcw className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white fill-white ml-1" />}
+            {ended ? <RotateCcw className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white fill-white ms-1" />}
           </span>
         </button>
       )}
@@ -113,14 +115,14 @@ export default function VideoPlayer({ media, onMeaningfulPlay, className }: { me
           }}
           className="cc-range w-full h-4"
           style={{ ["--cc-progress" as string]: `${progress}%` }}
-          aria-label="Seek"
+          aria-label={t("Seek")}
         />
         <div className="flex items-center justify-between text-white mt-1">
           <div className="flex items-center gap-2">
-            <IconButton onClick={toggle} label={playing ? "Pause" : "Play"}>
+            <IconButton onClick={toggle} label={playing ? t("Pause") : t("Play")}>
               {playing ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white" />}
             </IconButton>
-            <IconButton onClick={() => setMuted((m) => !m)} label={muted ? "Unmute" : "Mute"}>
+            <IconButton onClick={() => setMuted((m) => !m)} label={muted ? t("Unmute") : t("Mute")}>
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </IconButton>
             <span className="text-xs tabular-nums text-white/85">
@@ -129,7 +131,7 @@ export default function VideoPlayer({ media, onMeaningfulPlay, className }: { me
           </div>
           <IconButton
             onClick={() => (document.fullscreenElement ? void document.exitFullscreen() : void shell.current?.requestFullscreen())}
-            label={fullscreen ? "Exit full screen" : "Full screen"}
+            label={fullscreen ? t("Exit full screen") : t("Full screen")}
           >
             {fullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </IconButton>

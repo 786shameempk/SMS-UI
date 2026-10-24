@@ -18,9 +18,11 @@ import MediaCover from "../components/MediaCover";
 import ReviewPanel from "../components/ReviewPanel";
 import type { TalentCard, TalentCategory, TalentCreatorType, TalentReport, TalentSchoolSettings, TalentStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 type Tab = "queue" | "history" | "reports" | "settings";
 
 export default function ReviewCenterPage() {
+  const { t: tr } = useTranslation("talents");
   const { isAdmin, isReviewer } = useTalentRole();
   const [params, setParams] = useSearchParams();
   const tab = (params.get("tab") as Tab | null) ?? "queue";
@@ -39,16 +41,16 @@ export default function ReviewCenterPage() {
   if (!isReviewer) {
     return (
       <div className="max-w-[900px] mx-auto px-4 pt-10">
-        <EmptyState emoji="🔒" title="Reviewers only" body="The approval queue is for teachers and school admins." />
+        <EmptyState emoji="🔒" title={tr("Reviewers only")} body="The approval queue is for teachers and school admins." />
       </div>
     );
   }
 
   const tabs: Array<{ value: Tab; label: string; count?: number; admin?: boolean }> = [
-    { value: "queue", label: "Approval queue", count: queue?.pending },
-    { value: "history", label: "Reviewed" },
-    { value: "reports", label: "Reports", count: queue?.openReports, admin: true },
-    { value: "settings", label: "Settings", admin: true },
+    { value: "queue", label: tr("Approval queue"), count: queue?.pending },
+    { value: "history", label: tr("Reviewed") },
+    { value: "reports", label: tr("Reports"), count: queue?.openReports, admin: true },
+    { value: "settings", label: tr("Settings"), admin: true },
   ];
 
   return (
@@ -56,18 +58,18 @@ export default function ReviewCenterPage() {
       <section className="cc-hero rounded-[2rem] px-6 py-7 sm:px-8">
         <HeroDecor />
         <div className="relative">
-          <p className="text-xs uppercase tracking-widest text-white/60">Review center</p>
-          <h1 className="cc-display text-2xl sm:text-3xl font-extrabold">Help talents shine - safely ✨</h1>
-          <p className="text-white/70 text-sm mt-1 max-w-2xl">Everything here is private until you approve it. Check the content, its description and the visibility the creator asked for.</p>
+          <p className="text-xs uppercase tracking-widest text-white/60">{tr("Review center")}</p>
+          <h1 className="cc-display text-2xl sm:text-3xl font-extrabold">{tr("Help talents shine - safely ✨")}</h1>
+          <p className="text-white/70 text-sm mt-1 max-w-2xl">{tr("Everything here is private until you approve it. Check the content, its description and the visibility the creator asked for.")}</p>
         </div>
       </section>
 
       {queue && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatTile label="Waiting for review" value={queue.pending} emoji="⏳" gradient="from-amber-400 to-orange-500" />
-          <StatTile label="From students" value={queue.studentPending} emoji="🎒" gradient="from-brand-400 to-brand-500" />
-          <StatTile label="From teachers & parents" value={queue.teacherPending + (queue.parentPending ?? 0)} emoji="🍎" gradient="from-rose-400 to-brand-500" />
-          <StatTile label="You reviewed this week" value={queue.reviewedThisWeek} emoji="✅" gradient="from-emerald-400 to-brand-500" />
+          <StatTile label={tr("Waiting for review")} value={queue.pending} emoji="⏳" gradient="from-amber-400 to-orange-500" />
+          <StatTile label={tr("From students")} value={queue.studentPending} emoji="🎒" gradient="from-brand-400 to-brand-500" />
+          <StatTile label={tr("From teachers & parents")} value={queue.teacherPending + (queue.parentPending ?? 0)} emoji="🍎" gradient="from-rose-400 to-brand-500" />
+          <StatTile label={tr("You reviewed this week")} value={queue.reviewedThisWeek} emoji="✅" gradient="from-emerald-400 to-brand-500" />
         </div>
       )}
 
@@ -84,8 +86,8 @@ export default function ReviewCenterPage() {
                 tab === t.value ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {t.label}
-              {!!t.count && <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 text-[11px] font-bold text-amber-950">{t.count}</span>}
+              {tr(t.label)}
+              {!!t.count && <span className="ms-1.5 rounded-full bg-amber-400 px-1.5 text-[11px] font-bold text-amber-950">{t.count}</span>}
               {tab === t.value && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full cc-gradient-bg" />}
             </button>
           ))}
@@ -102,6 +104,7 @@ export default function ReviewCenterPage() {
 }
 
 function QueueList({ status: initialStatus, onOpen, allowStatusSwitch }: { status: TalentStatus; onOpen: (id: string) => void; allowStatusSwitch?: boolean }) {
+  const { t: tr } = useTranslation("talents");
   const [status, setStatus] = useState<TalentStatus>(initialStatus);
   const [creatorType, setCreatorType] = useState<TalentCreatorType | undefined>();
   const [category, setCategory] = useState<TalentCategory | undefined>();
@@ -114,30 +117,30 @@ function QueueList({ status: initialStatus, onOpen, allowStatusSwitch }: { statu
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         {allowStatusSwitch && (
-          <select value={status} onChange={(e) => setStatus(e.target.value as TalentStatus)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label="Status">
-            <option value="approved">Approved</option>
-            <option value="needs_changes">Changes requested</option>
-            <option value="rejected">Declined</option>
-            <option value="archived">Archived</option>
+          <select value={status} onChange={(e) => setStatus(e.target.value as TalentStatus)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Status")}>
+            <option value="approved">{tr("Approved")}</option>
+            <option value="needs_changes">{tr("Changes requested")}</option>
+            <option value="rejected">{tr("Declined")}</option>
+            <option value="archived">{tr("Archived")}</option>
           </select>
         )}
-        <select value={creatorType ?? ""} onChange={(e) => setCreatorType((e.target.value || undefined) as TalentCreatorType | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label="Creator">
-          <option value="">Everyone</option>
-          <option value="student">Students</option>
-          <option value="teacher">Teachers</option>
-          <option value="parent">Parents</option>
+        <select value={creatorType ?? ""} onChange={(e) => setCreatorType((e.target.value || undefined) as TalentCreatorType | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Creator")}>
+          <option value="">{tr("Everyone")}</option>
+          <option value="student">{tr("Students")}</option>
+          <option value="teacher">{tr("Teachers")}</option>
+          <option value="parent">{tr("Parents")}</option>
         </select>
-        <select value={category ?? ""} onChange={(e) => setCategory((e.target.value || undefined) as TalentCategory | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label="Category">
-          <option value="">All categories</option>
+        <select value={category ?? ""} onChange={(e) => setCategory((e.target.value || undefined) as TalentCategory | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Category")}>
+          <option value="">{tr("All categories")}</option>
           {CATEGORY_ORDER.map((c) => (
             <option key={c} value={c}>
-              {CATEGORY_CONFIG[c].emoji} {CATEGORY_CONFIG[c].label}
+              {CATEGORY_CONFIG[c].emoji} {tr(CATEGORY_CONFIG[c].label)}
             </option>
           ))}
         </select>
       </div>
 
-      {error && <EmptyState emoji="🔒" title="Can't open the queue" body={(error as Error).message} />}
+      {error && <EmptyState emoji="🔒" title={tr("Can't open the queue")} body={(error as Error).message} />}
       {isLoading && (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
@@ -146,7 +149,7 @@ function QueueList({ status: initialStatus, onOpen, allowStatusSwitch }: { statu
         </div>
       )}
       {data && data.items.length === 0 && (
-        <EmptyState emoji={status === "pending_approval" ? "🎉" : "🗂️"} title={status === "pending_approval" ? "All caught up!" : "Nothing here yet"} body={status === "pending_approval" ? "No submissions are waiting. New ones will show up here and in your notifications." : undefined} />
+        <EmptyState emoji={status === "pending_approval" ? "🎉" : "🗂️"} title={status === "pending_approval" ? tr("All caught up!") : tr("Nothing here yet")} body={status === "pending_approval" ? "No submissions are waiting. New ones will show up here and in your notifications." : undefined} />
       )}
       <div className="space-y-3">
         {data?.items.map((t) => (
@@ -158,21 +161,22 @@ function QueueList({ status: initialStatus, onOpen, allowStatusSwitch }: { statu
 }
 
 function QueueRow({ talent, onOpen, pending }: { talent: TalentCard; onOpen: () => void; pending: boolean }) {
+  const { t } = useTranslation("talents");
   const category = CATEGORY_CONFIG[talent.category];
   const waitingHours = talent.submittedAt ? (Date.now() - new Date(talent.submittedAt).getTime()) / 3_600_000 : 0;
   return (
-    <button type="button" onClick={onOpen} className="cc-card w-full text-left flex gap-4 rounded-3xl border border-border bg-card p-3 cursor-pointer">
+    <button type="button" onClick={onOpen} className="cc-card w-full text-start flex gap-4 rounded-3xl border border-border bg-card p-3 cursor-pointer">
       <MediaCover talent={talent} className="w-28 h-24 sm:w-40 sm:h-28 shrink-0 rounded-2xl" />
       <div className="min-w-0 flex-1 py-0.5 space-y-1.5">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className={cn("rounded-full px-2 py-0.5 font-medium", category.tint)}>
-            {category.emoji} {category.label}
+            {category.emoji} {t(category.label)}
           </span>
           <span className="rounded-full bg-secondary px-2 py-0.5 text-secondary-foreground">
-            {VISIBILITY_CONFIG[talent.visibility].emoji} {VISIBILITY_CONFIG[talent.visibility].label}
+            {VISIBILITY_CONFIG[talent.visibility].emoji} {t(VISIBILITY_CONFIG[talent.visibility].label)}
           </span>
           {!pending && <StatusBadge status={talent.status} />}
-          {pending && waitingHours > 48 && <span className="rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 px-2 py-0.5 font-medium">Waiting {Math.floor(waitingHours / 24)}d</span>}
+          {pending && waitingHours > 48 && <span className="rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 px-2 py-0.5 font-medium">{t("Waiting {{v1}}d", { v1: Math.floor(waitingHours / 24) })}</span>}
         </div>
         <p className="font-semibold text-foreground line-clamp-1">{talent.title}</p>
         {talent.description && <p className="text-sm text-muted-foreground line-clamp-1 hidden sm:block">{talent.description}</p>}
@@ -183,12 +187,13 @@ function QueueRow({ talent, onOpen, pending }: { talent: TalentCard; onOpen: () 
           <span className="hidden sm:inline">· {timeAgo(talent.submittedAt ?? talent.createdAt)}</span>
         </div>
       </div>
-      <span className="hidden md:flex self-center shrink-0 rounded-full cc-gradient-bg px-4 py-2 text-sm font-semibold text-white">{pending ? "Review" : "Open"}</span>
+      <span className="hidden md:flex self-center shrink-0 rounded-full cc-gradient-bg px-4 py-2 text-sm font-semibold text-white">{pending ? t("Review") : t("Open")}</span>
     </button>
   );
 }
 
 function ReportsList() {
+  const { t } = useTranslation("talents");
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<"open" | "all">("open");
   const { data, isLoading } = useQuery({ queryKey: ["talents", "reports", status], queryFn: () => listTalentReports(status === "open" ? "open" : undefined) });
@@ -197,7 +202,7 @@ function ReportsList() {
   const resolve = useMutation({
     mutationFn: ({ report, resolution }: { report: TalentReport; resolution: "dismiss" | "hide_content" }) => resolveTalentReport(report.id, resolution, notes[report.id]),
     onSuccess: (_, v) => {
-      toast.success(v.resolution === "dismiss" ? "Report dismissed" : "Content hidden");
+      toast.success(v.resolution === "dismiss" ? t("Report dismissed") : t("Content hidden"));
       void queryClient.invalidateQueries({ queryKey: ["talents"] });
     },
     onError: (err: Error) => toast.error(err.message),
@@ -210,12 +215,12 @@ function ReportsList() {
       <div className="flex items-center gap-2">
         {(["open", "all"] as const).map((s) => (
           <button key={s} type="button" onClick={() => setStatus(s)} className={cn("rounded-full px-3.5 py-1.5 text-sm font-medium cursor-pointer", status === s ? "bg-foreground text-background" : "bg-secondary text-secondary-foreground")}>
-            {s === "open" ? "Open" : "All reports"}
+            {s === "open" ? t("Open") : t("All reports")}
           </button>
         ))}
       </div>
       {isLoading && <div className="h-24 rounded-3xl cc-shimmer" />}
-      {data && data.length === 0 && <EmptyState emoji="🛡️" title="No reports" body="Nothing has been flagged. Creative Campus is looking good." />}
+      {data && data.length === 0 && <EmptyState emoji="🛡️" title={t("No reports")} body="Nothing has been flagged. Creative Campus is looking good." />}
       {data?.map((r) => (
         <div key={r.id} className="rounded-3xl border border-border bg-card p-4 space-y-3">
           <div className="flex flex-wrap items-start justify-between gap-2">
@@ -224,29 +229,29 @@ function ReportsList() {
                 {r.showcaseTitle}
               </Link>
               <p className="text-xs text-muted-foreground">
-                by {r.creatorName} · reported {formatDateTime(r.createdAt)}
-                {r.fromAnotherSchool && " · from another school"}
+                {t("by")} {r.creatorName} {t("· reported")} {formatDateTime(r.createdAt)}
+                {r.fromAnotherSchool && t(" · from another school")}
               </p>
             </div>
             <div className="flex gap-1.5">
               <span className="rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 px-2.5 py-0.5 text-xs font-medium">{reasonLabel(r.reason)}</span>
-              {r.showcaseHidden && <span className="rounded-full bg-slate-500/10 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">Hidden</span>}
+              {r.showcaseHidden && <span className="rounded-full bg-slate-500/10 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{t("Hidden")}</span>}
             </div>
           </div>
           {r.details && <p className="rounded-2xl bg-secondary/60 px-3.5 py-2.5 text-sm text-foreground">“{r.details}”</p>}
           {r.status === "open" ? (
             <div className="flex flex-col sm:flex-row gap-2">
-              <Input placeholder="Resolution note (optional)" value={notes[r.id] ?? ""} onChange={(e) => setNotes((n) => ({ ...n, [r.id]: e.target.value }))} className="flex-1" />
+              <Input placeholder={t("Resolution note (optional)")} value={notes[r.id] ?? ""} onChange={(e) => setNotes((n) => ({ ...n, [r.id]: e.target.value }))} className="flex-1" />
               <Button variant="outline" disabled={resolve.isPending} onClick={() => resolve.mutate({ report: r, resolution: "dismiss" })}>
-                <ThumbsUp className="w-4 h-4" /> Dismiss
+                <ThumbsUp className="w-4 h-4" /> {t("Dismiss")}
               </Button>
               <Button variant="destructive" disabled={resolve.isPending} onClick={() => resolve.mutate({ report: r, resolution: "hide_content" })}>
-                <EyeOff className="w-4 h-4" /> Hide content
+                <EyeOff className="w-4 h-4" /> {t("Hide content")}
               </Button>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {r.status === "dismissed" ? "Dismissed" : "Content hidden"} by {r.resolvedByName} {r.resolvedAt && `· ${formatDateTime(r.resolvedAt)}`}
+              {r.status === "dismissed" ? t("Dismissed") : t("Content hidden")} {t("by")} {r.resolvedByName} {r.resolvedAt && `· ${formatDateTime(r.resolvedAt)}`}
               {r.resolutionNote && ` - “${r.resolutionNote}”`}
             </p>
           )}
@@ -257,6 +262,7 @@ function ReportsList() {
 }
 
 function SettingsForm() {
+  const { t } = useTranslation("talents");
   const queryClient = useQueryClient();
   const { data } = useQuery({ queryKey: ["talents", "settings"], queryFn: getTalentSettings });
   const [form, setForm] = useState<Omit<TalentSchoolSettings, "tenantId"> | null>(null);
@@ -269,7 +275,7 @@ function SettingsForm() {
     onSuccess: (s) => {
       queryClient.setQueryData(["talents", "settings"], s);
       void queryClient.invalidateQueries({ queryKey: ["talents"] });
-      toast.success("Settings saved");
+      toast.success(t("Settings saved"));
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -286,51 +292,51 @@ function SettingsForm() {
       className="grid lg:grid-cols-2 gap-5"
     >
       <section className="rounded-3xl border border-border bg-card p-5 space-y-4">
-        <h2 className="cc-display text-lg font-bold text-foreground">🏫 School showcase page</h2>
+        <h2 className="cc-display text-lg font-bold text-foreground">{t("🏫 School showcase page")}</h2>
         <div className="space-y-1.5">
-          <Label htmlFor="cc-name">Display name</Label>
-          <Input id="cc-name" value={form.displayName ?? ""} maxLength={200} onChange={(e) => set("displayName", e.target.value)} placeholder="ABC International School" />
+          <Label htmlFor="cc-name">{t("Display name")}</Label>
+          <Input id="cc-name" value={form.displayName ?? ""} maxLength={200} onChange={(e) => set("displayName", e.target.value)} placeholder={t("ABC International School")} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="cc-tagline">Tagline</Label>
-          <Input id="cc-tagline" value={form.tagline ?? ""} maxLength={300} onChange={(e) => set("tagline", e.target.value)} placeholder="Celebrating the creativity of our students and teachers." />
+          <Label htmlFor="cc-tagline">{t("Tagline")}</Label>
+          <Input id="cc-tagline" value={form.tagline ?? ""} maxLength={300} onChange={(e) => set("tagline", e.target.value)} placeholder={t("Celebrating the creativity of our students and teachers.")} />
         </div>
       </section>
 
       <section className="rounded-3xl border border-border bg-card p-5 space-y-4">
         <h2 className="cc-display text-lg font-bold text-foreground flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-brand-500" /> Approval rules
+          <ShieldCheck className="w-5 h-5 text-brand-500" /> {t("Approval rules")}
         </h2>
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-foreground mb-1.5">Who reviews student submissions?</legend>
+          <legend className="text-sm font-medium text-foreground mb-1.5">{t("Who reviews student submissions?")}</legend>
           {(
             [
-              { value: "teachers_and_admins", label: "Teachers & school admins", hint: "Any teacher (typically the class teacher) or an admin can approve student work." },
-              { value: "admins_only", label: "School admins only", hint: "Only admins and the principal can approve student work." },
+              { value: "teachers_and_admins", label: t("Teachers & school admins"), hint: "Any teacher (typically the class teacher) or an admin can approve student work." },
+              { value: "admins_only", label: t("School admins only"), hint: "Only admins and the principal can approve student work." },
             ] as const
           ).map((o) => (
             <label key={o.value} className={cn("flex items-start gap-3 rounded-2xl border px-3.5 py-3 cursor-pointer", form.studentReviewScope === o.value ? "border-brand-500 bg-brand-500/5" : "border-border")}>
               <input type="radio" name="scope" checked={form.studentReviewScope === o.value} onChange={() => set("studentReviewScope", o.value)} className="mt-1 accent-brand-600" />
               <span>
-                <span className="block text-sm font-medium text-foreground">{o.label}</span>
+                <span className="block text-sm font-medium text-foreground">{t(o.label)}</span>
                 <span className="block text-xs text-muted-foreground">{o.hint}</span>
               </span>
             </label>
           ))}
-          <p className="text-xs text-muted-foreground">Teacher submissions are always reviewed by a school admin. Nobody can approve their own work.</p>
+          <p className="text-xs text-muted-foreground">{t("Teacher submissions are always reviewed by a school admin. Nobody can approve their own work.")}</p>
         </fieldset>
-        <ToggleRow label="Students may request Public visibility" hint="Off = student work can only be shared School Only." checked={form.allowStudentPublic} onChange={(v) => set("allowStudentPublic", v)} />
-        <ToggleRow label="Teachers may request Public visibility" checked={form.allowTeacherPublic} onChange={(v) => set("allowTeacherPublic", v)} />
+        <ToggleRow label={t("Students may request Public visibility")} hint={t("Off = student work can only be shared School Only.")} checked={form.allowStudentPublic} onChange={(v) => set("allowStudentPublic", v)} />
+        <ToggleRow label={t("Teachers may request Public visibility")} checked={form.allowTeacherPublic} onChange={(v) => set("allowTeacherPublic", v)} />
         <div className="space-y-1.5">
-          <Label htmlFor="cc-threshold">Auto-hide after this many open reports</Label>
+          <Label htmlFor="cc-threshold">{t("Auto-hide after this many open reports")}</Label>
           <Input id="cc-threshold" type="number" min={0} max={50} value={form.autoHideReportThreshold} onChange={(e) => set("autoHideReportThreshold", Math.max(0, Math.min(50, Number(e.target.value) || 0)))} className="w-28" />
-          <p className="text-xs text-muted-foreground">Content is hidden pending your review once it reaches this many reports. 0 turns auto-hide off.</p>
+          <p className="text-xs text-muted-foreground">{t("Content is hidden pending your review once it reaches this many reports. 0 turns auto-hide off.")}</p>
         </div>
       </section>
 
       <div className="lg:col-span-2 flex justify-end">
         <Button type="submit" className="cc-gradient-bg text-white" loading={save.isPending}>
-          Save settings
+          {t("Save settings")}
         </Button>
       </div>
     </form>

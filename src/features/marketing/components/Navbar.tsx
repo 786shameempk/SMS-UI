@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronDown, CircleHelp, GraduationCap, LifeBuoy, ListChecks, Menu, ShieldCheck, Workflow, X, type LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { appHref } from "@/lib/appUrl";
@@ -48,6 +49,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const resourcesRef = useRef<HTMLDivElement>(null);
   const { openDemo, openContact } = useLeadCapture();
+  const { t } = useTranslation("marketing");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -86,10 +88,10 @@ export default function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo />
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label={t("Main")}>
           {NAV_LINKS.map((link) => (
             <a key={link.href} href={link.href} className="whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 xl:px-3 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-900">
-              {link.label}
+              {t(link.label)}
             </a>
           ))}
           <div ref={resourcesRef} className="relative">
@@ -100,7 +102,7 @@ export default function Navbar() {
               aria-haspopup="true"
               className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-900/[0.04] hover:text-slate-900"
             >
-              Resources
+              {t("Resources")}
               <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", resourcesOpen && "rotate-180")} />
             </button>
             <AnimatePresence>
@@ -119,12 +121,12 @@ export default function Navbar() {
                           <r.icon className="h-4 w-4" />
                         </span>
                         <span>
-                          <span className="block text-sm font-semibold text-slate-900">{r.label}</span>
-                          <span className="block text-xs text-slate-500">{r.description}</span>
+                          <span className="block text-sm font-semibold text-slate-900">{t(r.label)}</span>
+                          <span className="block text-xs text-slate-500">{t(r.description)}</span>
                         </span>
                       </>
                     );
-                    const cls = "group flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-slate-50";
+                    const cls = "group flex w-full items-center gap-3 rounded-xl p-2.5 text-start transition-colors hover:bg-slate-50";
                     return r.href ? (
                       <a key={r.label} href={r.href} onClick={() => runResource(r)} className={cls}>
                         {body}
@@ -143,10 +145,10 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Button variant="ghost" asChild>
-            <a href={appHref("/login")}>Sign In</a>
+            <a href={appHref("/login")}>{t("Sign In")}</a>
           </Button>
           <Button onClick={openDemo} className="group">
-            Get Started
+            {t("Get Started")}
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Button>
         </div>
@@ -155,7 +157,7 @@ export default function Navbar() {
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 lg:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label={open ? t("Close menu") : t("Open menu")}
           aria-expanded={open}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -174,24 +176,24 @@ export default function Navbar() {
             <div className="flex flex-col gap-0.5 px-4 py-4 sm:px-6">
               {NAV_LINKS.map((link) => (
                 <a key={link.href} href={link.href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-3 text-[15px] font-medium text-slate-800 hover:bg-slate-50">
-                  {link.label}
+                  {t(link.label)}
                 </a>
               ))}
-              <p className="mt-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Resources</p>
+              <p className="mt-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{t("Resources")}</p>
               {RESOURCES.map((r) =>
                 r.href ? (
                   <a key={r.label} href={r.href} onClick={() => runResource(r)} className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                    <r.icon className="h-4 w-4 text-brand-700" /> {r.label}
+                    <r.icon className="h-4 w-4 text-brand-700" /> {t(r.label)}
                   </a>
                 ) : (
-                  <button key={r.label} type="button" onClick={() => runResource(r)} className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50">
-                    <r.icon className="h-4 w-4 text-brand-700" /> {r.label}
+                  <button key={r.label} type="button" onClick={() => runResource(r)} className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-start text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <r.icon className="h-4 w-4 text-brand-700" /> {t(r.label)}
                   </button>
                 ),
               )}
               <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
                 <Button variant="outline" size="lg" asChild>
-                  <a href={appHref("/login")}>Sign In</a>
+                  <a href={appHref("/login")}>{t("Sign In")}</a>
                 </Button>
                 <Button
                   size="lg"
@@ -200,7 +202,7 @@ export default function Navbar() {
                     openDemo();
                   }}
                 >
-                  Get Started
+                  {t("Get Started")}
                 </Button>
               </div>
             </div>

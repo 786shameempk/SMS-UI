@@ -8,6 +8,7 @@ import { extractApiErrorMessage } from "@/lib/httpClient";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
 
+import { useTranslation } from "react-i18next";
 export const ALL = "__all";
 
 export interface Option<T extends string = string> {
@@ -117,16 +118,17 @@ export function SelectField<T extends string>({
   className?: string;
   invalid?: boolean;
 }) {
+  const { t } = useTranslation("extracurricular");
   return (
     <Select value={value ?? (allLabel ? ALL : undefined)} onValueChange={(v) => onChange(v === ALL ? undefined : (v as T))} disabled={disabled}>
       <SelectTrigger id={id} className={className} aria-invalid={invalid ? true : undefined}>
-        <SelectValue placeholder={placeholder ?? "Select"} />
+        <SelectValue placeholder={placeholder ?? t("Select")} />
       </SelectTrigger>
       <SelectContent>
         {allLabel && <SelectItem value={ALL}>{allLabel}</SelectItem>}
         {items.map((o) => (
           <SelectItem key={o.value} value={o.value}>
-            {o.label}
+            {t(o.label)}
           </SelectItem>
         ))}
       </SelectContent>

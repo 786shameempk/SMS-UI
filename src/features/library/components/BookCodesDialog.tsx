@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { useTranslation } from "react-i18next";
 import JsBarcode from "jsbarcode";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Book } from "../types";
@@ -13,6 +14,7 @@ export default function BookCodesDialog({
   onOpenChange: (open: boolean) => void;
   book: Book | null;
 }) {
+  const { t } = useTranslation("library");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,13 +51,13 @@ export default function BookCodesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>{book?.title ?? "Book codes"}</DialogTitle>
-          <DialogDescription>Barcode encodes the ISBN; QR code encodes the book ID for scanning at the desk.</DialogDescription>
+          <DialogTitle>{book?.title ?? t("Book codes")}</DialogTitle>
+          <DialogDescription>{t("Barcode encodes the ISBN; QR code encodes the book ID for scanning at the desk.")}</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-2">
           <svg ref={setBarcodeRef} />
-          {qrDataUrl && <img src={qrDataUrl} alt="Book QR code" className="w-32 h-32" />}
-          <p className="text-xs text-muted-foreground">ISBN: {book?.isbn}</p>
+          {qrDataUrl && <img src={qrDataUrl} alt={t("Book QR code")} className="w-32 h-32" />}
+          <p className="text-xs text-muted-foreground">{t("ISBN: {{isbn}}", { isbn: book?.isbn })}</p>
         </div>
       </DialogContent>
     </Dialog>

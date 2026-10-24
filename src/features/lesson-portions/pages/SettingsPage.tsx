@@ -16,6 +16,7 @@ import { getNotificationPreferences, getPortionSettings, listAudit, saveNotifica
 import { ALERT_LABEL, COMPLETION_MODE_LABEL, SelectField, formatDateTime, options, useApiMutation, usePortionAccess } from "../shared";
 import type { AuditEntry, CompletionMode, PortionSettings } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function SettingsPage() {
   const access = usePortionAccess();
   return (
@@ -49,6 +50,7 @@ const ALERTS: Array<{ key: keyof PortionSettings; label: string }> = [
 ];
 
 function ModuleSettings({ canManage }: { canManage: boolean }) {
+  const { t: tr } = useTranslation("lesson-portions");
   const query = useQuery({ queryKey: ["portions", "settings"], queryFn: getPortionSettings });
   const [v, setV] = useState<PortionSettings | null>(null);
   const [numbers, setNumbers] = useState({ threshold: "10", missing: "3", reminder: "7" });
@@ -67,8 +69,8 @@ function ModuleSettings({ canManage }: { canManage: boolean }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Module settings</CardTitle>
-        <CardDescription>How lesson plans, progress and alerts behave for this branch. {canManage ? "" : "Only people who manage the syllabus can change them."}</CardDescription>
+        <CardTitle>{tr("Module settings")}</CardTitle>
+        <CardDescription>{tr("How lesson plans, progress and alerts behave for this branch.")} {canManage ? "" : tr("Only people who manage the syllabus can change them.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {query.isLoading && <Skeleton className="h-48 w-full" />}
@@ -78,31 +80,31 @@ function ModuleSettings({ canManage }: { canManage: boolean }) {
             {TOGGLES.map((t) => (
               <label key={t.key} className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
                 <span>
-                  {t.label}
+                  {tr(t.label)}
                   <span className="block text-xs text-muted-foreground">{t.hint}</span>
                 </span>
                 <Switch checked={Boolean(v[t.key])} disabled={!canManage} onCheckedChange={(c) => setV({ ...v, [t.key]: c })} aria-label={t.label} />
               </label>
             ))}
-            <FormField label="How completion is measured" htmlFor="st-mode" hint="Used for every percentage in the module. Only completed topics count.">
+            <FormField label={tr("How completion is measured")} htmlFor="st-mode" hint={tr("Used for every percentage in the module. Only completed topics count.")}>
               <SelectField id="st-mode" value={v.completionMode} onChange={(m) => setV({ ...v, completionMode: (m ?? "Periods") as CompletionMode })} items={options(COMPLETION_MODE_LABEL)} disabled={!canManage} className="w-full sm:w-72" />
             </FormField>
             <div className="grid gap-4 sm:grid-cols-3">
-              <FormField label="Behind when trailing by" htmlFor="st-threshold" error={errors.threshold} hint="Percentage points.">
+              <FormField label={tr("Behind when trailing by")} htmlFor="st-threshold" error={errors.threshold} hint={tr("Percentage points.")}>
                 <Input id="st-threshold" inputMode="numeric" value={numbers.threshold} disabled={!canManage} onChange={(e) => setNumbers({ ...numbers, threshold: e.target.value })} aria-invalid={errors.threshold ? true : undefined} />
               </FormField>
-              <FormField label="Missing update after" htmlFor="st-missing" error={errors.missing} hint="Days with nothing recorded.">
+              <FormField label={tr("Missing update after")} htmlFor="st-missing" error={errors.missing} hint={tr("Days with nothing recorded.")}>
                 <Input id="st-missing" inputMode="numeric" value={numbers.missing} disabled={!canManage} onChange={(e) => setNumbers({ ...numbers, missing: e.target.value })} aria-invalid={errors.missing ? true : undefined} />
               </FormField>
-              <FormField label="Deadline reminder" htmlFor="st-reminder" error={errors.reminder} hint="Days before a deadline.">
+              <FormField label={tr("Deadline reminder")} htmlFor="st-reminder" error={errors.reminder} hint={tr("Days before a deadline.")}>
                 <Input id="st-reminder" inputMode="numeric" value={numbers.reminder} disabled={!canManage} onChange={(e) => setNumbers({ ...numbers, reminder: e.target.value })} aria-invalid={errors.reminder ? true : undefined} />
               </FormField>
             </div>
             <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Alerts the school sends</legend>
+              <legend className="text-sm font-medium">{tr("Alerts the school sends")}</legend>
               {ALERTS.map((a) => (
                 <label key={a.key} className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
-                  {a.label}
+                  {tr(a.label)}
                   <Switch checked={Boolean(v[a.key])} disabled={!canManage} onCheckedChange={(c) => setV({ ...v, [a.key]: c })} aria-label={a.label} />
                 </label>
               ))}
@@ -114,7 +116,7 @@ function ModuleSettings({ canManage }: { canManage: boolean }) {
                   disabled={invalid}
                   onClick={() => save.mutate({ ...v, behindThresholdPercent: Number(numbers.threshold), missingUpdateAfterDays: Number(numbers.missing), deadlineReminderDays: Number(numbers.reminder) })}
                 >
-                  Save settings
+                  {tr("Save settings")}
                 </Button>
               </div>
             )}
@@ -126,6 +128,7 @@ function ModuleSettings({ canManage }: { canManage: boolean }) {
 }
 
 function AlertPreferences() {
+  const { t } = useTranslation("lesson-portions");
   const query = useQuery({ queryKey: ["portions", "preferences"], queryFn: getNotificationPreferences });
   const save = useApiMutation(saveNotificationPreferences, { success: "Preferences saved", invalidate: [["portions", "preferences"]] });
   const muted = new Set(query.data?.mutedTypes ?? []);
@@ -138,8 +141,8 @@ function AlertPreferences() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My alerts</CardTitle>
-        <CardDescription>Choose which of these alerts reach you. You only ever get alerts about classes and plans you are responsible for. Turned off for everyone? Then your choice doesn't matter.</CardDescription>
+        <CardTitle>{t("My alerts")}</CardTitle>
+        <CardDescription>{t("Choose which of these alerts reach you. You only ever get alerts about classes and plans you are responsible for. Turned off for everyone? Then your choice doesn't matter.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {query.isLoading && <Skeleton className="h-32 w-full" />}
@@ -164,18 +167,19 @@ const ACTIONS: Array<{ key: string; label: string; hint: string; has: (a: Return
 ];
 
 function Permissions({ access }: { access: ReturnType<typeof usePortionAccess> }) {
+  const { t } = useTranslation("lesson-portions");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4" aria-hidden="true" /> What you can do here
+          <ShieldCheck className="h-4 w-4" aria-hidden="true" /> {t("What you can do here")}
         </CardTitle>
         <CardDescription>
-          Set by your school in{" "}
+          {t("Set by your school in")}{" "}
           <Link to="/admin/roles" className="text-primary hover:underline">
-            Roles & Permissions
+            {t("Roles & Permissions")}
           </Link>{" "}
-          (Syllabus & Portions). Teachers only ever see their own classes and subjects, whatever the settings.
+          {t("(Syllabus & Portions). Teachers only ever see their own classes and subjects, whatever the settings.")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -183,10 +187,10 @@ function Permissions({ access }: { access: ReturnType<typeof usePortionAccess> }
           {ACTIONS.map((a) => (
             <li key={a.key} className="flex items-start justify-between gap-3 py-2 text-sm">
               <span>
-                {a.label}
+                {t(a.label)}
                 <span className="block text-xs text-muted-foreground">{a.hint}</span>
               </span>
-              <Badge variant={a.has(access) ? "success" : "neutral"}>{a.has(access) ? "Yes" : "No"}</Badge>
+              <Badge variant={a.has(access) ? "success" : "neutral"}>{a.has(access) ? t("Yes") : t("No")}</Badge>
             </li>
           ))}
         </ul>
@@ -196,20 +200,21 @@ function Permissions({ access }: { access: ReturnType<typeof usePortionAccess> }
 }
 
 function AuditTrail() {
+  const { t } = useTranslation("lesson-portions");
   const [page, setPage] = useState(1);
   const [entity, setEntity] = useState<string | undefined>();
   const query = useQuery({ queryKey: ["portions", "audit", entity, page], queryFn: () => listAudit({ entityType: entity, page, pageSize: 25 }), placeholderData: (p) => p });
   const columns: ColumnDef<AuditEntry, unknown>[] = [
-    { id: "at", header: "When", accessorFn: (r) => r.at, cell: ({ row }) => <span className="text-sm">{formatDateTime(row.original.at)}</span> },
-    { id: "entity", header: "What", accessorFn: (r) => r.entityType, cell: ({ row }) => <span className="text-sm">{row.original.entityType}</span> },
-    { id: "action", header: "Action", accessorFn: (r) => r.action, cell: ({ row }) => <Badge variant="neutral">{row.original.action.replace(/-/g, " ")}</Badge> },
-    { id: "details", header: "Details", accessorFn: (r) => r.details ?? "", cell: ({ row }) => <span className="line-clamp-2 max-w-md break-all font-mono text-xs text-muted-foreground">{row.original.details ?? "—"}</span> },
+    { id: "at", header: t("When"), accessorFn: (r) => r.at, cell: ({ row }) => <span className="text-sm">{formatDateTime(row.original.at)}</span> },
+    { id: "entity", header: t("What"), accessorFn: (r) => r.entityType, cell: ({ row }) => <span className="text-sm">{row.original.entityType}</span> },
+    { id: "action", header: t("Action"), accessorFn: (r) => r.action, cell: ({ row }) => <Badge variant="neutral">{row.original.action.replace(/-/g, " ")}</Badge> },
+    { id: "details", header: t("Details"), accessorFn: (r) => r.details ?? "", cell: ({ row }) => <span className="line-clamp-2 max-w-md break-all font-mono text-xs text-muted-foreground">{row.original.details ?? "—"}</span> },
   ];
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Audit trail</CardTitle>
-        <CardDescription>Syllabus changes, lesson plan assignments and decisions, progress updates and corrections, deadline changes, exam portion publication and settings.</CardDescription>
+        <CardTitle>{t("Audit trail")}</CardTitle>
+        <CardDescription>{t("Syllabus changes, lesson plan assignments and decisions, progress updates and corrections, deadline changes, exam portion publication and settings.")}</CardDescription>
       </CardHeader>
       <CardContent>
         <DataTable
@@ -221,8 +226,8 @@ function AuditTrail() {
           exportFileName="portion-audit-trail"
           pageSize={25}
           serverPagination={{ pageIndex: page - 1, pageSize: 25, totalCount: query.data?.totalCount ?? 0, onPageChange: (i) => setPage(i + 1) }}
-          filters={<SelectField aria-label="What" value={entity} onChange={(v) => { setEntity(v); setPage(1); }} allLabel="Everything" items={["SyllabusPlan", "SyllabusChapter", "SyllabusTopic", "LessonPlan", "LessonProgress", "Exam", "PortionSettings", "Curriculum", "LessonResource"].map((e) => ({ value: e, label: e }))} className="w-48" />}
-          empty={{ title: "Nothing recorded yet" }}
+          filters={<SelectField aria-label={t("What")} value={entity} onChange={(v) => { setEntity(v); setPage(1); }} allLabel="Everything" items={["SyllabusPlan", "SyllabusChapter", "SyllabusTopic", "LessonPlan", "LessonProgress", "Exam", "PortionSettings", "Curriculum", "LessonResource"].map((e) => ({ value: e, label: e }))} className="w-48" />}
+          empty={{ title: t("Nothing recorded yet") }}
         />
       </CardContent>
     </Card>

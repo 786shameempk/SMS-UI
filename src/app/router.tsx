@@ -10,10 +10,12 @@ import AppLayout from "@/layouts/AppLayout";
 import { officeRoutes } from "./officeRoutes";
 const LandingPage = lazy(() => import("@/features/marketing/pages/LandingPage"));
 const LoginPage = lazy(() => import("@/features/authentication/pages/LoginPage"));
+const VerifyCertificatePage = lazy(() => import("@/features/certificates/pages/VerifyCertificatePage"));
 const ForgotPasswordPage = lazy(() => import("@/features/authentication/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/features/authentication/pages/ResetPasswordPage"));
 const ChangePasswordRequiredPage = lazy(() => import("@/features/authentication/pages/ChangePasswordRequiredPage"));
 const SecuritySettingsPage = lazy(() => import("@/features/authentication/pages/SecuritySettingsPage"));
+const MyAttendancePassPage = lazy(() => import("@/features/attendance/pages/MyAttendancePassPage"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/DashboardPage"));
 const UserManagementPage = lazy(() => import("@/features/administration/users/pages/UserManagementPage"));
 const RolePermissionManagementPage = lazy(() => import("@/features/administration/roles/pages/RolePermissionManagementPage"));
@@ -116,6 +118,7 @@ const ExamReportsPage = lazy(() => import("@/features/online-exams/pages/ExamRep
 const MyExamsPage = lazy(() => import("@/features/online-exams/pages/MyExamsPage"));
 const MyResultsPage = lazy(() => import("@/features/online-exams/pages/MyResultsPage"));
 const MyResultPage = lazy(() => import("@/features/online-exams/pages/MyResultPage"));
+const ProctoringMonitorPage = lazy(() => import("@/features/online-exams/pages/ProctoringMonitorPage"));
 const TakeExamPage = lazy(() => import("@/features/online-exams/pages/TakeExamPage"));
 const HelpLayout = lazy(() => import("@/features/help/pages/HelpLayout"));
 const HelpHomePage = lazy(() => import("@/features/help/pages/HelpHomePage"));
@@ -130,6 +133,7 @@ export const router = createBrowserRouter([
   { path: "/", element: <LandingPage />, errorElement: <RouteError /> },
   { path: "/login", element: <LoginPage />, errorElement: <RouteError /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
+  { path: "/verify/certificate/:token", element: <VerifyCertificatePage /> },
   { path: "/reset-password", element: <ResetPasswordPage /> },
   {
     // Where an account with a temporary password must go first; the only signed-in page it may open.
@@ -185,6 +189,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "dashboard", element: <DashboardPage /> },
       { path: "account/security", element: <SecuritySettingsPage /> },
+      { path: "account/attendance-pass", element: <MyAttendancePassPage /> },
       { path: "admin/users", element: <UserManagementPage /> },
       { path: "admin/roles", element: <RolePermissionManagementPage /> },
       { path: "admin/branches", element: <BranchManagementPage /> },
@@ -284,6 +289,7 @@ export const router = createBrowserRouter([
       { path: "online-exams/exams/new", element: <ExamWizardPage /> },
       { path: "online-exams/exams/:id", element: <ExamDetailPage /> },
       { path: "online-exams/exams/:id/edit", element: <ExamWizardPage key="edit" /> },
+      { path: "online-exams/exams/:id/monitor", element: <ProctoringMonitorPage /> },
       { path: "online-exams/exams/:id/results", element: <ExamResultsPage /> },
       { path: "online-exams/exams/:id/attempts/:attemptId", element: <AttemptReviewPage /> },
       { path: "online-exams/question-bank", element: <QuestionBankPage /> },

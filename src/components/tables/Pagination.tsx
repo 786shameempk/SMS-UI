@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/utils/cn";
+import { Trans, useTranslation } from "react-i18next";
 import { pageWindow } from "./pageWindow";
 
 const DEFAULT_PAGE_SIZES = [10, 25, 50, 100];
@@ -42,28 +43,34 @@ export function Pagination({
   note,
   className,
 }: PaginationProps) {
+  const { t } = useTranslation("common");
   const current = pageIndex + 1;
   const sizes = pageSizeOptions.includes(pageSize) ? pageSizeOptions : [...pageSizeOptions, pageSize].sort((a, b) => a - b);
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t("Pagination")}
       className={cn("flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border bg-muted/30 px-3 py-2.5 sm:px-4", className)}
     >
       <div className="flex items-center gap-4">
         <p className="text-xs text-muted-foreground tabular-nums" aria-live="polite">
-          <span className="hidden sm:inline">Showing </span>
-          <span className="font-medium text-foreground">
-            {from.toLocaleString()}–{to.toLocaleString()}
-          </span>{" "}
-          of <span className="font-medium text-foreground">{totalCount.toLocaleString()}</span>
+          <Trans
+            t={t}
+            i18nKey="<0>Showing </0><1>{{from}}–{{to}}</1> of <2>{{total}}</2>"
+            values={{ from: from.toLocaleString(), to: to.toLocaleString(), total: totalCount.toLocaleString() }}
+            components={[
+              <span key="0" className="hidden sm:inline" />,
+              <span key="1" className="font-medium text-foreground" />,
+              <span key="2" className="font-medium text-foreground" />,
+            ]}
+          />
           {note && <span className="hidden sm:inline"> {note}</span>}
         </p>
         {onPageSizeChange && (
           <label className="hidden items-center gap-2 text-xs text-muted-foreground md:flex">
-            Rows per page
+            {t("Rows per page")}
             <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-              <SelectTrigger className="h-7 w-[4.5rem] px-2 text-xs" aria-label="Rows per page">
+              <SelectTrigger className="h-7 w-[4.5rem] px-2 text-xs" aria-label={t("Rows per page")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -86,13 +93,13 @@ export function Pagination({
             className="pointer-coarse:size-10"
             onClick={() => onPageChange(pageIndex - 1)}
             disabled={pageIndex <= 0}
-            aria-label="Previous page"
+            aria-label={t("Previous page")}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
           <span className="px-2 text-xs text-muted-foreground tabular-nums sm:hidden">
-            Page {current} of {pageCount}
+            {t("Page {{current}} of {{total}}", { current, total: pageCount })}
           </span>
           <ul className="hidden items-center gap-1 sm:flex">
             {pageWindow(current, pageCount).map((p, i) =>
@@ -106,7 +113,7 @@ export function Pagination({
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => onPageChange(p - 1)}
-                    aria-label={`Page ${p}`}
+                    aria-label={t("Page {{page}}", { page: p })}
                     aria-current={p === current ? "page" : undefined}
                     className={cn(
                       "w-auto min-w-8 px-2 text-xs tabular-nums",
@@ -126,7 +133,7 @@ export function Pagination({
             className="pointer-coarse:size-10"
             onClick={() => onPageChange(pageIndex + 1)}
             disabled={pageIndex >= pageCount - 1}
-            aria-label="Next page"
+            aria-label={t("Next page")}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

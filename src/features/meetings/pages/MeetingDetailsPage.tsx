@@ -20,6 +20,7 @@ import JoinMeetingButton from "../components/JoinMeetingButton";
 import { CancelMeetingDialog, RescheduleDialog } from "../components/MeetingActionDialogs";
 import { ActivityTab, AttendanceTab, MaterialsTab, NotesTab, ParticipantsTab, RecordingsTab } from "../components/DetailTabs";
 
+import { useTranslation } from "react-i18next";
 function Fact({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3">
@@ -33,6 +34,7 @@ function Fact({ icon: Icon, label, children }: { icon: React.ElementType; label:
 }
 
 export default function MeetingDetailsPage() {
+  const { t } = useTranslation("meetings");
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -46,12 +48,12 @@ export default function MeetingDetailsPage() {
   });
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: meetingKeys.all });
-  const publish = useMutation({ mutationFn: () => publishMeeting(id), onSuccess: () => { refresh(); toast.success("Published. Everyone invited has been notified."); }, onError: (e: Error) => toast.error(e.message) });
-  const end = useMutation({ mutationFn: () => endMeeting(id), onSuccess: () => { refresh(); setDialog(null); toast.success("Ended. Attendance is final."); }, onError: (e: Error) => toast.error(e.message) });
-  const remove = useMutation({ mutationFn: () => deleteMeeting(id), onSuccess: () => { refresh(); toast.success("Deleted"); navigate("/online-classes"); }, onError: (e: Error) => toast.error(e.message) });
+  const publish = useMutation({ mutationFn: () => publishMeeting(id), onSuccess: () => { refresh(); toast.success(t("Published. Everyone invited has been notified.")); }, onError: (e: Error) => toast.error(e.message) });
+  const end = useMutation({ mutationFn: () => endMeeting(id), onSuccess: () => { refresh(); setDialog(null); toast.success(t("Ended. Attendance is final.")); }, onError: (e: Error) => toast.error(e.message) });
+  const remove = useMutation({ mutationFn: () => deleteMeeting(id), onSuccess: () => { refresh(); toast.success(t("Deleted")); navigate("/online-classes"); }, onError: (e: Error) => toast.error(e.message) });
   const stopSeries = useMutation({
     mutationFn: () => endSeries(meeting!.recurrence!.id),
-    onSuccess: () => { refresh(); setDialog(null); toast.success("Series ended. Upcoming sessions are cancelled."); },
+    onSuccess: () => { refresh(); setDialog(null); toast.success(t("Series ended. Upcoming sessions are cancelled.")); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -68,9 +70,9 @@ export default function MeetingDetailsPage() {
     return (
       <PageContainer className="max-w-lg text-center">
         <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
-        <h1 className="mt-3 text-lg font-semibold">This class isn't available</h1>
-        <p className="mt-1 text-sm text-muted-foreground">It may have been deleted, or you aren't invited to it.</p>
-        <Button asChild variant="outline" className="mt-4"><Link to="/online-classes">Back to Online Classes</Link></Button>
+        <h1 className="mt-3 text-lg font-semibold">{t("This class isn't available")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("It may have been deleted, or you aren't invited to it.")}</p>
+        <Button asChild variant="outline" className="mt-4"><Link to="/online-classes">{t("Back to Online Classes")}</Link></Button>
       </PageContainer>
     );
   }
@@ -86,7 +88,7 @@ export default function MeetingDetailsPage() {
         eyebrow={
           <div className="space-y-2">
             <Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-4 w-4" /> Online Classes
+              <ArrowLeft className="h-4 w-4" /> {t("Online Classes")}
             </Link>
             <div className="flex flex-wrap items-center gap-2">
               <MeetingTypeBadge type={s.meetingType} />
@@ -105,27 +107,27 @@ export default function MeetingDetailsPage() {
           <>
       {s.status === "Draft" && meeting.can.edit && (
         <Button onClick={() => publish.mutate()} disabled={publish.isPending}>
-          {publish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Publish
+          {publish.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {t("Publish")}
         </Button>
       )}
       <JoinMeetingButton meeting={s} showWaiting />
       {meeting.can.end && (
         <Button variant="outline" onClick={() => setDialog("end")}>
-          <Square className="h-4 w-4" /> End for everyone
+          <Square className="h-4 w-4" /> {t("End for everyone")}
         </Button>
       )}
       {hasMore && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="More actions"><MoreHorizontal className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" aria-label={t("More actions")}><MoreHorizontal className="h-4 w-4" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {meeting.can.reschedule && <DropdownMenuItem onSelect={() => setDialog("reschedule")}><CalendarClock className="h-4 w-4" /> Reschedule</DropdownMenuItem>}
-            {meeting.can.cancel && <DropdownMenuItem onSelect={() => setDialog("cancel")}><CalendarX2 className="h-4 w-4" /> Cancel {type.noun}</DropdownMenuItem>}
+            {meeting.can.reschedule && <DropdownMenuItem onSelect={() => setDialog("reschedule")}><CalendarClock className="h-4 w-4" /> {t("Reschedule")}</DropdownMenuItem>}
+            {meeting.can.cancel && <DropdownMenuItem onSelect={() => setDialog("cancel")}><CalendarX2 className="h-4 w-4" /> {t("Cancel")} {type.noun}</DropdownMenuItem>}
             {meeting.recurrence && !meeting.recurrence.isEnded && meeting.can.edit && (
-              <DropdownMenuItem onSelect={() => setDialog("endSeries")}><Repeat className="h-4 w-4" /> End the whole series</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setDialog("endSeries")}><Repeat className="h-4 w-4" /> {t("End the whole series")}</DropdownMenuItem>
             )}
-            {meeting.can.delete && <DropdownMenuItem onSelect={() => setDialog("delete")} className="text-destructive-strong focus:text-destructive-strong" variant="destructive"><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>}
+            {meeting.can.delete && <DropdownMenuItem onSelect={() => setDialog("delete")} className="text-destructive-strong focus:text-destructive-strong" variant="destructive"><Trash2 className="h-4 w-4" /> {t("Delete")}</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
       )}
@@ -136,35 +138,35 @@ export default function MeetingDetailsPage() {
       {s.status === "Cancelled" && (
         <div role="status" className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive-soft px-4 py-3 text-sm text-red-800 dark:text-red-200">
           <CalendarX2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-          <span>This {type.noun} was cancelled.{meeting.cancelReason && <> Reason: {meeting.cancelReason}</>}</span>
+          <span>{t("This")} {type.noun} {t("was cancelled.")}{meeting.cancelReason && <>{t("Reason: {{cancelReason}}", { cancelReason: meeting.cancelReason })}</>}</span>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Fact icon={CalendarClock} label="Date">{new Date(s.startUtc).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</Fact>
-        <Fact icon={Clock} label="Time">
+        <Fact icon={CalendarClock} label={t("Date")}>{new Date(s.startUtc).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</Fact>
+        <Fact icon={Clock} label={t("Time")}>
           {formatTimeRange(s.startUtc, s.endUtc)} <span className="block text-xs font-normal text-muted-foreground">{formatDuration(s.durationMinutes)}</span>
         </Fact>
-        <Fact icon={User} label="Host">{s.myRelation === "Host" ? "You" : s.hostName}</Fact>
-        <Fact icon={Users} label="Invited">{s.participantCount} {s.participantCount === 1 ? "person" : "people"}</Fact>
+        <Fact icon={User} label={t("Host")}>{s.myRelation === "Host" ? t("You") : s.hostName}</Fact>
+        <Fact icon={Users} label={t("Invited")}>{s.participantCount} {s.participantCount === 1 ? t("person") : t("people")}</Fact>
       </div>
 
       {meeting.recurrence && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Repeat className="h-4 w-4" aria-hidden />
-          {meeting.recurrence.isEnded ? "Part of a series that has ended." : meeting.recurrence.description}
-          {meeting.rescheduledFromUtc && <span>· Moved from {formatDayLabel(meeting.rescheduledFromUtc)} {formatTime(meeting.rescheduledFromUtc)}</span>}
+          {meeting.recurrence.isEnded ? t("Part of a series that has ended.") : meeting.recurrence.description}
+          {meeting.rescheduledFromUtc && <span>{t("· Moved from {{v1}} {{v2}}", { v1: formatDayLabel(meeting.rescheduledFromUtc), v2: formatTime(meeting.rescheduledFromUtc) })}</span>}
         </p>
       )}
 
       <Tabs value={tab} onValueChange={(v) => setParams((p) => { p.set("tab", v); return p; }, { replace: true })}>
         <TabsList className="max-w-full overflow-x-auto">
-          <TabsTrigger value="participants">People</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="materials">Materials{meeting.materialCount > 0 && ` · ${meeting.materialCount}`}</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="recordings">Recordings{meeting.recordingCount > 0 && ` · ${meeting.recordingCount}`}</TabsTrigger>
-          {meeting.can.viewAttendance && <TabsTrigger value="activity">Activity</TabsTrigger>}
+          <TabsTrigger value="participants">{t("People")}</TabsTrigger>
+          <TabsTrigger value="attendance">{t("Attendance")}</TabsTrigger>
+          <TabsTrigger value="materials">{t("Materials")}{meeting.materialCount > 0 && ` · ${meeting.materialCount}`}</TabsTrigger>
+          <TabsTrigger value="notes">{t("Notes")}</TabsTrigger>
+          <TabsTrigger value="recordings">{t("Recordings")}{meeting.recordingCount > 0 && ` · ${meeting.recordingCount}`}</TabsTrigger>
+          {meeting.can.viewAttendance && <TabsTrigger value="activity">{t("Activity")}</TabsTrigger>}
         </TabsList>
         <TabsContent value="participants" className="mt-4"><ParticipantsTab meeting={meeting} /></TabsContent>
         <TabsContent value="attendance" className="mt-4"><AttendanceTab meeting={meeting} /></TabsContent>
@@ -179,9 +181,9 @@ export default function MeetingDetailsPage() {
       <ConfirmDialog
         open={dialog === "end"}
         onOpenChange={(o) => setDialog(o ? "end" : null)}
-        title={`End the ${type.noun} for everyone?`}
-        description="Everyone is disconnected and attendance becomes final. You can still correct it afterwards."
-        confirmLabel="End now"
+        title={t("End the {{noun}} for everyone?", { noun: type.noun })}
+        description={t("Everyone is disconnected and attendance becomes final. You can still correct it afterwards.")}
+        confirmLabel={t("End now")}
         confirmVariant="destructive"
         submitting={end.isPending}
         onConfirm={() => end.mutate()}
@@ -189,9 +191,9 @@ export default function MeetingDetailsPage() {
       <ConfirmDialog
         open={dialog === "delete"}
         onOpenChange={(o) => setDialog(o ? "delete" : null)}
-        title="Delete this for good?"
-        description="It disappears from everyone's list. This can't be undone."
-        confirmLabel="Delete"
+        title={t("Delete this for good?")}
+        description={t("It disappears from everyone's list. This can't be undone.")}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => remove.mutate()}
@@ -199,9 +201,9 @@ export default function MeetingDetailsPage() {
       <ConfirmDialog
         open={dialog === "endSeries"}
         onOpenChange={(o) => setDialog(o ? "endSeries" : null)}
-        title="End the whole series?"
-        description="Every upcoming session is cancelled and everyone invited is told. Past sessions and their attendance are kept."
-        confirmLabel="End series"
+        title={t("End the whole series?")}
+        description={t("Every upcoming session is cancelled and everyone invited is told. Past sessions and their attendance are kept.")}
+        confirmLabel={t("End series")}
         confirmVariant="destructive"
         submitting={stopSeries.isPending}
         onConfirm={() => stopSeries.mutate()}

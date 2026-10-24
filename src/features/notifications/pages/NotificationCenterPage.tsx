@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Banknote, CalendarDays, Check, GraduationCap, Megaphone, MessageSquare, Plus, Settings, Sparkles, Trash2, Video } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import toast from "react-hot-toast";
@@ -34,6 +35,7 @@ export default function NotificationCenterPage() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [formOpen, setFormOpen] = useState(false);
+  const { t } = useTranslation("notifications");
 
   const { data: notifications = [], isLoading } = useQuery({ queryKey: ["notifications", "mine"], queryFn: listMyNotifications });
 
@@ -44,24 +46,24 @@ export default function NotificationCenterPage() {
     mutationFn: markAllReadForCurrentUser,
     onSuccess: () => {
       invalidate();
-      toast.success("All notifications marked read");
+      toast.success(t("All notifications marked read"));
     },
   });
   const deleteMutation = useMutation({
     mutationFn: deleteNotification,
     onSuccess: () => {
       invalidate();
-      toast.success("Notification deleted");
+      toast.success(t("Notification deleted"));
     },
   });
   const postMutation = useMutation({
     mutationFn: postAnnouncement,
     onSuccess: () => {
       invalidate();
-      toast.success("Announcement posted");
+      toast.success(t("Announcement posted"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not post announcement"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not post announcement")),
   });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -75,21 +77,27 @@ export default function NotificationCenterPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Notification center"
-        description={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "You're all caught up."}
+        title={t("Notification center")}
+        description={
+          unreadCount > 0
+            ? unreadCount === 1
+              ? t("{{count}} unread notification", { count: unreadCount })
+              : t("{{count}} unread notifications", { count: unreadCount })
+            : t("You're all caught up.")
+        }
         actions={
           <>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <Button variant="outline" onClick={() => markAllReadMutation.mutate()} disabled={markAllReadMutation.isPending}>
                   <Check className="w-4 h-4" />
-                  Mark all read
+                  {t("Mark all read")}
                 </Button>
               )}
               {canAnnounce && (
                 <Button onClick={() => setFormOpen(true)}>
                   <Plus className="w-4 h-4" />
-                  Post announcement
+                  {t("Post announcement")}
                 </Button>
               )}
             </div>
@@ -98,8 +106,8 @@ export default function NotificationCenterPage() {
       />
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        {isLoading && <p className="px-4 py-8 text-sm text-muted-foreground text-center">Loading…</p>}
-        {!isLoading && notifications.length === 0 && <p className="px-4 py-8 text-sm text-muted-foreground text-center">No notifications yet.</p>}
+        {isLoading && <p className="px-4 py-8 text-sm text-muted-foreground text-center">{t("Loading…")}</p>}
+        {!isLoading && notifications.length === 0 && <p className="px-4 py-8 text-sm text-muted-foreground text-center">{t("No notifications yet.")}</p>}
         <div className="divide-y divide-border">
           {notifications.map((n) => {
             const Icon = CATEGORY_ICON[n.category];
@@ -112,7 +120,7 @@ export default function NotificationCenterPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-foreground">{n.title}</p>
-                    <Badge variant={categoryConfig.variant}>{categoryConfig.label}</Badge>
+                    <Badge variant={categoryConfig.variant}>{t(categoryConfig.label)}</Badge>
                     {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />}
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">{n.body}</p>
@@ -121,12 +129,12 @@ export default function NotificationCenterPage() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   {n.actionUrl && (
                     <Button variant="outline" size="sm" onClick={() => handleView(n)}>
-                      {n.actionLabel ?? "View"}
+                      {n.actionLabel ?? t("View")}
                     </Button>
                   )}
                   {!n.read && !n.actionUrl && (
                     <Button variant="ghost" size="sm" onClick={() => markReadMutation.mutate(n.id)}>
-                      Mark read
+                      {t("Mark read")}
                     </Button>
                   )}
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteMutation.mutate(n.id)}>

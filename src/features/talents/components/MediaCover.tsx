@@ -5,9 +5,11 @@ import type { TalentCard } from "../types";
 import { waveform } from "../media";
 import { MusicNote, Sparkle } from "./Decor";
 
+import { useTranslation } from "react-i18next";
 /** Card artwork: the cover image, a video poster frame, designed audio art, or designed text art. */
 /** `overlay` = the caller lays its own title over the cover, so text art drops its excerpt to avoid a clash. */
 export default function MediaCover({ talent, className, showTypeBadge = true, overlay = false }: { talent: TalentCard; className?: string; showTypeBadge?: boolean; overlay?: boolean }) {
+  const { t } = useTranslation("talents");
   const category = CATEGORY_CONFIG[talent.category];
   const cover = talent.cover;
   const hasVideo = talent.mediaTypes.includes("video");
@@ -31,18 +33,18 @@ export default function MediaCover({ talent, className, showTypeBadge = true, ov
       {cover?.type === "video" && (
         <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span className="w-12 h-12 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg">
-            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+            <Play className="w-5 h-5 text-white fill-white ms-0.5" />
           </span>
         </span>
       )}
 
       {showTypeBadge && talent.mediaCount > 0 && (
-        <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/45 backdrop-blur-md px-2 py-0.5 text-[11px] text-white">
+        <span className="absolute bottom-2 end-2 inline-flex items-center gap-1 rounded-full bg-black/45 backdrop-blur-md px-2 py-0.5 text-[11px] text-white">
           {hasVideo ? <Film className="w-3 h-3" /> : hasAudio && cover?.type === "audio" ? <Mic className="w-3 h-3" /> : <Images className="w-3 h-3" />}
-          {talent.mediaCount > 1 ? talent.mediaCount : hasVideo ? "Video" : cover?.type === "audio" ? "Audio" : "Photo"}
+          {talent.mediaCount > 1 ? talent.mediaCount : hasVideo ? t("Video") : cover?.type === "audio" ? t("Audio") : t("Photo")}
         </span>
       )}
-      <span className="sr-only">{category.label}</span>
+      <span className="sr-only">{t(category.label)}</span>
     </div>
   );
 }
@@ -53,8 +55,8 @@ function AudioArt({ talent }: { talent: TalentCard }) {
   return (
     <div className={cn("absolute inset-0 bg-gradient-to-br flex items-center justify-center", category.gradient)}>
       <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_30%_20%,white,transparent_45%)]" />
-      <MusicNote className="absolute top-3 left-3 w-6 h-6 text-white/40" />
-      <Sparkle className="absolute top-5 right-6 w-3 h-3 text-white/70" />
+      <MusicNote className="absolute top-3 start-3 w-6 h-6 text-white/40" />
+      <Sparkle className="absolute top-5 end-6 w-3 h-3 text-white/70" />
       <div className="flex items-end gap-[3px] h-1/2 px-6 w-full justify-center">
         {bars.map((v, i) => (
           <span key={i} className="w-[5px] rounded-full bg-white/85" style={{ height: `${v * 100}%` }} />
@@ -70,7 +72,7 @@ function TextArt({ talent, overlay }: { talent: TalentCard; overlay: boolean }) 
     return (
       <div className={cn("absolute inset-0 bg-gradient-to-br", category.gradient)}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_25%,rgba(255,255,255,0.35),transparent_45%)]" />
-        <span className="absolute right-6 top-6 text-6xl opacity-80 drop-shadow-lg" aria-hidden="true">
+        <span className="absolute end-6 top-6 text-6xl opacity-80 drop-shadow-lg" aria-hidden="true">
           {category.emoji}
         </span>
       </div>

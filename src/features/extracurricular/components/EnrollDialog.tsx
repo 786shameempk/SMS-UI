@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useStudentOptions } from "../shared";
 import type { Activity } from "../types";
 
+import { useTranslation } from "react-i18next";
 /** Ask for a place (a parent or student) or put a student in (staff). The server decides whether it is approved, requested or waitlisted. */
 export default function EnrollDialog({
   open,
@@ -24,6 +25,7 @@ export default function EnrollDialog({
   submitting: boolean;
   onSubmit: (values: { studentId: string; note: string | null; consentGiven: boolean }) => Promise<void>;
 }) {
+  const { t } = useTranslation("extracurricular");
   const students = useStudentOptions(open);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -51,10 +53,10 @@ export default function EnrollDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{isFamily ? "Ask to join" : "Enroll a student"}</DialogTitle>
+          <DialogTitle>{isFamily ? t("Ask to join") : t("Enroll a student")}</DialogTitle>
           <DialogDescription>
             {activity?.name}
-            {activity?.requiresApproval && isFamily ? " — a coordinator will approve the request." : ""}
+            {activity?.requiresApproval && isFamily ? t(" — a coordinator will approve the request.") : ""}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -67,39 +69,39 @@ export default function EnrollDialog({
             void onSubmit({ studentId, note: note.trim() || null, consentGiven: consent });
           }}
         >
-          <FormField label="Student" htmlFor="enroll-student" required error={missingStudent ? "Choose a student" : undefined}>
+          <FormField label={t("Student")} htmlFor="enroll-student" required error={missingStudent ? "Choose a student" : undefined}>
             <Combobox
-              aria-label="Student"
+              aria-label={t("Student")}
               value={studentId}
               onValueChange={setStudentId}
               options={students.options}
-              placeholder={students.isLoading ? "Loading…" : "Choose a student"}
+              placeholder={students.isLoading ? t("Loading…") : t("Choose a student")}
               searchPlaceholder="Search by name or admission number"
             />
           </FormField>
           {activity?.safetyNotes && (
             <div className="rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-sm text-warning-strong">
-              <p className="font-medium">Safety</p>
+              <p className="font-medium">{t("Safety")}</p>
               <p>{activity.safetyNotes}</p>
             </div>
           )}
           {needsConsent && (
             <FormField error={missingConsent ? "Consent is required for this activity" : undefined}>
               <label className="flex items-start gap-2 text-sm">
-                <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} aria-label="Parental consent" className="mt-0.5" />
-                <span>I am the student's parent or guardian and I consent to their taking part in this activity.</span>
+                <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} aria-label={t("Parental consent")} className="mt-0.5" />
+                <span>{t("I am the student's parent or guardian and I consent to their taking part in this activity.")}</span>
               </label>
             </FormField>
           )}
-          <FormField label="Note" htmlFor="enroll-note" optional>
+          <FormField label={t("Note")} htmlFor="enroll-note" optional>
             <Textarea id="enroll-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
           </FormField>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isFamily ? "Send request" : "Enroll"}
+              {isFamily ? t("Send request") : t("Enroll")}
             </Button>
           </DialogFooter>
         </form>

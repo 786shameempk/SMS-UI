@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -15,6 +16,7 @@ import PolicyFormDialog from "./PolicyFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function PoliciesTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const { data: policies = [], isLoading } = useQuery({ queryKey: ["admin", "policies"], queryFn: listPolicies });
   const { data: roles = [] } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
@@ -29,7 +31,7 @@ export default function PoliciesTab() {
     mutationFn: createPolicy,
     onSuccess: () => {
       invalidate();
-      toast.success("Policy created");
+      toast.success(t("Policy created"));
       setFormOpen(false);
     },
   });
@@ -38,7 +40,7 @@ export default function PoliciesTab() {
     mutationFn: ({ id, values }: { id: string; values: PolicyFormValues }) => updatePolicy(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Policy updated");
+      toast.success(t("Policy updated"));
       setFormOpen(false);
       setEditingPolicy(null);
     },
@@ -48,7 +50,7 @@ export default function PoliciesTab() {
     mutationFn: (id: string) => deletePolicy(id),
     onSuccess: () => {
       invalidate();
-      toast.success(`${deleteTarget?.name} deleted`);
+      toast.success(t("{{name}} deleted", { name: deleteTarget?.name }));
       setDeleteTarget(null);
     },
   });
@@ -64,7 +66,7 @@ export default function PoliciesTab() {
     <div className="space-y-4">
       <DataTableToolbar>
         <p className="text-sm text-muted-foreground">
-          Policies apply attribute-based conditions on top of role permissions.
+          {t("Policies apply attribute-based conditions on top of role permissions.")}
         </p>
         <Button
           onClick={() => {
@@ -73,7 +75,7 @@ export default function PoliciesTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          Add policy
+          {t("Add policy")}
         </Button>
       </DataTableToolbar>
 
@@ -86,7 +88,7 @@ export default function PoliciesTab() {
               <div className="min-w-0 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-semibold text-foreground">{policy.name}</p>
-                  <Badge variant="neutral">{policy.module}</Badge>
+                  <Badge variant="neutral">{t(policy.module)}</Badge>
                 </div>
                 <p className="text-sm text-secondary-foreground">{policy.description}</p>
                 <code className="inline-block text-[11px] bg-muted border border-border rounded px-2 py-1 text-secondary-foreground">
@@ -104,7 +106,7 @@ export default function PoliciesTab() {
                 <Switch
                   checked={policy.enabled}
                   onCheckedChange={(v) => toggleMutation.mutate({ id: policy.id, enabled: v })}
-                  aria-label={`Enable ${policy.name}`}
+                  aria-label={t("Enable {{name}}", { name: policy.name })}
                 />
                 <RowActions>
                   <DropdownMenuItem
@@ -114,21 +116,21 @@ export default function PoliciesTab() {
                     }}
                   >
                     <Pencil className="w-3.5 h-3.5" />
-                    Edit policy
+                    {t("Edit policy")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setDeleteTarget(policy)}
                     variant="destructive"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    Delete policy
+                    {t("Delete policy")}
                   </DropdownMenuItem>
                 </RowActions>
               </div>
             </CardContent>
           </Card>
         ))}
-        {!isLoading && policies.length === 0 && <p className="text-sm text-muted-foreground">No policies defined yet.</p>}
+        {!isLoading && policies.length === 0 && <p className="text-sm text-muted-foreground">{t("No policies defined yet.")}</p>}
       </div>
 
       <PolicyFormDialog
@@ -149,9 +151,9 @@ export default function PoliciesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete policy"
-        description={`This will remove the "${deleteTarget?.name}" policy.`}
-        confirmLabel="Delete"
+        title={t("Delete policy")}
+        description={t("This will remove the \"{{name}}\" policy.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ClipboardCheck, Copy, Languages as LanguagesIcon, Loader2, Megaphone, Sparkles, Wand2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,8 +44,9 @@ const REWRITES: { action: Exclude<RewriteAction, "Translate">; label: string }[]
 const POSTING_ROLES = ["admin", "superAdmin", "principal"];
 
 function Field({ label, children, htmlFor }: { label: string; htmlFor: string; children: ReactNode }) {
+  const { t } = useTranslation("ai");
   return (
-    <FormField label={label} htmlFor={htmlFor}>
+    <FormField label={t(label)} htmlFor={htmlFor}>
       {children}
     </FormField>
   );
@@ -55,6 +57,7 @@ function Field({ label, children, htmlFor }: { label: string; htmlFor: string; c
  * version stays editable; rewrite and translate act on the version on screen. Nothing is sent without a person.
  */
 export default function NoticeDrafter() {
+  const { t } = useTranslation("ai");
   const role = useAuthStore((s) => s.user?.role);
   const { languages, can } = useAiCapabilities();
   const queryClient = useQueryClient();
@@ -88,7 +91,7 @@ export default function NoticeDrafter() {
   const post = useMutation({
     mutationFn: () => postAnnouncement({ title: draft!.title, body: draft![version], category: "announcement", audience: postAudience }),
     onSuccess: () => {
-      toast.success("Announcement posted");
+      toast.success(t("Announcement posted"));
       setPosting(null);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
@@ -107,7 +110,7 @@ export default function NoticeDrafter() {
         sourceFeature: "generate-notification",
       }),
     onSuccess: () => {
-      toast.success("Saved for review. Track it under Review & Publish.");
+      toast.success(t("Saved for review. Track it under Review & Publish."));
       setPosting(null);
       queryClient.invalidateQueries({ queryKey: CONTENT_KEY });
     },
@@ -123,7 +126,7 @@ export default function NoticeDrafter() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Copy is blocked here. Select the text and copy it instead.");
+      toast.error(t("Copy is blocked here. Select the text and copy it instead."));
     }
   };
 
@@ -131,9 +134,9 @@ export default function NoticeDrafter() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> Draft a notice or message with AI
+          <Sparkles className="h-4 w-4 text-primary" /> {t("Draft a notice or message with AI")}
         </CardTitle>
-        <CardDescription>Describe what you want to say. The AI writes it; you edit and decide what is sent.</CardDescription>
+        <CardDescription>{t("Describe what you want to say. The AI writes it; you edit and decide what is sent.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
@@ -145,7 +148,7 @@ export default function NoticeDrafter() {
               <SelectContent>
                 {KINDS.map((k) => (
                   <SelectItem key={k.value} value={k.value}>
-                    {k.label}
+                    {t(k.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -157,9 +160,9 @@ export default function NoticeDrafter() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Neutral">Neutral</SelectItem>
-                <SelectItem value="Friendly">Friendly</SelectItem>
-                <SelectItem value="Formal">Formal</SelectItem>
+                <SelectItem value="Neutral">{t("Neutral")}</SelectItem>
+                <SelectItem value="Friendly">{t("Friendly")}</SelectItem>
+                <SelectItem value="Formal">{t("Formal")}</SelectItem>
               </SelectContent>
             </Select>
           </Field>
@@ -171,29 +174,29 @@ export default function NoticeDrafter() {
               <SelectContent>
                 {languages.map((l) => (
                   <SelectItem key={l} value={l}>
-                    {l}
+                    {t(l)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Field>
         </div>
-        <FormField label="Audience" htmlFor="notice-audience" optional hint="e.g. Parents of Grade 8. Leave empty to use the type's usual audience.">
+        <FormField label={t("Audience")} htmlFor="notice-audience" optional hint={t("e.g. Parents of Grade 8. Leave empty to use the type's usual audience.")}>
           <Input id="notice-audience" value={audience} onChange={(e) => setAudience(e.target.value)} maxLength={100} />
         </FormField>
-        <FormField label="What should it say?" htmlFor="notice-instruction" hint="Include the dates, times and amounts you want in it. Anything missing becomes a [placeholder].">
-          <Textarea id="notice-instruction" rows={3} maxLength={1500} value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder={EXAMPLES[0]} />
+        <FormField label={t("What should it say?")} htmlFor="notice-instruction" hint={t("Include the dates, times and amounts you want in it. Anything missing becomes a [placeholder].")}>
+          <Textarea id="notice-instruction" rows={3} maxLength={1500} value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder={t(EXAMPLES[0])} />
         </FormField>
         <div className="flex flex-wrap gap-1.5">
           {EXAMPLES.map((e) => (
-            <Button key={e} type="button" size="sm" variant="ghost" onClick={() => setInstruction(e)}>
-              {e}
+            <Button key={e} type="button" size="sm" variant="ghost" onClick={() => setInstruction(t(e))}>
+              {t(e)}
             </Button>
           ))}
         </div>
         <Button onClick={() => generate.mutate()} disabled={!instruction.trim() || busy}>
           {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {draft ? "Draft again" : "Draft with AI"}
+          {draft ? t("Draft again") : t("Draft with AI")}
         </Button>
         {generate.isError && (
           <p role="alert" className="text-sm text-destructive">
@@ -202,70 +205,70 @@ export default function NoticeDrafter() {
         )}
 
         {draft && (
-          <div className="space-y-3 rounded-lg border border-border p-4" aria-label="AI draft">
+          <div className="space-y-3 rounded-lg border border-border p-4" aria-label={t("AI draft")}>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="info" dot>
-                <Sparkles className="mr-1 h-3 w-3" /> AI draft
+                <Sparkles className="me-1 h-3 w-3" /> {t("AI draft")}
               </Badge>
               <Badge variant="warning" dot>
-                Review before sending
+                {t("Review before sending")}
               </Badge>
             </div>
-            <FormField label="Title" htmlFor="notice-title">
+            <FormField label={t("Title")} htmlFor="notice-title">
               <Input id="notice-title" value={draft.title} maxLength={200} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
             </FormField>
             <Tabs value={version} onValueChange={(v) => setVersion(v as Version)}>
               <TabsList>
-                <TabsTrigger value="content">Full</TabsTrigger>
-                <TabsTrigger value="shortVersion">Short</TabsTrigger>
-                <TabsTrigger value="formalVersion">Formal</TabsTrigger>
+                <TabsTrigger value="content">{t("Full")}</TabsTrigger>
+                <TabsTrigger value="shortVersion">{t("Short")}</TabsTrigger>
+                <TabsTrigger value="formalVersion">{t("Formal")}</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Textarea aria-label="Notice text" rows={version === "shortVersion" ? 3 : 8} value={text} maxLength={4000} onChange={(e) => setDraft({ ...draft, [version]: e.target.value })} disabled={rewrite.isPending} />
+            <Textarea aria-label={t("Notice text")} rows={version === "shortVersion" ? 3 : 8} value={text} maxLength={4000} onChange={(e) => setDraft({ ...draft, [version]: e.target.value })} disabled={rewrite.isPending} />
             <div className="flex flex-wrap items-center gap-1.5">
               {REWRITES.map((r) => (
                 <Button key={r.action} type="button" size="sm" variant="outline" disabled={busy || !text.trim()} onClick={() => rewrite.mutate({ action: r.action })}>
-                  <Wand2 className="h-3.5 w-3.5" /> {r.label}
+                  <Wand2 className="h-3.5 w-3.5" /> {t(r.label)}
                 </Button>
               ))}
               {can("translate") && (
                 <span className="flex items-center gap-1.5">
                   <Select value={translateTo} onValueChange={setTranslateTo}>
-                    <SelectTrigger className="h-8 w-36" aria-label="Translate into">
-                      <SelectValue placeholder="Translate to…" />
+                    <SelectTrigger className="h-8 w-36" aria-label={t("Translate into")}>
+                      <SelectValue placeholder={t("Translate to…")} />
                     </SelectTrigger>
                     <SelectContent>
                       {languages.map((l) => (
                         <SelectItem key={l} value={l}>
-                          {l}
+                          {t(l)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <Button type="button" size="sm" variant="outline" disabled={busy || !translateTo || !text.trim()} onClick={() => rewrite.mutate({ action: "Translate", language: translateTo })}>
-                    <LanguagesIcon className="h-3.5 w-3.5" /> Translate
+                    <LanguagesIcon className="h-3.5 w-3.5" /> {t("Translate")}
                   </Button>
                 </span>
               )}
-              {rewrite.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Rewriting" />}
+              {rewrite.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label={t("Rewriting")} />}
             </div>
             <div className="flex flex-wrap gap-2 border-t border-border pt-3">
               <Button type="button" variant="outline" onClick={copy}>
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? "Copied" : "Copy"}
+                {copied ? t("Copied") : t("Copy")}
               </Button>
               {can("author-content") && (
                 <Button type="button" variant="outline" onClick={() => (isMessage ? submit.mutate() : setPosting("submit"))} disabled={busy || submit.isPending || !draft.title.trim() || !text.trim()}>
-                  {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />} Submit for approval
+                  {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />} {t("Submit for approval")}
                 </Button>
               )}
               {role && POSTING_ROLES.includes(role) && (
                 <Button type="button" onClick={() => setPosting("post")} disabled={busy || !draft.title.trim() || !text.trim()}>
-                  <Megaphone className="h-4 w-4" /> Post as announcement
+                  <Megaphone className="h-4 w-4" /> {t("Post as announcement")}
                 </Button>
               )}
             </div>
-            {text.includes("[") && <p className="text-xs text-warning-strong">Fill in the [placeholders] before sending.</p>}
+            {text.includes("[") && <p className="text-xs text-warning-strong">{t("Fill in the [placeholders] before sending.")}</p>}
           </div>
         )}
       </CardContent>
@@ -273,14 +276,14 @@ export default function NoticeDrafter() {
       <Dialog open={posting !== null} onOpenChange={(v) => !post.isPending && !submit.isPending && !v && setPosting(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{posting === "submit" ? "Submit for approval" : "Post announcement"}</DialogTitle>
+            <DialogTitle>{posting === "submit" ? t("Submit for approval") : t("Post announcement")}</DialogTitle>
             <DialogDescription>
               {posting === "submit"
-                ? "An administrator reviews and approves it before it is published to the audience you choose. Nothing is sent yet."
-                : "It appears in the notifications of everyone in the audience you choose, and as a push notification on their phones."}
+                ? t("An administrator reviews and approves it before it is published to the audience you choose. Nothing is sent yet.")
+                : t("It appears in the notifications of everyone in the audience you choose, and as a push notification on their phones.")}
             </DialogDescription>
           </DialogHeader>
-          <FormField label="Send to" htmlFor="post-audience">
+          <FormField label={t("Send to")} htmlFor="post-audience">
             <Select value={postAudience} onValueChange={(v) => setPostAudience(v as AnnouncementAudience)}>
               <SelectTrigger id="post-audience">
                 <SelectValue />
@@ -288,7 +291,7 @@ export default function NoticeDrafter() {
               <SelectContent>
                 {AUDIENCE_OPTIONS.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
-                    {o.label}
+                    {t(o.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -298,20 +301,20 @@ export default function NoticeDrafter() {
             <p className="font-medium">{draft?.title}</p>
             <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-muted-foreground">{text}</p>
           </div>
-          {text.includes("[") && <p className="text-sm text-destructive">This text still has [placeholders]. Fill them in first.</p>}
+          {text.includes("[") && <p className="text-sm text-destructive">{t("This text still has [placeholders]. Fill them in first.")}</p>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPosting(null)} disabled={post.isPending || submit.isPending}>
-              Cancel
+              {t("Cancel")}
             </Button>
             {posting === "submit" ? (
               <Button onClick={() => submit.mutate()} disabled={submit.isPending}>
                 {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
-                Submit
+                {t("Submit")}
               </Button>
             ) : (
               <Button onClick={() => post.mutate()} disabled={post.isPending || text.includes("[")}>
                 {post.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}
-                Post
+                {t("Post")}
               </Button>
             )}
           </DialogFooter>

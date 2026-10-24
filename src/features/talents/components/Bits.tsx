@@ -6,6 +6,7 @@ import { formatCount } from "../hooks";
 import type { TalentCategory, TalentCreator, TalentStatus, TalentVisibility } from "../types";
 import { Sparkle } from "./Decor";
 
+import { useTranslation } from "react-i18next";
 const AVATAR_GRADIENTS = [
   "from-brand-500 to-brand-400",
   "from-brand-500 to-amber-400",
@@ -86,6 +87,7 @@ const CREATOR_TYPE_PILL: Record<TalentCreator["type"], { label: string; light: s
 };
 
 export function CreatorTypePill({ type, onDark = false }: { type: TalentCreator["type"]; onDark?: boolean }) {
+  const { t } = useTranslation("talents");
   const config = CREATOR_TYPE_PILL[type] ?? CREATOR_TYPE_PILL.student;
   return (
     <span
@@ -94,22 +96,24 @@ export function CreatorTypePill({ type, onDark = false }: { type: TalentCreator[
         onDark ? config.dark : config.light,
       )}
     >
-      {config.label}
+      {t(config.label)}
     </span>
   );
 }
 
 export function StatusBadge({ status, className }: { status: TalentStatus; className?: string }) {
+  const { t } = useTranslation("talents");
   const config = STATUS_CONFIG[status];
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", config.className, className)}>
       <span className={cn("w-1.5 h-1.5 rounded-full", config.dot, status === "pending_approval" && "animate-pulse")} />
-      {config.label}
+      {t(config.label)}
     </span>
   );
 }
 
 export function VisibilityBadge({ visibility, onDark = false, className }: { visibility: TalentVisibility; onDark?: boolean; className?: string }) {
+  const { t } = useTranslation("talents");
   const Icon = visibility === "public" ? Globe2 : School;
   return (
     <span
@@ -121,12 +125,13 @@ export function VisibilityBadge({ visibility, onDark = false, className }: { vis
       title={VISIBILITY_CONFIG[visibility].description}
     >
       <Icon className="w-3 h-3" />
-      {VISIBILITY_CONFIG[visibility].label}
+      {t(VISIBILITY_CONFIG[visibility].label)}
     </span>
   );
 }
 
 export function CategoryChip({ category, active, onClick, count, size = "md" }: { category: TalentCategory; active?: boolean; onClick?: () => void; count?: number; size?: "sm" | "md" }) {
+  const { t } = useTranslation("talents");
   const config = CATEGORY_CONFIG[category];
   const Comp = onClick ? "button" : "span";
   return (
@@ -141,27 +146,29 @@ export function CategoryChip({ category, active, onClick, count, size = "md" }: 
       )}
     >
       <span aria-hidden="true">{config.emoji}</span>
-      {config.label}
+      {t(config.label)}
       {count !== undefined && <span className={cn("text-[11px] tabular-nums", active ? "text-white/80" : "opacity-60")}>{count}</span>}
     </Comp>
   );
 }
 
 export function ViewCount({ count, className }: { count: number; className?: string }) {
+  const { t } = useTranslation("talents");
   return (
-    <span className={cn("inline-flex items-center gap-1 tabular-nums", className)} title={`${count.toLocaleString()} views`}>
+    <span className={cn("inline-flex items-center gap-1 tabular-nums", className)} title={t("{{v1}} views", { v1: count.toLocaleString() })}>
       <Eye className="w-3.5 h-3.5" />
       {formatCount(count)}
-      <span className="sr-only">views</span>
+      <span className="sr-only">{t("views")}</span>
     </span>
   );
 }
 
 export function FeaturedRibbon({ className }: { className?: string }) {
+  const { t } = useTranslation("talents");
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-full cc-warm-bg px-2 py-0.5 text-[11px] font-semibold text-white shadow-md", className)}>
       <Star className="w-3 h-3 fill-current" />
-      Featured
+      {t("Featured")}
     </span>
   );
 }
@@ -184,8 +191,8 @@ export function SectionHeader({ emoji, title, subtitle, action }: { emoji?: stri
 export function EmptyState({ emoji = "✨", title, body, action }: { emoji?: string; title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
-      <Sparkle className="cc-sparkle absolute top-6 left-[20%] w-4 h-4 text-brand-400" />
-      <Sparkle className="cc-sparkle absolute bottom-8 right-[18%] w-3 h-3 text-brand-400 [animation-delay:1s]" />
+      <Sparkle className="cc-sparkle absolute top-6 start-[20%] w-4 h-4 text-brand-400" />
+      <Sparkle className="cc-sparkle absolute bottom-8 end-[18%] w-3 h-3 text-brand-400 [animation-delay:1s]" />
       <div className="text-4xl mb-3" aria-hidden="true">
         {emoji}
       </div>
@@ -199,7 +206,7 @@ export function EmptyState({ emoji = "✨", title, body, action }: { emoji?: str
 export function StatTile({ label, value, emoji, gradient }: { label: string; value: number | string; emoji: string; gradient: string }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4">
-      <div className={cn("absolute -right-6 -top-6 w-20 h-20 rounded-full bg-gradient-to-br opacity-20 blur-xl", gradient)} />
+      <div className={cn("absolute -end-6 -top-6 w-20 h-20 rounded-full bg-gradient-to-br opacity-20 blur-xl", gradient)} />
       <div className="text-xl" aria-hidden="true">
         {emoji}
       </div>

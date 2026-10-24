@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -29,6 +30,7 @@ export default function TransferStudentDialog({
   onSubmit: (values: TransferFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("students");
   const {
     register,
     handleSubmit,
@@ -47,33 +49,33 @@ export default function TransferStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Transfer student</DialogTitle>
+          <DialogTitle>{t("Transfer student")}</DialogTitle>
           <DialogDescription>
-            {student ? `Mark ${student.firstName} ${student.lastName} as transferred out of the school.` : ""}
+            {student ? t("Mark {{name}} as transferred out of the school.", { name: `${student.firstName} ${student.lastName}` }) : ""}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="toSchool" required>Destination school</Label>
+            <Label htmlFor="toSchool" required>{t("Destination school")}</Label>
             <Input id="toSchool" aria-invalid={errors.toSchool ? true : undefined} {...register("toSchool")} />
-            {errors.toSchool && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toSchool.message}</p>}
+            {errors.toSchool && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.toSchool.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="transferCertificateNumber" required>Transfer certificate number</Label>
+            <Label htmlFor="transferCertificateNumber" required>{t("Transfer certificate number")}</Label>
             <Input id="transferCertificateNumber" aria-invalid={errors.transferCertificateNumber ? true : undefined} {...register("transferCertificateNumber")} />
-            {errors.transferCertificateNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.transferCertificateNumber.message}</p>}
+            {errors.transferCertificateNumber && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.transferCertificateNumber.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="reason" required>Reason</Label>
+            <Label htmlFor="reason" required>{t("Reason")}</Label>
             <Textarea id="reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
-            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.reason.message ?? "")}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" variant="destructive" loading={submitting}>
-              Confirm transfer
+              {t("Confirm transfer")}
             </Button>
           </DialogFooter>
         </form>

@@ -5,8 +5,10 @@ import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import { cn } from "@/utils/cn";
 import type { TalentMedia } from "../types";
 
+import { useTranslation } from "react-i18next";
 /** Stage + thumbnail strip, with a full-screen lightbox (keyboard arrows, Esc, swipe). */
 export default function ImageGallery({ images, title }: { images: TalentMedia[]; title: string }) {
+  const { t } = useTranslation("talents");
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const current = images[index];
@@ -24,7 +26,7 @@ export default function ImageGallery({ images, title }: { images: TalentMedia[];
           <motion.img
             key={current.id}
             src={current.url}
-            alt={current.caption ?? `${title} - image ${index + 1}`}
+            alt={current.caption ?? t("{{title}} - image {{v1}}", { title, v1: index + 1 })}
             initial={{ opacity: 0, scale: 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -37,7 +39,7 @@ export default function ImageGallery({ images, title }: { images: TalentMedia[];
           <>
             <NavButton side="left" onClick={() => go(-1)} />
             <NavButton side="right" onClick={() => go(1)} />
-            <span className="absolute top-3 left-3 rounded-full bg-black/45 backdrop-blur-md px-2.5 py-0.5 text-xs text-white tabular-nums">
+            <span className="absolute top-3 start-3 rounded-full bg-black/45 backdrop-blur-md px-2.5 py-0.5 text-xs text-white tabular-nums">
               {index + 1} / {images.length}
             </span>
           </>
@@ -45,8 +47,8 @@ export default function ImageGallery({ images, title }: { images: TalentMedia[];
         <button
           type="button"
           onClick={() => setLightbox(true)}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/45 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
-          aria-label="View full screen"
+          className="absolute top-3 end-3 w-9 h-9 rounded-full bg-black/45 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+          aria-label={t("View full screen")}
         >
           <Expand className="w-4 h-4" />
         </button>
@@ -66,7 +68,7 @@ export default function ImageGallery({ images, title }: { images: TalentMedia[];
                 "relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden cursor-pointer transition-all",
                 i === index ? "ring-2 ring-brand-500 ring-offset-2 ring-offset-background" : "opacity-60 hover:opacity-100",
               )}
-              aria-label={`Show image ${i + 1}`}
+              aria-label={t("Show image {{v1}}", { v1: i + 1 })}
             >
               <img src={img.url} alt="" loading="lazy" className="w-full h-full object-cover" />
             </button>
@@ -80,6 +82,7 @@ export default function ImageGallery({ images, title }: { images: TalentMedia[];
 }
 
 function NavButton({ side, onClick }: { side: "left" | "right"; onClick: () => void }) {
+  const { t } = useTranslation("talents");
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
   return (
     <button
@@ -87,9 +90,9 @@ function NavButton({ side, onClick }: { side: "left" | "right"; onClick: () => v
       onClick={onClick}
       className={cn(
         "absolute top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/35 backdrop-blur-md border border-white/30 text-white flex items-center justify-center cursor-pointer transition-colors",
-        side === "left" ? "left-3" : "right-3",
+        side === "left" ? "start-3" : "end-3",
       )}
-      aria-label={side === "left" ? "Previous image" : "Next image"}
+      aria-label={side === "left" ? t("Previous image") : t("Next image")}
     >
       <Icon className="w-5 h-5" />
     </button>
@@ -97,6 +100,7 @@ function NavButton({ side, onClick }: { side: "left" | "right"; onClick: () => v
 }
 
 function Lightbox({ images, index, onIndex, onClose, title }: { images: TalentMedia[]; index: number; onIndex: (i: number) => void; onClose: () => void; title: string }) {
+  const { t } = useTranslation("talents");
   const touchStart = useRef<number | null>(null);
   const go = useCallback((delta: number) => onIndex((index + delta + images.length) % images.length), [index, images.length, onIndex]);
 
@@ -130,7 +134,7 @@ function Lightbox({ images, index, onIndex, onClose, title }: { images: TalentMe
       animate={{ opacity: 1 }}
       role="dialog"
       aria-modal="true"
-      aria-label={`${title} gallery`}
+      aria-label={t("{{title}} gallery", { title })}
       onTouchStart={(e) => (touchStart.current = e.touches[0]!.clientX)}
       onTouchEnd={(e) => {
         if (touchStart.current === null) return;
@@ -144,7 +148,7 @@ function Lightbox({ images, index, onIndex, onClose, title }: { images: TalentMe
           {index + 1} / {images.length}
         </span>
         <p className="text-sm font-medium truncate px-4">{title}</p>
-        <button type="button" onClick={onClose} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label="Close">
+        <button type="button" onClick={onClose} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer" aria-label={t("Close")}>
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -177,7 +181,7 @@ function Lightbox({ images, index, onIndex, onClose, title }: { images: TalentMe
             type="button"
             onClick={() => onIndex(i)}
             className={cn("shrink-0 w-12 h-12 rounded-lg overflow-hidden cursor-pointer", i === index ? "ring-2 ring-white" : "opacity-50 hover:opacity-90")}
-            aria-label={`Show image ${i + 1}`}
+            aria-label={t("Show image {{v1}}", { v1: i + 1 })}
           >
             <img src={img.url} alt="" className="w-full h-full object-cover" />
           </button>

@@ -19,6 +19,7 @@ import { createOnlineExam, getAuthoringOptions, getOnlineExam, listAssignableStu
 import { EXAM_TYPE_LABEL, EXAM_TYPES, formatMarks, isExamStaff } from "../constants";
 import { COMMON_TIME_ZONES } from "../timeZone";
 import type { ExamSettings, OnlineExamType } from "../types";
+import type { ProctoringMode } from "../proctoring/types";
 import AssignStep, { assignedStudents } from "../components/wizard/AssignStep";
 import QuestionsStep from "../components/wizard/QuestionsStep";
 import ReviewStep from "../components/wizard/ReviewStep";
@@ -49,7 +50,7 @@ function Stepper({ step, maxVisited, onGo }: { step: number; maxVisited: number;
                 disabled={!reachable}
                 aria-current={i === step ? "step" : undefined}
                 className={cn(
-                  "flex items-center gap-2 rounded-full py-1 pl-1 pr-1 text-sm transition-colors sm:pr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "flex items-center gap-2 rounded-full py-1 ps-1 pe-1 text-sm transition-colors sm:pe-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   reachable ? "cursor-pointer" : "cursor-not-allowed opacity-60",
                   i === step ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
@@ -407,6 +408,51 @@ export default function ExamWizardPage() {
               <FormField label="Negative marking" htmlFor="ex-neg" optional error={errors.negativeMarkPerWrong} hint="Marks deducted per wrong objective answer. 0 turns it off.">
                 <Input id="ex-neg" type="number" min={0} step={0.25} className="max-w-[10rem]" value={Number.isFinite(state.settings.negativeMarkPerWrong) ? state.settings.negativeMarkPerWrong : ""} onChange={(e) => setSetting("negativeMarkPerWrong", e.target.value === "" ? NaN : Number(e.target.value))} />
               </FormField>
+              <FormField label="Question pool" htmlFor="ex-pool" optional error={errors.questionsPerAttempt} hint="Each student gets this many questions drawn at random from the exam's questions. 0 gives everyone all questions. Questions in a pool must carry equal marks.">
+                <Input id="ex-pool" type="number" min={0} step={1} className="max-w-[10rem]" value={Number.isFinite(state.settings.questionsPerAttempt) ? state.settings.questionsPerAttempt : ""} onChange={(e) => setSetting("questionsPerAttempt", e.target.value === "" ? 0 : Number(e.target.value))} />
+              </FormField>
+
+              <div className="space-y-3 rounded-xl border border-border/80 p-4">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Proctoring</p>
+                  <p className="text-xs text-muted-foreground">
+                    Students see exactly what is recorded and must agree before they start. Browsers cannot stop cheating; events only flag attempts for you to review.
+                  </p>
+                </div>
+                <FormField label="Mode" htmlFor="ex-proc">
+                  <Select value={state.settings.proctoring} onValueChange={(v) => setSetting("proctoring", v as ProctoringMode)}>
+                    <SelectTrigger id="ex-proc" className="max-w-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Off">Off</SelectItem>
+                      <SelectItem value="Basic">Browser events (tab switches, fullscreen, copy/paste, idle)</SelectItem>
+                      <SelectItem value="Webcam">Browser events and camera</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                {state.settings.proctoring !== "Off" && (
+                  <>
+                    <Toggle label="Require fullscreen" hint="The exam asks for fullscreen; every exit is recorded." checked={state.settings.requireFullscreen} onChange={(v) => setSetting("requireFullscreen", v)} />
+                    <FormRow cols={3}>
+                      <FormField label="Flag for review after" htmlFor="ex-warn" error={errors.warningThreshold} hint="Incidents (tab switches, fullscreen exits, camera off).">
+                        <Input id="ex-warn" type="number" min={1} max={50} value={state.settings.warningThreshold} onChange={(e) => setSetting("warningThreshold", Number(e.target.value))} />
+                      </FormField>
+                      <FormField label="Auto-submit after" htmlFor="ex-auto" error={errors.autoSubmitAfterIncidents} hint="Incidents. 0 never submits automatically.">
+                        <Input id="ex-auto" type="number" min={0} max={50} value={state.settings.autoSubmitAfterIncidents} onChange={(e) => setSetting("autoSubmitAfterIncidents", Number(e.target.value))} />
+                      </FormField>
+                      <FormField label="Keep evidence for (days)" htmlFor="ex-ret" error={errors.evidenceRetentionDays} hint="After the exam closes, then deleted.">
+                        <Input id="ex-ret" type="number" min={7} max={365} value={state.settings.evidenceRetentionDays} onChange={(e) => setSetting("evidenceRetentionDays", Number(e.target.value))} />
+                      </FormField>
+                    </FormRow>
+                    {state.settings.proctoring === "Webcam" && (
+                      <FormField label="Camera photo every (seconds)" htmlFor="ex-snap" error={errors.snapshotIntervalSeconds} hint="0 keeps no photos; the camera only has to stay on.">
+                        <Input id="ex-snap" type="number" min={0} max={900} className="max-w-[10rem]" value={state.settings.snapshotIntervalSeconds} onChange={(e) => setSetting("snapshotIntervalSeconds", Number(e.target.value))} />
+                      </FormField>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           )}
 

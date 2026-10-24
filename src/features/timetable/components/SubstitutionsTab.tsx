@@ -15,7 +15,9 @@ import type { TimetableSubstitution } from "../types";
 import SubstitutionFormDialog from "./SubstitutionFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
+import { useTranslation } from "react-i18next";
 export default function SubstitutionsTab() {
+  const { t: tr } = useTranslation("timetable");
   const queryClient = useQueryClient();
   const { data: substitutions = [], isLoading, isError, refetch } = useQuery({ queryKey: ["timetable", "substitutions"], queryFn: listSubstitutions });
   const { data: sections = [] } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
@@ -32,7 +34,7 @@ export default function SubstitutionsTab() {
     mutationFn: createSubstitution,
     onSuccess: () => {
       invalidate();
-      toast.success("Substitute assigned");
+      toast.success(tr("Substitute assigned"));
       setFormOpen(false);
     },
     onError: (err: Error) => toast.error(err.message),
@@ -42,7 +44,7 @@ export default function SubstitutionsTab() {
     mutationFn: deleteSubstitution,
     onSuccess: () => {
       invalidate();
-      toast.success("Substitution removed");
+      toast.success(tr("Substitution removed"));
       setDeleteTarget(null);
     },
   });
@@ -54,27 +56,25 @@ export default function SubstitutionsTab() {
   const sectionLabel = (id: string) => sections.find((s) => s.id === id)?.name ?? id;
 
   const columns: ColumnDef<TimetableSubstitution, unknown>[] = [
-    { accessorKey: "date", header: "Date", cell: ({ row }) => <span className="text-sm text-foreground">{row.original.date}</span> },
+    { accessorKey: "date", header: tr("Date"), cell: ({ row }) => <span className="text-sm text-foreground">{row.original.date}</span> },
     {
       id: "day-period",
-      header: "Day / period",
+      header: tr("Day / period"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
-          {DAY_DEFINITIONS.find((d) => d.value === row.original.dayOfWeek)?.label} &middot; Period {row.original.periodNumber}
+          {tr(DAY_DEFINITIONS.find((d) => d.value === row.original.dayOfWeek)?.label ?? "")} {tr("· Period")} {row.original.periodNumber}
         </span>
       ),
     },
-    { id: "section", header: "Section", cell: ({ row }) => <span className="text-sm text-foreground">{sectionLabel(row.original.sectionId)}</span> },
+    { id: "section", header: tr("Section"), cell: ({ row }) => <span className="text-sm text-foreground">{sectionLabel(row.original.sectionId)}</span> },
     {
       id: "teachers",
-      header: "Covering",
+      header: tr("Covering"),
       cell: ({ row }) => (
-        <span className="text-sm text-secondary-foreground">
-          {teacherName(row.original.originalStaffId)} &rarr; {teacherName(row.original.substituteStaffId)}
-        </span>
+        <span className="text-sm text-secondary-foreground">{tr("{{v1}} → {{v2}}", { v1: teacherName(row.original.originalStaffId), v2: teacherName(row.original.substituteStaffId) })}</span>
       ),
     },
-    { accessorKey: "reason", header: "Reason", cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.reason ?? "—"}</span> },
+    { accessorKey: "reason", header: tr("Reason"), cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.reason ?? "—"}</span> },
     {
       id: "actions",
       header: "",
@@ -82,7 +82,7 @@ export default function SubstitutionsTab() {
         <RowActions>
           <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} variant="destructive">
             <Trash2 className="w-3.5 h-3.5" />
-            Remove
+            {tr("Remove")}
           </DropdownMenuItem>
         </RowActions>
       ),
@@ -97,11 +97,11 @@ export default function SubstitutionsTab() {
         <div />
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          Assign substitute
+          {tr("Assign substitute")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No substitutions recorded yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={tr("No substitutions recorded yet.")} />
 
       <SubstitutionFormDialog
         open={formOpen}
@@ -119,9 +119,9 @@ export default function SubstitutionsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove substitution"
-        description="This removes the one-off substitute assignment. The recurring timetable is unaffected."
-        confirmLabel="Remove"
+        title={tr("Remove substitution")}
+        description={tr("This removes the one-off substitute assignment. The recurring timetable is unaffected.")}
+        confirmLabel={tr("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

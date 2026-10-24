@@ -1,4 +1,4 @@
-import type { DiscountType, FeeFrequency, FeeInvoiceStatus, FeeType, PaymentMode, RefundStatus } from "./types";
+import type { DiscountType, FeeFrequency, FeeInvoiceStatus, FeeType, GatewayRefundStatus, PaymentMode, RefundStatus } from "./types";
 
 export const FEE_TYPE_OPTIONS: Array<{ value: FeeType; label: string }> = [
   { value: "tuition", label: "Tuition" },
@@ -35,6 +35,13 @@ export const INVOICE_STATUS_CONFIG: Record<FeeInvoiceStatus, { label: string; va
   due: { label: "Due", variant: "warning" },
   overdue: { label: "Overdue", variant: "danger" },
   partial: { label: "Partial", variant: "info" },
+};
+
+export const GATEWAY_REFUND_STATUS_CONFIG: Record<GatewayRefundStatus, { label: string; variant: BadgeVariant } | null> = {
+  not_sent: null,
+  initiated: { label: "With the gateway", variant: "info" },
+  succeeded: { label: "Refunded to payer", variant: "success" },
+  failed: { label: "Gateway refused", variant: "danger" },
 };
 
 export const REFUND_STATUS_CONFIG: Record<RefundStatus, { label: string; variant: BadgeVariant }> = {

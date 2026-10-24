@@ -2,6 +2,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { useTranslation } from "react-i18next";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -42,7 +43,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-y-0 right-0 z-50 flex h-dvh w-full max-w-lg flex-col border-l border-border bg-card shadow-lg outline-none sm:rounded-l-xl",
+        "fixed inset-y-0 end-0 z-50 flex h-dvh w-full max-w-lg flex-col border-s border-border bg-card shadow-lg outline-none sm:rounded-s-xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
         "data-[state=open]:duration-300 data-[state=closed]:duration-200 ease-out",
         className
@@ -58,20 +59,25 @@ const DialogContent = React.forwardRef<
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-6 flex flex-col gap-4 [&>form]:flex [&>form]:flex-1 [&>form]:flex-col [--thead-position:static]">
         {children}
       </div>
-      <DialogPrimitive.Close className="absolute right-3 top-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none cursor-pointer">
+      <DialogPrimitive.Close className="absolute end-3 top-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none cursor-pointer">
         <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
+        <span className="sr-only"><CloseLabel /></span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
+function CloseLabel() {
+  const { t } = useTranslation("common");
+  return t("Close");
+}
+
 /** Pinned to the top of the panel's scroll area, full-bleed under the close button. */
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "sticky top-0 z-10 -mx-6 flex flex-col gap-1 border-b border-border bg-card px-6 pt-5 pb-4 pr-14 text-left",
+      "sticky top-0 z-10 -mx-6 flex flex-col gap-1 border-b border-border bg-card px-6 pt-5 pb-4 pe-14 text-start",
       className,
     )}
     {...props}

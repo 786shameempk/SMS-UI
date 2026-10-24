@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,6 +12,7 @@ import { deleteStaffDocument, uploadStaffDocument } from "../../api";
 import type { StaffDocument, StaffMember } from "../../types";
 
 export default function StaffDocumentsTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState<StaffDocument["category"]>("other");
@@ -26,7 +28,7 @@ export default function StaffDocumentsTab({ staff }: { staff: StaffMember }) {
       uploadStaffDocument(staff.id, doc),
     onSuccess: () => {
       invalidate();
-      toast.success("Document uploaded");
+      toast.success(t("Document uploaded"));
     },
   });
 
@@ -34,7 +36,7 @@ export default function StaffDocumentsTab({ staff }: { staff: StaffMember }) {
     mutationFn: (documentId: string) => deleteStaffDocument(staff.id, documentId),
     onSuccess: () => {
       invalidate();
-      toast.success("Document removed");
+      toast.success(t("Document removed"));
       setDeleteTarget(null);
     },
   });
@@ -52,13 +54,16 @@ export default function StaffDocumentsTab({ staff }: { staff: StaffMember }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const categoryLabel = (value: StaffDocument["category"]) => DOCUMENT_CATEGORIES.find((c) => c.value === value)?.label ?? value;
+  const categoryLabel = (value: StaffDocument["category"]) => {
+    const label = DOCUMENT_CATEGORIES.find((c) => c.value === value)?.label;
+    return label ? t(label) : value;
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Documents</CardTitle>
-        <CardDescription>ID proof, resume, certificates, and contract on file.</CardDescription>
+        <CardTitle>{t("Documents")}</CardTitle>
+        <CardDescription>{t("ID proof, resume, certificates, and contract on file.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2">
@@ -69,20 +74,20 @@ export default function StaffDocumentsTab({ staff }: { staff: StaffMember }) {
             <SelectContent>
               {DOCUMENT_CATEGORIES.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
-                  {c.label}
+                  {t(c.label)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Button onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
             {uploadMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            Upload document
+            {t("Upload document")}
           </Button>
           <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
         </div>
 
         <div className="space-y-2">
-          {staff.documents.length === 0 && <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>}
+          {staff.documents.length === 0 && <p className="text-sm text-muted-foreground">{t("No documents uploaded yet.")}</p>}
           {staff.documents.map((doc) => (
             <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -113,9 +118,9 @@ export default function StaffDocumentsTab({ staff }: { staff: StaffMember }) {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete document"
-        description={`Remove "${deleteTarget?.name}" from this staff member's record?`}
-        confirmLabel="Delete"
+        title={t("Delete document")}
+        description={t("Remove \"{{name}}\" from this staff member's record?", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

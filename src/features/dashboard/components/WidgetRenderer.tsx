@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import type { DashboardContext } from "../sources/types";
 import { HEIGHT_PX } from "../layout";
 import { WIDGET_REGISTRY, type WidgetEnv } from "../registry";
@@ -15,11 +16,12 @@ interface Props {
 }
 
 function LoaderWidget({ config, item, ctx, env }: Props) {
+  const { t } = useTranslation("dashboard");
   const entry = WIDGET_REGISTRY[config.id];
   if (entry.kind !== "loader") throw new Error(`${config.id} is not a data widget`);
   const query = useDashboardWidget(env.source, entry.key, { enabled: true, ctx, dateRange: env.dateRange, refreshSeconds: config.refreshInterval });
   return (
-    <WidgetShell query={query} title={config.name} height={HEIGHT_PX[item.h]} skeleton={entry.skeleton}>
+    <WidgetShell query={query} title={t(config.name)} height={HEIGHT_PX[item.h]} skeleton={entry.skeleton}>
       {(data) => entry.render(data, env)}
     </WidgetShell>
   );
@@ -30,7 +32,8 @@ function LoaderWidget({ config, item, ctx, env }: Props) {
  * own query (hidden widgets are never rendered, so never fetched), and its code loads lazily behind a skeleton.
  */
 export default function WidgetRenderer(props: Props) {
+  const { t } = useTranslation("dashboard");
   const entry = WIDGET_REGISTRY[props.config.id];
-  const fallback = (entry.kind === "loader" && entry.skeleton) || <WidgetSkeleton title={props.config.name} height={HEIGHT_PX[props.item.h]} />;
+  const fallback = (entry.kind === "loader" && entry.skeleton) || <WidgetSkeleton title={t(props.config.name)} height={HEIGHT_PX[props.item.h]} />;
   return <Suspense fallback={fallback}>{entry.kind === "loader" ? <LoaderWidget {...props} /> : entry.render(props.env)}</Suspense>;
 }

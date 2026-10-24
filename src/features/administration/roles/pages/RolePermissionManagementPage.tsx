@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RolesTab from "../components/RolesTab";
 import PermissionMatrixTab from "../components/PermissionMatrixTab";
@@ -9,22 +10,23 @@ import SubMenusTab from "../components/SubMenusTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function RolePermissionManagementPage() {
+  const { t } = useTranslation("administration");
   return (
     <PageContainer>
       <PageHeader
-        title="Roles &amp; permissions"
-        description="Manage roles, fine-grained permissions, attribute-based policies, and feature availability."
+        title={t("Roles & permissions")}
+        description={t("Manage roles, fine-grained permissions, attribute-based policies, and feature availability.")}
       />
 
       <Tabs defaultValue="roles">
         <TabsList variant="line">
-          <TabsTrigger value="roles">Roles</TabsTrigger>
-          <TabsTrigger value="matrix">Permission matrix</TabsTrigger>
-          <TabsTrigger value="policies">Policies</TabsTrigger>
-          <TabsTrigger value="staff">Staff actions</TabsTrigger>
-          <TabsTrigger value="submenus">Sub-menus</TabsTrigger>
-          <TabsTrigger value="ai">AI permissions</TabsTrigger>
-          <TabsTrigger value="features">Feature toggles</TabsTrigger>
+          <TabsTrigger value="roles">{t("Roles")}</TabsTrigger>
+          <TabsTrigger value="matrix">{t("Permission matrix")}</TabsTrigger>
+          <TabsTrigger value="policies">{t("Policies")}</TabsTrigger>
+          <TabsTrigger value="staff">{t("Staff actions")}</TabsTrigger>
+          <TabsTrigger value="submenus">{t("Sub-menus")}</TabsTrigger>
+          <TabsTrigger value="ai">{t("AI permissions")}</TabsTrigger>
+          <TabsTrigger value="features">{t("Feature toggles")}</TabsTrigger>
         </TabsList>
         <TabsContent value="roles">
           <RolesTab />

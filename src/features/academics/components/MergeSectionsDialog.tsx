@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import type { SchoolClass, Section } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function MergeSectionsDialog({
   open,
   onOpenChange,
@@ -22,6 +23,7 @@ export default function MergeSectionsDialog({
   onMerge: (primarySectionId: string, secondarySectionId: string) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("academics");
   const [classId, setClassId] = useState("");
   const [primarySectionId, setPrimarySectionId] = useState("");
   const [secondarySectionId, setSecondarySectionId] = useState("");
@@ -49,16 +51,16 @@ export default function MergeSectionsDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Merge className="w-4 h-4 text-muted-foreground" />
-            Merge sections
+            {t("Merge sections")}
           </DialogTitle>
           <DialogDescription>
-            Combine two sections of the same class into one. Student records are not migrated automatically in this preview.
+            {t("Combine two sections of the same class into one. Student records are not migrated automatically in this preview.")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="mergeClass">Class</Label>
+            <Label htmlFor="mergeClass">{t("Class")}</Label>
             <Select
               value={classId}
               onValueChange={(value) => {
@@ -68,7 +70,7 @@ export default function MergeSectionsDialog({
               }}
             >
               <SelectTrigger id="mergeClass">
-                <SelectValue placeholder="Select a class" />
+                <SelectValue placeholder={t("Select a class")} />
               </SelectTrigger>
               <SelectContent>
                 {classes.map((c) => (
@@ -82,10 +84,10 @@ export default function MergeSectionsDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="primarySection">Keep section</Label>
+              <Label htmlFor="primarySection">{t("Keep section")}</Label>
               <Select value={primarySectionId} onValueChange={setPrimarySectionId} disabled={!classId}>
                 <SelectTrigger id="primarySection">
-                  <SelectValue placeholder="Select a section" />
+                  <SelectValue placeholder={t("Select a section")} />
                 </SelectTrigger>
                 <SelectContent>
                   {sectionsInClass.map((s) => (
@@ -97,10 +99,10 @@ export default function MergeSectionsDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="secondarySection">Merge into it</Label>
+              <Label htmlFor="secondarySection">{t("Merge into it")}</Label>
               <Select value={secondarySectionId} onValueChange={setSecondarySectionId} disabled={!classId}>
                 <SelectTrigger id="secondarySection">
-                  <SelectValue placeholder="Select a section" />
+                  <SelectValue placeholder={t("Select a section")} />
                 </SelectTrigger>
                 <SelectContent>
                   {sectionsInClass.map((s) => (
@@ -114,19 +116,16 @@ export default function MergeSectionsDialog({
           </div>
 
           {canMerge && primarySection && secondarySection && (
-            <p className="text-sm text-secondary-foreground">
-              {secondarySection.name} will be merged into {primarySection.name}, combining {secondarySection.currentStrength} student(s)
-              and {secondarySection.capacity} seats.
-            </p>
+            <p className="text-sm text-secondary-foreground">{t("{{name}} will be merged into {{name1}}, combining {{currentStrength}} student(s) and {{capacity}} seats.", { name: secondarySection.name, name1: primarySection.name, currentStrength: secondarySection.currentStrength, capacity: secondarySection.capacity })}</p>
           )}
         </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="button" disabled={!canMerge} onClick={() => setConfirmOpen(true)}>
-            Merge sections
+            {t("Merge sections")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -134,13 +133,13 @@ export default function MergeSectionsDialog({
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Confirm section merge"
+        title={t("Confirm section merge")}
         description={
           primarySection && secondarySection
-            ? `Merge ${secondarySection.name} into ${primarySection.name} for ${className}? This action cannot be undone.`
+            ? t("Merge {{name}} into {{name1}} for {{className}}? This action cannot be undone.", { name: secondarySection.name, name1: primarySection.name, className })
             : ""
         }
-        confirmLabel="Merge"
+        confirmLabel={t("Merge")}
         confirmVariant="destructive"
         submitting={submitting}
         onConfirm={async () => {

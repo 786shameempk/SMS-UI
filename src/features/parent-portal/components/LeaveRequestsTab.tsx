@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createLeaveRequest, listLeaveRequests } from "../api";
 import type { LeaveRequestFormValues, LeaveRequestStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 const STATUS_CONFIG: Record<LeaveRequestStatus, { label: string; variant: "success" | "warning" | "danger" }> = {
   pending: { label: "Pending", variant: "warning" },
   approved: { label: "Approved", variant: "success" },
@@ -30,6 +31,7 @@ const leaveFormSchema = z
   .refine((v) => new Date(v.toDate) >= new Date(v.fromDate), { message: "End date must be after start date", path: ["toDate"] });
 
 export default function LeaveRequestsTab({ studentId }: { studentId: string }) {
+  const { t } = useTranslation("parent-portal");
   const queryClient = useQueryClient();
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["parent-portal", "leave", studentId],
@@ -51,7 +53,7 @@ export default function LeaveRequestsTab({ studentId }: { studentId: string }) {
     mutationFn: (values: LeaveRequestFormValues) => createLeaveRequest(studentId, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parent-portal", "leave", studentId] });
-      toast.success("Leave request submitted");
+      toast.success(t("Leave request submitted"));
       setFormOpen(false);
       reset();
     },
@@ -61,17 +63,17 @@ export default function LeaveRequestsTab({ studentId }: { studentId: string }) {
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <div>
-          <CardTitle>Leave requests</CardTitle>
-          <CardDescription>Request and track leave on behalf of your child.</CardDescription>
+          <CardTitle>{t("Leave requests")}</CardTitle>
+          <CardDescription>{t("Request and track leave on behalf of your child.")}</CardDescription>
         </div>
         <Button size="sm" onClick={() => setFormOpen(true)}>
           <Plus className="w-3.5 h-3.5" />
-          New request
+          {t("New request")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading requests…</p>}
-        {!isLoading && requests.length === 0 && <p className="text-sm text-muted-foreground">No leave requests yet.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading requests…")}</p>}
+        {!isLoading && requests.length === 0 && <p className="text-sm text-muted-foreground">{t("No leave requests yet.")}</p>}
         {requests.map((req) => {
           const config = STATUS_CONFIG[req.status];
           return (
@@ -83,7 +85,7 @@ export default function LeaveRequestsTab({ studentId }: { studentId: string }) {
                 <p className="text-xs text-muted-foreground truncate">{req.reason}</p>
               </div>
               <Badge variant={config.variant} className="shrink-0">
-                {config.label}
+                {t(config.label)}
               </Badge>
             </div>
           );
@@ -93,33 +95,33 @@ export default function LeaveRequestsTab({ studentId }: { studentId: string }) {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New leave request</DialogTitle>
-            <DialogDescription>Let the school know your child will be away.</DialogDescription>
+            <DialogTitle>{t("New leave request")}</DialogTitle>
+            <DialogDescription>{t("Let the school know your child will be away.")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit((values) => createMutation.mutate(values))} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="fromDate">From</Label>
+                <Label htmlFor="fromDate">{t("From")}</Label>
                 <Input id="fromDate" type="date" aria-invalid={errors.fromDate ? true : undefined} {...register("fromDate")} />
                 {errors.fromDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.fromDate.message}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="toDate">To</Label>
+                <Label htmlFor="toDate">{t("To")}</Label>
                 <Input id="toDate" type="date" aria-invalid={errors.toDate ? true : undefined} {...register("toDate")} />
                 {errors.toDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.toDate.message}</p>}
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="reason">Reason</Label>
+              <Label htmlFor="reason">{t("Reason")}</Label>
               <Textarea id="reason" rows={3} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
               {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button type="submit" loading={createMutation.isPending}>
-                Submit request
+                {t("Submit request")}
               </Button>
             </DialogFooter>
           </form>

@@ -66,8 +66,8 @@ export default function SubscriptionsPage() {
                   <TableHead>Plan</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ends</TableHead>
-                  <TableHead className="text-right">Renews at</TableHead>
-                  <TableHead className="text-right">Overdue</TableHead>
+                  <TableHead className="text-end">Renews at</TableHead>
+                  <TableHead className="text-end">Overdue</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -80,8 +80,8 @@ export default function SubscriptionsPage() {
                     <TableCell>{s.planName} v{s.planVersion}</TableCell>
                     <TableCell><StatusBadge status={s.status} /></TableCell>
                     <TableCell>{day(s.endDate)}<p className={`text-xs ${s.daysLeft < 0 ? "text-destructive-strong" : "text-muted-foreground"}`}>{s.daysLeft < 0 ? `${-s.daysLeft} days ago` : `${s.daysLeft} days left`}</p></TableCell>
-                    <TableCell className="text-right tabular-nums">{money(s.renewalAmount, s.currency)}{s.autoRenew ? <p className="text-xs text-muted-foreground">auto-renews</p> : null}</TableCell>
-                    <TableCell className="text-right tabular-nums">{s.overdueAmount > 0 ? <span className="text-destructive-strong">{money(s.overdueAmount, s.currency)}</span> : "—"}</TableCell>
+                    <TableCell className="text-end tabular-nums">{money(s.renewalAmount, s.currency)}{s.autoRenew ? <p className="text-xs text-muted-foreground">auto-renews</p> : null}</TableCell>
+                    <TableCell className="text-end tabular-nums">{s.overdueAmount > 0 ? <span className="text-destructive-strong">{money(s.overdueAmount, s.currency)}</span> : "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

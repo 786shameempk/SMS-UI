@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BarChart3, Loader2, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,6 +17,7 @@ function gradeVariant(grade: string): "success" | "info" | "warning" | "danger" 
 }
 
 export default function StudentPerformanceTab({ staff }: { staff: StaffMember }) {
+  const { t } = useTranslation("teachers");
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["teachers", "performance", staff.id],
     queryFn: () => getTeacherPerformanceOverview(staff.id),
@@ -30,7 +32,7 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
     return (
       <div className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="w-4 h-4 animate-spin" />
-        Loading student performance…
+        {t("Loading student performance…")}
       </div>
     );
   }
@@ -39,7 +41,7 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
     return (
       <Card>
         <CardContent className="p-6 text-sm text-muted-foreground">
-          No subject or class assignments yet, so there is no student performance to show. Assign subjects first.
+          {t("No subject or class assignments yet, so there is no student performance to show. Assign subjects first.")}
         </CardContent>
       </Card>
     );
@@ -51,10 +53,10 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-muted-foreground" />
-            Class average by subject
+            {t("Class average by subject")}
           </CardTitle>
           <CardDescription>
-            Placeholder scores until the Examinations module ships — for illustration only.
+            {t("Placeholder scores until the Examinations module ships — for illustration only.")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -66,7 +68,7 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
                 <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} width={36} domain={[0, 100]} />
                 <Tooltip
                   contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 12 }}
-                  formatter={(value) => [`${value}`, "Class average"]}
+                  formatter={(value) => [`${value}`, t("Class average")]}
                 />
                 <Bar dataKey="classAverage" fill="var(--color-brand-500)" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -82,19 +84,19 @@ export default function StudentPerformanceTab({ staff }: { staff: StaffMember })
               <Users className="w-4 h-4 text-muted-foreground" />
               {row.subject.name} &middot; {row.schoolClass.name}
             </CardTitle>
-            <Badge variant="info">Class average {row.classAverage}</Badge>
+            <Badge variant="info">{t("Class average {{value}}", { value: row.classAverage })}</Badge>
           </CardHeader>
           <CardContent>
             {row.students.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No students found for this class.</p>
+              <p className="text-sm text-muted-foreground">{t("No students found for this class.")}</p>
             ) : (
               <Table containerClassName="rounded-lg border border-border">
                 <TableHeader>
                   <TableRow hover={false}>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Roll no.</TableHead>
-                    <TableHead>Avg. score</TableHead>
-                    <TableHead>Grade</TableHead>
+                    <TableHead>{t("Student")}</TableHead>
+                    <TableHead>{t("Roll no.")}</TableHead>
+                    <TableHead>{t("Avg. score")}</TableHead>
+                    <TableHead>{t("Grade")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

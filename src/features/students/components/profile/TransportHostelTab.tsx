@@ -2,6 +2,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bus, Home } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ function MasterSelect({ id, value, onChange, options, placeholder, disabled }: {
 }
 
 export default function TransportHostelTab({ student }: { student: Student }) {
+  const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["students"] });
@@ -73,7 +75,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
     mutationFn: (values: TransportDetails) => updateTransport(student.id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Transport details saved");
+      toast.success(t("Transport details saved"));
     },
   });
 
@@ -102,7 +104,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
     mutationFn: (values: HostelDetails) => updateHostel(student.id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Hostel details saved");
+      toast.success(t("Hostel details saved"));
     },
   });
 
@@ -112,14 +114,14 @@ export default function TransportHostelTab({ student }: { student: Student }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bus className="w-4 h-4 text-muted-foreground" />
-            Transport
+            {t("Transport")}
           </CardTitle>
-          <CardDescription>School bus route and pickup point, if the student uses transport.</CardDescription>
+          <CardDescription>{t("School bus route and pickup point, if the student uses transport.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmitTransport((values) => transportMutation.mutate(values))} className="space-y-4 max-w-lg">
             <div className="flex items-center justify-between">
-              <Label htmlFor="transport-required">Requires school transport</Label>
+              <Label htmlFor="transport-required">{t("Requires school transport")}</Label>
               <Controller
                 control={transportControl}
                 name="required"
@@ -129,7 +131,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
             {transportRequired && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="routeName">Route</Label>
+                  <Label htmlFor="routeName">{t("Route")}</Label>
                   {routes.isError ? (
                     <Input id="routeName" {...registerTransport("routeName")} />
                   ) : (
@@ -146,14 +148,14 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                             if (v !== field.value) setTransportValue("pickupPoint", "", { shouldDirty: true });
                           }}
                           options={activeRoutes.map((r) => ({ value: r.name, label: r.name }))}
-                          placeholder={routes.isLoading ? "Loading routes…" : activeRoutes.length ? "Select a route" : "No routes set up"}
+                          placeholder={routes.isLoading ? t("Loading routes…") : activeRoutes.length ? t("Select a route") : t("No routes set up")}
                         />
                       )}
                     />
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="pickupPoint">Pickup point</Label>
+                  <Label htmlFor="pickupPoint">{t("Pickup point")}</Label>
                   {routes.isError ? (
                     <Input id="pickupPoint" {...registerTransport("pickupPoint")} />
                   ) : (
@@ -167,7 +169,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                           onChange={field.onChange}
                           disabled={!routeName}
                           options={(stops.data ?? []).map((s) => ({ value: s.name, label: s.name }))}
-                          placeholder={!routeName ? "Select a route first" : stops.isLoading ? "Loading stops…" : stops.data?.length ? "Select a pickup point" : "No stops on this route"}
+                          placeholder={!routeName ? t("Select a route first") : stops.isLoading ? t("Loading stops…") : stops.data?.length ? t("Select a pickup point") : t("No stops on this route")}
                         />
                       )}
                     />
@@ -176,7 +178,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
               </div>
             )}
             <Button type="submit" size="sm" loading={transportMutation.isPending}>
-              Save transport details
+              {t("Save transport details")}
             </Button>
           </form>
         </CardContent>
@@ -186,14 +188,14 @@ export default function TransportHostelTab({ student }: { student: Student }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Home className="w-4 h-4 text-muted-foreground" />
-            Hostel
+            {t("Hostel")}
           </CardTitle>
-          <CardDescription>Boarding assignment, if the student resides on campus.</CardDescription>
+          <CardDescription>{t("Boarding assignment, if the student resides on campus.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmitHostel((values) => hostelMutation.mutate(values))} className="space-y-4 max-w-lg">
             <div className="flex items-center justify-between">
-              <Label htmlFor="hostel-required">Resides in hostel</Label>
+              <Label htmlFor="hostel-required">{t("Resides in hostel")}</Label>
               <Controller
                 control={hostelControl}
                 name="required"
@@ -203,7 +205,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
             {hostelRequired && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="hostelName">Hostel</Label>
+                  <Label htmlFor="hostelName">{t("Hostel")}</Label>
                   {hostels.isError ? (
                     <Input id="hostelName" {...registerHostel("hostelName")} />
                   ) : (
@@ -220,14 +222,14 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                             if (v !== field.value) setHostelValue("roomNumber", "", { shouldDirty: true });
                           }}
                           options={activeHostels.map((h) => ({ value: h.name, label: h.name }))}
-                          placeholder={hostels.isLoading ? "Loading hostels…" : activeHostels.length ? "Select a hostel" : "No hostels set up"}
+                          placeholder={hostels.isLoading ? t("Loading hostels…") : activeHostels.length ? t("Select a hostel") : t("No hostels set up")}
                         />
                       )}
                     />
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="roomNumber">Room number</Label>
+                  <Label htmlFor="roomNumber">{t("Room number")}</Label>
                   {hostels.isError ? (
                     <Input id="roomNumber" {...registerHostel("roomNumber")} />
                   ) : (
@@ -243,7 +245,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                           options={(rooms.data ?? [])
                             .filter((r) => r.status === "active" || r.roomNumber === field.value)
                             .map((r) => ({ value: r.roomNumber, label: r.floor ? `${r.roomNumber} · ${r.floor}` : r.roomNumber }))}
-                          placeholder={!hostelName ? "Select a hostel first" : rooms.isLoading ? "Loading rooms…" : rooms.data?.length ? "Select a room" : "No rooms in this hostel"}
+                          placeholder={!hostelName ? t("Select a hostel first") : rooms.isLoading ? t("Loading rooms…") : rooms.data?.length ? t("Select a room") : t("No rooms in this hostel")}
                         />
                       )}
                     />
@@ -252,7 +254,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
               </div>
             )}
             <Button type="submit" size="sm" loading={hostelMutation.isPending}>
-              Save hostel details
+              {t("Save hostel details")}
             </Button>
           </form>
         </CardContent>

@@ -1,6 +1,7 @@
 import { Banknote, Bell, CalendarDays, GraduationCap, Settings } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
 import { formatRelativeDay } from "@/utils/format";
 import type { NotificationItem } from "../types";
@@ -13,6 +14,7 @@ const CATEGORY_ICON = {
 } as const;
 
 export default function NotificationsCard({ notifications }: { notifications: NotificationItem[] }) {
+  const { t } = useTranslation("dashboard");
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -20,12 +22,12 @@ export default function NotificationsCard({ notifications }: { notifications: No
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
-          Notifications
+          {t("Notifications")}
         </CardTitle>
-        <CardDescription>{unreadCount} unread</CardDescription>
+        <CardDescription>{t("{{count}} unread", { count: unreadCount })}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-1">
-        {notifications.length === 0 && <EmptyState bare size="sm" icon={Bell} title="You're all caught up" description="New notifications will appear here." className="py-6" />}
+        {notifications.length === 0 && <EmptyState bare size="sm" icon={Bell} title={t("You're all caught up")} description={t("New notifications will appear here.")} className="py-6" />}
         {notifications.map((n) => {
           const Icon = CATEGORY_ICON[n.category];
           return (

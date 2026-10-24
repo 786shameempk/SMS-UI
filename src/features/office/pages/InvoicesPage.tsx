@@ -60,8 +60,8 @@ export default function InvoicesPage() {
                   <TableHead>Type</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Outstanding</TableHead>
+                  <TableHead className="text-end">Total</TableHead>
+                  <TableHead className="text-end">Outstanding</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -72,10 +72,10 @@ export default function InvoicesPage() {
                       <p className="text-xs text-muted-foreground">{i.schoolName}</p>
                     </TableCell>
                     <TableCell>{i.kind}{i.label ? <span className="text-xs text-muted-foreground"> · {i.label}</span> : null}</TableCell>
-                    <TableCell>{day(i.dueDate)}{i.overdue ? <span className="ml-1 text-xs text-destructive-strong">{i.daysOverdue}d late</span> : null}</TableCell>
+                    <TableCell>{day(i.dueDate)}{i.overdue ? <span className="ms-1 text-xs text-destructive-strong">{i.daysOverdue}d late</span> : null}</TableCell>
                     <TableCell><StatusBadge status={i.status} /></TableCell>
-                    <TableCell className="text-right tabular-nums">{money(i.total, i.currency)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{money(i.outstanding, i.currency)}</TableCell>
+                    <TableCell className="text-end tabular-nums">{money(i.total, i.currency)}</TableCell>
+                    <TableCell className="text-end tabular-nums">{money(i.outstanding, i.currency)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -119,7 +119,7 @@ function InvoiceDialog({ id, onClose }: { id: string; onClose: () => void }) {
             inv.isError ? <ErrorState onRetry={() => inv.refetch()} retrying={inv.isRefetching} /> : <Skeleton className="h-48 rounded-lg" />
           ) : (
             <div className="space-y-4 text-sm">
-              <div className="flex items-center gap-2"><StatusBadge status={x.status} />{x.overdue && <StatusBadge status="Failed">Overdue</StatusBadge>}<Link className="ml-auto text-primary hover:underline" to={`/office/schools/${x.schoolId}`}>Open school</Link></div>
+              <div className="flex items-center gap-2"><StatusBadge status={x.status} />{x.overdue && <StatusBadge status="Failed">Overdue</StatusBadge>}<Link className="ms-auto text-primary hover:underline" to={`/office/schools/${x.schoolId}`}>Open school</Link></div>
               <ul className="divide-y divide-border rounded-lg border border-border">
                 {x.lines.map((l) => (<li key={l.description} className="flex justify-between px-3 py-1.5"><span>{l.description}</span><span className="tabular-nums">{money(l.amount, x.currency)}</span></li>))}
               </ul>

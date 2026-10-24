@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +29,7 @@ interface RoleFormDialogProps {
 }
 
 export default function RoleFormDialog({ open, onOpenChange, role, onSubmit, submitting }: RoleFormDialogProps) {
+  const { t } = useTranslation("administration");
   const isEdit = Boolean(role);
   const {
     register,
@@ -46,21 +48,21 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSubmit, sub
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit role" : "Add role"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("Edit role") : t("Add role")}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "Update this role's name and description." : "Create a custom role to assign fine-grained permissions."}
+            {isEdit ? t("Update this role's name and description.") : t("Create a custom role to assign fine-grained permissions.")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name" required>Role name</Label>
+            <Label htmlFor="name" required>{t("Role name")}</Label>
             <Input id="name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="description" required>Description</Label>
+            <Label htmlFor="description" required>{t("Description")}</Label>
             <Textarea id="description" rows={3} aria-invalid={errors.description ? true : undefined} {...register("description")} />
-            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.description.message}</p>}
+            {errors.description && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.description.message ?? "")}</p>}
           </div>
           <label className="flex items-start gap-3 rounded-lg border border-border p-3 cursor-pointer select-none">
             <Checkbox
@@ -69,19 +71,18 @@ export default function RoleFormDialog({ open, onOpenChange, role, onSubmit, sub
               onCheckedChange={(v) => setValue("grantsAllBranchAccess", v === true, { shouldDirty: true })}
             />
             <span className="space-y-0.5">
-              <span className="block text-sm font-medium text-foreground">All branches</span>
+              <span className="block text-sm font-medium text-foreground">{t("All branches")}</span>
               <span className="block text-xs text-muted-foreground">
-                Users with this role work across every branch and switch branch in the header. Leave off to lock each user to the
-                branch they're assigned.
+                {t("Users with this role work across every branch and switch branch in the header. Leave off to lock each user to the branch they're assigned.")}
               </span>
             </span>
           </label>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create role"}
+              {isEdit ? t("Save changes") : t("Create role")}
             </Button>
           </DialogFooter>
         </form>

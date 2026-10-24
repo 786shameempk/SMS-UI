@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -54,6 +55,7 @@ export default function BookFormDialog({
   submitting: boolean;
   onSubmit: (values: BookFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("library");
   const isEdit = Boolean(book);
   const {
     register,
@@ -85,11 +87,11 @@ export default function BookFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit book" : "New book"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("Edit book") : t("New book")}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Changing the total copies adjusts availability while preserving copies currently on loan."
-              : "New books start with every copy available to issue."}
+              ? t("Changing the total copies adjusts availability while preserving copies currently on loan.")
+              : t("New books start with every copy available to issue.")}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -103,33 +105,33 @@ export default function BookFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="bk-title" required>Title</Label>
-            <Input id="bk-title" placeholder="e.g. Malgudi Days" aria-invalid={errors.title ? true : undefined} {...register("title")} />
-            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.title.message}</p>}
+            <Label htmlFor="bk-title" required>{t("Title")}</Label>
+            <Input id="bk-title" placeholder={t("e.g. Malgudi Days")} aria-invalid={errors.title ? true : undefined} {...register("title")} />
+            {errors.title && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.title.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bk-isbn" required>ISBN</Label>
-              <Input id="bk-isbn" placeholder="e.g. 9780143039655" aria-invalid={errors.isbn ? true : undefined} {...register("isbn")} />
-              {errors.isbn && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.isbn.message}</p>}
+              <Label htmlFor="bk-isbn" required>{t("ISBN")}</Label>
+              <Input id="bk-isbn" placeholder={t("e.g. 9780143039655")} aria-invalid={errors.isbn ? true : undefined} {...register("isbn")} />
+              {errors.isbn && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.isbn.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bk-totalCopies" required>Total copies</Label>
+              <Label htmlFor="bk-totalCopies" required>{t("Total copies")}</Label>
               <Input id="bk-totalCopies" type="number" min="1" step="1" aria-invalid={errors.totalCopies ? true : undefined} {...register("totalCopies")} />
-              {errors.totalCopies && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.totalCopies.message}</p>}
+              {errors.totalCopies && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.totalCopies.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="bk-authorId" required>Author</Label>
+            <Label htmlFor="bk-authorId" required>{t("Author")}</Label>
             <Controller
               control={control}
               name="authorId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="bk-authorId">
-                    <SelectValue placeholder="Select author" />
+                    <SelectValue placeholder={t("Select author")} />
                   </SelectTrigger>
                   <SelectContent>
                     {authors.map((a) => (
@@ -141,19 +143,19 @@ export default function BookFormDialog({
                 </Select>
               )}
             />
-            {errors.authorId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.authorId.message}</p>}
+            {errors.authorId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.authorId.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="bk-publisherId" required>Publisher</Label>
+              <Label htmlFor="bk-publisherId" required>{t("Publisher")}</Label>
               <Controller
                 control={control}
                 name="publisherId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="bk-publisherId">
-                      <SelectValue placeholder="Select publisher" />
+                      <SelectValue placeholder={t("Select publisher")} />
                     </SelectTrigger>
                     <SelectContent>
                       {publishers.map((p) => (
@@ -165,17 +167,17 @@ export default function BookFormDialog({
                   </Select>
                 )}
               />
-              {errors.publisherId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.publisherId.message}</p>}
+              {errors.publisherId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.publisherId.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bk-categoryId" required>Category</Label>
+              <Label htmlFor="bk-categoryId" required>{t("Category")}</Label>
               <Controller
                 control={control}
                 name="categoryId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="bk-categoryId">
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={t("Select category")} />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((c) => (
@@ -187,26 +189,26 @@ export default function BookFormDialog({
                   </Select>
                 )}
               />
-              {errors.categoryId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.categoryId.message}</p>}
+              {errors.categoryId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.categoryId.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="bk-shelfLocation" optional>Shelf location</Label>
-            <Input id="bk-shelfLocation" placeholder="e.g. F-12" {...register("shelfLocation")} />
+            <Label htmlFor="bk-shelfLocation" optional>{t("Shelf location")}</Label>
+            <Input id="bk-shelfLocation" placeholder={t("e.g. F-12")} {...register("shelfLocation")} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="bk-coverNote" optional>Note</Label>
+            <Label htmlFor="bk-coverNote" optional>{t("Note")}</Label>
             <Textarea id="bk-coverNote" rows={2} {...register("coverNote")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create book"}
+              {isEdit ? t("Save changes") : t("Create book")}
             </Button>
           </DialogFooter>
         </form>

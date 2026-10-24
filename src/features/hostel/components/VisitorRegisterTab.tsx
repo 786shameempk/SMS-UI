@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -12,6 +13,7 @@ import type { VisitorLogRow } from "../types";
 import VisitorCheckInDialog from "./VisitorCheckInDialog";
 
 export default function VisitorRegisterTab() {
+  const { t } = useTranslation("hostel");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
 
@@ -25,25 +27,25 @@ export default function VisitorRegisterTab() {
     mutationFn: checkInVisitor,
     onSuccess: () => {
       invalidate();
-      toast.success("Visitor checked in");
+      toast.success(t("Visitor checked in"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not check in visitor"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not check in visitor")),
   });
 
   const checkOutMutation = useMutation({
     mutationFn: checkOutVisitor,
     onSuccess: () => {
       invalidate();
-      toast.success("Visitor checked out");
+      toast.success(t("Visitor checked out"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not check out visitor"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not check out visitor")),
   });
 
   const columns: ColumnDef<VisitorLogRow, unknown>[] = [
     {
       id: "visitor",
-      header: "Visitor",
+      header: t("Visitor"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.visitorName}</p>
@@ -53,7 +55,7 @@ export default function VisitorRegisterTab() {
     },
     {
       id: "student",
-      header: "Visiting",
+      header: t("Visiting"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.student.firstName} {row.original.student.lastName} · {row.original.hostel.name}
@@ -62,27 +64,27 @@ export default function VisitorRegisterTab() {
     },
     {
       id: "purpose",
-      header: "Purpose",
+      header: t("Purpose"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.purpose ?? "—"}</span>,
     },
     {
       id: "checkIn",
-      header: "Check-in",
+      header: t("Check-in"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.checkInAt).toLocaleString()}</span>,
     },
     {
       id: "checkOut",
-      header: "Check-out",
+      header: t("Check-out"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">{row.original.checkOutAt ? new Date(row.original.checkOutAt).toLocaleString() : "—"}</span>
       ),
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = VISITOR_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -92,7 +94,7 @@ export default function VisitorRegisterTab() {
         row.original.status === "checked-in" ? (
           <Button variant="outline" size="sm" onClick={() => checkOutMutation.mutate(row.original.id)} disabled={checkOutMutation.isPending}>
             <LogOut className="w-3.5 h-3.5" />
-            Check out
+            {t("Check out")}
           </Button>
         ) : null,
     },
@@ -101,14 +103,14 @@ export default function VisitorRegisterTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Log visitors checking in to see hostel residents.</p>
+        <p className="text-sm text-muted-foreground">{t("Log visitors checking in to see hostel residents.")}</p>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          Check in visitor
+          {t("Check in visitor")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={logs} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No visitors logged yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={logs} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No visitors logged yet.")} pageSize={10} />
 
       <VisitorCheckInDialog
         open={formOpen}

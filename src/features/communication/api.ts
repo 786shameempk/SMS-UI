@@ -16,8 +16,8 @@ import type {
 // EngagementService's enums serialize as PascalCase (C# convention); SMS UI's types use
 // lowercase/kebab-case unions - see docs/MICROSERVICES_PLAN.md's enum-translation note.
 
-const CHANNEL_TO_API: Record<Channel, string> = { email: "Email", sms: "Sms", push: "Push", whatsapp: "WhatsApp", "in-app": "InApp" };
-const CHANNEL_FROM_API: Record<string, Channel> = { Email: "email", Sms: "sms", Push: "push", WhatsApp: "whatsapp", InApp: "in-app" };
+export const CHANNEL_TO_API: Record<Channel, string> = { email: "Email", sms: "Sms", push: "Push", whatsapp: "WhatsApp", "in-app": "InApp" };
+export const CHANNEL_FROM_API: Record<string, Channel> = { Email: "email", Sms: "sms", Push: "push", WhatsApp: "whatsapp", InApp: "in-app" };
 
 const AUDIENCE_TO_API: Record<AudienceType, string> = { students: "Students", staff: "Staff", parents: "Parents" };
 const AUDIENCE_FROM_API: Record<string, AudienceType> = { Students: "students", Staff: "staff", Parents: "parents" };
@@ -34,6 +34,10 @@ interface ApiTemplate {
   subject: string | null;
   body: string;
   channels: string[];
+  language?: string | null;
+  smsTemplateId?: string | null;
+  whatsAppTemplateName?: string | null;
+  whatsAppTemplateLanguage?: string | null;
 }
 
 interface ApiGroup {
@@ -59,12 +63,16 @@ interface ApiMessage {
   sentAt: string | null;
   status: string;
   createdAt: string;
+  templateId?: string | null;
 }
 
 interface ApiDeliverySummary {
   channel: string;
   delivered: number;
   failed: number;
+  queued?: number;
+  sent?: number;
+  skipped?: number;
 }
 
 async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
@@ -87,6 +95,10 @@ function mapTemplate(t: ApiTemplate): MessageTemplate {
     subject: t.subject ?? undefined,
     body: t.body,
     channels: channelsFromApi(t.channels),
+    language: t.language ?? "en",
+    smsTemplateId: t.smsTemplateId ?? undefined,
+    whatsAppTemplateName: t.whatsAppTemplateName ?? undefined,
+    whatsAppTemplateLanguage: t.whatsAppTemplateLanguage ?? undefined,
   };
 }
 
@@ -116,6 +128,7 @@ function mapMessage(m: ApiMessage): BroadcastMessage {
     sentAt: m.sentAt ?? undefined,
     status: STATUS_FROM_API[m.status],
     createdAt: m.createdAt,
+    templateId: m.templateId ?? undefined,
   };
 }
 
@@ -126,6 +139,10 @@ function templateBody(values: MessageTemplateFormValues) {
     subject: values.subject?.trim() || null,
     body: values.body,
     channels: channelsToApi(values.channels),
+    language: values.language || "en",
+    smsTemplateId: values.smsTemplateId?.trim() || null,
+    whatsAppTemplateName: values.whatsAppTemplateName?.trim() || null,
+    whatsAppTemplateLanguage: values.whatsAppTemplateLanguage?.trim() || null,
   };
 }
 
@@ -189,7 +206,7 @@ export async function listMessages(): Promise<BroadcastMessage[]> {
   return (await unwrap(engagementHttpClient.get<ApiMessage[]>("api/BroadcastMessages"))).map(mapMessage);
 }
 
-/** Delivery is simulated server-side, and an "in-app" channel lands in the real notification inbox. */
+/** Sent through the school's configured providers: the server answers at once and the delivery worker sends in the background. */
 export async function composeMessage(values: ComposeMessageFormValues): Promise<BroadcastMessage> {
   return mapMessage(
     await unwrap(
@@ -202,6 +219,8 @@ export async function composeMessage(values: ComposeMessageFormValues): Promise<
         staffIds: values.staffIds,
         // datetime-local has no zone: interpret it in the viewer's local time, send UTC.
         scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
+        templateId: values.templateId ?? null,
+        idempotencyKey: values.idempotencyKey ?? null,
       }),
     ),
   );
@@ -217,5 +236,12 @@ export async function cancelScheduledMessage(id: string): Promise<BroadcastMessa
 
 export async function getDeliverySummary(messageId: string): Promise<MessageDeliverySummary[]> {
   const rows = await unwrap(engagementHttpClient.get<ApiDeliverySummary[]>(`api/BroadcastMessages/${messageId}/delivery-summary`));
-  return rows.map((r) => ({ channel: CHANNEL_FROM_API[r.channel], delivered: r.delivered, failed: r.failed }));
+  return rows.map((r) => ({
+    channel: CHANNEL_FROM_API[r.channel],
+    delivered: r.delivered,
+    failed: r.failed,
+    queued: r.queued ?? 0,
+    sent: r.sent ?? 0,
+    skipped: r.skipped ?? 0,
+  }));
 }

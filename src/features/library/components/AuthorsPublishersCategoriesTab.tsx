@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -41,6 +42,7 @@ function EntityList<T extends { id: string; name: string }>({
   onEdit: (item: T) => void;
   onDelete: (item: T) => void;
 }) {
+  const { t } = useTranslation("library");
   return (
     <Card className="flex-1 min-w-[260px]">
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
@@ -50,12 +52,12 @@ function EntityList<T extends { id: string; name: string }>({
         </div>
         <Button size="sm" variant="outline" onClick={onAdd}>
           <Plus className="w-3.5 h-3.5" />
-          Add
+          {t("Add")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-1.5">
-        {isLoading && <p className="text-sm text-muted-foreground py-2">Loading…</p>}
-        {!isLoading && items.length === 0 && <p className="text-sm text-muted-foreground py-2">No entries yet.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground py-2">{t("Loading…")}</p>}
+        {!isLoading && items.length === 0 && <p className="text-sm text-muted-foreground py-2">{t("No entries yet.")}</p>}
         {!isLoading &&
           items.map((item) => (
             <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
@@ -75,7 +77,10 @@ function EntityList<T extends { id: string; name: string }>({
   );
 }
 
+const DELETE_TITLES = { author: "Delete author", publisher: "Delete publisher", category: "Delete category" } as const;
+
 export default function AuthorsPublishersCategoriesTab() {
+  const { t } = useTranslation("library");
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["library"] });
 
@@ -95,57 +100,57 @@ export default function AuthorsPublishersCategoriesTab() {
     mutationFn: createAuthor,
     onSuccess: () => {
       invalidate();
-      toast.success("Author added");
+      toast.success(t("Author added"));
       setAuthorForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add author"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add author")),
   });
   const authorUpdate = useMutation({
     mutationFn: ({ id, values }: { id: string; values: AuthorFormValues }) => updateAuthor(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Author updated");
+      toast.success(t("Author updated"));
       setAuthorForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update author"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update author")),
   });
 
   const publisherCreate = useMutation({
     mutationFn: createPublisher,
     onSuccess: () => {
       invalidate();
-      toast.success("Publisher added");
+      toast.success(t("Publisher added"));
       setPublisherForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add publisher"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add publisher")),
   });
   const publisherUpdate = useMutation({
     mutationFn: ({ id, values }: { id: string; values: PublisherFormValues }) => updatePublisher(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Publisher updated");
+      toast.success(t("Publisher updated"));
       setPublisherForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update publisher"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update publisher")),
   });
 
   const categoryCreate = useMutation({
     mutationFn: createCategory,
     onSuccess: () => {
       invalidate();
-      toast.success("Category added");
+      toast.success(t("Category added"));
       setCategoryForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add category"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add category")),
   });
   const categoryUpdate = useMutation({
     mutationFn: ({ id, values }: { id: string; values: BookCategoryFormValues }) => updateCategory(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Category updated");
+      toast.success(t("Category updated"));
       setCategoryForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update category"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update category")),
   });
 
   const deleteMutation = useMutation({
@@ -156,18 +161,18 @@ export default function AuthorsPublishersCategoriesTab() {
     },
     onSuccess: () => {
       invalidate();
-      toast.success("Deleted");
+      toast.success(t("Deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete")),
   });
 
   return (
     <div className="space-y-4">
       <div className="flex gap-4 flex-wrap lg:flex-nowrap">
         <EntityList
-          title="Authors"
-          description="Book authors referenced by the catalog."
+          title={t("Authors")}
+          description={t("Book authors referenced by the catalog.")}
           items={authors}
           isLoading={authorsLoading}
           onAdd={() => setAuthorForm({ open: true, editing: null })}
@@ -175,8 +180,8 @@ export default function AuthorsPublishersCategoriesTab() {
           onDelete={(item) => setDeleteTarget({ kind: "author", item })}
         />
         <EntityList
-          title="Publishers"
-          description="Publishing houses referenced by the catalog."
+          title={t("Publishers")}
+          description={t("Publishing houses referenced by the catalog.")}
           items={publishers}
           isLoading={publishersLoading}
           onAdd={() => setPublisherForm({ open: true, editing: null })}
@@ -184,8 +189,8 @@ export default function AuthorsPublishersCategoriesTab() {
           onDelete={(item) => setDeleteTarget({ kind: "publisher", item })}
         />
         <EntityList
-          title="Categories"
-          description="Genres and subjects used to organize books."
+          title={t("Categories")}
+          description={t("Genres and subjects used to organize books.")}
           items={categories}
           isLoading={categoriesLoading}
           onAdd={() => setCategoryForm({ open: true, editing: null })}
@@ -228,9 +233,9 @@ export default function AuthorsPublishersCategoriesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title={`Delete ${deleteTarget?.kind ?? ""}`}
-        description={`Delete "${deleteTarget?.item.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={deleteTarget ? t(DELETE_TITLES[deleteTarget.kind]) : "Delete "}
+        description={t('Delete "{{name}}"? This cannot be undone.', { name: deleteTarget?.item.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

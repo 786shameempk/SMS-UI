@@ -5,6 +5,7 @@ import { isJoinableNow, useJoinMeeting, useNow } from "../hooks";
 import type { MeetingSummary } from "../types";
 import { formatTime } from "../utils";
 
+import { useTranslation } from "react-i18next";
 interface JoinMeetingButtonProps {
   meeting: MeetingSummary;
   size?: "sm" | "default" | "lg";
@@ -18,6 +19,7 @@ interface JoinMeetingButtonProps {
  * opens (10 minutes before the start). The server re-checks all of it on /join.
  */
 export default function JoinMeetingButton({ meeting, size = "default", className, showWaiting }: JoinMeetingButtonProps) {
+  const { t } = useTranslation("meetings");
   const now = useNow(15_000);
   const join = useJoinMeeting();
   const joinable = isJoinableNow(meeting, now);
@@ -28,9 +30,7 @@ export default function JoinMeetingButton({ meeting, size = "default", className
     if (!showWaiting || meeting.status !== "Scheduled" || Date.parse(meeting.endUtc) < now) return null;
     if (!["Participant", "CoHost", "Host"].includes(meeting.myRelation)) return null;
     return (
-      <Button size={size} variant="outline" disabled className={className}>
-        Opens at {formatTime(meeting.opensAtUtc)}
-      </Button>
+      <Button size={size} variant="outline" disabled className={className}>{t("Opens at {{v1}}", { v1: formatTime(meeting.opensAtUtc) })}</Button>
     );
   }
 

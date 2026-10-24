@@ -1,4 +1,5 @@
 import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
+import i18n from "@/i18n";
 
 /** "general": documents, slides, sheets, images, zip. "document": text, Word and PDF only. */
 export type AttachmentKind = "general" | "document";
@@ -39,11 +40,11 @@ export const attachmentAccept = (kind: AttachmentKind) => ACCEPT[kind];
 
 export const attachmentHint = (kind: AttachmentKind) =>
   kind === "document"
-    ? `PDF, Word or text file, up to ${MAX_ATTACHMENT_MB} MB.`
-    : `PDF, Word, PowerPoint, Excel, image, text or zip, up to ${MAX_ATTACHMENT_MB} MB.`;
+    ? i18n.t("PDF, Word or text file, up to {{size}} MB.", { ns: "attachments", size: MAX_ATTACHMENT_MB })
+    : i18n.t("PDF, Word, PowerPoint, Excel, image, text or zip, up to {{size}} MB.", { ns: "attachments", size: MAX_ATTACHMENT_MB });
 
 export async function uploadAttachment(file: File, kind: AttachmentKind = "general"): Promise<UploadedAttachment> {
-  if (file.size > MAX_ATTACHMENT_MB * 1024 * 1024) throw new Error(`The file is larger than ${MAX_ATTACHMENT_MB} MB.`);
+  if (file.size > MAX_ATTACHMENT_MB * 1024 * 1024) throw new Error(i18n.t("The file is larger than {{size}} MB.", { ns: "attachments", size: MAX_ATTACHMENT_MB }));
   const form = new FormData();
   form.append("file", file);
   form.append("kind", kind);
@@ -52,7 +53,7 @@ export async function uploadAttachment(file: File, kind: AttachmentKind = "gener
     const { data } = await academicHttpClient.post<UploadedAttachment>("/api/attachments", form, { headers: { "Content-Type": "multipart/form-data" } });
     return data;
   } catch (err) {
-    throw new Error(extractApiErrorMessage(err, "Could not upload the file."));
+    throw new Error(extractApiErrorMessage(err, i18n.t("Could not upload the file.", { ns: "attachments" })));
   }
 }
 
@@ -66,7 +67,7 @@ export async function openAttachment(id: string, fileName: string): Promise<void
     const { data } = await academicHttpClient.get<Blob>(`/api/attachments/${id}`, { responseType: "blob" });
     blob = data;
   } catch (err) {
-    throw new Error(extractApiErrorMessage(err, "Could not open the file."));
+    throw new Error(extractApiErrorMessage(err, i18n.t("Could not open the file.", { ns: "attachments" })));
   }
   const url = URL.createObjectURL(blob);
   const previewable = blob.type === "application/pdf" || blob.type.startsWith("image/") || blob.type === "text/plain";

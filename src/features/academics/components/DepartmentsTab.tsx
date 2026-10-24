@@ -13,7 +13,9 @@ import DepartmentFormDialog from "./DepartmentFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 import { useIsTeacher } from "@/lib/roleAccess";
 
+import { useTranslation } from "react-i18next";
 export default function DepartmentsTab() {
+  const { t } = useTranslation("academics");
   const readOnly = useIsTeacher();
   const queryClient = useQueryClient();
   const { data: departments = [], isLoading, isError, refetch } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
@@ -28,7 +30,7 @@ export default function DepartmentsTab() {
     mutationFn: createDepartment,
     onSuccess: () => {
       invalidate();
-      toast.success("Department created");
+      toast.success(t("Department created"));
       setFormOpen(false);
     },
   });
@@ -37,7 +39,7 @@ export default function DepartmentsTab() {
     mutationFn: ({ id, values }: { id: string; values: DepartmentFormValues }) => updateDepartment(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Department updated");
+      toast.success(t("Department updated"));
       setFormOpen(false);
       setEditing(null);
     },
@@ -47,16 +49,16 @@ export default function DepartmentsTab() {
     mutationFn: deleteDepartment,
     onSuccess: () => {
       invalidate();
-      toast.success("Department deleted");
+      toast.success(t("Department deleted"));
       setDeleteTarget(null);
     },
   });
 
   const columns: ColumnDef<Department, unknown>[] = [
-    { accessorKey: "name", header: "Name", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "name", header: t("Name"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
     {
       accessorKey: "description",
-      header: "Description",
+      header: t("Description"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.description || "—"}</span>,
     },
     {
@@ -73,11 +75,11 @@ export default function DepartmentsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(department)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -88,7 +90,7 @@ export default function DepartmentsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.</p>
+        <p className="text-sm text-muted-foreground">{t("Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.")}</p>
         {!readOnly && (
           <Button
           onClick={() => {
@@ -97,12 +99,12 @@ export default function DepartmentsTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          New department
+          {t("New department")}
         </Button>
         )}
       </DataTableToolbar>
 
-      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={departments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No departments yet." />
+      <DataTable searchable columns={readOnly ? columns.filter((col) => col.id !== "actions") : columns} data={departments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No departments yet.")} />
 
       <DepartmentFormDialog
         open={formOpen}
@@ -121,9 +123,9 @@ export default function DepartmentsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete department"
-        description={`This will permanently delete "${deleteTarget?.name}".`}
-        confirmLabel="Delete"
+        title={t("Delete department")}
+        description={t("This will permanently delete \"{{name}}\".", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

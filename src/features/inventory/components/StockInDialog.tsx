@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ export default function StockInDialog({
   submitting: boolean;
   onSubmit: (values: StockInFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("inventory");
   const {
     register,
     handleSubmit,
@@ -59,8 +61,8 @@ export default function StockInDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Stock in</DialogTitle>
-          <DialogDescription>Record newly received stock — a purchase, donation, or restock.</DialogDescription>
+          <DialogTitle>{t("Stock in")}</DialogTitle>
+          <DialogDescription>{t("Record newly received stock — a purchase, donation, or restock.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -69,7 +71,7 @@ export default function StockInDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="si-itemId" required>Item</Label>
+            <Label htmlFor="si-itemId" required>{t("Item")}</Label>
             <Controller
               control={control}
               name="itemId"
@@ -83,7 +85,7 @@ export default function StockInDialog({
                   }}
                 >
                   <SelectTrigger id="si-itemId">
-                    <SelectValue placeholder="Select an item" />
+                    <SelectValue placeholder={t("Select an item")} />
                   </SelectTrigger>
                   <SelectContent>
                     {items.map((i) => (
@@ -95,35 +97,35 @@ export default function StockInDialog({
                 </Select>
               )}
             />
-            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.itemId.message}</p>}
+            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.itemId.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="si-quantity" required>Quantity</Label>
+              <Label htmlFor="si-quantity" required>{t("Quantity")}</Label>
               <Input id="si-quantity" type="number" min="1" step="1" aria-invalid={errors.quantity ? true : undefined} {...register("quantity")} />
-              {errors.quantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.quantity.message}</p>}
+              {errors.quantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.quantity.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="si-unitCost" required>Unit cost</Label>
+              <Label htmlFor="si-unitCost" required>{t("Unit cost")}</Label>
               <Input id="si-unitCost" type="number" min="0" step="1" aria-invalid={errors.unitCost ? true : undefined} {...register("unitCost")} />
-              {errors.unitCost && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.unitCost.message}</p>}
+              {errors.unitCost && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.unitCost.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="si-vendorId" optional>Vendor</Label>
+              <Label htmlFor="si-vendorId" optional>{t("Vendor")}</Label>
               <Controller
                 control={control}
                 name="vendorId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="si-vendorId">
-                      <SelectValue placeholder="Select vendor" />
+                      <SelectValue placeholder={t("Select vendor")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NO_VENDOR}>No vendor</SelectItem>
+                      <SelectItem value={NO_VENDOR}>{t("No vendor")}</SelectItem>
                       {vendors.map((v) => (
                         <SelectItem key={v.id} value={v.id}>
                           {v.name}
@@ -135,23 +137,23 @@ export default function StockInDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="si-date" required>Date</Label>
+              <Label htmlFor="si-date" required>{t("Date")}</Label>
               <Input id="si-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
-              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.date.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="si-reference" optional>Reference</Label>
-            <Input id="si-reference" placeholder="e.g. invoice or PO number" {...register("reference")} />
+            <Label htmlFor="si-reference" optional>{t("Reference")}</Label>
+            <Input id="si-reference" placeholder={t("e.g. invoice or PO number")} {...register("reference")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Record stock in
+              {t("Record stock in")}
             </Button>
           </DialogFooter>
         </form>

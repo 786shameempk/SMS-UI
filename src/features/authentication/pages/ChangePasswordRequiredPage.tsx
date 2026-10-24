@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ export default function ChangePasswordRequiredPage() {
   const email = useAuthStore((s) => s.user?.email ?? "");
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useTranslation("authentication");
   const {
     register,
     handleSubmit,
@@ -43,10 +45,10 @@ export default function ChangePasswordRequiredPage() {
     try {
       await changePassword(email, values.currentPassword, values.newPassword);
       clearAuth("signedOut");
-      toast.success("Password updated. Sign in with your new password.");
+      toast.success(t("Password updated. Sign in with your new password."));
       navigate("/login", { replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not update password");
+      toast.error(err instanceof Error ? err.message : t("Could not update password"));
     } finally {
       setSubmitting(false);
     }
@@ -58,35 +60,37 @@ export default function ChangePasswordRequiredPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5" aria-hidden="true" />
-            Set a new password
+            {t("Set a new password")}
           </CardTitle>
           <CardDescription>
-            You signed in with a temporary password{email ? ` (${email})` : ""}. Choose a new one to continue.
+            {email
+              ? t("You signed in with a temporary password ({{email}}). Choose a new one to continue.", { email })
+              : t("You signed in with a temporary password. Choose a new one to continue.")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="currentPassword">Temporary password</Label>
+              <Label htmlFor="currentPassword">{t("Temporary password")}</Label>
               <Input id="currentPassword" type="password" autoComplete="current-password" aria-invalid={errors.currentPassword ? true : undefined} {...register("currentPassword")} />
-              {errors.currentPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.currentPassword.message}</p>}
+              {errors.currentPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.currentPassword.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="newPassword">New password</Label>
+              <Label htmlFor="newPassword">{t("New password")}</Label>
               <Input id="newPassword" type="password" autoComplete="new-password" aria-invalid={errors.newPassword ? true : undefined} {...register("newPassword")} />
-              {errors.newPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.newPassword.message}</p>}
+              {errors.newPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.newPassword.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirm new password</Label>
+              <Label htmlFor="confirmPassword">{t("Confirm new password")}</Label>
               <Input id="confirmPassword" type="password" autoComplete="new-password" aria-invalid={errors.confirmPassword ? true : undefined} {...register("confirmPassword")} />
-              {errors.confirmPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.confirmPassword.message}</p>}
+              {errors.confirmPassword && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.confirmPassword.message ?? "")}</p>}
             </div>
             <div className="flex items-center justify-between gap-3">
               <Button type="submit" loading={submitting}>
-                Update password
+                {t("Update password")}
               </Button>
               <Button type="button" variant="ghost" onClick={() => { clearAuth("signedOut"); navigate("/login", { replace: true }); }}>
-                Sign out
+                {t("Sign out")}
               </Button>
             </div>
           </form>

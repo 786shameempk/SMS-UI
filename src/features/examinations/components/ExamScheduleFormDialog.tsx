@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Subject } from "@/features/academics/types";
 import type { ExamSchedule, ExamScheduleFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const scheduleFormSchema = z
   .object({
     subjectId: z.string().min(1, "Select a subject"),
@@ -54,6 +55,7 @@ export default function ExamScheduleFormDialog({
   onSubmit: (values: ExamScheduleFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("examinations");
   const isEdit = Boolean(schedule);
   const {
     register,
@@ -91,22 +93,22 @@ export default function ExamScheduleFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit subject schedule" : "New subject schedule"}</DialogTitle>
-          <DialogDescription>Schedule one subject paper within this exam, with its date, time, and marks.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit subject schedule") : t("New subject schedule")}</DialogTitle>
+          <DialogDescription>{t("Schedule one subject paper within this exam, with its date, time, and marks.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((v) => onSubmit({ ...v, internalMaxMarks: v.internalMaxMarks?.trim() ? Number(v.internalMaxMarks) : null }))}
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="subjectId">Subject</Label>
+            <Label htmlFor="subjectId">{t("Subject")}</Label>
             <Controller
               control={control}
               name="subjectId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="subjectId">
-                    <SelectValue placeholder="Select a subject" />
+                    <SelectValue placeholder={t("Select a subject")} />
                   </SelectTrigger>
                   <SelectContent>
                     {subjects.map((s) => (
@@ -123,17 +125,17 @@ export default function ExamScheduleFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">{t("Date")}</Label>
               <Input id="date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
               {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="startTime">Start time</Label>
+              <Label htmlFor="startTime">{t("Start time")}</Label>
               <Input id="startTime" type="time" aria-invalid={errors.startTime ? true : undefined} {...register("startTime")} />
               {errors.startTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.startTime.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endTime">End time</Label>
+              <Label htmlFor="endTime">{t("End time")}</Label>
               <Input id="endTime" type="time" aria-invalid={errors.endTime ? true : undefined} {...register("endTime")} />
               {errors.endTime && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.endTime.message}</p>}
             </div>
@@ -141,17 +143,17 @@ export default function ExamScheduleFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="maxMarks">Max marks (total)</Label>
+              <Label htmlFor="maxMarks">{t("Max marks (total)")}</Label>
               <Input id="maxMarks" type="number" min={1} aria-invalid={errors.maxMarks ? true : undefined} {...register("maxMarks")} />
               {errors.maxMarks && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.maxMarks.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="internalMaxMarks" optional>Internal (CE) max marks</Label>
+              <Label htmlFor="internalMaxMarks" optional>{t("Internal (CE) max marks")}</Label>
               <Input
                 id="internalMaxMarks"
                 type="number"
                 min={1}
-                placeholder="None"
+                placeholder={t("None")}
                 aria-invalid={errors.internalMaxMarks ? true : undefined}
                 {...register("internalMaxMarks")}
               />
@@ -160,8 +162,8 @@ export default function ExamScheduleFormDialog({
               ) : (
                 <p className="text-xs text-muted-foreground">
                   {hasInternal
-                    ? `Internal ${internalMax} + actual ${maxMarks - internalMax} = ${maxMarks}. Marks are entered separately.`
-                    : "Leave empty if there is no internal / CE component."}
+                    ? t("Internal {{internalMax}} + actual {{v1}} = {{maxMarks}}. Marks are entered separately.", { internalMax, v1: maxMarks - internalMax, maxMarks })
+                    : t("Leave empty if there is no internal / CE component.")}
                 </p>
               )}
             </div>
@@ -169,22 +171,22 @@ export default function ExamScheduleFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="passMarks">Pass marks</Label>
+              <Label htmlFor="passMarks">{t("Pass marks")}</Label>
               <Input id="passMarks" type="number" min={0} aria-invalid={errors.passMarks ? true : undefined} {...register("passMarks")} />
               {errors.passMarks && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.passMarks.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="room" optional>Room</Label>
-              <Input id="room" placeholder="e.g. Room 101" {...register("room")} />
+              <Label htmlFor="room" optional>{t("Room")}</Label>
+              <Input id="room" placeholder={t("e.g. Room 101")} {...register("room")} />
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Add subject schedule"}
+              {isEdit ? t("Save changes") : t("Add subject schedule")}
             </Button>
           </DialogFooter>
         </form>

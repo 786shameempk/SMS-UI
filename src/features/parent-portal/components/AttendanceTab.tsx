@@ -4,6 +4,7 @@ import { cn } from "@/utils/cn";
 import { getAttendanceSummary } from "../api";
 import type { AttendanceDayStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 const STATUS_STYLE: Record<AttendanceDayStatus, string> = {
   present: "bg-success",
   absent: "bg-destructive",
@@ -19,39 +20,40 @@ const STATUS_LABEL: Record<AttendanceDayStatus, string> = {
 };
 
 export default function AttendanceTab({ studentId }: { studentId: string }) {
+  const { t } = useTranslation("parent-portal");
   const { data, isLoading } = useQuery({
     queryKey: ["parent-portal", "attendance", studentId],
     queryFn: () => getAttendanceSummary(studentId),
   });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground">Loading attendance…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground">{t("Loading attendance…")}</p>;
 
   const pct = data.totalDays > 0 ? Math.round((data.presentDays / data.totalDays) * 100) : 0;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Attendance</CardTitle>
-        <CardDescription>{pct}% present over the last {data.totalDays} school days.</CardDescription>
+        <CardTitle>{t("Attendance")}</CardTitle>
+        <CardDescription>{t("{{pct}}% present over the last {{totalDays}} school days.", { pct, totalDays: data.totalDays })}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
             <p className="text-lg font-bold text-foreground tabular-nums">{data.presentDays}</p>
-            <p className="text-[11px] text-muted-foreground">Present</p>
+            <p className="text-[11px] text-muted-foreground">{t("Present")}</p>
           </div>
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
             <p className="text-lg font-bold text-foreground tabular-nums">{data.lateDays}</p>
-            <p className="text-[11px] text-muted-foreground">Late</p>
+            <p className="text-[11px] text-muted-foreground">{t("Late")}</p>
           </div>
           <div className="rounded-lg bg-secondary/60 p-3 text-center">
             <p className="text-lg font-bold text-foreground tabular-nums">{data.absentDays}</p>
-            <p className="text-[11px] text-muted-foreground">Absent</p>
+            <p className="text-[11px] text-muted-foreground">{t("Absent")}</p>
           </div>
         </div>
 
         <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2">Last 14 days</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">{t("Last 14 days")}</p>
           <div className="flex gap-1.5 flex-wrap">
             {data.recent.map((day) => (
               <div

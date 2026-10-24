@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HealthRecordsTab from "../components/HealthRecordsTab";
 import CheckupsTab from "../components/CheckupsTab";
@@ -7,20 +8,21 @@ import ReportsTab from "../components/ReportsTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function HealthMedicalPage() {
+  const { t } = useTranslation("health");
   return (
     <PageContainer>
       <PageHeader
-        title="Health & Medical"
-        description="Student health records, checkups, vaccinations, and infirmary visits."
+        title={t("Health & Medical")}
+        description={t("Student health records, checkups, vaccinations, and infirmary visits.")}
       />
 
       <Tabs defaultValue="records">
         <TabsList variant="line">
-          <TabsTrigger value="records">Health Records</TabsTrigger>
-          <TabsTrigger value="checkups">Checkups</TabsTrigger>
-          <TabsTrigger value="vaccinations">Vaccinations</TabsTrigger>
-          <TabsTrigger value="visits">Infirmary Visits</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="records">{t("Health Records")}</TabsTrigger>
+          <TabsTrigger value="checkups">{t("Checkups")}</TabsTrigger>
+          <TabsTrigger value="vaccinations">{t("Vaccinations")}</TabsTrigger>
+          <TabsTrigger value="visits">{t("Infirmary Visits")}</TabsTrigger>
+          <TabsTrigger value="reports">{t("Reports")}</TabsTrigger>
         </TabsList>
         <TabsContent value="records">
           <HealthRecordsTab />

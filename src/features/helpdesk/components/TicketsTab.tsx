@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -13,6 +14,7 @@ import type { TicketRow } from "../types";
 import TicketDetailDialog from "./TicketDetailDialog";
 
 export default function TicketsTab() {
+  const { t } = useTranslation("helpdesk");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -31,7 +33,7 @@ export default function TicketsTab() {
   const columns: ColumnDef<TicketRow, unknown>[] = [
     {
       id: "ticket",
-      header: "Ticket",
+      header: t("Ticket"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -44,33 +46,33 @@ export default function TicketsTab() {
     },
     {
       id: "category",
-      header: "Category",
-      cell: ({ row }) => <span className="text-sm text-foreground">{CATEGORY_CONFIG[row.original.category].label}</span>,
+      header: t("Category"),
+      cell: ({ row }) => <span className="text-sm text-foreground">{t(CATEGORY_CONFIG[row.original.category].label)}</span>,
     },
     {
       id: "priority",
-      header: "Priority",
-      cell: ({ row }) => <Badge variant={PRIORITY_CONFIG[row.original.priority].variant}>{PRIORITY_CONFIG[row.original.priority].label}</Badge>,
+      header: t("Priority"),
+      cell: ({ row }) => <Badge variant={PRIORITY_CONFIG[row.original.priority].variant}>{t(PRIORITY_CONFIG[row.original.priority].label)}</Badge>,
     },
     {
       id: "raisedBy",
-      header: "Raised by",
+      header: t("Raised by"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.raisedByLabel}</span>,
     },
     {
       id: "assignedTo",
-      header: "Assigned to",
-      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.assignedTo ? `${row.original.assignedTo.firstName} ${row.original.assignedTo.lastName}` : "Unassigned"}</span>,
+      header: t("Assigned to"),
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.assignedTo ? `${row.original.assignedTo.firstName} ${row.original.assignedTo.lastName}` : t("Unassigned")}</span>,
     },
     {
       accessorKey: "createdAt",
-      header: "Raised",
+      header: t("Raised"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.createdAt)}</span>,
     },
     {
       id: "status",
-      header: "Status",
-      cell: ({ row }) => <Badge variant={STATUS_CONFIG[row.original.status].variant}>{STATUS_CONFIG[row.original.status].label}</Badge>,
+      header: t("Status"),
+      cell: ({ row }) => <Badge variant={STATUS_CONFIG[row.original.status].variant}>{t(STATUS_CONFIG[row.original.status].label)}</Badge>,
     },
     {
       id: "actions",
@@ -78,7 +80,7 @@ export default function TicketsTab() {
       cell: ({ row }) => (
         <Button variant="ghost" size="sm" onClick={() => setSelectedId(row.original.id)}>
           <Eye className="w-3.5 h-3.5" />
-          View
+          {t("View")}
         </Button>
       ),
     },
@@ -90,39 +92,39 @@ export default function TicketsTab() {
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("Status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="all">{t("All statuses")}</SelectItem>
               {(Object.keys(STATUS_CONFIG) as Array<keyof typeof STATUS_CONFIG>).map((s) => (
                 <SelectItem key={s} value={s}>
-                  {STATUS_CONFIG[s].label}
+                  {t(STATUS_CONFIG[s].label)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={t("Category")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
+              <SelectItem value="all">{t("All categories")}</SelectItem>
               {CATEGORY_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.label)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder="Priority" />
+              <SelectValue placeholder={t("Priority")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All priorities</SelectItem>
+              <SelectItem value="all">{t("All priorities")}</SelectItem>
               {PRIORITY_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.label)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -136,7 +138,7 @@ export default function TicketsTab() {
         isLoading={isLoading}
         isError={isError}
         onRetry={() => refetch()}
-        emptyMessage="No tickets match your filters."
+        emptyMessage={t("No tickets match your filters.")}
         pageSize={10}
       />
 

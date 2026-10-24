@@ -7,6 +7,7 @@ import { z } from "zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ArrowRight, Check, ChevronDown, Clock, Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ function GoogleMark() {
 }
 
 function FieldError({ id, message }: { id: string; message?: string }) {
+  const { t } = useTranslation("authentication");
   return (
     <AnimatePresence initial={false}>
       {message && (
@@ -69,7 +71,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
           className="flex items-center gap-1 text-xs text-destructive-strong"
         >
           <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
-          {message}
+          {t(message)}
         </motion.p>
       )}
     </AnimatePresence>
@@ -83,6 +85,7 @@ function CredentialsForm() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const [serverError, setServerError] = useState<string | null>(null);
   const [demoOpen, setDemoOpen] = useState(false);
+  const { t } = useTranslation("authentication");
 
   const {
     register,
@@ -112,12 +115,12 @@ function CredentialsForm() {
       const result = await login({ ...values, email: values.email.trim() });
       setSession(result.user, result.token, result.permissions, values.rememberMe, result.refreshToken);
       setStatus("success");
-      toast.success(`Welcome back, ${result.user.name.split(" ")[0]}`);
+      toast.success(t("Welcome back, {{name}}", { name: result.user.name.split(" ")[0] }));
       // Every sign-in starts on the dashboard (the first nav item), never the page the last session ended on.
       window.setTimeout(() => navigate("/dashboard", { replace: true }), SUCCESS_PAUSE_MS);
     } catch (err) {
       setStatus("idle");
-      setServerError(err instanceof Error ? err.message : "We couldn't sign you in. Please try again.");
+      setServerError(err instanceof Error ? err.message : t("We couldn't sign you in. Please try again."));
     }
   };
 
@@ -146,9 +149,9 @@ function CredentialsForm() {
       </AnimatePresence>
 
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email address</Label>
+        <Label htmlFor="email">{t("Email address")}</Label>
         <div className="relative">
-          <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Mail className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input
             id="email"
             type="email"
@@ -156,7 +159,7 @@ function CredentialsForm() {
             placeholder="you@school.edu"
             autoComplete="username"
             disabled={busy}
-            className="h-11 rounded-xl pl-10 text-[15px] sm:text-sm"
+            className="h-11 rounded-xl ps-10 text-[15px] sm:text-sm"
             aria-invalid={errors.email ? true : undefined}
             aria-describedby={errors.email ? "email-error" : undefined}
             {...register("email", { onChange: clearServerError })}
@@ -166,16 +169,16 @@ function CredentialsForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t("Password")}</Label>
         <div className="relative">
-          <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Lock className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
+            placeholder={t("Enter your password")}
             autoComplete="current-password"
             disabled={busy}
-            className="h-11 rounded-xl pl-10 pr-11 text-[15px] sm:text-sm"
+            className="h-11 rounded-xl ps-10 pe-11 text-[15px] sm:text-sm"
             aria-invalid={errors.password ? true : undefined}
             aria-describedby={errors.password ? "password-error" : undefined}
             {...register("password", { onChange: clearServerError })}
@@ -183,8 +186,8 @@ function CredentialsForm() {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="absolute end-1 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={showPassword ? t("Hide password") : t("Show password")}
             aria-pressed={showPassword}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -196,13 +199,13 @@ function CredentialsForm() {
       <div className="flex items-center justify-between gap-3">
         <label className="flex cursor-pointer select-none items-center gap-2.5 py-0.5">
           <Checkbox checked={watch("rememberMe")} onCheckedChange={(v) => setValue("rememberMe", v === true)} disabled={busy} />
-          <span className="text-sm text-secondary-foreground">Remember me</span>
+          <span className="text-sm text-secondary-foreground">{t("Remember me")}</span>
         </label>
         <Link
           to="/forgot-password"
           className="rounded text-sm font-medium text-primary-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Forgot password?
+          {t("Forgot password?")}
         </Link>
       </div>
 
@@ -218,13 +221,13 @@ function CredentialsForm() {
       >
         {status === "success" ? (
           <>
-            <Check className="h-4 w-4" strokeWidth={2.5} /> Signed in — opening your workspace
+            <Check className="h-4 w-4" strokeWidth={2.5} /> {t("Signed in — opening your workspace")}
           </>
         ) : status === "submitting" ? (
-          "Signing in…"
+          t("Signing in…")
         ) : (
           <>
-            Sign In
+            {t("Sign In")}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </>
         )}
@@ -232,7 +235,7 @@ function CredentialsForm() {
 
       <div className="relative flex items-center gap-3 py-1" role="separator">
         <div className="h-px flex-1 bg-border" />
-        <span className="text-[11px] font-semibold tracking-widest text-muted-foreground">OR</span>
+        <span className="text-[11px] font-semibold tracking-widest text-muted-foreground">{t("OR")}</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
@@ -241,11 +244,11 @@ function CredentialsForm() {
         variant="outline"
         size="lg"
         disabled={busy}
-        onClick={() => toast("Google sign-in isn't enabled for your school yet.")}
+        onClick={() => toast(t("Google sign-in isn't enabled for your school yet."))}
         className="h-11 w-full rounded-xl text-[15px] sm:text-sm"
       >
         <GoogleMark />
-        Sign in with Google
+        {t("Sign in with Google")}
       </Button>
 
       {/* Demo accounts */}
@@ -256,7 +259,7 @@ function CredentialsForm() {
           aria-expanded={demoOpen}
           className="flex w-full cursor-pointer items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Exploring the demo? Use a sample account
+          {t("Exploring the demo? Use a sample account")}
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", demoOpen && "rotate-180")} />
         </button>
         <AnimatePresence initial={false}>
@@ -274,9 +277,9 @@ function CredentialsForm() {
                     type="button"
                     onClick={() => fillDemo(a)}
                     disabled={busy}
-                    className="w-full cursor-pointer rounded-lg bg-secondary/60 px-2.5 py-2 text-left transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed"
+                    className="w-full cursor-pointer rounded-lg bg-secondary/60 px-2.5 py-2 text-start transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed"
                   >
-                    <span className="block text-xs font-semibold text-foreground">{a.role}</span>
+                    <span className="block text-xs font-semibold text-foreground">{t(a.role)}</span>
                     <span className="block truncate text-[11px] text-muted-foreground">{a.email}</span>
                   </button>
                 </li>
@@ -291,6 +294,7 @@ function CredentialsForm() {
 
 export default function LoginPage() {
   const [expired] = useState(() => readSignOutReason() === "expired");
+  const { t } = useTranslation("authentication");
 
   return (
     <div className="flex min-h-dvh w-full bg-background">
@@ -300,7 +304,7 @@ export default function LoginPage() {
         {/* Soft backdrop behind the form (phones and tablets get it full-width) */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-32 left-1/2 h-80 w-[36rem] -translate-x-1/2 rounded-full bg-indigo-400/10 blur-3xl lg:hidden" />
-          <div className="absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-brand-300/10 blur-3xl" />
+          <div className="absolute -end-24 bottom-0 h-72 w-72 rounded-full bg-brand-300/10 blur-3xl" />
         </div>
 
         <div className="relative flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
@@ -310,18 +314,18 @@ export default function LoginPage() {
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="w-full max-w-[25rem]"
           >
-            <div className="mb-8 flex flex-col items-center text-center lg:items-start lg:text-left">
+            <div className="mb-8 flex flex-col items-center text-center lg:items-start lg:text-start">
               <div className="lg:hidden">
                 <BrandMark />
               </div>
-              <h1 className="mt-8 text-[1.75rem] font-bold leading-tight tracking-[-0.025em] text-foreground lg:mt-0">Welcome back!</h1>
-              <p className="mt-2 text-[15px] text-muted-foreground">Sign in to continue to your school workspace.</p>
+              <h1 className="mt-8 text-[1.75rem] font-bold leading-tight tracking-[-0.025em] text-foreground lg:mt-0">{t("Welcome back!")}</h1>
+              <p className="mt-2 text-[15px] text-muted-foreground">{t("Sign in to continue to your school workspace.")}</p>
             </div>
 
             {expired && (
               <div role="status" className="mb-5 flex items-start gap-2.5 rounded-xl border border-warning/30 bg-warning-soft px-3.5 py-3 text-sm text-warning-strong">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <p>Your session has expired. Please sign in again to continue where you left off.</p>
+                <p>{t("Your session has expired. Please sign in again to continue where you left off.")}</p>
               </div>
             )}
 
@@ -330,7 +334,7 @@ export default function LoginPage() {
             <p className="mx-auto mt-8 flex max-w-xs items-start gap-2 text-xs leading-relaxed text-muted-foreground lg:mx-0 lg:max-w-none">
               <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0 text-success" aria-hidden="true" />
               <span>
-                Secure sign-in. Your school's data stays private to your school and is never shared.
+                {t("Secure sign-in. Your school's data stays private to your school and is never shared.")}
               </span>
             </p>
           </motion.div>
@@ -341,15 +345,15 @@ export default function LoginPage() {
               there. Locally (one origin) it's the in-app "/" route. */}
           {isSiteOnOtherOrigin ? (
             <a href={siteHref("/")} className="rounded hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              &larr; Back to website
+              &larr; {t("Back to website")}
             </a>
           ) : (
             <Link to="/" className="rounded hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              &larr; Back to website
+              &larr; {t("Back to website")}
             </Link>
           )}
           <span aria-hidden="true" className="hidden sm:inline">&middot;</span>
-          <span>Need help? Contact your school administrator</span>
+          <span>{t("Need help? Contact your school administrator")}</span>
         </footer>
       </main>
     </div>

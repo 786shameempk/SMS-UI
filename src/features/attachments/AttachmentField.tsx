@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from "react";
 import { Loader2, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AttachmentLink from "./AttachmentLink";
@@ -11,7 +12,7 @@ import { attachmentAccept, attachmentHint, uploadAttachment, type AttachmentKind
  * (`value`), so saving the form is a normal JSON request. `onChange(null)` means the file was removed.
  */
 export default function AttachmentField({
-  label = "Attachment",
+  label,
   kind = "general",
   value,
   onChange,
@@ -23,6 +24,7 @@ export default function AttachmentField({
   onChange: (value: AttachmentRef | null) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation("attachments");
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -36,7 +38,7 @@ export default function AttachmentField({
       const uploaded = await uploadAttachment(file, kind);
       onChange({ id: uploaded.id, fileName: uploaded.fileName });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not upload the file.";
+      const message = err instanceof Error ? err.message : t("Could not upload the file.");
       setError(message);
       toast.error(message);
     } finally {
@@ -47,7 +49,7 @@ export default function AttachmentField({
 
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={inputId} optional>{label}</Label>
+      <Label htmlFor={inputId} optional>{label ?? t("Attachment")}</Label>
       <input
         ref={inputRef}
         id={inputId}
@@ -65,12 +67,12 @@ export default function AttachmentField({
         )}
         <Button type="button" variant="outline" size="sm" disabled={disabled || uploading} onClick={() => inputRef.current?.click()}>
           {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-          {uploading ? "Uploading…" : value ? "Replace file" : "Upload file"}
+          {uploading ? t("Uploading…") : value ? t("Replace file") : t("Upload file")}
         </Button>
         {value && !uploading && (
           <Button type="button" variant="ghost" size="sm" className="text-destructive-strong" disabled={disabled} onClick={() => onChange(null)}>
             <Trash2 className="w-3.5 h-3.5" />
-            Remove
+            {t("Remove")}
           </Button>
         )}
       </div>

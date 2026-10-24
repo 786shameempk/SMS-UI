@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -33,6 +34,7 @@ export default function AdmissionDecisionDialog({
   submitting: boolean;
   onSubmit: (values: AdmissionDecisionFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("students");
   const { data: seatAvailability = [] } = useQuery({
     queryKey: ["students", "seat-availability", application?.branchId],
     queryFn: () => listSeatAvailability(application?.branchId),
@@ -57,23 +59,26 @@ export default function AdmissionDecisionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Selection decision</DialogTitle>
+          <DialogTitle>{t("Selection decision")}</DialogTitle>
           <DialogDescription>
-            Decide the outcome for {application.applicantFirstName} {application.applicantLastName} ({application.appliedClass}).
+            {t("Decide the outcome for {{name}} ({{className}}).", {
+              name: `${application.applicantFirstName} ${application.applicantLastName}`,
+              className: application.appliedClass,
+            })}
           </DialogDescription>
         </DialogHeader>
 
         {seats && (
           <p className={`text-xs rounded-md border px-2.5 py-2 ${seats.availableSeats > 0 ? "bg-secondary/40 border-border text-secondary-foreground" : "bg-warning-soft border-warning/30 text-warning-strong"}`}>
             {seats.availableSeats > 0
-              ? `${seats.availableSeats} of ${seats.capacity} seats currently available in ${seats.className}.`
-              : `${seats.className} currently has no seats available (${seats.currentStrength}/${seats.capacity}) — consider waitlisting.`}
+              ? t("{{available}} of {{capacity}} seats currently available in {{className}}.", { available: seats.availableSeats, capacity: seats.capacity, className: seats.className })
+              : t("{{className}} currently has no seats available ({{strength}}/{{capacity}}) — consider waitlisting.", { className: seats.className, strength: seats.currentStrength, capacity: seats.capacity })}
           </p>
         )}
 
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, decisionRemarks: values.decisionRemarks?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="dec-decision" required>Decision</Label>
+            <Label htmlFor="dec-decision" required>{t("Decision")}</Label>
             <Controller
               control={control}
               name="decision"
@@ -85,7 +90,7 @@ export default function AdmissionDecisionDialog({
                   <SelectContent>
                     {DECISION_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -95,16 +100,16 @@ export default function AdmissionDecisionDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="dec-remarks" optional>Remarks</Label>
+            <Label htmlFor="dec-remarks" optional>{t("Remarks")}</Label>
             <Textarea id="dec-remarks" rows={3} {...register("decisionRemarks")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Record decision
+              {t("Record decision")}
             </Button>
           </DialogFooter>
         </form>

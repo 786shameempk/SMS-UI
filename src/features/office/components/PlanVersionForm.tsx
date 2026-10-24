@@ -30,7 +30,7 @@ function CheckGroup({ legend, items, selected, onChange, disabled, locked = [] }
               <Checkbox checked={isLocked || selected.includes(i.key)} disabled={disabled || isLocked} onCheckedChange={(v) => toggle(i.key, v === true)} aria-label={i.label} />
               <span>
                 {i.label}
-                {isLocked && <span className="ml-1 text-xs text-muted-foreground">(always included)</span>}
+                {isLocked && <span className="ms-1 text-xs text-muted-foreground">(always included)</span>}
               </span>
             </label>
           );

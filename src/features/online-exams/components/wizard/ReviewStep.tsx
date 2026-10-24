@@ -18,7 +18,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-1.5 text-sm">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium text-foreground">{children}</dd>
+      <dd className="text-end font-medium text-foreground">{children}</dd>
     </div>
   );
 }
@@ -51,7 +51,7 @@ export default function ReviewStep({ state, labels, assignedCount, blockers, onE
             <AlertTriangle className="h-4 w-4" />
             Save as a draft for now - fix these to schedule or publish:
           </p>
-          <ul className="mt-1.5 list-disc space-y-0.5 pl-6">
+          <ul className="mt-1.5 list-disc space-y-0.5 ps-6">
             {blockers.map((b) => (
               <li key={b}>{b}</li>
             ))}
@@ -102,6 +102,8 @@ export default function ReviewStep({ state, labels, assignedCount, blockers, onE
               <Row label="Passing marks">{formatMarks(s.passingMarks)}</Row>
               <Row label="Attempts">{s.maxAttempts}</Row>
               {s.negativeMarkPerWrong > 0 && <Row label="Negative marking">−{formatMarks(s.negativeMarkPerWrong)} per wrong answer</Row>}
+              {s.questionsPerAttempt > 0 && <Row label="Question pool">{s.questionsPerAttempt} drawn per student</Row>}
+              <Row label="Proctoring">{s.proctoring === "Off" ? "Off" : `${s.proctoring === "Webcam" ? "Browser and camera" : "Browser events"}${s.requireFullscreen ? ", fullscreen" : ""}; flag after ${s.warningThreshold}${s.autoSubmitAfterIncidents ? `, auto-submit after ${s.autoSubmitAfterIncidents}` : ""}`}</Row>
             </dl>
             <ul className="grid gap-1.5 sm:grid-cols-2">
               <Flag on={s.shuffleQuestions} label="Shuffle questions" />

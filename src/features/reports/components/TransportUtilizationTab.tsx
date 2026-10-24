@@ -6,27 +6,29 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, CHART_TOOLTIP_STYLE }
 import { getTransportUtilizationReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 export default function TransportUtilizationTab() {
+  const { t } = useTranslation("reports");
   const { data, isLoading } = useQuery({ queryKey: ["reports", "transport-utilization"], queryFn: getTransportUtilizationReport });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatTile label="Students assigned" value={String(data.totalAssigned)} icon={Users} />
-        <StatTile label="Total seating capacity" value={String(data.totalCapacity)} icon={Bus} />
-        <StatTile label="Overall utilization" value={`${data.overallUtilization}%`} icon={Percent} />
+        <StatTile label={t("Students assigned")} value={String(data.totalAssigned)} icon={Users} />
+        <StatTile label={t("Total seating capacity")} value={String(data.totalCapacity)} icon={Bus} />
+        <StatTile label={t("Overall utilization")} value={`${data.overallUtilization}%`} icon={Percent} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Route utilization</CardTitle>
-          <CardDescription>Active student assignments as a share of each route's bus capacity.</CardDescription>
+          <CardTitle>{t("Route utilization")}</CardTitle>
+          <CardDescription>{t("Active student assignments as a share of each route's bus capacity.")}</CardDescription>
         </CardHeader>
         <CardContent>
           {data.routes.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-10 text-center">No routes with an assigned bus yet.</p>
+            <p className="text-sm text-muted-foreground py-10 text-center">{t("No routes with an assigned bus yet.")}</p>
           ) : (
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">

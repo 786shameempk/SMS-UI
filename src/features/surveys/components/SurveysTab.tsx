@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -18,6 +19,7 @@ import SurveyResultsDialog from "./SurveyResultsDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function SurveysTab() {
+  const { t } = useTranslation("surveys");
   const queryClient = useQueryClient();
   const { data: surveys = [], isLoading, isError, refetch } = useQuery({ queryKey: ["surveys", "list"], queryFn: () => listSurveys() });
   const [statusFilter, setStatusFilter] = useState("all");
@@ -31,35 +33,35 @@ export default function SurveysTab() {
     mutationFn: createSurvey,
     onSuccess: (survey) => {
       invalidate();
-      toast.success(`"${survey.title}" saved as draft`);
+      toast.success(t("\"{{title}}\" saved as draft", { title: survey.title }));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create survey"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create survey")),
   });
 
   const publishMutation = useMutation({
     mutationFn: publishSurvey,
     onSuccess: () => {
       invalidate();
-      toast.success("Survey published");
+      toast.success(t("Survey published"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not publish survey"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not publish survey")),
   });
 
   const closeMutation = useMutation({
     mutationFn: closeSurvey,
     onSuccess: () => {
       invalidate();
-      toast.success("Survey closed");
+      toast.success(t("Survey closed"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not close survey"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not close survey")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteSurvey,
     onSuccess: () => {
       invalidate();
-      toast.success("Survey deleted");
+      toast.success(t("Survey deleted"));
       setDeleteTarget(null);
     },
   });
@@ -69,38 +71,38 @@ export default function SurveysTab() {
   const columns: ColumnDef<SurveyRow, unknown>[] = [
     {
       id: "title",
-      header: "Survey",
+      header: t("Survey"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.title}</p>
-          <p className="text-xs text-muted-foreground">{row.original.questions.length} question{row.original.questions.length === 1 ? "" : "s"}</p>
+          <p className="text-xs text-muted-foreground">{row.original.questions.length === 1 ? t("{{count}} question", { count: 1 }) : t("{{count}} questions", { count: row.original.questions.length })}</p>
         </div>
       ),
     },
     {
       id: "audience",
-      header: "Audience",
-      cell: ({ row }) => <span className="text-sm text-foreground">{AUDIENCE_CONFIG[row.original.audience].label}</span>,
+      header: t("Audience"),
+      cell: ({ row }) => <span className="text-sm text-foreground">{t(AUDIENCE_CONFIG[row.original.audience].label)}</span>,
     },
     {
       id: "responseCount",
-      header: "Responses",
+      header: t("Responses"),
       cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{row.original.responseCount}</span>,
     },
     {
       accessorKey: "opensAt",
-      header: "Opens",
+      header: t("Opens"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.opensAt)}</span>,
     },
     {
       id: "closesAt",
-      header: "Closes",
+      header: t("Closes"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.closesAt ? formatRelativeDay(row.original.closesAt) : "—"}</span>,
     },
     {
       id: "status",
-      header: "Status",
-      cell: ({ row }) => <Badge variant={SURVEY_STATUS_CONFIG[row.original.status].variant}>{SURVEY_STATUS_CONFIG[row.original.status].label}</Badge>,
+      header: t("Status"),
+      cell: ({ row }) => <Badge variant={SURVEY_STATUS_CONFIG[row.original.status].variant}>{t(SURVEY_STATUS_CONFIG[row.original.status].label)}</Badge>,
     },
     {
       id: "actions",
@@ -111,15 +113,15 @@ export default function SurveysTab() {
           <RowActions>
             <DropdownMenuItem onClick={() => setResultsId(s.id)}>
               <BarChart3 className="w-3.5 h-3.5" />
-              View results
+              {t("View results")}
             </DropdownMenuItem>
             {s.status === "draft" && (
-              <DropdownMenuItem onClick={() => publishMutation.mutate(s.id)}>Publish</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => publishMutation.mutate(s.id)}>{t("Publish")}</DropdownMenuItem>
             )}
-            {s.status === "published" && <DropdownMenuItem onClick={() => closeMutation.mutate(s.id)}>Close</DropdownMenuItem>}
+            {s.status === "published" && <DropdownMenuItem onClick={() => closeMutation.mutate(s.id)}>{t("Close")}</DropdownMenuItem>}
             <DropdownMenuItem onClick={() => setDeleteTarget(s)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -132,24 +134,24 @@ export default function SurveysTab() {
       <DataTableToolbar>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t("Status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="all">{t("All statuses")}</SelectItem>
             {(Object.keys(SURVEY_STATUS_CONFIG) as Array<keyof typeof SURVEY_STATUS_CONFIG>).map((s) => (
               <SelectItem key={s} value={s}>
-                {SURVEY_STATUS_CONFIG[s].label}
+                {t(SURVEY_STATUS_CONFIG[s].label)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          New survey
+          {t("New survey")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No surveys match your filter." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No surveys match your filter.")} pageSize={10} />
 
       <SurveyFormDialog
         open={formOpen}
@@ -165,9 +167,9 @@ export default function SurveysTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete survey"
-        description={`Delete "${deleteTarget?.title}" and all of its responses? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete survey")}
+        description={t("Delete \"{{title}}\" and all of its responses? This cannot be undone.", { title: deleteTarget?.title })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

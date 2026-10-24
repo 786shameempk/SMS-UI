@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { CircleCheck, Download, FileBarChart, TrendingDown, UserRoundSearch } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { INSIGHT_CAPABILITIES } from "../data";
 import SectionHeading from "./SectionHeading";
 import Reveal from "./Reveal";
@@ -64,11 +65,12 @@ function InsightCard({ index, className, children }: { index: number; className?
 }
 
 export default function InsightsSection() {
+  const { t } = useTranslation("marketing");
   return (
     <section id="insights" className="relative isolate scroll-mt-16 overflow-hidden bg-slate-950 py-24 sm:py-32">
       {/* Backdrop glows */}
-      <div className="pointer-events-none absolute -left-40 top-0 -z-10 h-[30rem] w-[30rem] rounded-full bg-brand-500/15 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 right-0 -z-10 h-[34rem] w-[34rem] rounded-full bg-brand-700/20 blur-3xl" />
+      <div className="pointer-events-none absolute -start-40 top-0 -z-10 h-[30rem] w-[30rem] rounded-full bg-brand-500/15 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 end-0 -z-10 h-[34rem] w-[34rem] rounded-full bg-brand-700/20 blur-3xl" />
       <div
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
         style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "22px 22px" }}
@@ -79,9 +81,9 @@ export default function InsightsSection() {
           <SectionHeading
             align="left"
             inverted
-            eyebrow="AI insights"
-            title="AI-Powered School Management That Surfaces What Matters"
-            description="The AI in School Sphere watches the patterns across attendance, academics, and fees — and brings the things that matter to your attention, based on your school's real records."
+            eyebrow={t("AI insights")}
+            title={t("AI-Powered School Management That Surfaces What Matters")}
+            description={t("The AI in School Sphere watches the patterns across attendance, academics, and fees — and brings the things that matter to your attention, based on your school's real records.")}
           />
           <ul className="mt-10 grid gap-3 sm:grid-cols-2">
             {INSIGHT_CAPABILITIES.map((c) => (
@@ -89,7 +91,7 @@ export default function InsightsSection() {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-400/10 text-brand-300">
                   <c.icon className="h-4 w-4" />
                 </span>
-                {c.label}
+                {t(c.label)}
               </li>
             ))}
           </ul>
@@ -98,14 +100,14 @@ export default function InsightsSection() {
         <div className="relative min-h-[26rem] sm:min-h-[28rem]">
           <Network />
           <div className="relative flex flex-col gap-3.5 py-4 sm:px-6">
-            <InsightCard index={0} className="sm:mr-16">
+            <InsightCard index={0} className="sm:me-16">
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-400/15 text-amber-300">
                   <TrendingDown className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-300/90">Attendance trend</p>
-                  <p className="mt-1 text-sm font-medium leading-snug text-white">Monday attendance in Grade 8 has dipped 4% over three weeks.</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-300/90">{t("Attendance trend")}</p>
+                  <p className="mt-1 text-sm font-medium leading-snug text-white">{t("Monday attendance in Grade 8 has dipped 4% over three weeks.")}</p>
                 </div>
                 <svg viewBox="0 0 60 24" className="mt-1 hidden h-6 w-16 shrink-0 sm:block" aria-hidden="true">
                   <polyline points="0,4 12,6 24,5 36,11 48,15 60,20" fill="none" stroke="rgb(252 211 77)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -113,14 +115,14 @@ export default function InsightsSection() {
               </div>
             </InsightCard>
 
-            <InsightCard index={1} className="sm:ml-12">
+            <InsightCard index={1} className="sm:ms-12">
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-400/15 text-brand-300">
                   <UserRoundSearch className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-300">May need attention</p>
-                  <p className="mt-1 text-sm font-medium leading-snug text-white">3 students with falling test scores and attendance under 75%.</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-300">{t("May need attention")}</p>
+                  <p className="mt-1 text-sm font-medium leading-snug text-white">{t("3 students with falling test scores and attendance under 75%.")}</p>
                   <div className="mt-3 flex items-center justify-between">
                     <div className="flex -space-x-1.5">
                       {["RK", "SP", "AM"].map((i, n) => (
@@ -129,20 +131,20 @@ export default function InsightsSection() {
                         </span>
                       ))}
                     </div>
-                    <span className="rounded-md bg-white/10 px-2 py-1 text-[11px] font-semibold text-white">Review</span>
+                    <span className="rounded-md bg-white/10 px-2 py-1 text-[11px] font-semibold text-white">{t("Review")}</span>
                   </div>
                 </div>
               </div>
             </InsightCard>
 
-            <InsightCard index={2} className="sm:mr-8">
+            <InsightCard index={2} className="sm:me-8">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-400/15 text-sky-300">
                   <FileBarChart className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white">September fee report is ready</p>
-                  <p className="text-xs text-slate-400">₹42.6L collected · 88% of expected</p>
+                  <p className="text-sm font-medium text-white">{t("September fee report is ready")}</p>
+                  <p className="text-xs text-slate-400">{t("₹42.6L collected · 88% of expected")}</p>
                 </div>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-slate-200">
                   <Download className="h-3.5 w-3.5" />
@@ -150,14 +152,14 @@ export default function InsightsSection() {
               </div>
             </InsightCard>
 
-            <InsightCard index={3} className="sm:ml-20">
+            <InsightCard index={3} className="sm:ms-20">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/15 text-emerald-300">
                   <CircleCheck className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white">Report card remarks drafted</p>
-                  <p className="text-xs text-slate-400">32 students · ready for your review</p>
+                  <p className="text-sm font-medium text-white">{t("Report card remarks drafted")}</p>
+                  <p className="text-xs text-slate-400">{t("32 students · ready for your review")}</p>
                 </div>
               </div>
             </InsightCard>

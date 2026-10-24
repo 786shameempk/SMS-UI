@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default function TemplateEditDialog({
     reset,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(templateSchema) });
+  const { t } = useTranslation("settings");
 
   useEffect(() => {
     if (open && template) reset({ subject: template.subject ?? "", body: template.body });
@@ -49,7 +51,11 @@ export default function TemplateEditDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{template.name}</DialogTitle>
-          <DialogDescription>System-triggered {template.channel === "email" ? "email" : "SMS"} content. Use the variables below in the body.</DialogDescription>
+          <DialogDescription>
+            {template.channel === "email"
+              ? t("System-triggered email content. Use the variables below in the body.")
+              : t("System-triggered SMS content. Use the variables below in the body.")}
+          </DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -67,23 +73,23 @@ export default function TemplateEditDialog({
 
           {template.channel === "email" && (
             <div className="space-y-1.5">
-              <Label htmlFor="tpl-subject">Subject</Label>
+              <Label htmlFor="tpl-subject">{t("Subject")}</Label>
               <Input id="tpl-subject" {...register("subject")} />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-body" required>Body</Label>
+            <Label htmlFor="tpl-body" required>{t("Body")}</Label>
             <Textarea id="tpl-body" rows={6} aria-invalid={errors.body ? true : undefined} {...register("body")} />
-            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.body.message}</p>}
+            {errors.body && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.body.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save changes
+              {t("Save changes")}
             </Button>
           </DialogFooter>
         </form>

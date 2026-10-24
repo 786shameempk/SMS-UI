@@ -18,6 +18,7 @@ import NextUpCard from "../components/NextUpCard";
 import ScheduleMeetingDialog from "../components/ScheduleMeetingDialog";
 import PushReminderBanner from "../components/PushReminderBanner";
 
+import { useTranslation } from "react-i18next";
 type Tab = "today" | "upcoming" | "past" | "drafts";
 
 function EmptyList({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ function pickNext(today: MeetingSummary[], upcoming: MeetingSummary[], now: numb
 }
 
 export default function MeetingsHomePage() {
+  const { t } = useTranslation("meetings");
   const { canSchedule, canSeeReports, isParent, user } = useMeetingRole();
   const [params, setParams] = useSearchParams();
   const tab = (params.get("tab") as Tab) ?? "today";
@@ -84,12 +86,12 @@ export default function MeetingsHomePage() {
     <PageContainer>
       <PageHeader
         eyebrow={<p className="text-sm text-muted-foreground">{todayLabel}</p>}
-        title={firstName ? `Hi ${firstName}` : "Online Classes"}
-        description={today.data ? `${today.data.filter((m) => m.status !== "Cancelled").length} ${isParent ? "classes and meetings" : "sessions"} today` : "Your classes and meetings"}
+        title={firstName ? t("Hi {{firstName}}", { firstName }) : t("Online Classes")}
+        description={today.data ? t("{{length}} {{v1}} today", { length: today.data.filter((m) => m.status !== "Cancelled").length, v1: isParent ? "classes and meetings" : "sessions" }) : t("Your classes and meetings")}
         actions={
           <>
-            <Button asChild variant="outline"><Link to="/online-classes/calendar"><CalendarDays className="h-4 w-4" /> Calendar</Link></Button>
-            {canSchedule && <Button onClick={() => openSchedule("OnlineClass")}><Plus className="h-4 w-4" /> Schedule class</Button>}
+            <Button asChild variant="outline"><Link to="/online-classes/calendar"><CalendarDays className="h-4 w-4" /> {t("Calendar")}</Link></Button>
+            {canSchedule && <Button onClick={() => openSchedule("OnlineClass")}><Plus className="h-4 w-4" /> {t("Schedule class")}</Button>}
           </>
         }
       />
@@ -99,28 +101,28 @@ export default function MeetingsHomePage() {
       <PushReminderBanner />
 
       {canSchedule && (
-        <nav aria-label="Quick actions" className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-2">
+        <nav aria-label={t("Quick actions")} className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-2">
           {[
-            { label: "Schedule class", icon: Plus, onClick: () => openSchedule("OnlineClass") },
-            { label: "Schedule meeting", icon: Users, onClick: () => openSchedule("ParentTeacherMeeting") },
-            { label: "Calendar", icon: CalendarDays, to: "/online-classes/calendar" },
-            { label: "Attendance", icon: ClipboardCheck, to: "/online-classes/reports?tab=attendance" },
-            { label: "Recordings", icon: Film, onClick: () => setTab("past") },
-            ...(canSeeReports ? [{ label: "Reports", icon: BarChart3, to: "/online-classes/reports" }] : []),
+            { label: t("Schedule class"), icon: Plus, onClick: () => openSchedule("OnlineClass") },
+            { label: t("Schedule meeting"), icon: Users, onClick: () => openSchedule("ParentTeacherMeeting") },
+            { label: t("Calendar"), icon: CalendarDays, to: "/online-classes/calendar" },
+            { label: t("Attendance"), icon: ClipboardCheck, to: "/online-classes/reports?tab=attendance" },
+            { label: t("Recordings"), icon: Film, onClick: () => setTab("past") },
+            ...(canSeeReports ? [{ label: t("Reports"), icon: BarChart3, to: "/online-classes/reports" }] : []),
           ].map((a) => {
             const content = (
               <>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-primary-text dark:bg-brand-900/40 dark:text-brand-300">
                   <a.icon className="h-4 w-4" aria-hidden />
                 </span>
-                <span className="truncate">{a.label}</span>
+                <span className="truncate">{t(a.label)}</span>
               </>
             );
             const cls = "flex items-center gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
             return "to" in a && a.to ? (
               <Link key={a.label} to={a.to} className={cls}>{content}</Link>
             ) : (
-              <button key={a.label} type="button" onClick={a.onClick} className={cn(cls, "text-left")}>{content}</button>
+              <button key={a.label} type="button" onClick={a.onClick} className={cn(cls, "text-start")}>{content}</button>
             );
           })}
         </nav>
@@ -129,21 +131,21 @@ export default function MeetingsHomePage() {
       <Tabs value={tab} onValueChange={setTab}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <TabsList>
-            <TabsTrigger value="today">Today</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="past"><History className="mr-1 h-3.5 w-3.5" />Past</TabsTrigger>
-            {canSchedule && <TabsTrigger value="drafts">Drafts</TabsTrigger>}
+            <TabsTrigger value="today">{t("Today")}</TabsTrigger>
+            <TabsTrigger value="upcoming">{t("Upcoming")}</TabsTrigger>
+            <TabsTrigger value="past"><History className="me-1 h-3.5 w-3.5" />{t("Past")}</TabsTrigger>
+            {canSchedule && <TabsTrigger value="drafts">{t("Drafts")}</TabsTrigger>}
           </TabsList>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by type">
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("Filter by type")}>
             <ToggleChip pressed={!group} onClick={() => setType(undefined)}>
-              All
+              {t("All")}
             </ToggleChip>
             {TYPE_LEGEND.map((g) => {
               const on = group?.label === g.label;
               return (
                 <ToggleChip key={g.label} pressed={on} onClick={() => setType(on ? undefined : g.label)}>
                   <span className={cn("h-2 w-2 rounded-full", g.dot)} aria-hidden />
-                  {g.label}
+                  {t(g.label)}
                 </ToggleChip>
               );
             })}
@@ -154,7 +156,7 @@ export default function MeetingsHomePage() {
           {today.isLoading ? <ListSkeleton /> : (
             <MeetingList
               meetings={laterToday.filter(matches)}
-              empty={<EmptyList>{next ? "Nothing else today." : "Nothing scheduled today."}</EmptyList>}
+              empty={<EmptyList>{next ? t("Nothing else today.") : t("Nothing scheduled today.")}</EmptyList>}
             />
           )}
         </TabsContent>
@@ -165,10 +167,10 @@ export default function MeetingsHomePage() {
               meetings={upcomingLater.filter(matches)}
               empty={
                 <EmptyList>
-                  Nothing in the next three weeks.
+                  {t("Nothing in the next three weeks.")}
                   {canSchedule && (
                     <Button size="sm" variant="link" onClick={() => openSchedule("OnlineClass")}>
-                      <CalendarPlus className="h-4 w-4" /> Schedule one
+                      <CalendarPlus className="h-4 w-4" /> {t("Schedule one")}
                     </Button>
                   )}
                 </EmptyList>
@@ -179,18 +181,18 @@ export default function MeetingsHomePage() {
 
         <TabsContent value="past" className="mt-4 space-y-3">
           <div className="relative max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input id="past-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title, class or teacher" className="pl-9" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input id="past-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("Search title, class or teacher")} className="ps-9" />
           </div>
           {past.isLoading ? <ListSkeleton /> : (
-            <MeetingList meetings={pastItems.filter(matches)} showDate empty={<EmptyList>No past classes or meetings yet.</EmptyList>} />
+            <MeetingList meetings={pastItems.filter(matches)} showDate empty={<EmptyList>{t("No past classes or meetings yet.")}</EmptyList>} />
           )}
         </TabsContent>
 
         {canSchedule && (
           <TabsContent value="drafts" className="mt-4">
             {drafts.isLoading ? <ListSkeleton /> : (
-              <MeetingList meetings={drafts.data?.items ?? []} showDate empty={<EmptyList>No drafts. Use “Save as draft” when scheduling to finish later.</EmptyList>} />
+              <MeetingList meetings={drafts.data?.items ?? []} showDate empty={<EmptyList>{t("No drafts. Use “Save as draft” when scheduling to finish later.")}</EmptyList>} />
             )}
           </TabsContent>
         )}

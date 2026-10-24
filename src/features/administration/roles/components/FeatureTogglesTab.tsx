@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { listFeatureToggles, setFeatureToggle } from "../api";
 
 export default function FeatureTogglesTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const { data: toggles = [], isLoading } = useQuery({ queryKey: ["admin", "feature-toggles"], queryFn: listFeatureToggles });
 
@@ -14,14 +16,14 @@ export default function FeatureTogglesTab() {
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) => setFeatureToggle(id, enabled),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "feature-toggles"] });
-      toast.success(`${updated.label} ${updated.enabled ? "enabled" : "disabled"}`);
+      toast.success(updated.enabled ? t("{{name}} enabled", { name: updated.label }) : t("{{name}} disabled", { name: updated.label }));
     },
   });
 
   const grouped = useMemo(() => {
     const acc: Record<string, typeof toggles> = {};
-    for (const t of toggles) {
-      acc[t.module] = acc[t.module] ? [...acc[t.module], t] : [t];
+    for (const toggle of toggles) {
+      acc[toggle.module] = acc[toggle.module] ? [...acc[toggle.module], toggle] : [toggle];
     }
     return acc;
   }, [toggles]);
@@ -39,7 +41,7 @@ export default function FeatureTogglesTab() {
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Turn entire features on or off application-wide, independent of who has permission to use them.
+        {t("Turn entire features on or off application-wide, independent of who has permission to use them.")}
       </p>
       {Object.entries(grouped).map(([module, items]) => (
         <div key={module} className="space-y-2">

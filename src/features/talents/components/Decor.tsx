@@ -54,14 +54,14 @@ export function HeroDecor({ dense = false }: { dense?: boolean }) {
   ];
   return (
     <>
-      <div className="cc-blob w-64 h-64 -top-16 -left-10" style={{ background: "var(--color-brand-600)" }} />
-      <div className="cc-blob w-72 h-72 -bottom-24 right-0" style={{ background: "var(--color-brand-500)", animationDelay: "-6s" }} />
+      <div className="cc-blob w-64 h-64 -top-16 -start-10" style={{ background: "var(--color-brand-600)" }} />
+      <div className="cc-blob w-72 h-72 -bottom-24 end-0" style={{ background: "var(--color-brand-500)", animationDelay: "-6s" }} />
       <div className="cc-blob w-40 h-40 top-10 right-1/3" style={{ background: "var(--color-brand-400)", animationDelay: "-11s", opacity: 0.35 }} />
       {sparkles.map((s, i) => (
         <Sparkle key={i} className="cc-sparkle" style={{ top: s.top, left: s.left, width: s.size, height: s.size, color: s.color, animationDelay: s.delay }} />
       ))}
-      <MusicNote className="absolute right-[6%] bottom-[18%] w-9 h-9 text-white/15 cc-float hidden sm:block" />
-      <PaletteShape className="absolute right-[22%] top-[12%] w-8 h-8 text-white/10 cc-float hidden md:block [animation-delay:-2s]" />
+      <MusicNote className="absolute end-[6%] bottom-[18%] w-9 h-9 text-white/15 cc-float hidden sm:block" />
+      <PaletteShape className="absolute end-[22%] top-[12%] w-8 h-8 text-white/10 cc-float hidden md:block [animation-delay:-2s]" />
     </>
   );
 }
@@ -71,7 +71,7 @@ export function BrushHeading({ children, className, accent = "var(--color-brand-
   return (
     <span className={cn("relative inline-block", className)}>
       <span className="relative z-10">{children}</span>
-      <BrushStroke className="absolute -bottom-1 left-0 w-full h-3 z-0 opacity-40" color={accent} />
+      <BrushStroke className="absolute -bottom-1 start-0 w-full h-3 z-0 opacity-40" color={accent} />
     </span>
   );
 }

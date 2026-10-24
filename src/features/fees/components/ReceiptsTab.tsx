@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
@@ -16,6 +17,7 @@ import ReceiptView from "./ReceiptView";
 import DeleteReceiptDialog from "./DeleteReceiptDialog";
 
 export default function ReceiptsTab() {
+  const { t } = useTranslation("fees");
   const queryClient = useQueryClient();
   const [viewing, setViewing] = useState<Receipt | null>(null);
   const [deleting, setDeleting] = useState<Receipt | null>(null);
@@ -27,10 +29,10 @@ export default function ReceiptsTab() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) => deleteReceipt(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fees"] });
-      toast.success("Payment deleted");
+      toast.success(t("Payment deleted"));
       setDeleting(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete the payment"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete the payment")),
   });
 
   const { data: receipts = [], isLoading, isError, refetch } = useQuery({ queryKey: ["fees", "receipts"], queryFn: listReceipts });
@@ -40,11 +42,16 @@ export default function ReceiptsTab() {
   const invoiceById = useMemo(() => new Map(invoices.map((inv) => [inv.id, inv] as const)), [invoices]);
   const studentById = useMemo(() => new Map(students.map((s) => [s.id, s] as const)), [students]);
 
+  const modeLabel = (mode: Receipt["paymentMode"]) => {
+    const label = PAYMENT_MODE_OPTIONS.find((o) => o.value === mode)?.label;
+    return label ? t(label) : label;
+  };
+
   const columns: ColumnDef<Receipt, unknown>[] = [
-    { accessorKey: "receiptNumber", header: "Receipt No.", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.receiptNumber}</span> },
+    { accessorKey: "receiptNumber", header: t("Receipt No."), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.receiptNumber}</span> },
     {
       id: "student",
-      header: "Student",
+      header: t("Student"),
       cell: ({ row }) => {
         const invoice = invoiceById.get(row.original.invoiceId);
         const student = invoice ? studentById.get(invoice.studentId) : undefined;
@@ -53,17 +60,17 @@ export default function ReceiptsTab() {
     },
     {
       accessorKey: "amount",
-      header: "Amount",
+      header: t("Amount"),
       cell: ({ row }) => <span className="text-sm text-foreground tabular-nums">{formatCurrency(row.original.amount)}</span>,
     },
     {
       accessorKey: "paymentMode",
-      header: "Mode",
-      cell: ({ row }) => <Badge variant="neutral">{PAYMENT_MODE_OPTIONS.find((o) => o.value === row.original.paymentMode)?.label}</Badge>,
+      header: t("Mode"),
+      cell: ({ row }) => <Badge variant="neutral">{modeLabel(row.original.paymentMode)}</Badge>,
     },
     {
       accessorKey: "paidOn",
-      header: "Paid on",
+      header: t("Paid on"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{new Date(row.original.paidOn).toLocaleDateString()}</span>,
     },
     {
@@ -73,12 +80,12 @@ export default function ReceiptsTab() {
         <div className="flex items-center justify-end gap-1">
           <Button variant="ghost" size="sm" onClick={() => setViewing(row.original)}>
             <Eye className="w-3.5 h-3.5" />
-            View
+            {t("View")}
           </Button>
           {canDelete && !row.original.providerPaymentId && (
             <Button variant="ghost" size="sm" className="text-destructive-strong" onClick={() => setDeleting(row.original)}>
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </Button>
           )}
         </div>
@@ -93,10 +100,10 @@ export default function ReceiptsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Receipts are generated automatically whenever a payment is recorded.</p>
+        <p className="text-sm text-muted-foreground">{t("Receipts are generated automatically whenever a payment is recorded.")}</p>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No receipts generated yet." />
+      <DataTable searchable columns={columns} data={sorted} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No receipts generated yet.")} />
 
       <DeleteReceiptDialog
         receipt={deleting}

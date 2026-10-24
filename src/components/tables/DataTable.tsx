@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import {
   type ColumnDef,
   type FilterFn,
@@ -71,7 +72,7 @@ interface DataTableProps<TData> {
   toolbar?: ReactNode;
   /** Filter controls placed next to the search box. */
   filters?: ReactNode;
-  /** Primary actions (e.g. "+ Add student"), right-aligned in the toolbar. */
+  /** Primary actions (e.g. "+ Add student"), end-aligned in the toolbar. */
   actions?: ReactNode;
   /** Applied filters, shown as removable chips under the toolbar. Also drives the "no results for these filters" state. */
   activeFilters?: ActiveFilter[];
@@ -153,12 +154,12 @@ export function DataTable<TData>({
   isLoading,
   isError,
   onRetry,
-  emptyMessage = "No records found.",
+  emptyMessage: emptyMessageProp,
   empty,
   pageSize = 10,
   pageSizeOptions,
   searchable,
-  searchPlaceholder = "Search…",
+  searchPlaceholder: searchPlaceholderProp,
   toolbar,
   filters,
   actions,
@@ -177,6 +178,9 @@ export function DataTable<TData>({
   className,
   serverPagination: server,
 }: DataTableProps<TData>) {
+  const { t } = useTranslation("common");
+  const emptyMessage = emptyMessageProp ?? t("No records found.");
+  const searchPlaceholder = searchPlaceholderProp ?? t("Search…");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -191,14 +195,14 @@ export function DataTable<TData>({
       enableHiding: false,
       header: ({ table }) => (
         <Checkbox
-          aria-label="Select all rows on this page"
+          aria-label={t("Select all rows on this page")}
           checked={table.getIsAllPageRowsSelected() ? true : table.getIsSomePageRowsSelected() ? "indeterminate" : false}
           onCheckedChange={(v) => table.toggleAllPageRowsSelected(v === true)}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
-          aria-label="Select row"
+          aria-label={t("Select row")}
           checked={row.getIsSelected()}
           disabled={!row.getCanSelect()}
           onCheckedChange={(v) => row.toggleSelected(v === true)}
@@ -207,7 +211,7 @@ export function DataTable<TData>({
       ),
     };
     return [select, ...columns];
-  }, [columns, selectable]);
+  }, [columns, selectable, t]);
 
   const table = useReactTable({
     data,
@@ -283,22 +287,24 @@ export function DataTable<TData>({
           bare
           size="sm"
           icon={isSearching ? SearchX : FilterX}
-          title={isSearching ? "No matching results" : "No results for these filters"}
+          title={isSearching ? t("No matching results") : t("No results for these filters")}
           description={
             isSearching
-              ? `Nothing matches “${globalFilter.trim()}”${hasFilters ? " with the current filters" : ""}. Try a different search.`
-              : "Try removing a filter or two to widen the results."
+              ? hasFilters
+                ? t("Nothing matches “{{query}}” with the current filters. Try a different search.", { query: globalFilter.trim() })
+                : t("Nothing matches “{{query}}”. Try a different search.", { query: globalFilter.trim() })
+              : t("Try removing a filter or two to widen the results.")
           }
           action={
             <>
               {isSearching && (
                 <Button variant="outline" size="sm" onClick={() => setGlobalFilter("")}>
-                  Clear search
+                  {t("Clear search")}
                 </Button>
               )}
               {hasFilters && onClearFilters && (
                 <Button variant="outline" size="sm" onClick={onClearFilters}>
-                  Clear filters
+                  {t("Clear filters")}
                 </Button>
               )}
             </>
@@ -329,20 +335,20 @@ export function DataTable<TData>({
   const toolButtons = (
     <>
       {onRefresh && (
-        <Button variant="ghost" size="icon-sm" onClick={onRefresh} disabled={isRefreshing} aria-label="Refresh" title="Refresh">
+        <Button variant="ghost" size="icon-sm" onClick={onRefresh} disabled={isRefreshing} aria-label={t("Refresh")} title={t("Refresh")}>
           <RotateCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
         </Button>
       )}
       {showColumnMenu && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" aria-label="Choose columns">
+            <Button variant="outline" size="sm" aria-label={t("Choose columns")}>
               <Settings2 className="h-3.5 w-3.5" />
-              <span className="hidden lg:inline">Columns</span>
+              <span className="hidden lg:inline">{t("Columns")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[12rem]">
-            <DropdownMenuLabel className="text-xs text-muted-foreground">Show columns</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs text-muted-foreground">{t("Show columns")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {hideableColumns.map((col) => (
               <DropdownMenuCheckboxItem
@@ -360,8 +366,8 @@ export function DataTable<TData>({
       {exportFileName && (
         <Button variant="outline" size="sm" onClick={() => exportCsv(filteredRows)} disabled={filteredRows.length === 0}>
           <Download className="h-3.5 w-3.5" />
-          <span className="hidden lg:inline">Export</span>
-          <span className="sr-only lg:hidden">Export</span>
+          <span className="hidden lg:inline">{t("Export")}</span>
+          <span className="sr-only lg:hidden">{t("Export")}</span>
         </Button>
       )}
     </>
@@ -397,26 +403,26 @@ export function DataTable<TData>({
           {bulkActive && (
             <div
               role="toolbar"
-              aria-label="Bulk actions"
+              aria-label={t("Bulk actions")}
               className={cn(
                 "flex flex-wrap items-center gap-2 border-b border-primary/20 bg-accent px-3 py-3 animate-in fade-in-0 duration-150 sm:px-4",
                 // Laid over the toolbar (which keeps its space) so the rows below never shift.
                 hasToolbarContent && "absolute inset-0 z-20",
               )}
             >
-              <div className="flex items-center gap-1 mr-auto">
-                <Button variant="ghost" size="icon-sm" onClick={clearSelection} aria-label="Clear selection" className="text-accent-foreground hover:bg-primary/10">
+              <div className="flex items-center gap-1 me-auto">
+                <Button variant="ghost" size="icon-sm" onClick={clearSelection} aria-label={t("Clear selection")} className="text-accent-foreground hover:bg-primary/10">
                   <X className="h-4 w-4" />
                 </Button>
                 <p className="text-sm font-medium text-accent-foreground tabular-nums" aria-live="polite">
-                  {selectedRows.length.toLocaleString()} selected
+                  {t("{{number}} selected", { number: selectedRows.length.toLocaleString() })}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {exportFileName && (
                   <Button variant="outline" size="sm" onClick={() => exportCsv(selectedRows)}>
                     <Download className="h-3.5 w-3.5" />
-                    Export
+                    {t("Export")}
                   </Button>
                 )}
                 {bulkActions?.(
@@ -455,7 +461,7 @@ export function DataTable<TData>({
                           className={cn(
                             tableClasses.head,
                             header.column.id === ACTIONS_ID && "w-12",
-                            header.column.id === SELECT_ID && "w-10 pr-0 [&>button]:align-middle",
+                            header.column.id === SELECT_ID && "w-10 pe-0 [&>button]:align-middle",
                           )}
                         >
                           {canSort && content ? (
@@ -493,7 +499,7 @@ export function DataTable<TData>({
                       {visibleColumns.map((col, j) => (
                         <td key={col.id} className="px-[var(--space-row-padding-x)] py-[var(--space-row-padding-y)]">
                           {col.id === ACTIONS_ID ? (
-                            <Skeleton className="h-6 w-6 ml-auto" />
+                            <Skeleton className="h-6 w-6 ms-auto" />
                           ) : col.id === SELECT_ID ? (
                             <Skeleton className="h-4 w-4 rounded-[4px]" />
                           ) : (
@@ -526,8 +532,8 @@ export function DataTable<TData>({
                           key={cell.id}
                           className={cn(
                             tableClasses.cell,
-                            cell.column.id === ACTIONS_ID && "text-right",
-                            cell.column.id === SELECT_ID && "w-10 pr-0 [&>button]:align-middle",
+                            cell.column.id === ACTIONS_ID && "text-end",
+                            cell.column.id === SELECT_ID && "w-10 pe-0 [&>button]:align-middle",
                           )}
                           onClick={cell.column.id === ACTIONS_ID || cell.column.id === SELECT_ID ? (e) => e.stopPropagation() : undefined}
                         >
@@ -580,19 +586,19 @@ export function DataTable<TData>({
                         )}
                         <div className="min-w-0 flex-1 text-sm font-medium">{first && flexRender(first.column.columnDef.cell, first.getContext())}</div>
                         {actions && (
-                          <div className="-mr-2 -mt-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="-me-2 -mt-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                             {flexRender(actions.column.columnDef.cell, actions.getContext())}
                           </div>
                         )}
                       </div>
                       {rest.length > 0 && (
-                        <dl className={cn("mt-2.5 grid grid-cols-[minmax(0,auto)_1fr] gap-x-4 gap-y-1.5 text-sm", select && "ml-8")}>
+                        <dl className={cn("mt-2.5 grid grid-cols-[minmax(0,auto)_1fr] gap-x-4 gap-y-1.5 text-sm", select && "ms-8")}>
                           {rest.map((cell) => {
                             const label = headerText(cell.column.columnDef);
                             return (
                               <div key={cell.id} className="contents">
                                 <dt className="text-xs leading-6 text-muted-foreground">{label ?? ""}</dt>
-                                <dd className="min-w-0 text-right [&>*]:justify-end">{flexRender(cell.column.columnDef.cell, cell.getContext())}</dd>
+                                <dd className="min-w-0 text-end [&>*]:justify-end">{flexRender(cell.column.columnDef.cell, cell.getContext())}</dd>
                               </div>
                             );
                           })}
@@ -626,7 +632,7 @@ export function DataTable<TData>({
               : undefined
           }
           pageSizeOptions={pageSizeOptions}
-          note={isSearching && !server ? `(filtered from ${data.length.toLocaleString()})` : undefined}
+          note={isSearching && !server ? t("(filtered from {{total}})", { total: data.length.toLocaleString() }) : undefined}
         />
       )}
     </div>

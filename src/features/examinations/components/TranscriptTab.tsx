@@ -13,7 +13,9 @@ import { EXAM_TYPE_LABELS, gradeBadgeVariant } from "../constants";
 import { getTranscript } from "../api";
 import type { TranscriptRow } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function TranscriptTab() {
+  const { t } = useTranslation("examinations");
   const { data: students = [] } = useQuery({ queryKey: ["examinations", "all-students"], queryFn: listStudents });
   const [studentId, setStudentId] = useState<string | undefined>();
   // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
@@ -28,30 +30,30 @@ export default function TranscriptTab() {
   });
 
   const columns: ColumnDef<TranscriptRow, unknown>[] = [
-    { accessorKey: "examName", header: "Exam", cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.examName}</span> },
+    { accessorKey: "examName", header: t("Exam"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.examName}</span> },
     {
       id: "type",
-      header: "Type",
+      header: t("Type"),
       cell: ({ row }) => <Badge variant="info">{EXAM_TYPE_LABELS[row.original.examType]}</Badge>,
     },
-    { accessorKey: "termName", header: "Term", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.termName}</span> },
-    { accessorKey: "academicYearName", header: "Academic year", cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.academicYearName}</span> },
+    { accessorKey: "termName", header: t("Term"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.termName}</span> },
+    { accessorKey: "academicYearName", header: t("Academic year"), cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.academicYearName}</span> },
     {
       id: "total",
-      header: "Total",
+      header: t("Total"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground tabular-nums">
           {row.original.totalObtained} / {row.original.totalMax}
         </span>
       ),
     },
-    { accessorKey: "percentage", header: "Percentage", cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.percentage}%</span> },
+    { accessorKey: "percentage", header: t("Percentage"), cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.percentage}%</span> },
     {
       accessorKey: "grade",
-      header: "Grade",
+      header: t("Grade"),
       cell: ({ row }) => <Badge variant={gradeBadgeVariant(row.original.grade)}>{row.original.grade}</Badge>,
     },
-    { accessorKey: "gpa", header: "GPA", cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.gpa.toFixed(2)}</span> },
+    { accessorKey: "gpa", header: t("GPA"), cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{row.original.gpa.toFixed(2)}</span> },
   ];
 
   return (
@@ -59,19 +61,19 @@ export default function TranscriptTab() {
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-3">
           <div>
-            <CardTitle>Transcript</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">Full academic history across all exams and terms for the selected student.</p>
+            <CardTitle>{t("Transcript")}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">{t("Full academic history across all exams and terms for the selected student.")}</p>
           </div>
           <div className="flex items-center gap-4">
             {transcript && (
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">CGPA (current academic year)</p>
+              <div className="text-end">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t("CGPA (current academic year)")}</p>
                 <p className="text-lg font-bold text-foreground tabular-nums">{transcript.cgpa.toFixed(2)}</p>
               </div>
             )}
             <Select value={studentId} onValueChange={setStudentId}>
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select a student" />
+                <SelectValue placeholder={t("Select a student")} />
               </SelectTrigger>
               <SelectContent>
                 {students.map((s) => (
@@ -90,7 +92,7 @@ export default function TranscriptTab() {
             isLoading={isLoading}
             isError={isError}
             onRetry={() => refetch()}
-            emptyMessage={studentId ? "No exam results recorded for this student yet." : "Select a student to view their transcript."}
+            emptyMessage={studentId ? t("No exam results recorded for this student yet.") : t("Select a student to view their transcript.")}
           />
         </CardContent>
       </Card>

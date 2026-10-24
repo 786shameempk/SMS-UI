@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Loader2, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +38,7 @@ const MODES: { value: StudyMode; label: string; prompt: string }[] = [
 let nextId = 0;
 
 export default function StudyAssistantTab() {
+  const { t } = useTranslation("ai");
   const user = useAuthStore((s) => s.user);
   const isParent = user?.role === "parent";
   const isStaff = isExamStaff(user?.role);
@@ -65,15 +67,15 @@ export default function StudyAssistantTab() {
     mutationFn: askStudyAssistant,
     onSuccess: (r) => {
       setConversationId(r.conversationId);
-      setTurns((t) => [...t, { id: ++nextId, role: "assistant", text: r.answer, sources: r.sources, usedMaterial: r.usedMaterial, notice: r.notice }]);
+      setTurns((prev) => [...prev, { id: ++nextId, role: "assistant", text: r.answer, sources: r.sources, usedMaterial: r.usedMaterial, notice: r.notice }]);
     },
-    onError: (e: Error) => setTurns((t) => [...t, { id: ++nextId, role: "assistant", text: e.message || "Something went wrong. Please try again.", error: true }]),
+    onError: (e: Error) => setTurns((prev) => [...prev, { id: ++nextId, role: "assistant", text: e.message || t("Something went wrong. Please try again."), error: true }]),
   });
 
   const send = () => {
     const message = draft.trim();
     if (!message || ask.isPending) return;
-    setTurns((t) => [...t, { id: ++nextId, role: "user", text: message }]);
+    setTurns((prev) => [...prev, { id: ++nextId, role: "user", text: message }]);
     setDraft("");
     ask.mutate({
       message, mode, conversationId,
@@ -91,11 +93,11 @@ export default function StudyAssistantTab() {
         {isStaff && (
           <div className="max-w-xs">
             <Select value={classId} onValueChange={(v) => { setClassId(v === "__all" ? "" : v); setConversationId(undefined); }}>
-              <SelectTrigger aria-label="Class to search">
-                <SelectValue placeholder="All classes" />
+              <SelectTrigger aria-label={t("Class to search")}>
+                <SelectValue placeholder={t("All classes")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all">All classes</SelectItem>
+                <SelectItem value="__all">{t("All classes")}</SelectItem>
                 {classes.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -106,31 +108,31 @@ export default function StudyAssistantTab() {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="What would you like to do?">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("What would you like to do?")}>
           {MODES.map((m) => (
-            <Button key={m.value} type="button" size="sm" variant={mode === m.value ? "default" : "outline"} aria-pressed={mode === m.value} onClick={() => { setMode(m.value); if (!draft && m.prompt) setDraft(m.prompt); }}>
-              {m.label}
+            <Button key={m.value} type="button" size="sm" variant={mode === m.value ? "default" : "outline"} aria-pressed={mode === m.value} onClick={() => { setMode(m.value); if (!draft && m.prompt) setDraft(t(m.prompt)); }}>
+              {t(m.label)}
             </Button>
           ))}
         </div>
 
-        <div className="min-h-48 max-h-[28rem] space-y-3 overflow-y-auto" role="log" aria-live="polite" aria-label="Study conversation">
-          {turns.length === 0 && <p className="text-sm text-muted-foreground">Ask about a topic. Answers use your class study materials when they cover it, and show which pages they came from.</p>}
-          {turns.map((t) => (
-            <div key={t.id} className={t.role === "user" ? "flex justify-end" : "flex justify-start"}>
-              <div className={t.role === "user" ? "max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground" : `max-w-[85%] rounded-lg border px-3 py-2 text-sm ${t.error ? "border-destructive" : "border-border"}`}>
-                <p className="whitespace-pre-wrap">{t.text}</p>
-                {t.notice && <p className="mt-1 text-xs text-muted-foreground">{t.notice}</p>}
-                {t.role === "assistant" && !t.error && t.usedMaterial === false && (
-                  <p className="mt-1 text-xs text-muted-foreground">Not found in your school materials, so this is a general explanation.</p>
+        <div className="min-h-48 max-h-[28rem] space-y-3 overflow-y-auto" role="log" aria-live="polite" aria-label={t("Study conversation")}>
+          {turns.length === 0 && <p className="text-sm text-muted-foreground">{t("Ask about a topic. Answers use your class study materials when they cover it, and show which pages they came from.")}</p>}
+          {turns.map((turn) => (
+            <div key={turn.id} className={turn.role === "user" ? "flex justify-end" : "flex justify-start"}>
+              <div className={turn.role === "user" ? "max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground" : `max-w-[85%] rounded-lg border px-3 py-2 text-sm ${turn.error ? "border-destructive" : "border-border"}`}>
+                <p className="whitespace-pre-wrap">{turn.text}</p>
+                {turn.notice && <p className="mt-1 text-xs text-muted-foreground">{turn.notice}</p>}
+                {turn.role === "assistant" && !turn.error && turn.usedMaterial === false && (
+                  <p className="mt-1 text-xs text-muted-foreground">{t("Not found in your school materials, so this is a general explanation.")}</p>
                 )}
-                {t.sources && <AISourceReferences sources={t.sources} />}
+                {turn.sources && <AISourceReferences sources={turn.sources} />}
               </div>
             </div>
           ))}
           {ask.isPending && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Looking through your materials…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t("Looking through your materials…")}
             </div>
           )}
           <div ref={bottom} />
@@ -138,20 +140,20 @@ export default function StudyAssistantTab() {
 
         <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
           <Textarea
-            aria-label="Study question"
+            aria-label={t("Study question")}
             rows={2}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="e.g. What is friction?"
+            placeholder={t("e.g. What is friction?")}
           />
           <Button type="submit" disabled={!draft.trim() || ask.isPending}>
             <Send className="h-4 w-4" />
-            Send
+            {t("Send")}
           </Button>
         </form>
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Sparkles className="h-3 w-3" /> AI can make mistakes. Check important facts with your teacher or textbook.
+          <Sparkles className="h-3 w-3" /> {t("AI can make mistakes. Check important facts with your teacher or textbook.")}
         </p>
       </CardContent>
     </Card>

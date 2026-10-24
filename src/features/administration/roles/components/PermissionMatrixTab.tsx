@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +15,7 @@ import type { PermissionCategory } from "../types";
 const CATEGORIES: PermissionCategory[] = ["menu", "api", "screen", "action"];
 
 export default function PermissionMatrixTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const [category, setCategory] = useState<PermissionCategory>("menu");
 
@@ -35,7 +37,7 @@ export default function PermissionMatrixTab() {
     onSuccess: (map) => {
       queryClient.setQueryData(["admin", "role-permissions"], map);
     },
-    onError: (err) => toast.error(err instanceof Error && err.message ? err.message : "Could not update permission"),
+    onError: (err) => toast.error(err instanceof Error && err.message ? err.message : t("Could not update permission")),
   });
 
   // Several cells at once (a whole column of the visible category). Each is the same single-cell change the checkboxes make, so the
@@ -48,10 +50,10 @@ export default function PermissionMatrixTab() {
     },
     onSuccess: ({ done, failed, map }) => {
       queryClient.setQueryData(["admin", "role-permissions"], map);
-      if (failed > 0) toast.error(`${done} changed, ${failed} could not be changed (outside the school's plan or protected).`);
-      else toast.success(`${done} permission${done === 1 ? "" : "s"} updated`);
+      if (failed > 0) toast.error(t("{{done}} changed, {{failed}} could not be changed (outside the school's plan or protected).", { done, failed }));
+      else toast.success(done === 1 ? t("{{count}} permission updated", { count: done }) : t("{{count}} permissions updated", { count: done }));
     },
-    onError: (err) => toast.error(err instanceof Error && err.message ? err.message : "Could not update permissions"),
+    onError: (err) => toast.error(err instanceof Error && err.message ? err.message : t("Could not update permissions")),
   });
 
   // Only the modules in the school's plan are grantable (superAdmin sees every module).
@@ -76,8 +78,8 @@ export default function PermissionMatrixTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="max-w-md">
-          <p className="text-sm font-medium text-foreground">{CATEGORY_LABEL[category]} permissions</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{CATEGORY_DESCRIPTION[category]}</p>
+          <p className="text-sm font-medium text-foreground">{t(`${CATEGORY_LABEL[category]} permissions`)}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{t(CATEGORY_DESCRIPTION[category])}</p>
         </div>
         <Select value={category} onValueChange={(v) => setCategory(v as PermissionCategory)}>
           <SelectTrigger className="w-44">
@@ -86,7 +88,7 @@ export default function PermissionMatrixTab() {
           <SelectContent>
             {CATEGORIES.map((c) => (
               <SelectItem key={c} value={c}>
-                {CATEGORY_LABEL[c]} permissions
+                {t(`${CATEGORY_LABEL[c]} permissions`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -97,9 +99,12 @@ export default function PermissionMatrixTab() {
         <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-brand-500/10 px-4 py-3 text-sm">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" />
           <p className="text-foreground">
-            Your school is on the <span className="font-semibold">{scope.planName}</span> plan, which includes{" "}
-            <span className="font-semibold">{scope.modules.length}</span> modules. Only those modules can be granted here. Contact the platform
-            administrator to add more.
+            <Trans
+              t={t}
+              i18nKey="Your school is on the <b>{{plan}}</b> plan, which includes <b>{{count}}</b> modules. Only those modules can be granted here. Contact the platform administrator to add more."
+              values={{ plan: scope.planName, count: scope.modules.length }}
+              components={{ b: <span className="font-semibold" /> }}
+            />
           </p>
         </div>
       )}
@@ -115,7 +120,7 @@ export default function PermissionMatrixTab() {
           <Table stickyHeader>
             <TableHeader>
               <TableRow hover={false}>
-                <TableHead className="sticky left-0 bg-muted">Module</TableHead>
+                <TableHead className="sticky start-0 bg-muted">{t("Module")}</TableHead>
                 {roles.map((role) => (
                   <TableHead key={role.id} className="text-center">
                     <div className="flex flex-col items-center gap-0.5">
@@ -125,19 +130,19 @@ export default function PermissionMatrixTab() {
                           type="button"
                           className="text-primary-text hover:underline cursor-pointer disabled:opacity-50"
                           disabled={bulkMutation.isPending}
-                          aria-label={`Grant every ${CATEGORY_LABEL[category]} permission shown to ${role.name}`}
+                          aria-label={t("Grant every {{category}} permission shown to {{role}}", { category: t(CATEGORY_LABEL[category]), role: role.name })}
                           onClick={() => bulkMutation.mutate({ roleId: role.id, permissionIds: rowsForCategory.filter((p) => !(rolePermissions[role.id] ?? []).includes(p.id)).map((p) => p.id), granted: true })}
                         >
-                          All
+                          {t("All")}
                         </button>
                         <button
                           type="button"
                           className="text-muted-foreground hover:underline cursor-pointer disabled:opacity-50"
                           disabled={bulkMutation.isPending}
-                          aria-label={`Clear every ${CATEGORY_LABEL[category]} permission shown for ${role.name}`}
+                          aria-label={t("Clear every {{category}} permission shown for {{role}}", { category: t(CATEGORY_LABEL[category]), role: role.name })}
                           onClick={() => bulkMutation.mutate({ roleId: role.id, permissionIds: rowsForCategory.filter((p) => (rolePermissions[role.id] ?? []).includes(p.id)).map((p) => p.id), granted: false })}
                         >
-                          None
+                          {t("None")}
                         </button>
                       </span>
                     </div>
@@ -149,12 +154,12 @@ export default function PermissionMatrixTab() {
               {grouped.flatMap((group) => [
                 <TableRow key={`group-${group.title}`} hover={false}>
                   <TableCell colSpan={roles.length + 1} className="bg-secondary/40 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {group.title}
+                    {t(group.title)}
                   </TableCell>
                 </TableRow>,
                 ...group.rows.map((perm) => (
                 <TableRow key={perm.id}>
-                  <TableCell className="sticky left-0 bg-card font-medium">{perm.module}</TableCell>
+                  <TableCell className="sticky start-0 bg-card font-medium">{t(perm.module)}</TableCell>
                   {roles.map((role) => {
                     const granted = (rolePermissions[role.id] ?? []).includes(perm.id);
                     return (
@@ -164,7 +169,7 @@ export default function PermissionMatrixTab() {
                           onCheckedChange={(checked) =>
                             toggleMutation.mutate({ roleId: role.id, permissionId: perm.id, granted: checked === true })
                           }
-                          aria-label={`${perm.label} for ${role.name}`}
+                          aria-label={t("{{permission}} for {{role}}", { permission: `${t(perm.module)} — ${t(CATEGORY_LABEL[perm.category])}`, role: role.name })}
                         />
                       </TableCell>
                     );

@@ -38,14 +38,16 @@ import {
 import { BOARD_LABEL, SYLLABUS_STATUS, SelectField, StatusBadge, formatDate, guardedClose, options, useApiMutation, usePortionAccess, useReferenceData } from "../shared";
 import type { Curriculum, CurriculumBoard, SyllabusStatus, SyllabusSummary } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function SyllabusSetupPage() {
+  const { t } = useTranslation("lesson-portions");
   const access = usePortionAccess();
   return (
     <Tabs defaultValue="syllabi">
       <TabsList variant="line">
-        <TabsTrigger value="syllabi">Syllabus plans</TabsTrigger>
-        <TabsTrigger value="templates">Templates</TabsTrigger>
-        <TabsTrigger value="curricula">Curricula</TabsTrigger>
+        <TabsTrigger value="syllabi">{t("Syllabus plans")}</TabsTrigger>
+        <TabsTrigger value="templates">{t("Templates")}</TabsTrigger>
+        <TabsTrigger value="curricula">{t("Curricula")}</TabsTrigger>
       </TabsList>
       <TabsContent value="syllabi">
         <SyllabiTab canManage={access.canManage} />
@@ -63,6 +65,7 @@ export default function SyllabusSetupPage() {
 // ── Syllabus plans ──────────────────────────────────────────────────────────
 
 function SyllabiTab({ canManage }: { canManage: boolean }) {
+  const { t } = useTranslation("lesson-portions");
   const data = useReferenceData();
   const curricula = useQuery({ queryKey: ["portions", "curricula"], queryFn: listCurricula });
   const [filters, setFilters] = useState<{ academicYearId?: string; classId?: string; subjectId?: string; curriculumId?: string; status?: SyllabusStatus }>({});
@@ -86,7 +89,7 @@ function SyllabiTab({ canManage }: { canManage: boolean }) {
   const columns: ColumnDef<SyllabusSummary, unknown>[] = [
     {
       id: "title",
-      header: "Syllabus",
+      header: t("Syllabus"),
       accessorFn: (r) => `${r.title} ${r.className} ${r.subjectName}`,
       cell: ({ row }) => (
         <div className="min-w-0">
@@ -99,12 +102,12 @@ function SyllabiTab({ canManage }: { canManage: boolean }) {
         </div>
       ),
     },
-    { id: "version", header: "Version", accessorFn: (r) => r.version, cell: ({ row }) => <span className="text-sm">v{row.original.version}</span> },
-    { id: "status", header: "Status", accessorFn: (r) => r.status, cell: ({ row }) => <StatusBadge map={SYLLABUS_STATUS} value={row.original.status} /> },
-    { id: "chapters", header: "Chapters", accessorFn: (r) => r.chapterCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.chapterCount}</span> },
-    { id: "topics", header: "Topics", accessorFn: (r) => r.topicCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.topicCount}</span> },
-    { id: "periods", header: "Periods", accessorFn: (r) => r.plannedPeriods, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.plannedPeriods}</span> },
-    { id: "deadline", header: "Complete by", accessorFn: (r) => r.completionDeadline ?? "", cell: ({ row }) => <span className="text-sm">{formatDate(row.original.completionDeadline)}</span> },
+    { id: "version", header: t("Version"), accessorFn: (r) => r.version, cell: ({ row }) => <span className="text-sm">{t("v{{version}}", { version: row.original.version })}</span> },
+    { id: "status", header: t("Status"), accessorFn: (r) => r.status, cell: ({ row }) => <StatusBadge map={SYLLABUS_STATUS} value={row.original.status} /> },
+    { id: "chapters", header: t("Chapters"), accessorFn: (r) => r.chapterCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.chapterCount}</span> },
+    { id: "topics", header: t("Topics"), accessorFn: (r) => r.topicCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.topicCount}</span> },
+    { id: "periods", header: t("Periods"), accessorFn: (r) => r.plannedPeriods, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.plannedPeriods}</span> },
+    { id: "deadline", header: t("Complete by"), accessorFn: (r) => r.completionDeadline ?? "", cell: ({ row }) => <span className="text-sm">{formatDate(row.original.completionDeadline)}</span> },
     ...(canManage
       ? [
           {
@@ -114,34 +117,34 @@ function SyllabiTab({ canManage }: { canManage: boolean }) {
             cell: ({ row }) => {
               const s = row.original;
               return (
-                <RowActions label={`Actions for ${s.title}`}>
+                <RowActions label={t("Actions for {{title}}", { title: s.title })}>
                   <DropdownMenuItem asChild>
-                    <Link to={`/lesson-portions/syllabus/${s.id}`}>Open chapters and topics</Link>
+                    <Link to={`/lesson-portions/syllabus/${s.id}`}>{t("Open chapters and topics")}</Link>
                   </DropdownMenuItem>
                   {s.status !== "Archived" && (
                     <DropdownMenuItem onClick={() => setForm({ open: true, editing: s })}>
-                      <Pencil /> Edit details
+                      <Pencil /> {t("Edit details")}
                     </DropdownMenuItem>
                   )}
                   {s.status === "Draft" && (
                     <DropdownMenuItem onClick={() => setConfirm({ kind: "publish", item: s })}>
-                      <Send /> Publish
+                      <Send /> {t("Publish")}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => version.mutate(s.id)}>
-                    <Copy /> New version
+                    <Copy /> {t("New version")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTemplate(s)}>
-                    <FileStack /> Save as template
+                    <FileStack /> {t("Save as template")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {s.status !== "Archived" && (
                     <DropdownMenuItem onClick={() => setConfirm({ kind: "archive", item: s })}>
-                      <Archive /> Archive
+                      <Archive /> {t("Archive")}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem variant="destructive" onClick={() => setConfirm({ kind: "delete", item: s })}>
-                    <Trash2 /> Delete
+                    <Trash2 /> {t("Delete")}
                   </DropdownMenuItem>
                 </RowActions>
               );
@@ -164,20 +167,20 @@ function SyllabiTab({ canManage }: { canManage: boolean }) {
         onRetry={() => list.refetch()}
         exportFileName="syllabus-plans"
         pageSize={10}
-        empty={{ icon: BookCopy, title: "No syllabus plans for these filters", description: canManage ? "Create a syllabus for a class and subject, or start from a template." : "Your school hasn't set up a syllabus for these filters yet." }}
+        empty={{ icon: BookCopy, title: t("No syllabus plans for these filters"), description: canManage ? "Create a syllabus for a class and subject, or start from a template." : "Your school hasn't set up a syllabus for these filters yet." }}
         filters={
           <>
-            <SelectField aria-label="Academic year" value={year} onChange={(v) => setFilters({ ...filters, academicYearId: v })} items={yearItems} className="w-36" />
-            <SelectField aria-label="Class" value={filters.classId} onChange={(v) => setFilters({ ...filters, classId: v })} allLabel="All classes" items={data.classes.map((c) => ({ value: c.id, label: c.name }))} className="w-36" />
-            <SelectField aria-label="Subject" value={filters.subjectId} onChange={(v) => setFilters({ ...filters, subjectId: v })} allLabel="All subjects" items={data.subjects.map((c) => ({ value: c.id, label: c.name }))} className="w-40" />
-            <SelectField aria-label="Curriculum" value={filters.curriculumId} onChange={(v) => setFilters({ ...filters, curriculumId: v })} allLabel="All curricula" items={(curricula.data ?? []).map((c) => ({ value: c.id, label: c.name }))} className="w-40" />
-            <SelectField aria-label="Status" value={filters.status} onChange={(v) => setFilters({ ...filters, status: v })} allLabel="Any status" items={options({ Draft: "Draft", Published: "Published", Archived: "Archived" })} className="w-36" />
+            <SelectField aria-label={t("Academic year")} value={year} onChange={(v) => setFilters({ ...filters, academicYearId: v })} items={yearItems} className="w-36" />
+            <SelectField aria-label={t("Class")} value={filters.classId} onChange={(v) => setFilters({ ...filters, classId: v })} allLabel="All classes" items={data.classes.map((c) => ({ value: c.id, label: c.name }))} className="w-36" />
+            <SelectField aria-label={t("Subject")} value={filters.subjectId} onChange={(v) => setFilters({ ...filters, subjectId: v })} allLabel="All subjects" items={data.subjects.map((c) => ({ value: c.id, label: c.name }))} className="w-40" />
+            <SelectField aria-label={t("Curriculum")} value={filters.curriculumId} onChange={(v) => setFilters({ ...filters, curriculumId: v })} allLabel="All curricula" items={(curricula.data ?? []).map((c) => ({ value: c.id, label: c.name }))} className="w-40" />
+            <SelectField aria-label={t("Status")} value={filters.status} onChange={(v) => setFilters({ ...filters, status: v })} allLabel="Any status" items={options({ Draft: "Draft", Published: "Published", Archived: "Archived" })} className="w-36" />
           </>
         }
         actions={
           canManage && (
             <Button onClick={() => setForm({ open: true, editing: null })}>
-              <Plus className="h-4 w-4" /> New syllabus
+              <Plus className="h-4 w-4" /> {t("New syllabus")}
             </Button>
           )
         }
@@ -189,15 +192,15 @@ function SyllabiTab({ canManage }: { canManage: boolean }) {
       <ConfirmDialog
         open={Boolean(confirm)}
         onOpenChange={(open) => !open && setConfirm(null)}
-        title={confirm?.kind === "delete" ? "Delete this syllabus?" : confirm?.kind === "archive" ? "Archive this syllabus?" : "Publish this syllabus?"}
+        title={confirm?.kind === "delete" ? t("Delete this syllabus?") : confirm?.kind === "archive" ? t("Archive this syllabus?") : t("Publish this syllabus?")}
         description={
           confirm?.kind === "delete"
-            ? "Its chapters and topics are removed. A syllabus with lesson plans or teaching records can't be deleted; archive it instead."
+            ? t("Its chapters and topics are removed. A syllabus with lesson plans or teaching records can't be deleted; archive it instead.")
             : confirm?.kind === "archive"
-              ? "Teachers can no longer record progress against it, and it stops counting in new reports. Existing records are kept."
-              : "Teachers can record progress against it, and it appears in dashboards. An earlier published version of the same syllabus is archived."
+              ? t("Teachers can no longer record progress against it, and it stops counting in new reports. Existing records are kept.")
+              : t("Teachers can record progress against it, and it appears in dashboards. An earlier published version of the same syllabus is archived.")
         }
-        confirmLabel={confirm?.kind === "delete" ? "Delete" : confirm?.kind === "archive" ? "Archive" : "Publish"}
+        confirmLabel={confirm?.kind === "delete" ? t("Delete") : confirm?.kind === "archive" ? t("Archive") : t("Publish")}
         confirmVariant={confirm?.kind === "delete" ? "destructive" : "default"}
         submitting={publish.isPending || archive.isPending || remove.isPending}
         onConfirm={() => {
@@ -242,6 +245,7 @@ function SyllabusFormDialog({
   data: ReturnType<typeof useReferenceData>;
   defaultYear?: string;
 }) {
+  const { t } = useTranslation("lesson-portions");
   const { register, handleSubmit, control, reset, setValue, watch, formState } = useForm<SyllabusForm>({ resolver: zodResolver(syllabusSchema) });
   const { errors, isDirty } = formState;
   // The list rows carry no long text, so editing loads the whole syllabus - otherwise saving would blank the textbooks and objectives.
@@ -291,51 +295,51 @@ function SyllabusFormDialog({
     <Dialog open={open} onOpenChange={guardedClose(isDirty, save.isPending, onOpenChange)}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit syllabus" : "New syllabus plan"}</DialogTitle>
-          <DialogDescription>One syllabus per academic year, class, subject and curriculum. Revisions are saved as new versions.</DialogDescription>
+          <DialogTitle>{editing ? t("Edit syllabus") : t("New syllabus plan")}</DialogTitle>
+          <DialogDescription>{t("One syllabus per academic year, class, subject and curriculum. Revisions are saved as new versions.")}</DialogDescription>
         </DialogHeader>
         <form id="syllabus-form" onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4 overflow-y-auto" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Curriculum" htmlFor="sy-curriculum" required error={errors.curriculumId?.message}>
-              <Controller control={control} name="curriculumId" render={({ field }) => <SelectField id="sy-curriculum" value={field.value} onChange={(v) => field.onChange(v ?? "")} items={curricula.filter((c) => c.isActive).map((c) => ({ value: c.id, label: `${c.name} (${BOARD_LABEL[c.board]})` }))} placeholder="Choose" className="w-full" invalid={Boolean(errors.curriculumId)} />} />
+            <FormField label={t("Curriculum")} htmlFor="sy-curriculum" required error={errors.curriculumId?.message}>
+              <Controller control={control} name="curriculumId" render={({ field }) => <SelectField id="sy-curriculum" value={field.value} onChange={(v) => field.onChange(v ?? "")} items={curricula.filter((c) => c.isActive).map((c) => ({ value: c.id, label: `${c.name} (${BOARD_LABEL[c.board]})` }))} placeholder={t("Choose")} className="w-full" invalid={Boolean(errors.curriculumId)} />} />
             </FormField>
-            <FormField label="Academic year" htmlFor="sy-year" required error={errors.academicYearId?.message}>
+            <FormField label={t("Academic year")} htmlFor="sy-year" required error={errors.academicYearId?.message}>
               <Controller control={control} name="academicYearId" render={({ field }) => <SelectField id="sy-year" value={field.value} onChange={field.onChange} items={data.years.map((y) => ({ value: y.id, label: y.name }))} className="w-full" disabled={Boolean(editing)} />} />
             </FormField>
-            <FormField label="Class" htmlFor="sy-class" required error={errors.classId?.message}>
-              <Controller control={control} name="classId" render={({ field }) => <SelectField id="sy-class" value={field.value} onChange={(v) => field.onChange(v ?? "")} items={data.classes.map((c) => ({ value: c.id, label: c.name }))} placeholder="Choose" className="w-full" invalid={Boolean(errors.classId)} />} />
+            <FormField label={t("Class")} htmlFor="sy-class" required error={errors.classId?.message}>
+              <Controller control={control} name="classId" render={({ field }) => <SelectField id="sy-class" value={field.value} onChange={(v) => field.onChange(v ?? "")} items={data.classes.map((c) => ({ value: c.id, label: c.name }))} placeholder={t("Choose")} className="w-full" invalid={Boolean(errors.classId)} />} />
             </FormField>
-            <FormField label="Subject" htmlFor="sy-subject" required error={errors.subjectId?.message}>
-              <Controller control={control} name="subjectId" render={({ field }) => <SelectField id="sy-subject" value={field.value} onChange={(v) => field.onChange(v ?? "")} items={subjects.map((c) => ({ value: c.id, label: c.name }))} placeholder="Choose" className="w-full" invalid={Boolean(errors.subjectId)} />} />
+            <FormField label={t("Subject")} htmlFor="sy-subject" required error={errors.subjectId?.message}>
+              <Controller control={control} name="subjectId" render={({ field }) => <SelectField id="sy-subject" value={field.value} onChange={(v) => field.onChange(v ?? "")} items={subjects.map((c) => ({ value: c.id, label: c.name }))} placeholder={t("Choose")} className="w-full" invalid={Boolean(errors.subjectId)} />} />
             </FormField>
           </div>
-          <FormField label="Title" htmlFor="sy-title" required error={errors.title?.message}>
+          <FormField label={t("Title")} htmlFor="sy-title" required error={errors.title?.message}>
             <Input id="sy-title" {...register("title")} aria-invalid={errors.title ? true : undefined} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Teaching starts" htmlFor="sy-start" optional error={errors.startDate?.message}>
+            <FormField label={t("Teaching starts")} htmlFor="sy-start" optional error={errors.startDate?.message}>
               <Input id="sy-start" type="date" {...register("startDate")} />
             </FormField>
-            <FormField label="Complete by" htmlFor="sy-end" optional error={errors.completionDeadline?.message} hint="Usually the end of the last term.">
+            <FormField label={t("Complete by")} htmlFor="sy-end" optional error={errors.completionDeadline?.message} hint={t("Usually the end of the last term.")}>
               <Input id="sy-end" type="date" {...register("completionDeadline")} aria-invalid={errors.completionDeadline ? true : undefined} />
             </FormField>
           </div>
-          <FormField label="Textbooks" htmlFor="sy-books" optional error={errors.textbooks?.message}>
+          <FormField label={t("Textbooks")} htmlFor="sy-books" optional error={errors.textbooks?.message}>
             <Textarea id="sy-books" rows={2} {...register("textbooks")} />
           </FormField>
-          <FormField label="Reference materials" htmlFor="sy-refs" optional error={errors.referenceMaterials?.message}>
+          <FormField label={t("Reference materials")} htmlFor="sy-refs" optional error={errors.referenceMaterials?.message}>
             <Textarea id="sy-refs" rows={2} {...register("referenceMaterials")} />
           </FormField>
-          <FormField label="Learning objectives" htmlFor="sy-obj" optional error={errors.learningObjectives?.message}>
+          <FormField label={t("Learning objectives")} htmlFor="sy-obj" optional error={errors.learningObjectives?.message}>
             <Textarea id="sy-obj" rows={3} {...register("learningObjectives")} />
           </FormField>
         </form>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => guardedClose(isDirty, save.isPending, onOpenChange)(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="submit" form="syllabus-form" loading={save.isPending} disabled={Boolean(editing) && !detail.data}>
-            {editing ? "Save changes" : "Create syllabus"}
+            {editing ? t("Save changes") : t("Create syllabus")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -344,6 +348,7 @@ function SyllabusFormDialog({
 }
 
 function SaveTemplateDialog({ source, onClose }: { source: SyllabusSummary | null; onClose: () => void }) {
+  const { t } = useTranslation("lesson-portions");
   const [name, setName] = useState("");
   useEffect(() => setName(source ? `${source.subjectName} · ${source.className} template` : ""), [source]);
   const save = useApiMutation((n: string) => saveSyllabusAsTemplate(source!.id, n), { success: "Saved as a template", onSuccess: onClose });
@@ -351,18 +356,18 @@ function SaveTemplateDialog({ source, onClose }: { source: SyllabusSummary | nul
     <Dialog open={Boolean(source)} onOpenChange={(open) => !open && !save.isPending && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Save as template</DialogTitle>
-          <DialogDescription>Keeps the chapters, topics, periods and dates so next year's syllabus can start from them.</DialogDescription>
+          <DialogTitle>{t("Save as template")}</DialogTitle>
+          <DialogDescription>{t("Keeps the chapters, topics, periods and dates so next year's syllabus can start from them.")}</DialogDescription>
         </DialogHeader>
-        <FormField label="Template name" htmlFor="tpl-name" required error={name.trim() ? undefined : "Give the template a name"}>
+        <FormField label={t("Template name")} htmlFor="tpl-name" required error={name.trim() ? undefined : "Give the template a name"}>
           <Input id="tpl-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={150} />
         </FormField>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={save.isPending}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={() => save.mutate(name.trim())} disabled={!name.trim()} loading={save.isPending}>
-            Save template
+            {t("Save template")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -373,6 +378,7 @@ function SaveTemplateDialog({ source, onClose }: { source: SyllabusSummary | nul
 // ── Templates ───────────────────────────────────────────────────────────────
 
 function TemplatesTab({ canManage }: { canManage: boolean }) {
+  const { t } = useTranslation("lesson-portions");
   const data = useReferenceData();
   const list = useQuery({ queryKey: ["portions", "syllabi", "templates"], queryFn: () => listSyllabi({ templates: true, pageSize: 200 }) });
   const [use, setUse] = useState<SyllabusSummary | null>(null);
@@ -381,7 +387,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }) {
   const columns: ColumnDef<SyllabusSummary, unknown>[] = [
     {
       id: "name",
-      header: "Template",
+      header: t("Template"),
       accessorFn: (r) => r.templateName ?? r.title,
       cell: ({ row }) => (
         <div>
@@ -394,8 +400,8 @@ function TemplatesTab({ canManage }: { canManage: boolean }) {
         </div>
       ),
     },
-    { id: "chapters", header: "Chapters", accessorFn: (r) => r.chapterCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.chapterCount}</span> },
-    { id: "periods", header: "Periods", accessorFn: (r) => r.plannedPeriods, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.plannedPeriods}</span> },
+    { id: "chapters", header: t("Chapters"), accessorFn: (r) => r.chapterCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.chapterCount}</span> },
+    { id: "periods", header: t("Periods"), accessorFn: (r) => r.plannedPeriods, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.plannedPeriods}</span> },
     ...(canManage
       ? [
           {
@@ -405,9 +411,9 @@ function TemplatesTab({ canManage }: { canManage: boolean }) {
             cell: ({ row }) => (
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={() => setUse(row.original)}>
-                  Use for a new year
+                  {t("Use for a new year")}
                 </Button>
-                <Button size="icon-sm" variant="ghost" aria-label={`Delete ${row.original.templateName}`} onClick={() => window.confirm("Delete this template?") && remove.mutate(row.original.id)}>
+                <Button size="icon-sm" variant="ghost" aria-label={t("Delete {{templateName}}", { templateName: row.original.templateName })} onClick={() => window.confirm("Delete this template?") && remove.mutate(row.original.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -426,7 +432,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }) {
         isError={list.isError}
         onRetry={() => list.refetch()}
         pageSize={10}
-        empty={{ icon: FileStack, title: "No templates yet", description: "Open a syllabus and choose Save as template to reuse it across academic years." }}
+        empty={{ icon: FileStack, title: t("No templates yet"), description: t("Open a syllabus and choose Save as template to reuse it across academic years.") }}
       />
       <UseTemplateDialog template={use} onClose={() => setUse(null)} data={data} />
     </>
@@ -434,6 +440,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }) {
 }
 
 function UseTemplateDialog({ template, onClose, data }: { template: SyllabusSummary | null; onClose: () => void; data: ReturnType<typeof useReferenceData> }) {
+  const { t } = useTranslation("lesson-portions");
   const [yearId, setYearId] = useState<string | undefined>();
   const [classIds, setClassIds] = useState<string[]>([]);
   const [start, setStart] = useState("");
@@ -458,17 +465,17 @@ function UseTemplateDialog({ template, onClose, data }: { template: SyllabusSumm
     <Dialog open={Boolean(template)} onOpenChange={(open) => !open && !create.isPending && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create from template</DialogTitle>
+          <DialogTitle>{t("Create from template")}</DialogTitle>
           <DialogDescription>
-            Copies "{template?.templateName}" into an academic year as a draft for each class you choose. Chapter dates move by the same number of days as the new start date.
+            {t("Copies \"")}{template?.templateName}{t("\" into an academic year as a draft for each class you choose. Chapter dates move by the same number of days as the new start date.")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 overflow-y-auto">
-          <FormField label="Academic year" htmlFor="ut-year" required>
+          <FormField label={t("Academic year")} htmlFor="ut-year" required>
             <SelectField id="ut-year" value={yearId} onChange={setYearId} items={data.years.map((y) => ({ value: y.id, label: y.name }))} className="w-full" />
           </FormField>
-          <FormField label="Classes" required hint="Classes that already have this syllabus are skipped.">
-            <div role="group" aria-label="Classes" className="flex flex-wrap gap-1.5">
+          <FormField label={t("Classes")} required hint={t("Classes that already have this syllabus are skipped.")}>
+            <div role="group" aria-label={t("Classes")} className="flex flex-wrap gap-1.5">
               {classes.map((c) => (
                 <ToggleChip key={c.id} pressed={classIds.includes(c.id)} onClick={() => setClassIds((ids) => (ids.includes(c.id) ? ids.filter((x) => x !== c.id) : [...ids, c.id]))}>
                   {c.name}
@@ -477,20 +484,20 @@ function UseTemplateDialog({ template, onClose, data }: { template: SyllabusSumm
             </div>
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Teaching starts" htmlFor="ut-start" optional>
+            <FormField label={t("Teaching starts")} htmlFor="ut-start" optional>
               <Input id="ut-start" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
             </FormField>
-            <FormField label="Complete by" htmlFor="ut-end" optional error={start && end && end < start ? "The deadline can't be before the start" : undefined}>
+            <FormField label={t("Complete by")} htmlFor="ut-end" optional error={start && end && end < start ? "The deadline can't be before the start" : undefined}>
               <Input id="ut-end" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
             </FormField>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={create.isPending}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={() => create.mutate(undefined)} disabled={invalid} loading={create.isPending}>
-            Create drafts
+            {t("Create drafts")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -509,16 +516,17 @@ const curriculumSchema = z.object({
 type CurriculumForm = z.infer<typeof curriculumSchema>;
 
 function CurriculaTab({ canManage }: { canManage: boolean }) {
+  const { t } = useTranslation("lesson-portions");
   const list = useQuery({ queryKey: ["portions", "curricula"], queryFn: listCurricula });
   const [form, setForm] = useState<{ open: boolean; editing: Curriculum | null }>({ open: false, editing: null });
   const [toDelete, setToDelete] = useState<Curriculum | null>(null);
   const remove = useApiMutation(deleteCurriculum, { success: "Curriculum deleted", onSuccess: () => setToDelete(null) });
 
   const columns: ColumnDef<Curriculum, unknown>[] = [
-    { id: "name", header: "Curriculum", accessorFn: (r) => r.name, cell: ({ row }) => <span className="text-sm font-medium">{row.original.name}</span> },
-    { id: "board", header: "Board", accessorFn: (r) => BOARD_LABEL[r.board], cell: ({ row }) => <span className="text-sm">{BOARD_LABEL[row.original.board]}</span> },
-    { id: "count", header: "Syllabus plans", accessorFn: (r) => r.syllabusCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.syllabusCount}</span> },
-    { id: "active", header: "Status", accessorFn: (r) => (r.isActive ? "Active" : "Inactive"), cell: ({ row }) => <Badge variant={row.original.isActive ? "success" : "neutral"}>{row.original.isActive ? "Active" : "Inactive"}</Badge> },
+    { id: "name", header: t("Curriculum"), accessorFn: (r) => r.name, cell: ({ row }) => <span className="text-sm font-medium">{row.original.name}</span> },
+    { id: "board", header: t("Board"), accessorFn: (r) => BOARD_LABEL[r.board], cell: ({ row }) => <span className="text-sm">{BOARD_LABEL[row.original.board]}</span> },
+    { id: "count", header: t("Syllabus plans"), accessorFn: (r) => r.syllabusCount, cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.syllabusCount}</span> },
+    { id: "active", header: t("Status"), accessorFn: (r) => (r.isActive ? "Active" : "Inactive"), cell: ({ row }) => <Badge variant={row.original.isActive ? "success" : "neutral"}>{row.original.isActive ? t("Active") : t("Inactive")}</Badge> },
     ...(canManage
       ? [
           {
@@ -526,12 +534,12 @@ function CurriculaTab({ canManage }: { canManage: boolean }) {
             header: "",
             enableSorting: false,
             cell: ({ row }) => (
-              <RowActions label={`Actions for ${row.original.name}`}>
+              <RowActions label={t("Actions for {{name}}", { name: row.original.name })}>
                 <DropdownMenuItem onClick={() => setForm({ open: true, editing: row.original })}>
-                  <Pencil /> Edit
+                  <Pencil /> {t("Edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive" onClick={() => setToDelete(row.original)}>
-                  <Trash2 /> Delete
+                  <Trash2 /> {t("Delete")}
                 </DropdownMenuItem>
               </RowActions>
             ),
@@ -549,11 +557,11 @@ function CurriculaTab({ canManage }: { canManage: boolean }) {
         isError={list.isError}
         onRetry={() => list.refetch()}
         pageSize={10}
-        empty={{ icon: BookCopy, title: "No curricula yet", description: canManage ? "Add CBSE, ICSE, Kerala State Board or your own curriculum, then create syllabus plans under it." : "Your school hasn't added a curriculum yet." }}
+        empty={{ icon: BookCopy, title: t("No curricula yet"), description: canManage ? "Add CBSE, ICSE, Kerala State Board or your own curriculum, then create syllabus plans under it." : "Your school hasn't added a curriculum yet." }}
         actions={
           canManage && (
             <Button onClick={() => setForm({ open: true, editing: null })}>
-              <Plus className="h-4 w-4" /> Add curriculum
+              <Plus className="h-4 w-4" /> {t("Add curriculum")}
             </Button>
           )
         }
@@ -562,9 +570,9 @@ function CurriculaTab({ canManage }: { canManage: boolean }) {
       <ConfirmDialog
         open={Boolean(toDelete)}
         onOpenChange={(open) => !open && setToDelete(null)}
-        title="Delete this curriculum?"
-        description="A curriculum with syllabus plans can't be deleted; mark it inactive instead."
-        confirmLabel="Delete"
+        title={t("Delete this curriculum?")}
+        description={t("A curriculum with syllabus plans can't be deleted; mark it inactive instead.")}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => { if (toDelete) remove.mutate(toDelete.id); }}
@@ -574,6 +582,7 @@ function CurriculaTab({ canManage }: { canManage: boolean }) {
 }
 
 function CurriculumDialog({ open, editing, onOpenChange }: { open: boolean; editing: Curriculum | null; onOpenChange: (open: boolean) => void }) {
+  const { t } = useTranslation("lesson-portions");
   const { register, handleSubmit, control, reset, formState } = useForm<CurriculumForm>({ resolver: zodResolver(curriculumSchema) });
   const { errors, isDirty } = formState;
   useEffect(() => {
@@ -591,17 +600,17 @@ function CurriculumDialog({ open, editing, onOpenChange }: { open: boolean; edit
     <Dialog open={open} onOpenChange={guardedClose(isDirty, save.isPending, onOpenChange)}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit curriculum" : "Add curriculum"}</DialogTitle>
-          <DialogDescription>The board's curriculum your school follows for some classes or subjects.</DialogDescription>
+          <DialogTitle>{editing ? t("Edit curriculum") : t("Add curriculum")}</DialogTitle>
+          <DialogDescription>{t("The board's curriculum your school follows for some classes or subjects.")}</DialogDescription>
         </DialogHeader>
         <form id="curriculum-form" onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4" noValidate>
-          <FormField label="Name" htmlFor="cu-name" required error={errors.name?.message}>
-            <Input id="cu-name" {...register("name")} placeholder="e.g. CBSE 2026" aria-invalid={errors.name ? true : undefined} />
+          <FormField label={t("Name")} htmlFor="cu-name" required error={errors.name?.message}>
+            <Input id="cu-name" {...register("name")} placeholder={t("e.g. CBSE 2026")} aria-invalid={errors.name ? true : undefined} />
           </FormField>
-          <FormField label="Board" htmlFor="cu-board" required>
+          <FormField label={t("Board")} htmlFor="cu-board" required>
             <Controller control={control} name="board" render={({ field }) => <SelectField id="cu-board" value={field.value} onChange={(v) => field.onChange(v ?? "Other")} items={options(BOARD_LABEL)} className="w-full" />} />
           </FormField>
-          <FormField label="Description" htmlFor="cu-desc" optional error={errors.description?.message}>
+          <FormField label={t("Description")} htmlFor="cu-desc" optional error={errors.description?.message}>
             <Textarea id="cu-desc" rows={2} {...register("description")} />
           </FormField>
           <Controller
@@ -610,20 +619,20 @@ function CurriculumDialog({ open, editing, onOpenChange }: { open: boolean; edit
             render={({ field }) => (
               <label className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm">
                 <span>
-                  Active
-                  <span className="block text-xs text-muted-foreground">Inactive curricula can't be chosen for new syllabus plans.</span>
+                  {t("Active")}
+                  <span className="block text-xs text-muted-foreground">{t("Inactive curricula can't be chosen for new syllabus plans.")}</span>
                 </span>
-                <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Active" />
+                <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={t("Active")} />
               </label>
             )}
           />
         </form>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => guardedClose(isDirty, save.isPending, onOpenChange)(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button type="submit" form="curriculum-form" loading={save.isPending}>
-            {editing ? "Save changes" : "Add curriculum"}
+            {editing ? t("Save changes") : t("Add curriculum")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, QrCode, Trash2, Upload } from "lucide-react";
@@ -16,6 +17,7 @@ import BookCodesDialog from "./BookCodesDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function BooksTab() {
+  const { t } = useTranslation("library");
   const queryClient = useQueryClient();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -39,37 +41,37 @@ export default function BooksTab() {
     mutationFn: createBook,
     onSuccess: () => {
       invalidate();
-      toast.success("Book added to catalog");
+      toast.success(t("Book added to catalog"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add book"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add book")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: BookFormValues }) => updateBook(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Book updated");
+      toast.success(t("Book updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update book"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update book")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteBook,
     onSuccess: () => {
       invalidate();
-      toast.success("Book deleted");
+      toast.success(t("Book deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete book"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete book")),
   });
 
   const columns: ColumnDef<Book, unknown>[] = [
     {
       accessorKey: "title",
-      header: "Title",
+      header: t("Title"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.title}</p>
@@ -79,34 +81,34 @@ export default function BooksTab() {
     },
     {
       id: "author",
-      header: "Author",
+      header: t("Author"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{authorById.get(row.original.authorId)?.name ?? "—"}</span>,
     },
     {
       id: "publisher",
-      header: "Publisher",
+      header: t("Publisher"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{publisherById.get(row.original.publisherId)?.name ?? "—"}</span>,
     },
     {
       id: "category",
-      header: "Category",
+      header: t("Category"),
       cell: ({ row }) => <Badge variant="info">{categoryById.get(row.original.categoryId)?.name ?? "—"}</Badge>,
     },
     {
       id: "availability",
-      header: "Availability",
+      header: t("Availability"),
       cell: ({ row }) => {
         const { availableCopies, totalCopies } = row.original;
         return (
           <Badge variant={availableCopies === 0 ? "danger" : availableCopies < totalCopies ? "warning" : "success"}>
-            {availableCopies} / {totalCopies} available
+            {t("{{available}} / {{total}} available", { available: availableCopies, total: totalCopies })}
           </Badge>
         );
       },
     },
     {
       id: "shelfLocation",
-      header: "Shelf",
+      header: t("Shelf"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.shelfLocation ?? "—"}</span>,
     },
     {
@@ -118,7 +120,7 @@ export default function BooksTab() {
           <RowActions>
             <DropdownMenuItem onClick={() => setCodesTarget(book)}>
               <QrCode className="w-3.5 h-3.5" />
-              View barcode / QR
+              {t("View barcode / QR")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -127,11 +129,11 @@ export default function BooksTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(book)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -142,11 +144,11 @@ export default function BooksTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Manage the book catalog, copies, and shelf locations.</p>
+        <p className="text-sm text-muted-foreground">{t("Manage the book catalog, copies, and shelf locations.")}</p>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setImportOpen(true)}>
             <Upload className="w-4 h-4" />
-            Import
+            {t("Import")}
           </Button>
           <Button
             onClick={() => {
@@ -155,12 +157,12 @@ export default function BooksTab() {
             }}
           >
             <Plus className="w-4 h-4" />
-            New book
+            {t("New book")}
           </Button>
         </div>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={books} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No books in the catalog yet." pageSize={8} />
+      <DataTable searchable columns={columns} data={books} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No books in the catalog yet.")} pageSize={8} />
 
       <BulkBooksImportDialog open={importOpen} onOpenChange={setImportOpen} onFinished={() => queryClient.invalidateQueries({ queryKey: ["library"] })} />
 
@@ -186,9 +188,9 @@ export default function BooksTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete book"
-        description={`Delete "${deleteTarget?.title}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete book")}
+        description={t('Delete "{{name}}"? This cannot be undone.', { name: deleteTarget?.title })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

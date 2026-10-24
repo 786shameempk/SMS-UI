@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,6 +32,7 @@ export default function PromoteStaffDialog({
   onSubmit: (values: PromoteStaffFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("staff");
   const {
     register,
     handleSubmit,
@@ -50,14 +52,14 @@ export default function PromoteStaffDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Promote staff member</DialogTitle>
+          <DialogTitle>{t("Promote staff member")}</DialogTitle>
           <DialogDescription>
-            {staff ? `Change ${staff.firstName} ${staff.lastName}'s designation.` : ""}
+            {staff ? t("Change {{name}}'s designation.", { name: `${staff.firstName} ${staff.lastName}` }) : ""}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="toDesignation" required>New designation</Label>
+            <Label htmlFor="toDesignation" required>{t("New designation")}</Label>
             <Controller
               control={control}
               name="toDesignation"
@@ -69,7 +71,7 @@ export default function PromoteStaffDialog({
                   <SelectContent>
                     {DESIGNATIONS.map((d) => (
                       <SelectItem key={d} value={d}>
-                        {d}
+                        {t(d)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -78,20 +80,20 @@ export default function PromoteStaffDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="effectiveDate" required>Effective date</Label>
+            <Label htmlFor="effectiveDate" required>{t("Effective date")}</Label>
             <Input id="effectiveDate" type="date" aria-invalid={errors.effectiveDate ? true : undefined} {...register("effectiveDate")} />
-            {errors.effectiveDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.effectiveDate.message}</p>}
+            {errors.effectiveDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.effectiveDate.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="remarks" optional>Remarks</Label>
+            <Label htmlFor="remarks" optional>{t("Remarks")}</Label>
             <Textarea id="remarks" rows={2} {...register("remarks")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Promote
+              {t("Promote")}
             </Button>
           </DialogFooter>
         </form>

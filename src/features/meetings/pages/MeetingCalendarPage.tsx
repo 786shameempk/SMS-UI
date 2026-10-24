@@ -19,11 +19,13 @@ import type { MeetingType } from "../types";
 import ScheduleMeetingDialog from "../components/ScheduleMeetingDialog";
 import "./calendar.css";
 
+import { useTranslation } from "react-i18next";
 /**
  * Month / week / day / agenda (design decision D6: FullCalendar's MIT core, themed with the SMS tokens in
  * calendar.css). Colour = meeting type; cancelled sessions are struck through; clicking opens the meeting.
  */
 export default function MeetingCalendarPage() {
+  const { t } = useTranslation("meetings");
   const navigate = useNavigate();
   const { canSchedule } = useMeetingRole();
   const [range, setRange] = useState<{ from: string; to: string } | null>(null);
@@ -64,7 +66,7 @@ export default function MeetingCalendarPage() {
         {!arg.view.type.startsWith("timeGrid") && (
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: arg.event.backgroundColor }} aria-hidden />
         )}
-        {status === "Live" && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-success" aria-label="Live" />}
+        {status === "Live" && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-success" aria-label={t("Live")} />}
         {arg.timeText && <span className="shrink-0 font-semibold">{arg.timeText}</span>}
         <span className="truncate">{arg.event.title}</span>
       </div>
@@ -75,13 +77,13 @@ export default function MeetingCalendarPage() {
     <PageContainer>
       <PageHeader
         eyebrow={<Link to="/online-classes" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Online Classes
+          <ArrowLeft className="h-4 w-4" /> {t("Online Classes")}
         </Link>}
-        title="Class calendar"
-        actions={canSchedule && <Button onClick={() => setScheduleOpen(true)}><Plus className="h-4 w-4" /> Schedule</Button>}
+        title={t("Class calendar")}
+        actions={canSchedule && <Button onClick={() => setScheduleOpen(true)}><Plus className="h-4 w-4" /> {t("Schedule")}</Button>}
       />
 
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Show meeting types">
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t("Show meeting types")}>
         {TYPE_LEGEND.map((g) => {
           const on = !hidden.has(g.label);
           return (
@@ -91,11 +93,11 @@ export default function MeetingCalendarPage() {
               onClick={() => setHidden((prev) => { const next = new Set(prev); if (on) next.add(g.label); else next.delete(g.label); return next; })}
             >
               <span className={cn("h-2.5 w-2.5 rounded-full", g.dot)} aria-hidden />
-              {g.label}
+              {t(g.label)}
             </ToggleChip>
           );
         })}
-        {isFetching && <span className="text-xs text-muted-foreground">Updating…</span>}
+        {isFetching && <span className="text-xs text-muted-foreground">{t("Updating…")}</span>}
       </div>
 
       <div className="sms-calendar rounded-2xl border border-border bg-card p-2 sm:p-4">

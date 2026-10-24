@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DiscountsTab from "../components/DiscountsTab";
 import FeeStructuresTab from "../components/FeeStructuresTab";
@@ -5,24 +6,29 @@ import InvoicesTab from "../components/InvoicesTab";
 import ReceiptsTab from "../components/ReceiptsTab";
 import RefundsTab from "../components/RefundsTab";
 import OverdueTab from "../components/OverdueTab";
+import PaymentGatewaysTab from "../components/PaymentGatewaysTab";
+import PaymentTransactionsTab from "../components/PaymentTransactionsTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function FeeManagementPage() {
+  const { t } = useTranslation("fees");
   return (
     <PageContainer>
       <PageHeader
-        title="Fee management"
-        description="Configure fee structures and discounts, generate and track student invoices, and manage receipts and refunds."
+        title={t("Fee management")}
+        description={t("Configure fee structures and discounts, generate and track student invoices, and manage receipts and refunds.")}
       />
 
       <Tabs defaultValue="structures">
         <TabsList variant="line">
-          <TabsTrigger value="structures">Fee Structures</TabsTrigger>
-          <TabsTrigger value="discounts">Discounts & Scholarships</TabsTrigger>
-          <TabsTrigger value="invoices">Student Invoices</TabsTrigger>
-          <TabsTrigger value="overdue">Overdue</TabsTrigger>
-          <TabsTrigger value="receipts">Receipts</TabsTrigger>
-          <TabsTrigger value="refunds">Refunds</TabsTrigger>
+          <TabsTrigger value="structures">{t("Fee Structures")}</TabsTrigger>
+          <TabsTrigger value="discounts">{t("Discounts & Scholarships")}</TabsTrigger>
+          <TabsTrigger value="invoices">{t("Student Invoices")}</TabsTrigger>
+          <TabsTrigger value="overdue">{t("Overdue")}</TabsTrigger>
+          <TabsTrigger value="receipts">{t("Receipts")}</TabsTrigger>
+          <TabsTrigger value="refunds">{t("Refunds")}</TabsTrigger>
+          <TabsTrigger value="gateways">{t("Payment gateways")}</TabsTrigger>
+          <TabsTrigger value="gateway-activity">{t("Gateway activity")}</TabsTrigger>
         </TabsList>
         <TabsContent value="structures">
           <FeeStructuresTab />
@@ -41,6 +47,12 @@ export default function FeeManagementPage() {
         </TabsContent>
         <TabsContent value="refunds">
           <RefundsTab />
+        </TabsContent>
+        <TabsContent value="gateways">
+          <PaymentGatewaysTab />
+        </TabsContent>
+        <TabsContent value="gateway-activity">
+          <PaymentTransactionsTab />
         </TabsContent>
       </Tabs>
     </PageContainer>

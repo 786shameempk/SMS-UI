@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -55,6 +56,7 @@ export default function FeeStructureFormDialog({
   submitting: boolean;
   onSubmit: (values: FeeStructureFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("fees");
   const isEdit = Boolean(structure);
   const {
     register,
@@ -86,8 +88,8 @@ export default function FeeStructureFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit fee structure" : "New fee structure"}</DialogTitle>
-          <DialogDescription>Define the charge for a class and fee type, and optionally a late fine rule.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit fee structure") : t("New fee structure")}</DialogTitle>
+          <DialogDescription>{t("Define the charge for a class and fee type, and optionally a late fine rule.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -101,21 +103,21 @@ export default function FeeStructureFormDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="fs-name" required>Name</Label>
-            <Input id="fs-name" placeholder="e.g. Grade 8 Tuition Fee" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="fs-name" required>{t("Name")}</Label>
+            <Input id="fs-name" placeholder={t("e.g. Grade 8 Tuition Fee")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fs-academicYearId" required>Academic year</Label>
+              <Label htmlFor="fs-academicYearId" required>{t("Academic year")}</Label>
               <Controller
                 control={control}
                 name="academicYearId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="fs-academicYearId">
-                      <SelectValue placeholder="Select year" />
+                      <SelectValue placeholder={t("Select year")} />
                     </SelectTrigger>
                     <SelectContent>
                       {academicYears.map((y) => (
@@ -127,20 +129,20 @@ export default function FeeStructureFormDialog({
                   </Select>
                 )}
               />
-              {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.academicYearId.message}</p>}
+              {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.academicYearId.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fs-classId" optional>Class</Label>
+              <Label htmlFor="fs-classId" optional>{t("Class")}</Label>
               <Controller
                 control={control}
                 name="classId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="fs-classId">
-                      <SelectValue placeholder="All classes" />
+                      <SelectValue placeholder={t("All classes")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={ALL_CLASSES}>All classes</SelectItem>
+                      <SelectItem value={ALL_CLASSES}>{t("All classes")}</SelectItem>
                       {classes.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.name}
@@ -155,7 +157,7 @@ export default function FeeStructureFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fs-feeType" required>Fee type</Label>
+              <Label htmlFor="fs-feeType" required>{t("Fee type")}</Label>
               <Controller
                 control={control}
                 name="feeType"
@@ -167,7 +169,7 @@ export default function FeeStructureFormDialog({
                     <SelectContent>
                       {FEE_TYPE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -176,7 +178,7 @@ export default function FeeStructureFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fs-frequency" required>Frequency</Label>
+              <Label htmlFor="fs-frequency" required>{t("Frequency")}</Label>
               <Controller
                 control={control}
                 name="frequency"
@@ -188,7 +190,7 @@ export default function FeeStructureFormDialog({
                     <SelectContent>
                       {FREQUENCY_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -199,28 +201,28 @@ export default function FeeStructureFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="fs-amount" required>Amount (per cycle)</Label>
+            <Label htmlFor="fs-amount" required>{t("Amount (per cycle)")}</Label>
             <Input id="fs-amount" type="number" step="1" min="0" aria-invalid={errors.amount ? true : undefined} {...register("amount")} />
-            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.amount.message}</p>}
+            {errors.amount && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.amount.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="fs-lateFineFlat" optional>Flat late fine</Label>
+              <Label htmlFor="fs-lateFineFlat" optional>{t("Flat late fine")}</Label>
               <Input id="fs-lateFineFlat" type="number" step="1" min="0" {...register("lateFineFlat")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="fs-lateFinePerDay" optional>Per-day late fine</Label>
+              <Label htmlFor="fs-lateFinePerDay" optional>{t("Per-day late fine")}</Label>
               <Input id="fs-lateFinePerDay" type="number" step="1" min="0" {...register("lateFinePerDay")} />
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create structure"}
+              {isEdit ? t("Save changes") : t("Create structure")}
             </Button>
           </DialogFooter>
         </form>

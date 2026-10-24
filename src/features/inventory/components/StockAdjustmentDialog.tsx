@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ITEM_UNIT_OPTIONS } from "../constants";
 import type { InventoryItem, StockAdjustmentFormValues } from "../types";
 
 const adjustmentSchema = z.object({
@@ -37,6 +39,7 @@ export default function StockAdjustmentDialog({
   submitting: boolean;
   onSubmit: (values: StockAdjustmentFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("inventory");
   const {
     register,
     handleSubmit,
@@ -60,12 +63,12 @@ export default function StockAdjustmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Adjust stock</DialogTitle>
-          <DialogDescription>Correct the recorded quantity after a physical stock count, damage, or loss.</DialogDescription>
+          <DialogTitle>{t("Adjust stock")}</DialogTitle>
+          <DialogDescription>{t("Correct the recorded quantity after a physical stock count, damage, or loss.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, reason: values.reason.trim() }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="adj-itemId" required>Item</Label>
+            <Label htmlFor="adj-itemId" required>{t("Item")}</Label>
             <Controller
               control={control}
               name="itemId"
@@ -79,52 +82,55 @@ export default function StockAdjustmentDialog({
                   }}
                 >
                   <SelectTrigger id="adj-itemId">
-                    <SelectValue placeholder="Select an item" />
+                    <SelectValue placeholder={t("Select an item")} />
                   </SelectTrigger>
                   <SelectContent>
                     {items.map((i) => (
                       <SelectItem key={i.id} value={i.id}>
-                        {i.code} · {i.name} (currently {i.quantityInStock})
+                        {t("{{code}} · {{name}} (currently {{quantity}})", { code: i.code, name: i.name, quantity: i.quantityInStock })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.itemId.message}</p>}
+            {errors.itemId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.itemId.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="adj-newQuantity" required>Counted quantity</Label>
+              <Label htmlFor="adj-newQuantity" required>{t("Counted quantity")}</Label>
               <Input id="adj-newQuantity" type="number" min="0" step="1" aria-invalid={errors.newQuantity ? true : undefined} {...register("newQuantity")} />
-              {errors.newQuantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.newQuantity.message}</p>}
+              {errors.newQuantity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.newQuantity.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="adj-date" required>Date</Label>
+              <Label htmlFor="adj-date" required>{t("Date")}</Label>
               <Input id="adj-date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
-              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.date.message}</p>}
+              {errors.date && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.date.message ?? "")}</p>}
             </div>
           </div>
 
           {selectedItem && delta !== 0 && (
             <p className={`text-xs rounded-md border px-2.5 py-2 ${delta > 0 ? "border-success/30 bg-success-soft text-success-strong" : "border-warning/30 bg-warning-soft text-warning-strong"}`}>
-              {delta > 0 ? `+${delta}` : delta} {selectedItem.unit}(s) relative to the current recorded stock.
+              {t("{{delta}} {{unitLabel}}(s) relative to the current recorded stock.", {
+                delta: delta > 0 ? `+${delta}` : delta,
+                unitLabel: t(ITEM_UNIT_OPTIONS.find((o) => o.value === selectedItem.unit)?.label ?? selectedItem.unit),
+              })}
             </p>
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="adj-reason" required>Reason</Label>
-            <Textarea id="adj-reason" rows={2} placeholder="e.g. Annual stock take — 2 units found damaged" aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
-            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reason.message}</p>}
+            <Label htmlFor="adj-reason" required>{t("Reason")}</Label>
+            <Textarea id="adj-reason" rows={2} placeholder={t("e.g. Annual stock take — 2 units found damaged")} aria-invalid={errors.reason ? true : undefined} {...register("reason")} />
+            {errors.reason && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.reason.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save adjustment
+              {t("Save adjustment")}
             </Button>
           </DialogFooter>
         </form>

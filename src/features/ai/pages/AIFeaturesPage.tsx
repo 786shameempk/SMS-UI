@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import {
   ArrowRight,
@@ -51,6 +52,7 @@ interface Section {
 
 /** A feature the user may use: the page lists these in groups, one navigation entry each. */
 function useSections(): Section[] {
+  const { t } = useTranslation("ai");
   // The backend decides what AI this user may use and what the configured provider supports.
   const { can, unsupported, allowed } = useAiCapabilities();
   // Students see their own profile here; parents have it in the Parent Portal, staff on each student profile.
@@ -92,7 +94,8 @@ function useSections(): Section[] {
     },
     can("view-usage") && { value: "usage", label: "AI Usage", description: "How much AI the school is using", icon: Gauge, group: "Manage", panel: <UsageTab /> },
   ];
-  return all.filter((s): s is Section => Boolean(s));
+  // Name and description are translated here; group stays English (it is also an id) and is translated where shown.
+  return all.filter((s): s is Section => Boolean(s)).map((s) => ({ ...s, label: t(s.label), description: t(s.description) }));
 }
 
 const OVERVIEW = "overview";
@@ -101,7 +104,7 @@ const TRIGGER_CLASS = cn(
   "group flex shrink-0 snap-start cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border border-border bg-card px-3.5 py-2 text-sm font-medium text-muted-foreground shadow-xs transition-colors",
   "hover:border-primary/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
   "data-[state=active]:border-primary/40 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground",
-  "lg:w-full lg:items-start lg:gap-3 lg:whitespace-normal lg:rounded-xl lg:border-transparent lg:bg-transparent lg:p-2.5 lg:text-left lg:shadow-none",
+  "lg:w-full lg:items-start lg:gap-3 lg:whitespace-normal lg:rounded-xl lg:border-transparent lg:bg-transparent lg:p-2.5 lg:text-start lg:shadow-none",
   "lg:hover:bg-secondary lg:data-[state=active]:border-primary/25 lg:data-[state=active]:bg-accent",
 );
 
@@ -127,12 +130,13 @@ function NavTrigger({ value, label, description, icon: Icon }: { value: string; 
 
 /** The landing view: every feature this user may use, as cards grouped by what they are for. */
 function FeatureCard({ section, reason, onOpen }: { section: Section; reason?: string; onOpen: (value: string) => void }) {
+  const { t } = useTranslation("ai");
   const s = section;
   return (
     <button
       type="button"
       onClick={() => onOpen(s.value)}
-      className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border/80 bg-card p-4 text-left shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border/80 bg-card p-4 text-start shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span
         aria-hidden="true"
@@ -143,7 +147,7 @@ function FeatureCard({ section, reason, onOpen }: { section: Section; reason?: s
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-foreground">{s.label}</span>
         <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{s.description}</span>
-        {reason && <span className="mt-1.5 block text-[11px] font-medium text-primary-text">{reason}</span>}
+        {reason && <span className="mt-1.5 block text-[11px] font-medium text-primary-text">{t(reason)}</span>}
       </span>
       <ArrowRight
         aria-hidden="true"
@@ -164,13 +168,14 @@ function Overview({
   recommended: { section: Section; reason?: string }[];
   onOpen: (value: string) => void;
 }) {
+  const { t } = useTranslation("ai");
   return (
     <div className="space-y-7">
       {recommended.length > 0 && (
         <section aria-labelledby="ai-recommended" className="space-y-3 rounded-2xl border border-primary/20 bg-hero p-4 sm:p-5">
           <h3 id="ai-recommended" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary-text">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Recommended for you
+            {t("Recommended for you")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {recommended.map(({ section, reason }) => (
@@ -182,7 +187,7 @@ function Overview({
       {groups.map((group) => (
         <section key={group} aria-labelledby={`ai-group-${group}`} className="space-y-3">
           <h3 id={`ai-group-${group}`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {group}
+            {t(group)}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {sections
@@ -198,6 +203,7 @@ function Overview({
 }
 
 export default function AIFeaturesPage() {
+  const { t } = useTranslation("ai");
   const sections = useSections();
   const [params, setParams] = useSearchParams();
   // Vertical navigation beside the content on wide screens; a swipeable strip above it on phones.
@@ -220,15 +226,15 @@ export default function AIFeaturesPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="AI Features" description="Ask questions, study from school materials and get drafts and insights from this school's own data.">
+      <PageHeader title={t("AI Features")} description={t("Ask questions, study from school materials and get drafts and insights from this school's own data.")}>
         <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           <li className="flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5 text-primary-text" aria-hidden="true" />
-            Answers come from your school's own records
+            {t("Answers come from your school's own records")}
           </li>
           <li className="flex items-center gap-1.5">
             <UserCheck className="h-3.5 w-3.5 text-primary-text" aria-hidden="true" />
-            You review every draft before it is used
+            {t("You review every draft before it is used")}
           </li>
         </ul>
       </PageHeader>
@@ -240,7 +246,7 @@ export default function AIFeaturesPage() {
         className="grid min-w-0 gap-5 lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8"
       >
         <TabsPrimitive.List
-          aria-label="AI features"
+          aria-label={t("AI features")}
           className={cn(
             // Phones: one swipeable row of chips that bleeds to the screen edge. Desktop: a sticky grouped list.
             "-mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-6 sm:scroll-px-6 sm:px-6",
@@ -248,11 +254,11 @@ export default function AIFeaturesPage() {
           )}
         >
           <div role="presentation" className="contents lg:block lg:pb-3">
-            <NavTrigger value={OVERVIEW} label="Overview" description="Everything AI can do for you" icon={LayoutGrid} />
+            <NavTrigger value={OVERVIEW} label={t("Overview")} description={t("Everything AI can do for you")} icon={LayoutGrid} />
           </div>
           {groups.map((group) => (
             <div key={group} role="presentation" className="contents lg:block lg:space-y-1 lg:pb-3">
-              <p className="hidden px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground lg:block">{group}</p>
+              <p className="hidden px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground lg:block">{t(group)}</p>
               {sections
                 .filter((s) => s.group === group)
                 .map((s) => (
@@ -268,8 +274,8 @@ export default function AIFeaturesPage() {
               {section ? <section.icon className="h-5 w-5" /> : <LayoutGrid className="h-5 w-5" />}
             </span>
             <div className="min-w-0">
-              <h2 className="text-section-title">{section ? section.label : "What would you like to do?"}</h2>
-              <p className="text-sm text-muted-foreground">{section ? section.description : "Pick a feature to get started. Everything here works from this school's own data."}</p>
+              <h2 className="text-section-title">{section ? section.label : t("What would you like to do?")}</h2>
+              <p className="text-sm text-muted-foreground">{section ? section.description : t("Pick a feature to get started. Everything here works from this school's own data.")}</p>
             </div>
           </div>
           <TabsContent value={OVERVIEW} className="mt-0 min-w-0">

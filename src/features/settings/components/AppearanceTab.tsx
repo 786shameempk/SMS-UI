@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, Monitor, Moon, Sun } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/utils/cn";
 import { useUiStore } from "@/store/useUiStore";
@@ -19,6 +20,7 @@ export default function AppearanceTab() {
   const queryClient = useQueryClient();
   const themeMode = useUiStore((s) => s.themeMode);
   const setThemeMode = useUiStore((s) => s.setThemeMode);
+  const { t } = useTranslation("settings");
 
   const { data: brand, isLoading: brandLoading } = useQuery({ queryKey: ["settings", "brand-preset"], queryFn: getBrandPreset });
   const { data: radius, isLoading: radiusLoading } = useQuery({ queryKey: ["settings", "radius-preset"], queryFn: getRadiusPreset });
@@ -31,9 +33,9 @@ export default function AppearanceTab() {
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["settings", "brand-preset"] });
       invalidateAudit();
-      toast.success(`Theme switched to ${BRAND_PRESETS[updated].label}`);
+      toast.success(t("Theme switched to {{theme}}", { theme: t(BRAND_PRESETS[updated].label) }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not change theme"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not change theme")),
   });
 
   const radiusMutation = useMutation({
@@ -41,9 +43,9 @@ export default function AppearanceTab() {
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["settings", "radius-preset"] });
       invalidateAudit();
-      toast.success(`Corner style set to ${RADIUS_PRESETS[updated].label}`);
+      toast.success(t("Corner style set to {{style}}", { style: t(RADIUS_PRESETS[updated].label) }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not change corner style"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not change corner style")),
   });
 
   const densityMutation = useMutation({
@@ -51,20 +53,20 @@ export default function AppearanceTab() {
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["settings", "density-preset"] });
       invalidateAudit();
-      toast.success(`Density set to ${DENSITY_PRESETS[updated].label}`);
+      toast.success(t("Density set to {{density}}", { density: t(DENSITY_PRESETS[updated].label) }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not change density"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not change density")),
   });
 
   const isLoading = brandLoading || radiusLoading || densityLoading;
-  if (isLoading) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5 max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle>Theme mode</CardTitle>
-          <CardDescription>Your own preference for this device — unlike the settings below, this isn't shared with the rest of the school.</CardDescription>
+          <CardTitle>{t("Theme mode")}</CardTitle>
+          <CardDescription>{t("Your own preference for this device — unlike the settings below, this isn't shared with the rest of the school.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-3">
@@ -81,7 +83,7 @@ export default function AppearanceTab() {
                   )}
                 >
                   <option.icon className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">{option.label}</span>
+                  <span className="text-sm font-medium text-foreground">{t(option.label)}</span>
                 </button>
               );
             })}
@@ -91,16 +93,16 @@ export default function AppearanceTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Brand theme</CardTitle>
-          <CardDescription>Applies instantly across the whole portal — sidebar, buttons, badges, everything that uses the brand color.</CardDescription>
+          <CardTitle>{t("Brand theme")}</CardTitle>
+          <CardDescription>{t("Applies instantly across the whole portal — sidebar, buttons, badges, everything that uses the brand color.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-5">
             {BRAND_PRESET_GROUPS.map((group) => (
               <div key={group.id} className="space-y-2">
                 <div>
-                  <p className="text-label">{group.title}</p>
-                  <p className="text-helper">{group.hint}</p>
+                  <p className="text-label">{t(group.title)}</p>
+                  <p className="text-helper">{t(group.hint)}</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {BRAND_PRESET_OPTIONS.filter((o) => o.group === group.id).map((option) => {
@@ -113,7 +115,7 @@ export default function AppearanceTab() {
                   disabled={brandMutation.isPending}
                   onClick={() => brandMutation.mutate(option.value)}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors cursor-pointer disabled:opacity-50",
+                    "flex items-center gap-3 rounded-xl border p-3 text-start transition-colors cursor-pointer disabled:opacity-50",
                     isActive ? "border-primary ring-2 ring-ring" : "border-border hover:bg-secondary/50",
                   )}
                 >
@@ -125,7 +127,7 @@ export default function AppearanceTab() {
                         <Check className="w-4 h-4 text-white absolute inset-0 m-auto" />
                       ))}
                   </span>
-                  <span className="text-sm font-medium text-foreground">{option.label}</span>
+                  <span className="text-sm font-medium text-foreground">{t(option.label)}</span>
                 </button>
               );
             })}
@@ -138,8 +140,8 @@ export default function AppearanceTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Corner style</CardTitle>
-          <CardDescription>How rounded buttons, cards, and inputs look throughout the portal.</CardDescription>
+          <CardTitle>{t("Corner style")}</CardTitle>
+          <CardDescription>{t("How rounded buttons, cards, and inputs look throughout the portal.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-3">
@@ -160,7 +162,7 @@ export default function AppearanceTab() {
                     className="w-10 h-10 border-2 border-primary/70 bg-primary/10"
                     style={{ borderRadius: RADIUS_PRESETS[option.value].base }}
                   />
-                  <span className="text-sm font-medium text-foreground">{option.label}</span>
+                  <span className="text-sm font-medium text-foreground">{t(option.label)}</span>
                 </button>
               );
             })}
@@ -170,8 +172,8 @@ export default function AppearanceTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Density</CardTitle>
-          <CardDescription>How tightly cards, tables, and lists are spaced.</CardDescription>
+          <CardTitle>{t("Density")}</CardTitle>
+          <CardDescription>{t("How tightly cards, tables, and lists are spaced.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -185,7 +187,7 @@ export default function AppearanceTab() {
                   disabled={densityMutation.isPending}
                   onClick={() => densityMutation.mutate(option.value)}
                   className={cn(
-                    "flex flex-col gap-2.5 rounded-xl border p-3.5 text-left transition-colors cursor-pointer disabled:opacity-50",
+                    "flex flex-col gap-2.5 rounded-xl border p-3.5 text-start transition-colors cursor-pointer disabled:opacity-50",
                     isActive ? "border-primary ring-2 ring-ring" : "border-border hover:bg-secondary/50",
                   )}
                 >
@@ -195,8 +197,8 @@ export default function AppearanceTab() {
                     ))}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{option.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
+                    <p className="text-sm font-medium text-foreground">{t(option.label)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t(option.description)}</p>
                   </div>
                 </button>
               );

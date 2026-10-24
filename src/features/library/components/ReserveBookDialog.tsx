@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,6 +36,7 @@ export default function ReserveBookDialog({
   submitting: boolean;
   onSubmit: (values: ReserveBookFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("library");
   const {
     handleSubmit,
     reset,
@@ -53,19 +55,19 @@ export default function ReserveBookDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Reserve book</DialogTitle>
-          <DialogDescription>Reservations can only be placed for books with zero copies currently available.</DialogDescription>
+          <DialogTitle>{t("Reserve book")}</DialogTitle>
+          <DialogDescription>{t("Reservations can only be placed for books with zero copies currently available.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="resv-bookId" required>Book</Label>
+            <Label htmlFor="resv-bookId" required>{t("Book")}</Label>
             <Controller
               control={control}
               name="bookId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="resv-bookId">
-                    <SelectValue placeholder="Select a fully-booked title" />
+                    <SelectValue placeholder={t("Select a fully-booked title")} />
                   </SelectTrigger>
                   <SelectContent>
                     {fullyBookedBooks.map((b) => (
@@ -77,19 +79,19 @@ export default function ReserveBookDialog({
                 </Select>
               )}
             />
-            {errors.bookId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.bookId.message}</p>}
-            {fullyBookedBooks.length === 0 && <p className="text-xs text-muted-foreground">No books are fully booked right now.</p>}
+            {errors.bookId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.bookId.message ?? "")}</p>}
+            {fullyBookedBooks.length === 0 && <p className="text-xs text-muted-foreground">{t("No books are fully booked right now.")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="resv-memberId" required>Member</Label>
+            <Label htmlFor="resv-memberId" required>{t("Member")}</Label>
             <Controller
               control={control}
               name="memberId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="resv-memberId">
-                    <SelectValue placeholder="Select a member" />
+                    <SelectValue placeholder={t("Select a member")} />
                   </SelectTrigger>
                   <SelectContent>
                     {activeMembers.map((m) => (
@@ -101,16 +103,16 @@ export default function ReserveBookDialog({
                 </Select>
               )}
             />
-            {errors.memberId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.memberId.message}</p>}
+            {errors.memberId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.memberId.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" disabled={submitting || fullyBookedBooks.length === 0}>
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Reserve
+              {t("Reserve")}
             </Button>
           </DialogFooter>
         </form>

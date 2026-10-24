@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -18,6 +19,7 @@ import MarkVaccinationAdministeredDialog from "./MarkVaccinationAdministeredDial
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function VaccinationsTab() {
+  const { t } = useTranslation("health");
   const queryClient = useQueryClient();
   const { data: vaccinations = [], isLoading, isError, refetch } = useQuery({ queryKey: ["health", "vaccinations"], queryFn: () => listVaccinations() });
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -35,17 +37,17 @@ export default function VaccinationsTab() {
     mutationFn: createVaccination,
     onSuccess: () => {
       invalidate();
-      toast.success("Vaccination scheduled");
+      toast.success(t("Vaccination scheduled"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not schedule vaccination"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not schedule vaccination")),
   });
 
   const markMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: Parameters<typeof markVaccinationAdministered>[1] }) => markVaccinationAdministered(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Marked as administered");
+      toast.success(t("Marked as administered"));
       setMarkTarget(null);
     },
   });
@@ -54,7 +56,7 @@ export default function VaccinationsTab() {
     mutationFn: deleteVaccination,
     onSuccess: () => {
       invalidate();
-      toast.success("Vaccination record deleted");
+      toast.success(t("Vaccination record deleted"));
       setDeleteTarget(null);
     },
   });
@@ -64,7 +66,7 @@ export default function VaccinationsTab() {
   const columns: ColumnDef<VaccinationRow, unknown>[] = [
     {
       id: "student",
-      header: "Student",
+      header: t("Student"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -78,21 +80,21 @@ export default function VaccinationsTab() {
     },
     {
       id: "vaccine",
-      header: "Vaccine",
+      header: t("Vaccine"),
       cell: ({ row }) => (
         <span className="text-sm text-foreground">
-          {row.original.vaccineName} <span className="text-muted-foreground">(dose {row.original.doseNumber})</span>
+          {row.original.vaccineName} <span className="text-muted-foreground">{t("(dose {{dose}})", { dose: row.original.doseNumber })}</span>
         </span>
       ),
     },
     {
       id: "dueDate",
-      header: "Due date",
+      header: t("Due date"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatRelativeDay(row.original.dueDate)}</span>,
     },
     {
       id: "administered",
-      header: "Administered on",
+      header: t("Administered on"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.dateAdministered ? new Date(row.original.dateAdministered).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—"}
@@ -101,8 +103,8 @@ export default function VaccinationsTab() {
     },
     {
       id: "status",
-      header: "Status",
-      cell: ({ row }) => <Badge variant={VACCINATION_STATUS_CONFIG[row.original.status].variant}>{VACCINATION_STATUS_CONFIG[row.original.status].label}</Badge>,
+      header: t("Status"),
+      cell: ({ row }) => <Badge variant={VACCINATION_STATUS_CONFIG[row.original.status].variant}>{t(VACCINATION_STATUS_CONFIG[row.original.status].label)}</Badge>,
     },
     {
       id: "actions",
@@ -114,12 +116,12 @@ export default function VaccinationsTab() {
             {v.status !== "completed" && (
               <DropdownMenuItem onClick={() => setMarkTarget(v)}>
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Mark administered
+                {t("Mark administered")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => setDeleteTarget(v)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -132,24 +134,24 @@ export default function VaccinationsTab() {
       <DataTableToolbar>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t("Status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="all">{t("All statuses")}</SelectItem>
             {(Object.keys(VACCINATION_STATUS_CONFIG) as Array<keyof typeof VACCINATION_STATUS_CONFIG>).map((status) => (
               <SelectItem key={status} value={status}>
-                {VACCINATION_STATUS_CONFIG[status].label}
+                {t(VACCINATION_STATUS_CONFIG[status].label)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          Schedule vaccination
+          {t("Schedule vaccination")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No vaccination records match your filter." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No vaccination records match your filter.")} pageSize={10} />
 
       <VaccinationFormDialog
         open={formOpen}
@@ -173,9 +175,9 @@ export default function VaccinationsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete vaccination record"
-        description={`Delete "${deleteTarget?.vaccineName}" (dose ${deleteTarget?.doseNumber}) for ${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete vaccination record")}
+        description={t("Delete \"{{vaccine}}\" (dose {{dose}}) for {{name}}? This cannot be undone.", { vaccine: deleteTarget?.vaccineName, dose: deleteTarget?.doseNumber, name: `${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}` })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

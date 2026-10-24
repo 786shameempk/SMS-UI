@@ -1,4 +1,5 @@
 import { Bus, MapPin } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
@@ -7,15 +8,16 @@ import { useAuthStore } from "@/store/authStore";
 import type { BusStatusSummary } from "../types";
 
 export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSummary }) {
+  const { t } = useTranslation("dashboard");
   const role = useAuthStore((s) => s.user?.role);
   // A parent or student sees only their own bus, never the school's fleet.
   const family = role === "parent" || role === "student";
-  const own = role === "student" ? "Your transport." : "Your child's transport.";
+  const own = role === "student" ? t("Your transport.") : t("Your child's transport.");
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
-        <CardTitle>Bus status</CardTitle>
-        <CardDescription>{family ? own : "Live fleet status."}</CardDescription>
+        <CardTitle>{t("Bus status")}</CardTitle>
+        <CardDescription>{family ? own : t("Live fleet status.")}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 space-y-2">
         {busStatus.mine ? (
@@ -36,18 +38,18 @@ export default function BusStatusCard({ busStatus }: { busStatus: BusStatusSumma
               </div>
             </div>
             <Badge variant={TRACKING_STATUS_CONFIG[busStatus.mine.status].variant} className="shrink-0">
-              {TRACKING_STATUS_CONFIG[busStatus.mine.status].label}
+              {t(TRACKING_STATUS_CONFIG[busStatus.mine.status].label)}
             </Badge>
           </div>
         ) : family ? (
-          <EmptyState bare size="sm" icon={Bus} title="No bus assigned" description={role === "student" ? "You are not on a school bus route." : "Your child is not on a school bus route."} className="h-full py-6" />
+          <EmptyState bare size="sm" icon={Bus} title={t("No bus assigned")} description={role === "student" ? t("You are not on a school bus route.") : t("Your child is not on a school bus route.")} className="h-full py-6" />
         ) : busStatus.fleet.length === 0 ? (
-          <EmptyState bare size="sm" icon={Bus} title="No routes running" description="Live buses appear here during trips." className="h-full py-6" />
+          <EmptyState bare size="sm" icon={Bus} title={t("No routes running")} description={t("Live buses appear here during trips.")} className="h-full py-6" />
         ) : (
           <div className="grid grid-cols-2 gap-2">
             {busStatus.fleet.map((f) => (
               <div key={f.status} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                <Badge variant={TRACKING_STATUS_CONFIG[f.status].variant}>{TRACKING_STATUS_CONFIG[f.status].label}</Badge>
+                <Badge variant={TRACKING_STATUS_CONFIG[f.status].variant}>{t(TRACKING_STATUS_CONFIG[f.status].label)}</Badge>
                 <span className="text-sm font-semibold text-foreground tabular-nums">{f.count}</span>
               </div>
             ))}

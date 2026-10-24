@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import BulkImportDialog, { type ImportColumn, type ParsedRow } from "@/components/dialogs/BulkImportDialog";
 import { normalizeDate } from "@/utils/csvParse";
 import { getCurrentBranchId } from "@/utils/tenant";
@@ -19,16 +21,21 @@ const COLUMNS: ImportColumn[] = [
 
 const GENDERS: Gender[] = ["male", "female", "other"];
 
-export function parseStaffRow(r: Record<string, string>): ParsedRow<StaffFormValues> {
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+const translateStaff: Translate = (key, options) => i18n.t(key, { ns: "staff", ...options });
+
+// Column labels are the CSV header names, so they stay in English inside the messages.
+
+export function parseStaffRow(r: Record<string, string>, t: Translate = translateStaff): ParsedRow<StaffFormValues> {
   const missing = COLUMNS.filter((c) => c.required && !r[c.key]).map((c) => c.label);
-  if (missing.length) return { ok: false, error: `Missing ${missing.join(", ")}` };
+  if (missing.length) return { ok: false, error: t("Missing {{fields}}", { fields: missing.join(", ") }) };
   const dateOfBirth = normalizeDate(r.dateOfBirth);
-  if (!dateOfBirth) return { ok: false, error: `Date of birth "${r.dateOfBirth}" is not a valid date` };
+  if (!dateOfBirth) return { ok: false, error: t("Date of birth \"{{value}}\" is not a valid date", { value: r.dateOfBirth }) };
   const gender = GENDERS.find((g) => g === r.gender.toLowerCase());
-  if (!gender) return { ok: false, error: `Gender must be ${GENDERS.join(", ")}` };
+  if (!gender) return { ok: false, error: t("Gender must be {{values}}", { values: GENDERS.join(", ") }) };
   const designation = DESIGNATIONS.find((d) => d.toLowerCase() === r.designation.toLowerCase());
-  if (!designation) return { ok: false, error: `Designation "${r.designation}" is not one of: ${DESIGNATIONS.join(", ")}` };
-  if (!/^\S+@\S+\.\S+$/.test(r.email)) return { ok: false, error: `Email "${r.email}" is not valid` };
+  if (!designation) return { ok: false, error: t("Designation \"{{value}}\" is not one of: {{values}}", { value: r.designation, values: DESIGNATIONS.join(", ") }) };
+  if (!/^\S+@\S+\.\S+$/.test(r.email)) return { ok: false, error: t("Email \"{{value}}\" is not valid", { value: r.email }) };
   return {
     ok: true,
     value: {
@@ -53,15 +60,16 @@ interface Props {
 }
 
 export default function BulkStaffImportDialog({ open, onOpenChange, onFinished }: Props) {
+  const { t } = useTranslation("staff");
   return (
     <BulkImportDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Import staff"
-      description={`Add many staff members from a CSV file. Designation is one of: ${DESIGNATIONS.join(", ")}.`}
+      title={t("Import staff")}
+      description={t("Add many staff members from a CSV file. Designation is one of: {{values}}.", { values: DESIGNATIONS.join(", ") })}
       templateFileName="staff-import-template"
       columns={COLUMNS}
-      parseRow={parseStaffRow}
+      parseRow={(row) => parseStaffRow(row, t)}
       importRow={createStaff}
       onFinished={onFinished}
     />

@@ -1,6 +1,7 @@
 import { cn } from "@/utils/cn";
 import { statusToggleActiveClass } from "../constants";
 
+import { useTranslation } from "react-i18next";
 export default function StatusToggleGroup<T extends string>({
   value,
   onChange,
@@ -10,6 +11,7 @@ export default function StatusToggleGroup<T extends string>({
   onChange: (value: T) => void;
   options: { value: T; label: string }[];
 }) {
+  const { t } = useTranslation("attendance");
   return (
     <div className="flex flex-wrap gap-1.5">
       {options.map((opt) => {
@@ -24,7 +26,7 @@ export default function StatusToggleGroup<T extends string>({
               active ? statusToggleActiveClass(opt.value) : "border-border bg-card text-secondary-foreground hover:bg-secondary",
             )}
           >
-            {opt.label}
+            {t(opt.label)}
           </button>
         );
       })}

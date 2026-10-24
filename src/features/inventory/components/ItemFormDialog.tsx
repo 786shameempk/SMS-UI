@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ export default function ItemFormDialog({
   submitting: boolean;
   onSubmit: (values: InventoryItemFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("inventory");
   const isEdit = Boolean(item);
   const {
     register,
@@ -70,11 +72,11 @@ export default function ItemFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit item" : "New item"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("Edit item") : t("New item")}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Stock on hand can only change through a stock-in, issue, or adjustment — not here."
-              : "New items start at zero stock — record a purchase afterwards to bring in opening stock."}
+              ? t("Stock on hand can only change through a stock-in, issue, or adjustment — not here.")
+              : t("New items start at zero stock — record a purchase afterwards to bring in opening stock.")}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -83,19 +85,19 @@ export default function ItemFormDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="item-code" required>Code</Label>
-              <Input id="item-code" placeholder="e.g. STA-004" aria-invalid={errors.code ? true : undefined} {...register("code")} />
-              {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
+              <Label htmlFor="item-code" required>{t("Code")}</Label>
+              <Input id="item-code" placeholder={t("e.g. STA-004")} aria-invalid={errors.code ? true : undefined} {...register("code")} />
+              {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.code.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="item-category">Category</Label>
+              <Label htmlFor="item-category">{t("Category")}</Label>
               <Controller
                 control={control}
                 name="categoryId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="item-category">
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={t("Select category")} />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((c) => (
@@ -107,19 +109,19 @@ export default function ItemFormDialog({
                   </Select>
                 )}
               />
-              {errors.categoryId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.categoryId.message}</p>}
+              {errors.categoryId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.categoryId.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="item-name" required>Name</Label>
-            <Input id="item-name" placeholder="e.g. A4 Paper Ream" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="item-name" required>{t("Name")}</Label>
+            <Input id="item-name" placeholder={t("e.g. A4 Paper Ream")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="item-unit" required>Unit</Label>
+              <Label htmlFor="item-unit" required>{t("Unit")}</Label>
               <Controller
                 control={control}
                 name="unit"
@@ -131,7 +133,7 @@ export default function ItemFormDialog({
                     <SelectContent>
                       {ITEM_UNIT_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -140,28 +142,28 @@ export default function ItemFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="item-unitCost" required>Unit cost</Label>
+              <Label htmlFor="item-unitCost" required>{t("Unit cost")}</Label>
               <Input id="item-unitCost" type="number" min="0" step="1" aria-invalid={errors.unitCost ? true : undefined} {...register("unitCost")} />
-              {errors.unitCost && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.unitCost.message}</p>}
+              {errors.unitCost && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.unitCost.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="item-reorderLevel" required>Reorder level</Label>
+              <Label htmlFor="item-reorderLevel" required>{t("Reorder level")}</Label>
               <Input id="item-reorderLevel" type="number" min="0" step="1" aria-invalid={errors.reorderLevel ? true : undefined} {...register("reorderLevel")} />
-              {errors.reorderLevel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.reorderLevel.message}</p>}
+              {errors.reorderLevel && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.reorderLevel.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="item-location" optional>Storage location</Label>
-            <Input id="item-location" placeholder="e.g. Store Room A" {...register("location")} />
+            <Label htmlFor="item-location" optional>{t("Storage location")}</Label>
+            <Input id="item-location" placeholder={t("e.g. Store Room A")} {...register("location")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create item"}
+              {isEdit ? t("Save changes") : t("Create item")}
             </Button>
           </DialogFooter>
         </form>

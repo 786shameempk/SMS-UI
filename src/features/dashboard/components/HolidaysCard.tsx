@@ -1,4 +1,5 @@
 import { PalmtreeIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
@@ -6,16 +7,17 @@ import { formatRelativeDay } from "@/utils/format";
 import type { HolidayItem } from "../types";
 
 export default function HolidaysCard({ holidays }: { holidays: HolidayItem[] }) {
+  const { t } = useTranslation("dashboard");
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PalmtreeIcon className="w-4 h-4 text-muted-foreground" />
-          Upcoming holidays
+          {t("Upcoming holidays")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2.5">
-        {holidays.length === 0 && <EmptyState bare size="sm" icon={PalmtreeIcon} title="No upcoming holidays" className="py-6" />}
+        {holidays.length === 0 && <EmptyState bare size="sm" icon={PalmtreeIcon} title={t("No upcoming holidays")} className="py-6" />}
         {holidays.map((h) => (
           <div key={h.id} className="flex items-center justify-between">
             <div className="min-w-0">
@@ -23,7 +25,7 @@ export default function HolidaysCard({ holidays }: { holidays: HolidayItem[] }) 
               <p className="text-[11px] text-muted-foreground">{formatRelativeDay(h.date)}</p>
             </div>
             <Badge variant={h.type === "public" ? "info" : "neutral"} className="shrink-0 capitalize">
-              {h.type}
+              {t(h.type)}
             </Badge>
           </div>
         ))}

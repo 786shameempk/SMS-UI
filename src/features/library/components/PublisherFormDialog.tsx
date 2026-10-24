@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +33,7 @@ export default function PublisherFormDialog({
   submitting: boolean;
   onSubmit: (values: PublisherFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("library");
   const isEdit = Boolean(publisher);
   const {
     register,
@@ -49,28 +51,28 @@ export default function PublisherFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit publisher" : "New publisher"}</DialogTitle>
-          <DialogDescription>Publishers are referenced by books in the catalog.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit publisher") : t("New publisher")}</DialogTitle>
+          <DialogDescription>{t("Publishers are referenced by books in the catalog.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) => onSubmit({ ...values, address: values.address?.trim() || undefined }))}
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="pub-name" required>Name</Label>
-            <Input id="pub-name" placeholder="e.g. Penguin Random House India" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="pub-name" required>{t("Name")}</Label>
+            <Input id="pub-name" placeholder={t("e.g. Penguin Random House India")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pub-address" optional>Address</Label>
+            <Label htmlFor="pub-address" optional>{t("Address")}</Label>
             <Textarea id="pub-address" rows={2} {...register("address")} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create publisher"}
+              {isEdit ? t("Save changes") : t("Create publisher")}
             </Button>
           </DialogFooter>
         </form>

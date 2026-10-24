@@ -6,21 +6,23 @@ import ReportCardTab from "../components/ReportCardTab";
 import TranscriptTab from "../components/TranscriptTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
+import { useTranslation } from "react-i18next";
 export default function ExaminationManagementPage() {
+  const { t } = useTranslation("examinations");
   return (
     <PageContainer>
       <PageHeader
-        title="Examination management"
-        description="Schedule exams, enter marks, and review grades, rankings, report cards, and transcripts."
+        title={t("Examination management")}
+        description={t("Schedule exams, enter marks, and review grades, rankings, report cards, and transcripts.")}
       />
 
       <Tabs defaultValue="exams">
         <TabsList variant="line">
-          <TabsTrigger value="exams">Exams</TabsTrigger>
-          <TabsTrigger value="marks-entry">Marks Entry</TabsTrigger>
-          <TabsTrigger value="results-ranking">Results &amp; Ranking</TabsTrigger>
-          <TabsTrigger value="report-cards">Report Cards</TabsTrigger>
-          <TabsTrigger value="transcript">Transcript</TabsTrigger>
+          <TabsTrigger value="exams">{t("Exams")}</TabsTrigger>
+          <TabsTrigger value="marks-entry">{t("Marks Entry")}</TabsTrigger>
+          <TabsTrigger value="results-ranking">{t("Results & Ranking")}</TabsTrigger>
+          <TabsTrigger value="report-cards">{t("Report Cards")}</TabsTrigger>
+          <TabsTrigger value="transcript">{t("Transcript")}</TabsTrigger>
         </TabsList>
         <TabsContent value="exams">
           <ExamsTab />

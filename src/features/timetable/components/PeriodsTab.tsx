@@ -15,12 +15,14 @@ import { MAX_PERIODS, newPeriodRow, sortByTime, toFormValues, validateSetup } fr
 import type { DayOfWeek, PeriodFormRow, TimetableSetupFormValues } from "../types";
 import { TIMETABLE_SETUP_KEY, useTimetableSetup } from "../useTimetableSetup";
 
+import { useTranslation } from "react-i18next";
 /**
  * Period setup: each branch defines its own bell schedule (names, start/end times, breaks) and school days.
  * Lessons refer to a period by its number, so renaming or re-timing never moves them; a period or day that still
  * has lessons can't be removed (the server refuses and says which).
  */
 export default function PeriodsTab() {
+  const { t } = useTranslation("timetable");
   const queryClient = useQueryClient();
   const { setup, isLoading, isError, refetch, isFetching } = useTimetableSetup();
   // What the user has changed so far; until they change something the form shows what the branch has now.
@@ -37,7 +39,7 @@ export default function PeriodsTab() {
       setDraft(null);
       setShowErrors(false);
       setServerError(null);
-      toast.success("Periods saved");
+      toast.success(t("Periods saved"));
     },
     onError: (err: Error) => {
       setServerError(err.message);
@@ -48,8 +50,8 @@ export default function PeriodsTab() {
   const errors = useMemo(() => validateSetup(values), [values]);
   const dirty = draft !== null && JSON.stringify(draft) !== JSON.stringify(toFormValues(setup));
 
-  if (isLoading) return <LoadingState label="Loading periods…" />;
-  if (isError) return <ErrorState title="Couldn't load the periods" onRetry={() => void refetch()} retrying={isFetching} />;
+  if (isLoading) return <LoadingState label={t("Loading periods…")} />;
+  if (isError) return <ErrorState title={t("Couldn't load the periods")} onRetry={() => void refetch()} retrying={isFetching} />;
 
   const update = (patch: Partial<TimetableSetupFormValues>) => {
     setShowErrors(false);
@@ -73,14 +75,14 @@ export default function PeriodsTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>School days</CardTitle>
-          <CardDescription>The days this branch holds classes. Only these days appear in timetables.</CardDescription>
+          <CardTitle>{t("School days")}</CardTitle>
+          <CardDescription>{t("The days this branch holds classes. Only these days appear in timetables.")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div role="group" aria-label="School days" className="flex flex-wrap gap-1.5">
+          <div role="group" aria-label={t("School days")} className="flex flex-wrap gap-1.5">
             {DAY_DEFINITIONS.map((day) => (
               <ToggleChip key={day.value} size="lg" pressed={values.workingDays.includes(day.value)} onClick={() => toggleDay(day.value)}>
-                {day.label}
+                {t(day.label)}
               </ToggleChip>
             ))}
           </div>
@@ -89,19 +91,19 @@ export default function PeriodsTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Periods and breaks</CardTitle>
+          <CardTitle>{t("Periods and breaks")}</CardTitle>
           <CardDescription>
             {setup.isCustom
-              ? "This branch's own schedule. Rename or re-time a period any time; lessons stay where they are."
-              : "This branch is using the standard schedule. Change it below to make it your own."}
+              ? t("This branch's own schedule. Rename or re-time a period any time; lessons stay where they are.")
+              : t("This branch is using the standard schedule. Change it below to make it your own.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="hidden grid-cols-[minmax(0,2fr)_9rem_9rem_5rem_2.5rem] items-end gap-3 text-xs font-medium text-muted-foreground md:grid">
-            <span>Name</span>
-            <span>Starts</span>
-            <span>Ends</span>
-            <span>Break</span>
+            <span>{t("Name")}</span>
+            <span>{t("Starts")}</span>
+            <span>{t("Ends")}</span>
+            <span>{t("Break")}</span>
             <span />
           </div>
 
@@ -113,19 +115,19 @@ export default function PeriodsTab() {
               >
                 <div className="col-span-2 space-y-1.5 md:col-span-1">
                   <Label htmlFor={`label-${row.periodNumber}`} className="md:sr-only">
-                    Name
+                    {t("Name")}
                   </Label>
                   <Input id={`label-${row.periodNumber}`} value={row.label} maxLength={60} onChange={(e) => updateRow(row.periodNumber, { label: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor={`start-${row.periodNumber}`} className="md:sr-only">
-                    Starts
+                    {t("Starts")}
                   </Label>
                   <Input id={`start-${row.periodNumber}`} type="time" value={row.startTime} onChange={(e) => updateRow(row.periodNumber, { startTime: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor={`end-${row.periodNumber}`} className="md:sr-only">
-                    Ends
+                    {t("Ends")}
                   </Label>
                   <Input id={`end-${row.periodNumber}`} type="time" value={row.endTime} onChange={(e) => updateRow(row.periodNumber, { endTime: e.target.value })} />
                 </div>
@@ -134,17 +136,17 @@ export default function PeriodsTab() {
                     id={`break-${row.periodNumber}`}
                     checked={row.isBreak}
                     onCheckedChange={(checked) => updateRow(row.periodNumber, { isBreak: checked })}
-                    aria-label={`${row.label || "Period"} is a break`}
+                    aria-label={t("{{v1}} is a break", { v1: row.label || "Period" })}
                   />
                   <Label htmlFor={`break-${row.periodNumber}`} className="text-xs text-muted-foreground md:sr-only">
-                    Break
+                    {t("Break")}
                   </Label>
                 </div>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={`Remove ${row.label || "period"}`}
+                  aria-label={t("Remove {{v1}}", { v1: row.label || "period" })}
                   onClick={() => update({ periods: values.periods.filter((p) => p.periodNumber !== row.periodNumber) })}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -160,7 +162,7 @@ export default function PeriodsTab() {
             onClick={() => update({ periods: [...values.periods, newPeriodRow(values.periods)] })}
           >
             <Plus className="h-4 w-4" />
-            Add period or break
+            {t("Add period or break")}
           </Button>
 
           {showErrors && errors.length > 0 && (
@@ -184,10 +186,10 @@ export default function PeriodsTab() {
                 setShowErrors(false);
               }}>
               <RotateCcw className="h-4 w-4" />
-              Discard changes
+              {t("Discard changes")}
             </Button>
             <Button type="button" onClick={submit} loading={save.isPending} disabled={!dirty}>
-              Save periods
+              {t("Save periods")}
             </Button>
           </div>
         </CardContent>

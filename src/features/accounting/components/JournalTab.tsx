@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Eye, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +19,7 @@ import JournalEntryDetailDialog from "./JournalEntryDetailDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function JournalTab() {
+  const { t } = useTranslation("accounting");
   const queryClient = useQueryClient();
   const { data: entries = [], isLoading, isError, refetch } = useQuery({ queryKey: ["accounting", "entries"], queryFn: listJournalEntries });
   const { data: accounts = [] } = useQuery({ queryKey: ["accounting", "accounts"], queryFn: listAccounts });
@@ -38,26 +40,26 @@ export default function JournalTab() {
     mutationFn: createJournalEntry,
     onSuccess: () => {
       invalidate();
-      toast.success("Journal entry saved as draft");
+      toast.success(t("Journal entry saved as draft"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create entry"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create entry")),
   });
 
   const postMutation = useMutation({
     mutationFn: postJournalEntry,
     onSuccess: (entry) => {
       invalidate();
-      toast.success(`${entry.entryNumber} posted to the ledger`);
+      toast.success(t("{{entryNumber}} posted to the ledger", { entryNumber: entry.entryNumber }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not post entry"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not post entry")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteJournalEntry(id),
     onSuccess: () => {
       invalidate();
-      toast.success(`${deleteTarget?.entryNumber} removed`);
+      toast.success(t("{{name}} removed", { name: deleteTarget?.entryNumber }));
       setDeleteTarget(null);
     },
   });
@@ -70,9 +72,9 @@ export default function JournalTab() {
   const columns: ColumnDef<JournalEntry, unknown>[] = [
     {
       accessorKey: "entryNumber",
-      header: "Entry",
+      header: t("Entry"),
       cell: ({ row }) => (
-        <button type="button" onClick={() => setDetailEntry(row.original)} className="text-left cursor-pointer group">
+        <button type="button" onClick={() => setDetailEntry(row.original)} className="text-start cursor-pointer group">
           <p className="text-sm font-medium text-foreground group-hover:text-primary-text transition-colors">{row.original.entryNumber}</p>
           <p className="text-xs text-muted-foreground">{formatRelativeDay(row.original.date)}</p>
         </button>
@@ -80,17 +82,17 @@ export default function JournalTab() {
     },
     {
       accessorKey: "narration",
-      header: "Narration",
+      header: t("Narration"),
       cell: ({ row }) => (
         <div className="min-w-0 max-w-xs">
           <p className="text-sm text-foreground truncate">{row.original.narration}</p>
-          {row.original.reference && <p className="text-xs text-muted-foreground truncate">Ref: {row.original.reference}</p>}
+          {row.original.reference && <p className="text-xs text-muted-foreground truncate">{t("Ref: {{reference}}", { reference: row.original.reference })}</p>}
         </div>
       ),
     },
     {
       id: "amount",
-      header: "Amount",
+      header: t("Amount"),
       cell: ({ row }) => (
         <span className="text-sm text-foreground tabular-nums">
           {formatCurrency(row.original.lines.reduce((sum, l) => sum + l.debit, 0))}
@@ -99,15 +101,15 @@ export default function JournalTab() {
     },
     {
       id: "gst",
-      header: "GST",
-      cell: ({ row }) => (row.original.gstApplicable ? <Badge variant="info">Yes</Badge> : <span className="text-sm text-muted-foreground">—</span>),
+      header: t("GST"),
+      cell: ({ row }) => (row.original.gstApplicable ? <Badge variant="info">{t("Yes")}</Badge> : <span className="text-sm text-muted-foreground">—</span>),
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = JOURNAL_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -119,19 +121,19 @@ export default function JournalTab() {
           <RowActions>
             <DropdownMenuItem onClick={() => setDetailEntry(entry)}>
               <Eye className="w-3.5 h-3.5" />
-              View
+              {t("View")}
             </DropdownMenuItem>
             {entry.status === "draft" && (
               <DropdownMenuItem onClick={() => postMutation.mutate(entry.id)}>
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Post to ledger
+                {t("Post to ledger")}
               </DropdownMenuItem>
             )}
             {/* A posted entry is part of the books and is never deleted; a mistake is corrected with a new entry. */}
             {entry.status === "draft" && (
               <DropdownMenuItem onClick={() => setDeleteTarget(entry)} variant="destructive">
                 <Trash2 className="w-3.5 h-3.5" />
-                Delete
+                {t("Delete")}
               </DropdownMenuItem>
             )}
           </RowActions>
@@ -145,21 +147,21 @@ export default function JournalTab() {
       <DataTableToolbar>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t("Status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All entries</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="posted">Posted</SelectItem>
+            <SelectItem value="all">{t("All entries")}</SelectItem>
+            <SelectItem value="draft">{t("Draft")}</SelectItem>
+            <SelectItem value="posted">{t("Posted")}</SelectItem>
           </SelectContent>
         </Select>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          New entry
+          {t("New entry")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No journal entries yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No journal entries yet.")} pageSize={10} />
 
       <JournalEntryFormDialog
         open={formOpen}
@@ -176,9 +178,9 @@ export default function JournalTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete journal entry"
-        description={`Delete draft entry "${deleteTarget?.entryNumber}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete journal entry")}
+        description={t("Delete draft entry \"{{entryNumber}}\"? This cannot be undone.", { entryNumber: deleteTarget?.entryNumber })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

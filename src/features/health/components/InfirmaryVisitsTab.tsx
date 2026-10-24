@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -16,6 +17,7 @@ import InfirmaryVisitFormDialog from "./InfirmaryVisitFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function InfirmaryVisitsTab() {
+  const { t } = useTranslation("health");
   const queryClient = useQueryClient();
   const { data: visits = [], isLoading, isError, refetch } = useQuery({ queryKey: ["health", "visits"], queryFn: () => listInfirmaryVisits() });
   const [formOpen, setFormOpen] = useState(false);
@@ -31,17 +33,17 @@ export default function InfirmaryVisitsTab() {
     mutationFn: createInfirmaryVisit,
     onSuccess: () => {
       invalidate();
-      toast.success("Infirmary visit logged");
+      toast.success(t("Infirmary visit logged"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not log visit"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not log visit")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteInfirmaryVisit,
     onSuccess: () => {
       invalidate();
-      toast.success("Visit record deleted");
+      toast.success(t("Visit record deleted"));
       setDeleteTarget(null);
     },
   });
@@ -49,7 +51,7 @@ export default function InfirmaryVisitsTab() {
   const columns: ColumnDef<InfirmaryVisitRow, unknown>[] = [
     {
       id: "student",
-      header: "Student",
+      header: t("Student"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -63,12 +65,12 @@ export default function InfirmaryVisitsTab() {
     },
     {
       accessorKey: "visitedAt",
-      header: "Visited",
+      header: t("Visited"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatDateTime(row.original.visitedAt)}</span>,
     },
     {
       id: "symptoms",
-      header: "Symptoms",
+      header: t("Symptoms"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm text-foreground">{row.original.symptoms}</p>
@@ -78,7 +80,7 @@ export default function InfirmaryVisitsTab() {
     },
     {
       id: "treatment",
-      header: "Treatment",
+      header: t("Treatment"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm text-foreground">{row.original.treatmentGiven}</p>
@@ -88,13 +90,13 @@ export default function InfirmaryVisitsTab() {
     },
     {
       id: "outcome",
-      header: "Outcome",
-      cell: ({ row }) => <Badge variant={VISIT_OUTCOME_CONFIG[row.original.outcome].variant}>{VISIT_OUTCOME_CONFIG[row.original.outcome].label}</Badge>,
+      header: t("Outcome"),
+      cell: ({ row }) => <Badge variant={VISIT_OUTCOME_CONFIG[row.original.outcome].variant}>{t(VISIT_OUTCOME_CONFIG[row.original.outcome].label)}</Badge>,
     },
     {
       id: "parentNotified",
-      header: "Parent notified",
-      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.parentNotified ? "Yes" : "No"}</span>,
+      header: t("Parent notified"),
+      cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.parentNotified ? t("Yes") : t("No")}</span>,
     },
     {
       id: "actions",
@@ -103,7 +105,7 @@ export default function InfirmaryVisitsTab() {
         <RowActions>
           <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} variant="destructive">
             <Trash2 className="w-3.5 h-3.5" />
-            Delete
+            {t("Delete")}
           </DropdownMenuItem>
         </RowActions>
       ),
@@ -113,14 +115,14 @@ export default function InfirmaryVisitsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Sick-bay / infirmary visit log.</p>
+        <p className="text-sm text-muted-foreground">{t("Sick-bay / infirmary visit log.")}</p>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="w-4 h-4" />
-          Log visit
+          {t("Log visit")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={visits} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No infirmary visits logged yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={visits} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No infirmary visits logged yet.")} pageSize={10} />
 
       <InfirmaryVisitFormDialog
         open={formOpen}
@@ -134,9 +136,9 @@ export default function InfirmaryVisitsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete visit record"
-        description={`Delete this infirmary visit for ${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete visit record")}
+        description={t("Delete this infirmary visit for {{name}}? This cannot be undone.", { name: `${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}` })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

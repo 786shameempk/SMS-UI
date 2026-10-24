@@ -6,22 +6,24 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_INFO, CHART_PRIMARY, CHART_TOO
 import { getAttendanceTrendReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 export default function AttendanceTrendsTab() {
+  const { t } = useTranslation("reports");
   const { data, isLoading } = useQuery({ queryKey: ["reports", "attendance-trends"], queryFn: getAttendanceTrendReport });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatTile label="Student attendance (avg.)" value={`${data.studentAverage}%`} icon={CalendarCheck} />
-        <StatTile label="Staff attendance (avg.)" value={`${data.staffAverage}%`} icon={UserCheck} />
+        <StatTile label={t("Student attendance (avg.)")} value={`${data.studentAverage}%`} icon={CalendarCheck} />
+        <StatTile label={t("Staff attendance (avg.)")} value={`${data.staffAverage}%`} icon={UserCheck} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Attendance trend</CardTitle>
-          <CardDescription>Student vs. staff attendance percentage over the last 6 months.</CardDescription>
+          <CardTitle>{t("Attendance trend")}</CardTitle>
+          <CardDescription>{t("Student vs. staff attendance percentage over the last 6 months.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-72 w-full">
@@ -32,8 +34,8 @@ export default function AttendanceTrendsTab() {
                 <YAxis tickLine={false} axisLine={false} tick={CHART_AXIS_TICK} width={36} domain={[0, 100]} />
                 <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => (value === null ? ["No data", ""] : [`${value}%`, ""])} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="studentPercent" name="Students" stroke={CHART_PRIMARY} strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="staffPercent" name="Staff" stroke={CHART_INFO} strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="studentPercent" name={t("Students")} stroke={CHART_PRIMARY} strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="staffPercent" name={t("Staff")} stroke={CHART_INFO} strokeWidth={2} dot={{ r: 3 }} connectNulls />
               </LineChart>
             </ResponsiveContainer>
           </div>

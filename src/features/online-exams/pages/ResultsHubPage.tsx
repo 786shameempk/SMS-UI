@@ -13,8 +13,10 @@ import { listOnlineExams } from "../api";
 import { formatExamTime, formatMarks, isExamStaff } from "../constants";
 import type { OnlineExamListItem } from "../types";
 import { allowedActions, ExamStatusBadge, useExamActions } from "../components/useExamActions";
+import { useTranslation } from "react-i18next";
 
 export default function ResultsHubPage() {
+  const { t } = useTranslation("online-exams");
   const role = useAuthStore((s) => s.user?.role);
   const navigate = useNavigate();
   const exams = useQuery({ queryKey: ["online-exams", "list", {}], queryFn: () => listOnlineExams(), enabled: isExamStaff(role) });
@@ -29,7 +31,7 @@ export default function ResultsHubPage() {
     () => [
       {
         accessorKey: "name",
-        header: "Exam",
+        header: t("Exam"),
         cell: ({ row }) => (
           <div className="min-w-[12rem]">
             <p className="font-medium text-foreground">{row.original.name}</p>
@@ -37,11 +39,11 @@ export default function ResultsHubPage() {
           </div>
         ),
       },
-      { accessorKey: "endUtc", header: "Closed", cell: ({ row }) => <span className="whitespace-nowrap">{formatExamTime(row.original.endUtc, row.original.timeZoneId)}</span> },
-      { accessorKey: "totalMarks", header: "Marks", cell: ({ row }) => <span className="tabular-nums">{formatMarks(row.original.totalMarks)}</span> },
+      { accessorKey: "endUtc", header: t("Closed"), cell: ({ row }) => <span className="whitespace-nowrap">{formatExamTime(row.original.endUtc, row.original.timeZoneId)}</span> },
+      { accessorKey: "totalMarks", header: t("Marks"), cell: ({ row }) => <span className="tabular-nums">{formatMarks(row.original.totalMarks)}</span> },
       {
         accessorKey: "submittedCount",
-        header: "Appeared",
+        header: t("Appeared"),
         cell: ({ row }) => (
           <span className="tabular-nums">
             {row.original.submittedCount}/{row.original.assignedCount}
@@ -50,10 +52,10 @@ export default function ResultsHubPage() {
       },
       {
         accessorKey: "pendingEvaluationCount",
-        header: "To mark",
+        header: t("To mark"),
         cell: ({ row }) => (row.original.pendingEvaluationCount ? <Badge variant="warning" dot>{row.original.pendingEvaluationCount}</Badge> : <span className="text-muted-foreground">—</span>),
       },
-      { accessorKey: "status", header: "Status", cell: ({ row }) => <ExamStatusBadge status={row.original.status} /> },
+      { accessorKey: "status", header: t("Status"), cell: ({ row }) => <ExamStatusBadge status={row.original.status} /> },
       {
         id: "actions",
         header: "",
@@ -62,22 +64,22 @@ export default function ResultsHubPage() {
           <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
             {allowedActions(row.original).publish && (
               <Button size="sm" variant="outline" onClick={() => actions.openPublish(row.original)}>
-                Publish
+                {t("Publish")}
               </Button>
             )}
-            <RowActions label={`Actions for ${row.original.name}`}>{actions.menuItems(row.original)}</RowActions>
+            <RowActions label={t("Actions for {{name}}", { name: row.original.name })}>{actions.menuItems(row.original)}</RowActions>
           </div>
         ),
       },
     ],
-    [actions],
+    [actions, t],
   );
 
   if (!isExamStaff(role)) return <Navigate to="/online-exams/my/results" replace />;
 
   return (
     <PageContainer>
-      <PageHeader icon={Award} title="Results" description="Scores for every exam that's open or finished. Publish results to share them with students." />
+      <PageHeader icon={Award} title={t("Results")} description={t("Scores for every exam that's open or finished. Publish results to share them with students.")} />
       <DataTable
         columns={columns}
         data={data}
@@ -85,9 +87,9 @@ export default function ResultsHubPage() {
         isError={exams.isError}
         onRetry={() => exams.refetch()}
         searchable
-        searchPlaceholder="Search exams…"
+        searchPlaceholder={t("Search exams…")}
         onRowClick={(e) => navigate(`/online-exams/exams/${e.id}/results`)}
-        empty={{ icon: Award, title: "No results yet", description: "Results appear here once an exam opens and students submit." }}
+        empty={{ icon: Award, title: t("No results yet"), description: t("Results appear here once an exam opens and students submit.") }}
       />
       {actions.dialogs}
     </PageContainer>

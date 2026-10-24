@@ -6,24 +6,26 @@ import { CATEGORICAL_COLORS, CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, C
 import { getLibraryUsageReport } from "../api";
 import StatTile from "./StatTile";
 
+import { useTranslation } from "react-i18next";
 export default function LibraryUsageTab() {
+  const { t } = useTranslation("reports");
   const { data, isLoading } = useQuery({ queryKey: ["reports", "library-usage"], queryFn: getLibraryUsageReport });
 
-  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">Loading…</p>;
+  if (isLoading || !data) return <p className="text-sm text-muted-foreground py-10 text-center">{t("Loading…")}</p>;
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatTile label="Total loans" value={String(data.totalLoans)} icon={Library} />
-        <StatTile label="Currently issued" value={String(data.currentlyIssued)} icon={BookOpen} />
-        <StatTile label="Overdue" value={String(data.overdueCount)} icon={AlertTriangle} />
+        <StatTile label={t("Total loans")} value={String(data.totalLoans)} icon={Library} />
+        <StatTile label={t("Currently issued")} value={String(data.currentlyIssued)} icon={BookOpen} />
+        <StatTile label={t("Overdue")} value={String(data.overdueCount)} icon={AlertTriangle} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card>
           <CardHeader>
-            <CardTitle>Loan volume</CardTitle>
-            <CardDescription>Books issued per month over the last 6 months.</CardDescription>
+            <CardTitle>{t("Loan volume")}</CardTitle>
+            <CardDescription>{t("Books issued per month over the last 6 months.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-64 w-full">
@@ -42,8 +44,8 @@ export default function LibraryUsageTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Busiest categories</CardTitle>
-            <CardDescription>Categories with the most loans, all-time.</CardDescription>
+            <CardTitle>{t("Busiest categories")}</CardTitle>
+            <CardDescription>{t("Categories with the most loans, all-time.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-64 w-full">

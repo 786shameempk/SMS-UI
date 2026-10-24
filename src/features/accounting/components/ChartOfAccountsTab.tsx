@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
@@ -17,6 +18,7 @@ import AccountFormDialog from "./AccountFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function ChartOfAccountsTab() {
+  const { t } = useTranslation("accounting");
   const queryClient = useQueryClient();
   const { data: accounts = [], isLoading, isError, refetch } = useQuery({ queryKey: ["accounting", "accounts"], queryFn: listAccounts });
 
@@ -32,31 +34,31 @@ export default function ChartOfAccountsTab() {
     mutationFn: createAccount,
     onSuccess: () => {
       invalidate();
-      toast.success("Account created");
+      toast.success(t("Account created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create account"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create account")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: AccountFormValues }) => updateAccount(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Account updated");
+      toast.success(t("Account updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update account"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update account")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteAccount(id),
     onSuccess: () => {
       invalidate();
-      toast.success(`${deleteTarget?.name} removed`);
+      toast.success(t("{{name}} removed", { name: deleteTarget?.name }));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete account"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete account")),
   });
 
   const filtered = useMemo(() => {
@@ -71,12 +73,12 @@ export default function ChartOfAccountsTab() {
   const columns: ColumnDef<Account, unknown>[] = [
     {
       accessorKey: "code",
-      header: "Code",
+      header: t("Code"),
       cell: ({ row }) => <span className="text-sm font-medium text-foreground tabular-nums">{row.original.code}</span>,
     },
     {
       accessorKey: "name",
-      header: "Name",
+      header: t("Name"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm text-foreground">{row.original.name}</p>
@@ -86,10 +88,10 @@ export default function ChartOfAccountsTab() {
     },
     {
       accessorKey: "type",
-      header: "Type",
+      header: t("Type"),
       cell: ({ row }) => {
         const config = ACCOUNT_TYPE_CONFIG[row.original.type];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -106,11 +108,11 @@ export default function ChartOfAccountsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(account)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -121,17 +123,17 @@ export default function ChartOfAccountsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <SearchInput value={search} onValueChange={setSearch} placeholder="Search by code or name" containerClassName="sm:w-72" />
+        <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by code or name")} containerClassName="sm:w-72" />
         <div className="flex items-center gap-2">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={t("Type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="all">{t("All types")}</SelectItem>
               {ACCOUNT_TYPE_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.label)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -143,12 +145,12 @@ export default function ChartOfAccountsTab() {
             }}
           >
             <Plus className="w-4 h-4" />
-            Add account
+            {t("Add account")}
           </Button>
         </div>
       </DataTableToolbar>
 
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No accounts match your filters." />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No accounts match your filters.")} />
 
       <AccountFormDialog
         open={formOpen}
@@ -170,9 +172,9 @@ export default function ChartOfAccountsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete account"
-        description={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete account")}
+        description={t("Delete \"{{name}}\"? This cannot be undone.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

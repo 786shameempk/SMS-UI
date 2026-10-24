@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { applyThemeMode, type ThemeMode } from "@/features/settings/theme";
+import { applyLanguage } from "@/i18n";
 import { DEFAULT_DATE_RANGE } from "@/features/dashboard/dateRange";
 import type { DashboardDateRange, DashboardScopeView } from "@/features/dashboard/types";
 import type { SavedDashboardLayout } from "@/features/dashboard/layout";
@@ -31,6 +32,11 @@ interface UiState {
   /** This browser's live/demo choice; null = the deployment default. Ignored where demo data isn't allowed. */
   dashboardDataSource: DashboardDataSource | null;
   setDashboardDataSource: (source: DashboardDataSource | null) => void;
+  /** The interface language this user chose (null = the school's default). Synced to the account when signed in. */
+  language: string | null;
+  /** The language in effect last time (choice or school default), applied before first paint. */
+  resolvedLanguage: string | null;
+  setLanguage: (language: string | null, resolved: string) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -66,6 +72,12 @@ export const useUiStore = create<UiState>()(
         }),
       dashboardDataSource: null,
       setDashboardDataSource: (source) => set({ dashboardDataSource: source }),
+      language: null,
+      resolvedLanguage: null,
+      setLanguage: (language, resolved) => {
+        void applyLanguage(resolved);
+        set({ language, resolvedLanguage: resolved });
+      },
     }),
     {
       name: "sms-ui",

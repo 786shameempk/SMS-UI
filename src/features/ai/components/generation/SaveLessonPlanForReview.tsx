@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClipboardCheck, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CONTENT_KEY, createContent } from "../../content/api";
@@ -20,6 +21,7 @@ function thisMonday(): string {
  * the author (the server takes the teacher from the login, not from this page).
  */
 export default function SaveLessonPlanForReview({ plan, classId, subjectId }: { plan: LessonPlan; classId: string; subjectId: string }) {
+  const { t } = useTranslation("ai");
   const queryClient = useQueryClient();
   const [weekOf, setWeekOf] = useState(thisMonday);
   const [saved, setSaved] = useState(false);
@@ -36,20 +38,20 @@ export default function SaveLessonPlanForReview({ plan, classId, subjectId }: { 
     onSuccess: () => {
       setSaved(true);
       queryClient.invalidateQueries({ queryKey: CONTENT_KEY });
-      toast.success("Saved for review. Track it under Review & Publish.");
+      toast.success(t("Saved for review. Track it under Review & Publish."));
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (saved) return <p className="text-sm text-muted-foreground" role="status">Saved for review.</p>;
+  if (saved) return <p className="text-sm text-muted-foreground" role="status">{t("Saved for review.")}</p>;
   return (
     <div className="flex flex-wrap items-end gap-2">
       <label className="space-y-1 text-xs text-muted-foreground" htmlFor="lp-week">
-        <span className="block">Week of</span>
+        <span className="block">{t("Week of")}</span>
         <Input id="lp-week" type="date" value={weekOf} onChange={(e) => setWeekOf(e.target.value)} className="w-40" />
       </label>
       <Button variant="outline" onClick={() => save.mutate()} disabled={save.isPending || !weekOf}>
-        {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />} Save for review
+        {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />} {t("Save for review")}
       </Button>
     </div>
   );

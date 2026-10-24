@@ -2,12 +2,12 @@ import type { AudienceType, Channel, MessageStatus } from "./types";
 
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "neutral";
 
-export const CHANNELS: Array<{ value: Channel; label: string; simulated: boolean }> = [
-  { value: "email", label: "Email", simulated: true },
-  { value: "sms", label: "SMS", simulated: true },
-  { value: "push", label: "Push", simulated: true },
-  { value: "whatsapp", label: "WhatsApp", simulated: true },
-  { value: "in-app", label: "In-app", simulated: false },
+export const CHANNELS: Array<{ value: Channel; label: string }> = [
+  { value: "email", label: "Email" },
+  { value: "sms", label: "SMS" },
+  { value: "push", label: "Push" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "in-app", label: "In-app" },
 ];
 
 export const AUDIENCE_TYPE_OPTIONS: Array<{ value: AudienceType; label: string }> = [
@@ -22,13 +22,13 @@ export const MESSAGE_STATUS_CONFIG: Record<MessageStatus, { label: string; varia
   cancelled: { label: "Cancelled", variant: "neutral" },
 };
 
-/** Simulated per-channel delivery success rate, used only to generate realistic-looking demo delivery logs. */
-export const CHANNEL_SUCCESS_RATE: Record<Channel, number> = {
-  email: 0.97,
-  sms: 0.93,
-  push: 0.9,
-  whatsapp: 0.95,
-  "in-app": 1,
-};
-
 export const TEMPLATE_CATEGORIES = ["Announcement", "Fee Reminder", "Exam Notice", "Event", "Emergency", "General"];
+
+/** Languages a template can be written in (kept separate from the app's own UI language). */
+export const TEMPLATE_LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "ml", label: "Malayalam" },
+  { value: "hi", label: "Hindi" },
+  { value: "ta", label: "Tamil" },
+  { value: "ar", label: "Arabic" },
+];

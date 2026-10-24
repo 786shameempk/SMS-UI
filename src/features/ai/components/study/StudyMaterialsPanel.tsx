@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, Trash2, Upload } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,9 @@ const ERROR_TEXT: Record<string, string> = {
 
 const isPending = (d: AiDocument) => d.status === "Queued" || d.status === "Processing";
 
+/** Validation messages from validateUpload (study/api), translated where shown. */
+const UPLOAD_ERRORS = ["Choose a file.", "Only .pdf, .docx, .pptx, .txt files can be uploaded.", "That file is empty.", "Files can be at most 20 MB."];
+
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -35,6 +39,7 @@ function formatBytes(bytes: number) {
 
 /** Staff upload class material here; the AI service indexes it so the study assistant can answer from it with page citations. */
 export default function StudyMaterialsPanel() {
+  const { t } = useTranslation("ai");
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -53,8 +58,8 @@ export default function StudyMaterialsPanel() {
     refetchInterval: (q) => (q.state.data?.some(isPending) ? POLL_MS : false),
   });
 
-  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? "Unknown class";
-  const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "Unknown subject";
+  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? t("Unknown class");
+  const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? t("Unknown subject");
 
   const resetForm = () => {
     setFile(null);
@@ -65,7 +70,7 @@ export default function StudyMaterialsPanel() {
   const upload = useMutation({
     mutationFn: uploadAiDocument,
     onSuccess: (d) => {
-      toast.success(`"${d.title}" uploaded. Indexing has started.`);
+      toast.success(t("\"{{title}}\" uploaded. Indexing has started.", { title: d.title }));
       resetForm();
       queryClient.invalidateQueries({ queryKey: DOCUMENTS_KEY });
     },
@@ -75,14 +80,15 @@ export default function StudyMaterialsPanel() {
   const remove = useMutation({
     mutationFn: deleteAiDocument,
     onSuccess: () => {
-      toast.success("Material removed from the study assistant.");
+      toast.success(t("Material removed from the study assistant."));
       setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: DOCUMENTS_KEY });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const fileError = file ? validateUpload(file) : null;
+  const rawFileError = file ? validateUpload(file) : null;
+  const fileError = rawFileError && UPLOAD_ERRORS.includes(rawFileError) ? t(rawFileError) : rawFileError;
   const canUpload = Boolean(file && !fileError && target.classId && target.subjectId) && !upload.isPending;
 
   const submit = () => {
@@ -94,11 +100,11 @@ export default function StudyMaterialsPanel() {
     <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Add study material</CardTitle>
+          <CardTitle className="text-base">{t("Add study material")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-            <FormField label="File" htmlFor="ai-doc-file" error={fileError ?? undefined} hint={`${UPLOAD_EXTENSIONS.join(", ")} up to 20 MB`}>
+            <FormField label={t("File")} htmlFor="ai-doc-file" error={fileError ?? undefined} hint={t("{{types}} up to 20 MB", { types: UPLOAD_EXTENSIONS.join(", ") })}>
               <Input
                 id="ai-doc-file"
                 ref={fileInput}
@@ -107,24 +113,24 @@ export default function StudyMaterialsPanel() {
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
             </FormField>
-            <FormField label="Title" htmlFor="ai-doc-title">
-              <Input id="ai-doc-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={file ? file.name.replace(/\.[^.]+$/, "") : "e.g. Chapter 4 — Force and Pressure"} />
+            <FormField label={t("Title")} htmlFor="ai-doc-title">
+              <Input id="ai-doc-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={file ? file.name.replace(/\.[^.]+$/, "") : t("e.g. Chapter 4 — Force and Pressure")} />
             </FormField>
             <ClassSubjectFields classId={target.classId} subjectId={target.subjectId} onChange={setTarget} idPrefix="ai-doc" />
-            <FormField label="Who can use it" htmlFor="ai-doc-visibility">
+            <FormField label={t("Who can use it")} htmlFor="ai-doc-visibility">
               <Select value={visibility} onValueChange={(v) => setVisibility(v as DocumentVisibility)}>
                 <SelectTrigger id="ai-doc-visibility">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Class">Students and parents of this class</SelectItem>
-                  <SelectItem value="StaffOnly">Staff only</SelectItem>
+                  <SelectItem value="Class">{t("Students and parents of this class")}</SelectItem>
+                  <SelectItem value="StaffOnly">{t("Staff only")}</SelectItem>
                 </SelectContent>
               </Select>
             </FormField>
             <Button type="submit" disabled={!canUpload}>
               {upload.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              Upload and index
+              {t("Upload and index")}
             </Button>
           </form>
         </CardContent>
@@ -132,14 +138,14 @@ export default function StudyMaterialsPanel() {
 
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">Indexed materials</CardTitle>
+          <CardTitle className="text-base">{t("Indexed materials")}</CardTitle>
           <div className="w-48">
             <Select value={filterClassId || "__all"} onValueChange={(v) => setFilterClassId(v === "__all" ? "" : v)}>
-              <SelectTrigger aria-label="Filter by class">
-                <SelectValue placeholder="All classes" />
+              <SelectTrigger aria-label={t("Filter by class")}>
+                <SelectValue placeholder={t("All classes")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all">All classes</SelectItem>
+                <SelectItem value="__all">{t("All classes")}</SelectItem>
                 {classes.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -152,35 +158,35 @@ export default function StudyMaterialsPanel() {
         <CardContent>
           {documents.isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading materials…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t("Loading materials…")}
             </div>
           ) : documents.isError ? (
             <p className="text-sm text-destructive">{(documents.error as Error).message}</p>
           ) : !documents.data?.length ? (
-            <EmptyState bare size="sm" icon={FileText} title="No materials yet" description="Upload notes, chapters or slides so the study assistant can answer from them." />
+            <EmptyState bare size="sm" icon={FileText} title={t("No materials yet")} description={t("Upload notes, chapters or slides so the study assistant can answer from them.")} />
           ) : (
-            <ul className="divide-y divide-border" aria-label="Indexed materials">
+            <ul className="divide-y divide-border" aria-label={t("Indexed materials")}>
               {documents.data.map((d) => (
                 <li key={d.id} className="flex items-start gap-3 py-3">
                   <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-sm font-medium">{d.title}</span>
-                      <StatusBadge status={d.status} label={d.status === "Ready" ? "Ready" : undefined} variant={d.status === "Ready" ? "success" : undefined} />
-                      {d.visibility === "StaffOnly" && <StatusBadge status="staff" label="Staff only" variant="neutral" />}
+                      <StatusBadge status={d.status} label={d.status === "Ready" ? t("Ready") : undefined} variant={d.status === "Ready" ? "success" : undefined} />
+                      {d.visibility === "StaffOnly" && <StatusBadge status="staff" label={t("Staff only")} variant="neutral" />}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {className(d.classId)} · {subjectName(d.subjectId)} · {d.fileName} · {formatBytes(d.sizeBytes)}
-                      {d.status === "Ready" && ` · ${d.pageCount} page${d.pageCount === 1 ? "" : "s"}`}
+                      {d.status === "Ready" && ` · ${d.pageCount === 1 ? t("1 page") : t("{{count}} pages", { count: d.pageCount })}`}
                     </p>
                     {isPending(d) && (
-                      <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Indexing ${d.title}`} aria-valuenow={d.progress} aria-valuemin={0} aria-valuemax={100}>
+                      <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={t("Indexing {{title}}", { title: d.title })} aria-valuenow={d.progress} aria-valuemin={0} aria-valuemax={100}>
                         <div className="h-full bg-primary transition-all" style={{ width: `${Math.max(d.progress, 5)}%` }} />
                       </div>
                     )}
-                    {d.status === "Failed" && <p className="text-xs text-destructive">{ERROR_TEXT[d.errorCode ?? ""] ?? "Indexing failed. Upload the file again."}</p>}
+                    {d.status === "Failed" && <p className="text-xs text-destructive">{t(ERROR_TEXT[d.errorCode ?? ""] ?? "Indexing failed. Upload the file again.")}</p>}
                   </div>
-                  <Button variant="ghost" size="icon" aria-label={`Delete ${d.title}`} onClick={() => setDeleteTarget(d)}>
+                  <Button variant="ghost" size="icon" aria-label={t("Delete {{title}}", { title: d.title })} onClick={() => setDeleteTarget(d)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </li>
@@ -193,9 +199,9 @@ export default function StudyMaterialsPanel() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove study material"
-        description={`"${deleteTarget?.title}" will be deleted and the study assistant will stop using it.`}
-        confirmLabel="Delete"
+        title={t("Remove study material")}
+        description={t("\"{{title}}\" will be deleted and the study assistant will stop using it.", { title: deleteTarget?.title ?? "" })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={remove.isPending}
         onConfirm={() => {

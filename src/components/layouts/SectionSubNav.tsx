@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/utils/cn";
 import { ScrollArrow, useScrollStrip } from "@/components/ui/scroll-strip";
 import { findActiveSection, isNavItemActive } from "./navMatch";
+import { useTranslation } from "react-i18next";
 import { useVisibleNav } from "./useVisibleNav";
 
 /**
@@ -12,6 +13,7 @@ import { useVisibleNav } from "./useVisibleNav";
 export default function SectionSubNav() {
   const { pathname } = useLocation();
   const { sections } = useVisibleNav();
+  const { t } = useTranslation("common");
   const { setRef, more, nudge } = useScrollStrip('[aria-current="page"]');
   const section = findActiveSection(sections, pathname);
   if (!section || section.items.length < 2) return null;
@@ -25,7 +27,7 @@ export default function SectionSubNav() {
         <div className="relative min-w-0">
           <nav
             ref={setRef}
-            aria-label={`${section.title} menu`}
+            aria-label={t("{{section}} menu", { section: section.title })}
             className="flex gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {section.items.map((item) => {

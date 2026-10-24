@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,6 +45,7 @@ export default function GenerateInvoicesDialog({
   submitting: boolean;
   onSubmit: (values: GenerateInvoicesParams) => Promise<void>;
 }) {
+  const { t } = useTranslation("fees");
   const {
     register,
     handleSubmit,
@@ -58,28 +60,29 @@ export default function GenerateInvoicesDialog({
   }, [open, reset]);
 
   const academicYearId = watch("academicYearId");
-  const availableTerms = useMemo(() => terms.filter((t) => t.academicYearId === academicYearId), [terms, academicYearId]);
+  const availableTerms = useMemo(() => terms.filter((term) => term.academicYearId === academicYearId), [terms, academicYearId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Generate invoices</DialogTitle>
+          <DialogTitle>{t("Generate invoices")}</DialogTitle>
           <DialogDescription>
-            Bulk-create invoices for every active student covered by the chosen fee structure (its class, or all students if
-            the structure has no class), for the selected term.
+            {t(
+              "Bulk-create invoices for every active student covered by the chosen fee structure (its class, or all students if the structure has no class), for the selected term.",
+            )}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="gi-feeStructureId" required>Fee structure</Label>
+            <Label htmlFor="gi-feeStructureId" required>{t("Fee structure")}</Label>
             <Controller
               control={control}
               name="feeStructureId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="gi-feeStructureId">
-                    <SelectValue placeholder="Select a fee structure" />
+                    <SelectValue placeholder={t("Select a fee structure")} />
                   </SelectTrigger>
                   <SelectContent>
                     {structures.map((s) => (
@@ -91,19 +94,19 @@ export default function GenerateInvoicesDialog({
                 </Select>
               )}
             />
-            {errors.feeStructureId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.feeStructureId.message}</p>}
+            {errors.feeStructureId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.feeStructureId.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="gi-academicYearId" required>Academic year</Label>
+              <Label htmlFor="gi-academicYearId" required>{t("Academic year")}</Label>
               <Controller
                 control={control}
                 name="academicYearId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="gi-academicYearId">
-                      <SelectValue placeholder="Select year" />
+                      <SelectValue placeholder={t("Select year")} />
                     </SelectTrigger>
                     <SelectContent>
                       {academicYears.map((y) => (
@@ -115,44 +118,44 @@ export default function GenerateInvoicesDialog({
                   </Select>
                 )}
               />
-              {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.academicYearId.message}</p>}
+              {errors.academicYearId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.academicYearId.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="gi-term" required>Term</Label>
+              <Label htmlFor="gi-term" required>{t("Term")}</Label>
               <Controller
                 control={control}
                 name="term"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange} disabled={!academicYearId}>
                     <SelectTrigger id="gi-term">
-                      <SelectValue placeholder="Select term" />
+                      <SelectValue placeholder={t("Select term")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableTerms.map((t) => (
-                        <SelectItem key={t.id} value={t.name}>
-                          {t.name}
+                      {availableTerms.map((term) => (
+                        <SelectItem key={term.id} value={term.name}>
+                          {term.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.term && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.term.message}</p>}
+              {errors.term && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.term.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="gi-dueDate" required>Due date</Label>
+            <Label htmlFor="gi-dueDate" required>{t("Due date")}</Label>
             <Input id="gi-dueDate" type="date" aria-invalid={errors.dueDate ? true : undefined} {...register("dueDate")} />
-            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.dueDate.message}</p>}
+            {errors.dueDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.dueDate.message ?? "")}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Generate invoices
+              {t("Generate invoices")}
             </Button>
           </DialogFooter>
         </form>

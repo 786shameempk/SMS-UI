@@ -13,9 +13,11 @@ import { Panel } from "../components/bits";
 import { ProgressBar, SelectField, formatDate, formatDay, usePortionAccess, useApiMutation, useReferenceData, PROGRESS_STATUS, StatusBadge } from "../shared";
 import type { ExamCoverage, ExamPortionInput } from "../types";
 
+import { useTranslation } from "react-i18next";
 const keyOf = (subjectId: string, chapterId: string, topicId?: string | null) => `${subjectId}|${chapterId}|${topicId ?? ""}`;
 
 export default function ExamPortionsPage() {
+  const { t } = useTranslation("lesson-portions");
   const access = usePortionAccess();
   const data = useReferenceData();
   const exams = useQuery({ queryKey: ["portions", "exams"], queryFn: listExams });
@@ -30,12 +32,12 @@ export default function ExamPortionsPage() {
     <div className="space-y-5">
       <div className="max-w-xl space-y-1">
         <label htmlFor="ep-exam" className="text-sm font-medium">
-          Examination
+          {t("Examination")}
         </label>
-        <SelectField id="ep-exam" value={examId} onChange={setExamId} placeholder={exams.isLoading ? "Loading…" : "Choose an examination"} items={sorted.map((e) => ({ value: e.id, label: `${e.name} · ${className(e.classId)} · ${formatDate(e.startDate)}` }))} className="w-full" />
+        <SelectField id="ep-exam" value={examId} onChange={setExamId} placeholder={exams.isLoading ? t("Loading…") : t("Choose an examination")} items={sorted.map((e) => ({ value: e.id, label: `${e.name} · ${className(e.classId)} · ${formatDate(e.startDate)}` }))} className="w-full" />
       </div>
       {!exam ? (
-        <EmptyState icon={FileText} title="Choose an examination" description="Pick the chapters and topics it covers, publish them to students and parents, and see which of them have not been taught yet." />
+        <EmptyState icon={FileText} title={t("Choose an examination")} description={t("Pick the chapters and topics it covers, publish them to students and parents, and see which of them have not been taught yet.")} />
       ) : (
         <ExamEditor key={exam.id} examId={exam.id} classId={exam.classId} examName={exam.name} startDate={exam.startDate} canEdit={access.canManage || access.canApprove} />
       )}
@@ -44,6 +46,7 @@ export default function ExamPortionsPage() {
 }
 
 function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId: string; classId: string; examName: string; startDate: string; canEdit: boolean }) {
+  const { t: tr } = useTranslation("lesson-portions");
   const portions = useQuery({ queryKey: ["portions", "exam-portions", examId], queryFn: () => getExamPortions(examId) });
   const syllabi = useQuery({ queryKey: ["portions", "syllabi", "for-exam", classId], queryFn: () => listSyllabi({ classId, status: "Published", pageSize: 100 }) });
   const details = useQueries({ queries: (syllabi.data?.items ?? []).map((s) => ({ queryKey: ["portions", "syllabus", s.id], queryFn: () => getSyllabus(s.id) })) });
@@ -94,22 +97,22 @@ function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId:
   return (
     <div className="space-y-5">
       <Panel
-        title={`What ${examName} covers`}
-        description={published ? "Published: students and parents can see these portions (if your school shows exam syllabus to families). Unpublish to change them." : "Choose the chapters and topics. Only a published syllabus is shown to students and parents."}
+        title={tr("What {{examName}} covers", { examName })}
+        description={published ? tr("Published: students and parents can see these portions (if your school shows exam syllabus to families). Unpublish to change them.") : tr("Choose the chapters and topics. Only a published syllabus is shown to students and parents.")}
         actions={
           canEdit && (
             <div className="flex flex-wrap items-center gap-2">
               {published ? (
                 <Button size="sm" variant="outline" onClick={() => unpublish.mutate(undefined)} loading={unpublish.isPending}>
-                  <EyeOff className="h-4 w-4" /> Unpublish
+                  <EyeOff className="h-4 w-4" /> {tr("Unpublish")}
                 </Button>
               ) : (
                 <>
                   <Button size="sm" variant="outline" onClick={() => save.mutate(undefined)} loading={save.isPending} disabled={!dirty}>
-                    Save portions
+                    {tr("Save portions")}
                   </Button>
                   <Button size="sm" onClick={() => publish.mutate(undefined)} loading={publish.isPending} disabled={dirty || chosen.size === 0}>
-                    <Send className="h-4 w-4" /> Publish
+                    <Send className="h-4 w-4" /> {tr("Publish")}
                   </Button>
                 </>
               )}
@@ -119,11 +122,11 @@ function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId:
         loading={loading}
         error={portions.isError || syllabi.isError}
         onRetry={() => { portions.refetch(); syllabi.refetch(); }}
-        empty={!loading && subjects.length === 0 ? { icon: FileText, title: "No published syllabus for this class", description: "Publish a syllabus for the class's subjects first; its chapters and topics are what you choose from." } : null}
+        empty={!loading && subjects.length === 0 ? { icon: FileText, title: tr("No published syllabus for this class"), description: tr("Publish a syllabus for the class's subjects first; its chapters and topics are what you choose from.") } : null}
       >
         <div className="space-y-4">
-          {published && <Badge variant="success">Published {formatDate(portions.data?.publishedAt?.slice(0, 10))}</Badge>}
-          {dirty && !published && <p className="text-xs text-warning-strong">You have unsaved changes. Save before publishing.</p>}
+          {published && <Badge variant="success">{tr("Published")} {formatDate(portions.data?.publishedAt?.slice(0, 10))}</Badge>}
+          {dirty && !published && <p className="text-xs text-warning-strong">{tr("You have unsaved changes. Save before publishing.")}</p>}
           {subjects.map((s) => (
             <section key={s.summary.id} className="rounded-lg border border-border">
               <h3 className="border-b border-border bg-muted/40 px-3 py-2 text-sm font-semibold">{s.summary.subjectName}</h3>
@@ -137,10 +140,10 @@ function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId:
                   return (
                     <div key={c.id} className="space-y-1">
                       <label className="flex items-center gap-2 text-sm font-medium">
-                        <Checkbox disabled={published || !canEdit} checked={whole ? true : some ? "indeterminate" : false} onCheckedChange={(v) => toggle(s.summary.subjectId, c.id, null, v === true, leafIds)} aria-label={`Whole chapter ${c.title}`} />
+                        <Checkbox disabled={published || !canEdit} checked={whole ? true : some ? "indeterminate" : false} onCheckedChange={(v) => toggle(s.summary.subjectId, c.id, null, v === true, leafIds)} aria-label={tr("Whole chapter {{title}}", { title: c.title })} />
                         {c.title}
                       </label>
-                      <div className="grid gap-1 pl-6 sm:grid-cols-2">
+                      <div className="grid gap-1 ps-6 sm:grid-cols-2">
                         {leaves.map((t) => (
                           <label key={t.id} className="flex items-center gap-2 text-sm">
                             <Checkbox disabled={published || !canEdit} checked={whole || chosen.has(keyOf(s.summary.subjectId, c.id, t.id))} onCheckedChange={(v) => toggle(s.summary.subjectId, c.id, t.id, v === true, leafIds)} aria-label={t.title} />
@@ -158,12 +161,12 @@ function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId:
       </Panel>
 
       <Panel
-        title="Have these been taught?"
-        description={`Topics in the portions that are not yet completed in every section of the class, before ${formatDate(startDate)}.`}
+        title={tr("Have these been taught?")}
+        description={tr("Topics in the portions that are not yet completed in every section of the class, before {{v1}}.", { v1: formatDate(startDate) })}
         loading={coverage.isLoading}
         error={coverage.isError}
         onRetry={() => coverage.refetch()}
-        empty={coverage.data && coverage.data.length === 0 ? { icon: CalendarClock, title: "No portions set yet", description: "Choose chapters and topics above to see how much has been taught." } : null}
+        empty={coverage.data && coverage.data.length === 0 ? { icon: CalendarClock, title: tr("No portions set yet"), description: tr("Choose chapters and topics above to see how much has been taught.") } : null}
       >
         <ul className="space-y-4">
           {coverage.data?.map((c) => (
@@ -171,16 +174,16 @@ function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId:
               <div className="flex flex-wrap items-center gap-3">
                 <span className="w-32 shrink-0 font-medium">{c.subjectName}</span>
                 <ProgressBar percent={c.coveragePercent} risk={c.untaught.length === 0 ? "Complete" : c.coveragePercent < 50 ? "Behind" : "AtRisk"} className="min-w-48 flex-1" />
-                <span className="text-xs text-muted-foreground">{c.taughtTopics} of {c.portionTopics} taught</span>
+                <span className="text-xs text-muted-foreground">{tr("{{taughtTopics}} of {{portionTopics}} taught", { taughtTopics: c.taughtTopics, portionTopics: c.portionTopics })}</span>
                 {c.untaught.length > 0 && (
                   <Button size="sm" variant="outline" onClick={() => setRevision(c)}>
-                    Revision plan
+                    {tr("Revision plan")}
                   </Button>
                 )}
               </div>
               {c.untaught.length === 0 ? (
                 <p className="flex items-center gap-1.5 text-sm text-success-strong">
-                  <CircleCheck className="h-4 w-4" aria-hidden="true" /> Everything in this portion has been taught.
+                  <CircleCheck className="h-4 w-4" aria-hidden="true" /> {tr("Everything in this portion has been taught.")}
                 </p>
               ) : (
                 <ul className="divide-y divide-border rounded-lg border border-border text-sm">
@@ -188,7 +191,7 @@ function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId:
                     <li key={u.topicId} className="flex flex-wrap items-center gap-2 px-3 py-1.5">
                       <span className="min-w-0 flex-1">
                         {u.topicTitle}
-                        <span className="block text-xs text-muted-foreground">{u.chapterTitle}{u.sectionName ? ` · still to do in ${u.sectionName}` : ""}</span>
+                        <span className="block text-xs text-muted-foreground">{u.chapterTitle}{u.sectionName ? tr(" · still to do in {{sectionName}}", { sectionName: u.sectionName }) : ""}</span>
                       </span>
                       <StatusBadge map={PROGRESS_STATUS} value={u.status} />
                     </li>
@@ -206,14 +209,15 @@ function ExamEditor({ examId, classId, examName, startDate, canEdit }: { examId:
 }
 
 function RevisionDialog({ examId, coverage, onClose }: { examId: string; coverage: ExamCoverage | null; onClose: () => void }) {
+  const { t } = useTranslation("lesson-portions");
   const query = useQuery({ queryKey: ["portions", "revision-plan", examId, coverage?.subjectId], queryFn: () => examRevisionPlan(examId, coverage!.subjectId), enabled: Boolean(coverage) });
   const d = query.data;
   return (
     <Dialog open={Boolean(coverage)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Revision plan · {coverage?.subjectName}</DialogTitle>
-          <DialogDescription>A suggested order for revising what has been taught, on the teaching days left before the exam. It is a suggestion for the teacher; it doesn't change any plan.</DialogDescription>
+          <DialogTitle>{t("Revision plan ·")} {coverage?.subjectName}</DialogTitle>
+          <DialogDescription>{t("A suggested order for revising what has been taught, on the teaching days left before the exam. It is a suggestion for the teacher; it doesn't change any plan.")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 overflow-y-auto">
           {query.isLoading && <Skeleton className="h-24 w-full" />}
@@ -227,12 +231,12 @@ function RevisionDialog({ examId, coverage, onClose }: { examId: string; coverag
                     <li key={`${i.topicId}-${idx}`} className="flex items-center gap-3 px-3 py-1.5 text-sm">
                       <span className="w-28 shrink-0 text-xs text-muted-foreground">{formatDay(i.date)}</span>
                       <span className="min-w-0 flex-1 truncate">{i.topicTitle}</span>
-                      <span className="text-xs text-muted-foreground">{i.periods}p</span>
+                      <span className="text-xs text-muted-foreground">{t("{{periods}}p", { periods: i.periods })}</span>
                     </li>
                   ))}
                 </ul>
               )}
-              {d.unscheduled.length > 0 && <p className="text-xs text-destructive-strong">To teach first, or does not fit: {d.unscheduled.join(", ")}</p>}
+              {d.unscheduled.length > 0 && <p className="text-xs text-destructive-strong">{t("To teach first, or does not fit: {{v1}}", { v1: d.unscheduled.join(", ") })}</p>}
             </>
           )}
         </div>

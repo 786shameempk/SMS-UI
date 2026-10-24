@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ export interface QuestionGeneratorDefaults {
 }
 
 export default function QuestionGenerator({ defaults, onPublished }: { defaults?: QuestionGeneratorDefaults; onPublished?: () => void } = {}) {
+  const { t } = useTranslation("ai");
   const [target, setTarget] = useState({ classId: defaults?.classId ?? "", subjectId: defaults?.subjectId ?? "" });
   const [chapter, setChapter] = useState(defaults?.chapter ?? "");
   const [count, setCount] = useState(10);
@@ -50,8 +52,8 @@ export default function QuestionGenerator({ defaults, onPublished }: { defaults?
     onSuccess: (r) => {
       setPublished(true);
       onPublished?.();
-      toast.success(`${r.imported} question${r.imported === 1 ? "" : "s"} added to the question bank`);
-      if (r.errors.length) toast.error(`${r.errors.length} could not be imported: ${r.errors[0]}`);
+      toast.success(r.imported === 1 ? t("{{count}} question added to the question bank", { count: r.imported }) : t("{{count}} questions added to the question bank", { count: r.imported }));
+      if (r.errors.length) toast.error(t("{{count}} could not be imported: {{error}}", { count: r.errors.length, error: r.errors[0] }));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -68,19 +70,19 @@ export default function QuestionGenerator({ defaults, onPublished }: { defaults?
     <div className="max-w-3xl space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Question generator</CardTitle>
-          <CardDescription>Generates draft questions with answers. Nothing is saved until you approve.</CardDescription>
+          <CardTitle>{t("Question generator")}</CardTitle>
+          <CardDescription>{t("Generates draft questions with answers. Nothing is saved until you approve.")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ClassSubjectFields idPrefix="qg" {...target} onChange={setTarget} />
-          <FormField label="Chapter / topic" htmlFor="qg-chapter">
-            <Input id="qg-chapter" value={chapter} onChange={(e) => setChapter(e.target.value)} placeholder="e.g. Force and Pressure" />
+          <FormField label={t("Chapter / topic")} htmlFor="qg-chapter">
+            <Input id="qg-chapter" value={chapter} onChange={(e) => setChapter(e.target.value)} placeholder={t("e.g. Force and Pressure")} />
           </FormField>
           <div className="grid gap-3 sm:grid-cols-2">
-            <FormField label="Number of questions" htmlFor="qg-count">
+            <FormField label={t("Number of questions")} htmlFor="qg-count">
               <Input id="qg-count" type="number" min={1} max={50} value={count} onChange={(e) => setCount(Number(e.target.value))} />
             </FormField>
-            <FormField label="Difficulty" htmlFor="qg-difficulty">
+            <FormField label={t("Difficulty")} htmlFor="qg-difficulty">
               <Select value={difficulty} onValueChange={(v) => setDifficulty(v as AiDifficulty)}>
                 <SelectTrigger id="qg-difficulty">
                   <SelectValue />
@@ -88,7 +90,7 @@ export default function QuestionGenerator({ defaults, onPublished }: { defaults?
                 <SelectContent>
                   {AI_DIFFICULTIES.map((d) => (
                     <SelectItem key={d} value={d}>
-                      {d}
+                      {t(d)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -96,20 +98,20 @@ export default function QuestionGenerator({ defaults, onPublished }: { defaults?
             </FormField>
           </div>
           <fieldset className="space-y-1">
-            <legend className="text-sm font-medium">Question types</legend>
+            <legend className="text-sm font-medium">{t("Question types")}</legend>
             <div className="flex flex-wrap gap-3">
               {AI_QUESTION_KINDS.map((k) => (
                 <label key={k} className="flex items-center gap-1.5 text-sm">
                   <input type="checkbox" checked={types.includes(k)} onChange={() => toggle(k)} />
-                  {KIND_LABEL[k]}
+                  {t(KIND_LABEL[k])}
                 </label>
               ))}
             </div>
           </fieldset>
-          <FormField label="Learning objectives" htmlFor="qg-objectives" optional>
+          <FormField label={t("Learning objectives")} htmlFor="qg-objectives" optional>
             <Input id="qg-objectives" value={objectives} onChange={(e) => setObjectives(e.target.value)} />
           </FormField>
-          <FormField label="Source material" htmlFor="qg-material" optional hint="Paste textbook text to base questions on. It is treated as reference data only.">
+          <FormField label={t("Source material")} htmlFor="qg-material" optional hint={t("Paste textbook text to base questions on. It is treated as reference data only.")}>
             <Textarea id="qg-material" rows={3} value={material} onChange={(e) => setMaterial(e.target.value)} maxLength={8000} />
           </FormField>
           <FormError message={error} />
@@ -120,18 +122,18 @@ export default function QuestionGenerator({ defaults, onPublished }: { defaults?
       {questions && (
         <Card>
           <CardHeader>
-            <CardTitle>Review draft</CardTitle>
-            <CardDescription>{questions.length} questions. Edit or remove anything before approving.</CardDescription>
+            <CardTitle>{t("Review draft")}</CardTitle>
+            <CardDescription>{t("{{count}} questions. Edit or remove anything before approving.", { count: questions.length })}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <DraftBar
               published={published}
-              publishedLabel="Added to question bank"
+              publishedLabel={t("Added to question bank")}
               busy={publish.isPending || generate.isPending}
               onRegenerate={run}
               onReject={() => setQuestions(null)}
               onApprove={() => publish.mutate()}
-              approveLabel="Approve & add to question bank"
+              approveLabel={t("Approve & add to question bank")}
               canApprove={questions.length > 0 && questions.every((q) => q.question.trim() && q.correctAnswer.trim())}
             />
             <QuestionReviewList questions={questions} onChange={setQuestions} disabled={published} />

@@ -18,11 +18,14 @@ export const DEFAULT_LOCALIZATION: LocalizationSettings = {
   dateFormat: "DD/MM/YYYY",
 };
 
+/** The school's default interface language: the languages the web app is translated into (see src/i18n/languages.ts). */
 export const LANGUAGE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "en-IN", label: "English (India)" },
   { value: "en-US", label: "English (US)" },
+  { value: "ml-IN", label: "Malayalam" },
   { value: "hi-IN", label: "Hindi" },
-  { value: "kn-IN", label: "Kannada" },
+  { value: "ta-IN", label: "Tamil" },
+  { value: "ar", label: "Arabic" },
 ];
 
 export const TIMEZONE_OPTIONS: Array<{ value: string; label: string }> = [

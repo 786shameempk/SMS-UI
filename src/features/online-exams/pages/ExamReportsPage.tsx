@@ -18,24 +18,27 @@ import { CHART_GRID, CHART_TICK, CHART_TOOLTIP_STYLE } from "@/features/dashboar
 import { getExamAnalysis, listOnlineExams } from "../api";
 import { formatExamTime, formatMarks, formatPercent, isExamStaff, QUESTION_TYPE_LABEL } from "../constants";
 import type { QuestionAnalysis } from "../types";
+import { useTranslation } from "react-i18next";
 
 function ChartCard({ title, description, empty, children }: { title: string; description: string; empty: boolean; children: ReactNode }) {
+  const { t } = useTranslation("online-exams");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardTitle>{t(title)}</CardTitle>
+        <CardDescription>{t(description)}</CardDescription>
       </CardHeader>
       <CardContent>
-        {empty ? <EmptyState bare size="sm" icon={Layers} title="Nothing to show yet" className="h-56" /> : <div className="h-56 w-full">{children}</div>}
+        {empty ? <EmptyState bare size="sm" icon={Layers} title={t("Nothing to show yet")} className="h-56" /> : <div className="h-56 w-full">{children}</div>}
       </CardContent>
     </Card>
   );
 }
 
 function CorrectBar({ q }: { q: QuestionAnalysis }) {
+  const { t } = useTranslation("online-exams");
   return (
-    <div className="flex h-2 w-28 overflow-hidden rounded-full bg-secondary" role="img" aria-label={`${formatPercent(q.correctPercentage)} correct, ${formatPercent(q.incorrectPercentage)} incorrect, ${formatPercent(q.unansweredPercentage)} unanswered`}>
+    <div className="flex h-2 w-28 overflow-hidden rounded-full bg-secondary" role="img" aria-label={t("{{correct}} correct, {{incorrect}} incorrect, {{unanswered}} unanswered", { correct: formatPercent(q.correctPercentage), incorrect: formatPercent(q.incorrectPercentage), unanswered: formatPercent(q.unansweredPercentage) })}>
       <span className="bg-success" style={{ width: `${q.correctPercentage}%` }} />
       <span className="bg-destructive" style={{ width: `${q.incorrectPercentage}%` }} />
     </div>
@@ -43,6 +46,7 @@ function CorrectBar({ q }: { q: QuestionAnalysis }) {
 }
 
 export default function ExamReportsPage() {
+  const { t } = useTranslation("online-exams");
   const role = useAuthStore((s) => s.user?.role);
   // The school and role include AI Features (same rule as the nav), and the AI service can run this feature.
   const aiModule = useAuthStore((s) => !s.modulePermissions || s.modulePermissions.aiFeatures);
@@ -68,12 +72,12 @@ export default function ExamReportsPage() {
       { accessorKey: "number", header: "#", cell: ({ row }) => <span className="tabular-nums">{row.original.number}</span> },
       {
         accessorKey: "text",
-        header: "Question",
+        header: t("Question"),
         cell: ({ row }) => (
           <div className="max-w-md">
             <p className="line-clamp-2 text-foreground">{row.original.text}</p>
             <p className="text-xs text-muted-foreground">
-              {QUESTION_TYPE_LABEL[row.original.type]} · {formatMarks(row.original.marks)} marks
+              {t(QUESTION_TYPE_LABEL[row.original.type])} · {t("{{marks}} marks", { marks: formatMarks(row.original.marks) })}
               {row.original.topic ? ` · ${row.original.topic}` : ""}
             </p>
           </div>
@@ -81,7 +85,7 @@ export default function ExamReportsPage() {
       },
       {
         accessorKey: "correctPercentage",
-        header: "Correct",
+        header: t("Correct"),
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <CorrectBar q={row.original} />
@@ -89,11 +93,11 @@ export default function ExamReportsPage() {
           </div>
         ),
       },
-      { accessorKey: "incorrectPercentage", header: "Incorrect", cell: ({ row }) => <span className="tabular-nums">{formatPercent(row.original.incorrectPercentage)}</span> },
-      { accessorKey: "unanswered", header: "Skipped", cell: ({ row }) => <span className="tabular-nums">{row.original.unanswered}</span> },
+      { accessorKey: "incorrectPercentage", header: t("Incorrect"), cell: ({ row }) => <span className="tabular-nums">{formatPercent(row.original.incorrectPercentage)}</span> },
+      { accessorKey: "unanswered", header: t("Skipped"), cell: ({ row }) => <span className="tabular-nums">{row.original.unanswered}</span> },
       {
         accessorKey: "averageMarks",
-        header: "Avg marks",
+        header: t("Avg marks"),
         cell: ({ row }) => (
           <span className="tabular-nums">
             {formatMarks(row.original.averageMarks)}
@@ -102,7 +106,7 @@ export default function ExamReportsPage() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   if (!isExamStaff(role)) return <Navigate to="/online-exams/my/results" replace />;
@@ -114,12 +118,12 @@ export default function ExamReportsPage() {
     <PageContainer>
       <PageHeader
         icon={BarChart3}
-        title="Reports"
-        description="How each exam went, question by question - find the topics students struggled with."
+        title={t("Reports")}
+        description={t("How each exam went, question by question - find the topics students struggled with.")}
         actions={
           <Select value={examId || undefined} onValueChange={(v) => setParams({ exam: v }, { replace: true })} disabled={!reportable.length}>
-            <SelectTrigger className="w-full sm:w-[18rem]" aria-label="Exam">
-              <SelectValue placeholder={exams.isLoading ? "Loading exams…" : "Choose an exam"} />
+            <SelectTrigger className="w-full sm:w-[18rem]" aria-label={t("Exam")}>
+              <SelectValue placeholder={exams.isLoading ? t("Loading exams…") : t("Choose an exam")} />
             </SelectTrigger>
             <SelectContent>
               {reportable.map((e) => (
@@ -133,20 +137,20 @@ export default function ExamReportsPage() {
       />
 
       {exams.isError ? (
-        <ErrorState title="Couldn't load exams" onRetry={() => exams.refetch()} />
+        <ErrorState title={t("Couldn't load exams")} onRetry={() => exams.refetch()} />
       ) : !exams.isLoading && reportable.length === 0 ? (
-        <EmptyState icon={BarChart3} title="No reports yet" description="Reports appear once students have submitted an exam." />
+        <EmptyState icon={BarChart3} title={t("No reports yet")} description={t("Reports appear once students have submitted an exam.")} />
       ) : !examId || analysis.isLoading ? (
-        <LoadingState label="Loading report…" />
+        <LoadingState label={t("Loading report…")} />
       ) : analysis.isError || !a ? (
-        <ErrorState title="Couldn't load this report" description={analysis.error instanceof Error ? analysis.error.message : undefined} onRetry={() => analysis.refetch()} />
+        <ErrorState title={t("Couldn't load this report")} description={analysis.error instanceof Error ? analysis.error.message : undefined} onRetry={() => analysis.refetch()} />
       ) : (
         <>
           <StatGrid columns={4}>
-            <StatCard label="Class average" value={formatPercent(a.classAverage)} icon={Target} tone="brand" />
-            <StatCard label="Questions" value={a.questions.length} icon={Layers} tone="info" hint={`${formatMarks(a.exam.totalMarks)} marks`} />
-            <StatCard label="Students appeared" value={a.exam.submittedCount} icon={Users} tone="success" hint={`of ${a.exam.assignedCount} assigned`} />
-            <StatCard label="Exam closed" value={formatExamTime(a.exam.endUtc, a.exam.timeZoneId).split(",")[0]} icon={BarChart3} tone="neutral" />
+            <StatCard label={t("Class average")} value={formatPercent(a.classAverage)} icon={Target} tone="brand" />
+            <StatCard label={t("Questions")} value={a.questions.length} icon={Layers} tone="info" hint={t("{{marks}} marks", { marks: formatMarks(a.exam.totalMarks) })} />
+            <StatCard label={t("Students appeared")} value={a.exam.submittedCount} icon={Users} tone="success" hint={t("of {{n}} assigned", { n: a.exam.assignedCount })} />
+            <StatCard label={t("Exam closed")} value={formatExamTime(a.exam.endUtc, a.exam.timeZoneId).split(",")[0]} icon={BarChart3} tone="neutral" />
           </StatGrid>
 
           {/* Keyed by exam so switching exams never shows the previous exam's insights. */}
@@ -157,19 +161,19 @@ export default function ExamReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-warning-strong" />
-                  Worth revisiting
+                  {t("Worth revisiting")}
                 </CardTitle>
-                <CardDescription>The questions fewest students got right.</CardDescription>
+                <CardDescription>{t("The questions fewest students got right.")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
                   {hardest.map((q) => (
                     <li key={q.questionId} className="flex items-start justify-between gap-3 rounded-lg border border-border/80 px-3 py-2">
                       <span className="text-sm">
-                        <span className="font-semibold tabular-nums">Q{q.number}. </span>
+                        <span className="font-semibold tabular-nums">{t("Q{{n}}.", { n: q.number })} </span>
                         {q.text}
                       </span>
-                      <Badge variant={q.correctPercentage < 40 ? "danger" : "warning"}>{formatPercent(q.correctPercentage)} correct</Badge>
+                      <Badge variant={q.correctPercentage < 40 ? "danger" : "warning"}>{t("{{percent}} correct", { percent: formatPercent(q.correctPercentage) })}</Badge>
                     </li>
                   ))}
                 </ul>
@@ -184,7 +188,7 @@ export default function ExamReportsPage() {
                   <CartesianGrid {...CHART_GRID} />
                   <XAxis dataKey="label" tick={CHART_TICK} tickLine={false} axisLine={false} />
                   <YAxis allowDecimals={false} tick={CHART_TICK} tickLine={false} axisLine={false} width={28} />
-                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)" }} formatter={(v) => [v, "Students"]} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)" }} formatter={(v) => [v, t("Students")]} />
                   <Bar dataKey="value" fill="var(--color-brand-500)" radius={[6, 6, 0, 0]} maxBarSize={48} />
                 </BarChart>
               </ResponsiveContainer>
@@ -195,7 +199,7 @@ export default function ExamReportsPage() {
                   <CartesianGrid {...CHART_GRID} />
                   <XAxis dataKey="label" tick={CHART_TICK} tickLine={false} axisLine={false} />
                   <YAxis domain={[0, 100]} tick={CHART_TICK} tickLine={false} axisLine={false} width={32} unit="%" />
-                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)" }} formatter={(v) => [`${Math.round(Number(v) * 10) / 10}%`, "Average"]} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: "var(--color-secondary)" }} formatter={(v) => [`${Math.round(Number(v) * 10) / 10}%`, t("Average")]} />
                   <Bar dataKey="averagePercentage" fill="var(--color-info)" radius={[6, 6, 0, 0]} maxBarSize={48} />
                 </BarChart>
               </ResponsiveContainer>
@@ -204,11 +208,11 @@ export default function ExamReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Question analysis</CardTitle>
-              <CardDescription>Correct, incorrect and skipped answers for every question.</CardDescription>
+              <CardTitle>{t("Question analysis")}</CardTitle>
+              <CardDescription>{t("Correct, incorrect and skipped answers for every question.")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable columns={columns} data={a.questions} pageSize={50} empty={{ icon: Layers, title: "No questions" }} />
+              <DataTable columns={columns} data={a.questions} pageSize={50} empty={{ icon: Layers, title: t("No questions") }} />
             </CardContent>
           </Card>
         </>

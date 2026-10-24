@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldAlert, Trash2, UserX } from "lucide-react";
@@ -11,6 +12,7 @@ import type { WatchlistEntry } from "../types";
 import WatchlistFormDialog from "./WatchlistFormDialog";
 
 export default function WatchlistTab() {
+  const { t } = useTranslation("visitors");
   const queryClient = useQueryClient();
   const { data: watchlist = [], isLoading } = useQuery({ queryKey: ["visitors", "watchlist"], queryFn: listWatchlist });
   const [formOpen, setFormOpen] = useState(false);
@@ -22,7 +24,7 @@ export default function WatchlistTab() {
     mutationFn: addWatchlistEntry,
     onSuccess: () => {
       invalidate();
-      toast.success("Added to watchlist");
+      toast.success(t("Added to watchlist"));
       setFormOpen(false);
     },
   });
@@ -31,7 +33,7 @@ export default function WatchlistTab() {
     mutationFn: deleteWatchlistEntry,
     onSuccess: () => {
       invalidate();
-      toast.success("Removed from watchlist");
+      toast.success(t("Removed from watchlist"));
       setDeleteTarget(null);
     },
   });
@@ -40,16 +42,16 @@ export default function WatchlistTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground max-w-xl">
-          Names here trigger a warning banner if entered during visitor check-in. Front desk staff still decide whether to admit — this doesn't block entry automatically.
+          {t("Names here trigger a warning banner if entered during visitor check-in. Front desk staff still decide whether to admit — this doesn't block entry automatically.")}
         </p>
         <Button variant="destructive" onClick={() => setFormOpen(true)}>
           <UserX className="w-4 h-4" />
-          Add to watchlist
+          {t("Add to watchlist")}
         </Button>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-      {!isLoading && watchlist.length === 0 && <p className="text-sm text-muted-foreground">The watchlist is empty.</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t("Loading…")}</p>}
+      {!isLoading && watchlist.length === 0 && <p className="text-sm text-muted-foreground">{t("The watchlist is empty.")}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {watchlist.map((entry) => (
@@ -63,7 +65,7 @@ export default function WatchlistTab() {
                   <p className="text-sm font-semibold text-foreground">{entry.name}</p>
                   {entry.phone && <p className="text-xs text-muted-foreground">{entry.phone}</p>}
                   <p className="text-sm text-secondary-foreground mt-1">{entry.reason}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Added {formatRelativeDay(entry.addedAt)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("Added {{when}}", { when: formatRelativeDay(entry.addedAt) })}</p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setDeleteTarget(entry)}>
@@ -86,9 +88,9 @@ export default function WatchlistTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove from watchlist"
-        description={`Remove "${deleteTarget?.name}" from the watchlist?`}
-        confirmLabel="Remove"
+        title={t("Remove from watchlist")}
+        description={t("Remove \"{{name}}\" from the watchlist?", { name: deleteTarget?.name })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

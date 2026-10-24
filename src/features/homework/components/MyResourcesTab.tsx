@@ -14,7 +14,9 @@ import AttachmentLink from "@/features/attachments/AttachmentLink";
 import DiscussionThread from "./DiscussionThread";
 import TakeQuizDialog from "./TakeQuizDialog";
 
+import { useTranslation } from "react-i18next";
 export default function MyResourcesTab({ studentId }: { studentId: string }) {
+  const { t: tr } = useTranslation("homework");
   const queryClient = useQueryClient();
   const [discussionTarget, setDiscussionTarget] = useState<LearningResource | null>(null);
   const [quizResourceTarget, setQuizResourceTarget] = useState<LearningResource | null>(null);
@@ -54,9 +56,9 @@ export default function MyResourcesTab({ studentId }: { studentId: string }) {
     if (!viewedSet.has(resourceId)) viewMutation.mutate(resourceId);
   };
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading resources…</p>;
-  if (!student) return <p className="text-sm text-muted-foreground">Select a student to browse their resources.</p>;
-  if (myResources.length === 0) return <p className="text-sm text-muted-foreground">No learning resources shared for your class yet.</p>;
+  if (isLoading) return <p className="text-sm text-muted-foreground">{tr("Loading resources…")}</p>;
+  if (!student) return <p className="text-sm text-muted-foreground">{tr("Select a student to browse their resources.")}</p>;
+  if (myResources.length === 0) return <p className="text-sm text-muted-foreground">{tr("No learning resources shared for your class yet.")}</p>;
 
   return (
     <div className="space-y-3">
@@ -92,14 +94,14 @@ export default function MyResourcesTab({ studentId }: { studentId: string }) {
                     }}
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
-                    View discussion
+                    {tr("View discussion")}
                   </Button>
                 )}
 
                 {resource.type === "quiz" && quiz && (
                   <Button size="sm" onClick={() => setQuizResourceTarget(resource)}>
                     <ListChecks className="w-3.5 h-3.5" />
-                    Take quiz ({quiz.questions.length}q)
+                    {tr("Take quiz ({{count}} questions)", { count: quiz.questions.length })}
                   </Button>
                 )}
 
@@ -117,7 +119,7 @@ export default function MyResourcesTab({ studentId }: { studentId: string }) {
                     className="inline-flex items-center gap-1 text-xs text-primary-text hover:underline"
                   >
                     <ExternalLink className="w-3 h-3" />
-                    Open link
+                    {tr("Open link")}
                   </a>
                 )}
               </CardContent>

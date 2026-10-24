@@ -13,6 +13,7 @@ import { SUBMISSION_STATUS_CONFIG } from "../constants";
 import AttachmentLink from "@/features/attachments/AttachmentLink";
 import type { AssignedHomeworkRow } from "../types";
 
+import { useTranslation } from "react-i18next";
 export default function SubmitHomeworkDialog({
   open,
   onOpenChange,
@@ -24,6 +25,7 @@ export default function SubmitHomeworkDialog({
   row: AssignedHomeworkRow | null;
   studentId: string;
 }) {
+  const { t } = useTranslation("homework");
   const queryClient = useQueryClient();
   const [content, setContent] = useState("");
 
@@ -36,10 +38,10 @@ export default function SubmitHomeworkDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["homework", "assigned", studentId] });
       queryClient.invalidateQueries({ queryKey: ["homework", "progress"] });
-      toast.success("Homework submitted");
+      toast.success(t("Homework submitted"));
       onOpenChange(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not submit homework"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not submit homework")),
   });
 
   if (!row) return null;
@@ -56,9 +58,9 @@ export default function SubmitHomeworkDialog({
         </DialogHeader>
 
         <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-          <Badge variant={config.variant}>{config.label}</Badge>
-          <span>Due {new Date(homework.dueDate).toLocaleDateString()}</span>
-          {homework.attachmentNote && <span>· Attachment: {homework.attachmentNote}</span>}
+          <Badge variant={config.variant}>{t(config.label)}</Badge>
+          <span>{t("Due {{v1}}", { v1: new Date(homework.dueDate).toLocaleDateString() })}</span>
+          {homework.attachmentNote && <span>{t("· Attachment: {{attachmentNote}}", { attachmentNote: homework.attachmentNote })}</span>}
           {homework.attachmentId && homework.attachmentFileName && (
             <span className="inline-flex max-w-full items-center gap-1">
               · <AttachmentLink id={homework.attachmentId} fileName={homework.attachmentFileName} />
@@ -68,41 +70,41 @@ export default function SubmitHomeworkDialog({
 
         {submission.status === "resubmit_requested" && submission.feedback && (
           <div className="rounded-lg border border-warning/30 bg-warning-soft p-3 text-sm text-warning-strong">
-            <p className="font-medium">Your teacher asked you to resubmit:</p>
+            <p className="font-medium">{t("Your teacher asked you to resubmit:")}</p>
             <p className="mt-1">{submission.feedback}</p>
           </div>
         )}
 
         {submission.status === "graded" && (
           <div className="rounded-lg border border-border bg-secondary/40 p-3 text-sm space-y-1">
-            <p className="font-medium text-foreground">Grade: {submission.grade}</p>
+            <p className="font-medium text-foreground">{t("Grade: {{grade}}", { grade: submission.grade })}</p>
             {submission.feedback && <p className="text-secondary-foreground">{submission.feedback}</p>}
           </div>
         )}
 
         <div className="space-y-1.5">
-          <Label htmlFor="submission-content">Your answer</Label>
+          <Label htmlFor="submission-content">{t("Your answer")}</Label>
           <Textarea
             id="submission-content"
             rows={6}
-            placeholder="Type your submission here…"
+            placeholder={t("Type your submission here…")}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             disabled={!canEdit}
           />
           {submission.submittedAt && (
-            <p className="text-xs text-muted-foreground">Last submitted {formatDateTime(submission.submittedAt)}</p>
+            <p className="text-xs text-muted-foreground">{t("Last submitted {{v1}}", { v1: formatDateTime(submission.submittedAt) })}</p>
           )}
         </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t("Close")}
           </Button>
           {canEdit && (
             <Button type="button" disabled={!content.trim() || submitMutation.isPending} onClick={() => submitMutation.mutate()}>
               {submitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              {submission.status === "not_submitted" ? "Submit" : "Resubmit"}
+              {submission.status === "not_submitted" ? t("Submit") : t("Resubmit")}
             </Button>
           )}
         </DialogFooter>

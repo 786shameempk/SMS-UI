@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Bus, CreditCard, GraduationCap, RefreshCw, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ const AREA_ICON: Record<InsightArea, typeof Bus> = {
 };
 
 export default function InsightsTab() {
+  const { t } = useTranslation("ai");
   const queryClient = useQueryClient();
   const { can } = useAiCapabilities();
   const { data: insights = [], isLoading, isFetching } = useQuery({ queryKey: ["ai", "insights"], queryFn: getInsights });
@@ -24,15 +26,15 @@ export default function InsightsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground max-w-lg">
-          Rule-based summaries of this school's live data. "Explain with AI" asks the school's AI to interpret the same figures; it never changes them.
+          {t("Rule-based summaries of this school's live data. \"Explain with AI\" asks the school's AI to interpret the same figures; it never changes them.")}
         </p>
         <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["ai", "insights"] })} disabled={isFetching}>
           <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
-          Regenerate
+          {t("Regenerate")}
         </Button>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t("Loading…")}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {insights.map((insight: Insight) => {
@@ -45,7 +47,7 @@ export default function InsightsTab() {
                     <Icon className="w-[18px] h-[18px]" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{INSIGHT_AREA_CONFIG[insight.area].label}</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t(INSIGHT_AREA_CONFIG[insight.area].label)}</p>
                     <CardTitle className="text-base">{insight.headline}</CardTitle>
                   </div>
                 </div>
@@ -53,7 +55,7 @@ export default function InsightsTab() {
               <CardContent>
                 <ul className="space-y-1.5">
                   {insight.bullets.map((b, i) => (
-                    <li key={i} className="text-sm text-secondary-foreground pl-3 relative before:content-['·'] before:absolute before:left-0 before:text-slate-400">
+                    <li key={i} className="text-sm text-secondary-foreground ps-3 relative before:content-['·'] before:absolute before:start-0 before:text-slate-400">
                       {b}
                     </li>
                   ))}

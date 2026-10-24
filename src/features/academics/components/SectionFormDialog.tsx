@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { SchoolClass, Section, SectionFormValues } from "../types";
 
+import { useTranslation } from "react-i18next";
 const sectionFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   classId: z.string().min(1, "Select a class"),
@@ -37,6 +38,7 @@ export default function SectionFormDialog({
   onSubmit: (values: SectionFormValues) => Promise<void>;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("academics");
   const isEdit = Boolean(section);
   const {
     register,
@@ -66,25 +68,25 @@ export default function SectionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit section" : "New section"}</DialogTitle>
-          <DialogDescription>Sections are nested under a class and track capacity and enrolled strength.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit section") : t("New section")}</DialogTitle>
+          <DialogDescription>{t("Sections are nested under a class and track capacity and enrolled strength.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="name" required>Name</Label>
-              <Input id="name" placeholder="e.g. Section A" aria-invalid={errors.name ? true : undefined} {...register("name")} />
+              <Label htmlFor="name" required>{t("Name")}</Label>
+              <Input id="name" placeholder={t("e.g. Section A")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
               {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="classId" required>Class</Label>
+              <Label htmlFor="classId" required>{t("Class")}</Label>
               <Controller
                 control={control}
                 name="classId"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="classId">
-                      <SelectValue placeholder="Select a class" />
+                      <SelectValue placeholder={t("Select a class")} />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map((c) => (
@@ -101,19 +103,19 @@ export default function SectionFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="classTeacherName" optional>Class teacher</Label>
-            <Input id="classTeacherName" placeholder="Teacher name" {...register("classTeacherName")} />
-            <p className="text-xs text-muted-foreground">Free-text for now until the teacher module is wired up.</p>
+            <Label htmlFor="classTeacherName" optional>{t("Class teacher")}</Label>
+            <Input id="classTeacherName" placeholder={t("Teacher name")} {...register("classTeacherName")} />
+            <p className="text-xs text-muted-foreground">{t("Free-text for now until the teacher module is wired up.")}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="capacity" required>Capacity</Label>
+              <Label htmlFor="capacity" required>{t("Capacity")}</Label>
               <Input id="capacity" type="number" min={1} aria-invalid={errors.capacity ? true : undefined} {...register("capacity")} />
               {errors.capacity && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.capacity.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="currentStrength" required>Current strength</Label>
+              <Label htmlFor="currentStrength" required>{t("Current strength")}</Label>
               <Input id="currentStrength" type="number" min={0} aria-invalid={errors.currentStrength ? true : undefined} {...register("currentStrength")} />
               {errors.currentStrength && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.currentStrength.message}</p>}
             </div>
@@ -121,10 +123,10 @@ export default function SectionFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create section"}
+              {isEdit ? t("Save changes") : t("Create section")}
             </Button>
           </DialogFooter>
         </form>

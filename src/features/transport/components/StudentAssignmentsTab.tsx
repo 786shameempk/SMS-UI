@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2, UserRoundCheck, UserRoundX } from "lucide-react";
@@ -17,6 +18,7 @@ import AssignStudentDialog from "./AssignStudentDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function StudentAssignmentsTab() {
+  const { t } = useTranslation("transport");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<StudentTransportAssignmentRow | null>(null);
@@ -33,46 +35,46 @@ export default function StudentAssignmentsTab() {
     mutationFn: createAssignment,
     onSuccess: () => {
       invalidate();
-      toast.success("Student assigned to transport");
+      toast.success(t("Student assigned to transport"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not assign student"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not assign student")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: StudentTransportAssignmentFormValues }) => updateAssignment(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Assignment updated");
+      toast.success(t("Assignment updated"));
       setFormOpen(false);
       setEditing(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update assignment"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update assignment")),
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: "active" | "inactive" }) => setAssignmentStatus(id, status),
     onSuccess: () => {
       invalidate();
-      toast.success("Status updated");
+      toast.success(t("Status updated"));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update status"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update status")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteAssignment,
     onSuccess: () => {
       invalidate();
-      toast.success("Assignment removed");
+      toast.success(t("Assignment removed"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not remove assignment"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not remove assignment")),
   });
 
   const columns: ColumnDef<StudentTransportAssignmentRow, unknown>[] = [
     {
       id: "student",
-      header: "Student",
+      header: t("Student"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">
@@ -86,12 +88,12 @@ export default function StudentAssignmentsTab() {
     },
     {
       id: "route",
-      header: "Route",
+      header: t("Route"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.route.name}</span>,
     },
     {
       id: "stop",
-      header: "Stop",
+      header: t("Stop"),
       cell: ({ row }) => (
         <span className="text-sm text-secondary-foreground">
           {row.original.stop.name} ({row.original.stop.arrivalTime})
@@ -100,15 +102,15 @@ export default function StudentAssignmentsTab() {
     },
     {
       id: "fee",
-      header: "Monthly fee",
+      header: t("Monthly fee"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.monthlyFee != null ? formatCurrency(row.original.monthlyFee) : "—"}</span>,
     },
     {
       id: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => {
         const config = ASSIGNMENT_STATUS_CONFIG[row.original.status];
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        return <Badge variant={config.variant}>{t(config.label)}</Badge>;
       },
     },
     {
@@ -125,22 +127,22 @@ export default function StudentAssignmentsTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit
+              {t("Edit")}
             </DropdownMenuItem>
             {assignment.status === "active" ? (
               <DropdownMenuItem onClick={() => statusMutation.mutate({ id: assignment.id, status: "inactive" })}>
                 <UserRoundX className="w-3.5 h-3.5" />
-                Mark inactive
+                {t("Mark inactive")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={() => statusMutation.mutate({ id: assignment.id, status: "active" })}>
                 <UserRoundCheck className="w-3.5 h-3.5" />
-                Mark active
+                {t("Mark active")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => setDeleteTarget(assignment)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Remove
+              {t("Remove")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -151,7 +153,7 @@ export default function StudentAssignmentsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">Assign students to a transport route and pickup stop.</p>
+        <p className="text-sm text-muted-foreground">{t("Assign students to a transport route and pickup stop.")}</p>
         <Button
           onClick={() => {
             setEditing(null);
@@ -159,11 +161,11 @@ export default function StudentAssignmentsTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          Assign student
+          {t("Assign student")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={assignments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No students assigned to transport yet." pageSize={10} />
+      <DataTable searchable columns={columns} data={assignments} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No students assigned to transport yet.")} pageSize={10} />
 
       <AssignStudentDialog
         open={formOpen}
@@ -186,9 +188,9 @@ export default function StudentAssignmentsTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove transport assignment"
-        description={`Remove "${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}" from "${deleteTarget?.route.name}"? This cannot be undone.`}
-        confirmLabel="Remove"
+        title={t("Remove transport assignment")}
+        description={t('Remove "{{student}}" from "{{route}}"? This cannot be undone.', { student: `${deleteTarget?.student.firstName} ${deleteTarget?.student.lastName}`, route: deleteTarget?.route.name })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

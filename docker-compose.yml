@@ -107,6 +107,12 @@ services:
       # Online Exams notifications (scheduled, reminders, results...) go to EngagementService's internal events.
       Services__EngagementServiceUrl: http://engagementservice:8080/
       ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
+      # Attendance capture: QR passes and card hashes are signed with this key (empty = derived from the JWT/study-material key).
+      Attendance__SigningKey: ${ATTENDANCE_SIGNING_KEY:-}
+      # Face recognition attendance: None (default) or CompreFace (self-hosted; see docs/missing-features/01-attendance.md).
+      FaceRecognition__Provider: ${FACE_RECOGNITION_PROVIDER:-None}
+      FaceRecognition__CompreFace__BaseUrl: ${COMPREFACE_URL:-}
+      FaceRecognition__CompreFace__ApiKey: ${COMPREFACE_API_KEY:-}
     volumes:
       # Old Study Materials folder: copied into blob storage once on start, then no longer written.
       - study-materials:/app/App_Data/study-materials
@@ -126,6 +132,13 @@ services:
       Razorpay__KeyId: ${RAZORPAY_KEY_ID:-}
       Razorpay__KeySecret: ${RAZORPAY_KEY_SECRET:-}
       Razorpay__WebhookSecret: ${RAZORPAY_WEBHOOK_SECRET:-}
+      # Public addresses gateways send payers and webhooks back to (Stripe/Cashfree/PayU redirects, PayU's form post).
+      Payments__AppBaseUrl: ${PAYMENTS_APP_BASE_URL:-http://localhost:5173}
+      Payments__ApiBaseUrl: ${PAYMENTS_API_BASE_URL:-http://localhost:5137}
+      # Each school's gateway keys are encrypted with Data Protection keys kept on this volume. Losing it means re-entering the keys.
+      DataProtection__KeysPath: /app/App_Data/keys
+    volumes:
+      - finance-keys:/app/App_Data/keys
 
   campusservice:
     <<: *dotnet-service
@@ -138,6 +151,12 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CampusServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
       # Parent/student "my child's bus" asks AcademicService whose children they are.
       Services__AcademicServiceUrl: http://academicservice:8080/
+      # Personal data kept only as long as needed (days; 0 = keep). See docs/missing-features/07-qr-certificates-visitor-passes.md.
+      Retention__VisitorIdProofDays: ${RETENTION_VISITOR_ID_PROOF_DAYS:-90}
+      Retention__VisitorScanDays: ${RETENTION_VISITOR_SCAN_DAYS:-90}
+      Retention__CertificateVerificationDays: ${RETENTION_CERTIFICATE_VERIFICATION_DAYS:-180}
+      # Public certificate verification page: look-ups per client address per minute.
+      RateLimiting__PublicVerifyPerMinute: ${RATE_LIMIT_PUBLIC_VERIFY_PER_MINUTE:-20}
 
   engagementservice:
     <<: *dotnet-service
@@ -154,9 +173,24 @@ services:
       Push__PublicKey: ${PUSH_VAPID_PUBLIC_KEY:-}
       Push__PrivateKey: ${PUSH_VAPID_PRIVATE_KEY:-}
       Push__Subject: mailto:admin@educore.dev
+      # Communication Center delivery: contact details come from AcademicService (service key above); providers call back on PublicBaseUrl.
+      Services__AcademicServiceUrl: http://academicservice:8080/
+      Messaging__PublicBaseUrl: ${MESSAGING_PUBLIC_BASE_URL:-}
+      # Provider secrets are encrypted with Data Protection keys kept on this volume. Losing it means re-entering provider secrets.
+      DataProtection__KeysPath: /app/App_Data/keys
+      # Optional platform-wide email default for schools that have not connected their own provider (empty = none).
+      Messaging__Defaults__Email__Provider: ${PLATFORM_EMAIL_PROVIDER:-}
+      Messaging__Defaults__Email__Settings__host: ${SMTP_HOST:-}
+      Messaging__Defaults__Email__Settings__port: ${SMTP_PORT:-587}
+      Messaging__Defaults__Email__Settings__useSsl: ${SMTP_ENABLE_SSL:-true}
+      Messaging__Defaults__Email__Settings__username: ${SMTP_USERNAME:-}
+      Messaging__Defaults__Email__Settings__fromEmail: ${SMTP_FROM_EMAIL:-}
+      Messaging__Defaults__Email__Settings__fromName: ${SMTP_FROM_NAME:-School Sphere}
+      Messaging__Defaults__Email__Secrets__password: ${SMTP_PASSWORD:-}
     volumes:
       # Old Talent Showcase folder: copied into blob storage once on start, then no longer written.
       - talent-media:/app/App_Data/talent-media
+      - messaging-keys:/app/App_Data/keys
 
   # Online classes & meetings. See E:\Personal\MeetingService and the design doc linked in its README.
   meetingservice:
@@ -343,6 +377,8 @@ services:
       - redis-data:/data
 
 volumes:
+  finance-keys:
+  messaging-keys:
   sqlserver-data:
   azurite-data:
   redis-data:

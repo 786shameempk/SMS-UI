@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { BookOpen, Pencil, Plus, UserCog, Users2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function initialsOf(first: string, last: string) {
 }
 
 function TeachersDirectory() {
+  const { t } = useTranslation("teachers");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -48,21 +50,21 @@ function TeachersDirectory() {
     mutationFn: createStaff,
     onSuccess: () => {
       invalidateTeachers();
-      toast.success("Teacher added");
+      toast.success(t("Teacher added"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add teacher"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add teacher")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: StaffFormValues }) => updateStaff(id, values),
     onSuccess: () => {
       invalidateTeachers();
-      toast.success("Teacher updated");
+      toast.success(t("Teacher updated"));
       setFormOpen(false);
       setEditingTeacher(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update teacher"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update teacher")),
   });
 
   const assignSubjectMutation = useMutation({
@@ -70,10 +72,10 @@ function TeachersDirectory() {
       assignSubject({ staffId: assignSubjectTarget!.id, ...values }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teachers", "subject-assignments"] });
-      toast.success("Subject assigned");
+      toast.success(t("Subject assigned"));
       setAssignSubjectTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not assign subject"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not assign subject")),
   });
 
   const assignmentsByStaff = useMemo(() => {
@@ -90,33 +92,33 @@ function TeachersDirectory() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return teachers;
-    return teachers.filter((t) => {
-      const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
-      return fullName.includes(q) || t.employeeId.toLowerCase().includes(q) || t.department.toLowerCase().includes(q);
+    return teachers.filter((teacher) => {
+      const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
+      return fullName.includes(q) || teacher.employeeId.toLowerCase().includes(q) || teacher.department.toLowerCase().includes(q);
     });
   }, [teachers, search]);
 
   const columns: ColumnDef<StaffMember, unknown>[] = [
     {
       accessorKey: "firstName",
-      header: "Teacher",
+      header: t("Teacher"),
       cell: ({ row }) => {
-        const t = row.original;
+        const teacher = row.original;
         return (
           <button
             type="button"
-            onClick={() => navigate(`/teachers/${t.id}`)}
-            className="flex items-center gap-3 text-left cursor-pointer group"
+            onClick={() => navigate(`/teachers/${teacher.id}`)}
+            className="flex items-center gap-3 text-start cursor-pointer group"
           >
             <Avatar className="w-8 h-8">
-              {t.photoUrl && <AvatarImage src={t.photoUrl} alt={t.firstName} />}
-              <AvatarFallback className="text-[11px]">{initialsOf(t.firstName, t.lastName)}</AvatarFallback>
+              {teacher.photoUrl && <AvatarImage src={teacher.photoUrl} alt={teacher.firstName} />}
+              <AvatarFallback className="text-[11px]">{initialsOf(teacher.firstName, teacher.lastName)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground truncate group-hover:text-primary-text transition-colors">
-                {t.firstName} {t.lastName}
+                {teacher.firstName} {teacher.lastName}
               </p>
-              <p className="text-xs text-muted-foreground truncate">{t.employeeId}</p>
+              <p className="text-xs text-muted-foreground truncate">{teacher.employeeId}</p>
             </div>
           </button>
         );
@@ -124,47 +126,47 @@ function TeachersDirectory() {
     },
     {
       accessorKey: "department",
-      header: "Department",
+      header: t("Department"),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.department || "—"}</span>,
     },
     {
       id: "subjects",
-      header: "Subjects",
+      header: t("Subjects"),
       cell: ({ row }) => <Badge variant="neutral">{assignmentsByStaff.get(row.original.id)?.subjectIds.size ?? 0}</Badge>,
     },
     {
       id: "classes",
-      header: "Classes",
+      header: t("Classes"),
       cell: ({ row }) => <Badge variant="neutral">{assignmentsByStaff.get(row.original.id)?.classIds.size ?? 0}</Badge>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("Status"),
       cell: ({ row }) => <StaffStatusBadge status={row.original.status} />,
     },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => {
-        const t = row.original;
+        const teacher = row.original;
         return (
           <RowActions>
-            <DropdownMenuItem onClick={() => navigate(`/teachers/${t.id}`)}>
+            <DropdownMenuItem onClick={() => navigate(`/teachers/${teacher.id}`)}>
               <UserCog className="w-3.5 h-3.5" />
-              View profile
+              {t("View profile")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                setEditingTeacher(t);
+                setEditingTeacher(teacher);
                 setFormOpen(true);
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit details
+              {t("Edit details")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setAssignSubjectTarget(t)}>
+            <DropdownMenuItem onClick={() => setAssignSubjectTarget(teacher)}>
               <BookOpen className="w-3.5 h-3.5" />
-              Assign subject
+              {t("Assign subject")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -175,8 +177,8 @@ function TeachersDirectory() {
   return (
     <PageContainer>
       <PageHeader
-        title="Teacher management"
-        description="Subject &amp; class assignments, lesson plans, and student performance for teaching staff."
+        title={t("Teacher management")}
+        description={t("Subject & class assignments, lesson plans, and student performance for teaching staff.")}
       />
 
       <DataTable
@@ -185,18 +187,18 @@ function TeachersDirectory() {
         isLoading={isLoading}
         isError={isError}
         onRetry={() => refetch()}
-        getRowId={(t) => t.id}
-        empty={{ icon: Users2, title: "No teachers yet", description: "Add your first teacher to start assigning subjects and classes." }}
+        getRowId={(teacher) => teacher.id}
+        empty={{ icon: Users2, title: t("No teachers yet"), description: t("Add your first teacher to start assigning subjects and classes.") }}
         filters={
-          <SearchInput value={search} onValueChange={setSearch} placeholder="Search by name, ID, or department" containerClassName="sm:w-72" />
+          <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by name, ID, or department")} containerClassName="sm:w-72" />
         }
-        activeFilters={search.trim() ? [{ id: "search", label: "Search", value: search.trim(), onRemove: () => setSearch("") }] : []}
+        activeFilters={search.trim() ? [{ id: "search", label: t("Search"), value: search.trim(), onRemove: () => setSearch("") }] : []}
         onClearFilters={() => setSearch("")}
         actions={
           <>
             <Button variant="outline" onClick={() => setClassTeacherDialogOpen(true)}>
               <Users2 className="w-4 h-4" />
-              Assign class teachers
+              {t("Assign class teachers")}
             </Button>
             <Button
               onClick={() => {
@@ -205,7 +207,7 @@ function TeachersDirectory() {
               }}
             >
               <Plus className="w-4 h-4" />
-              New teacher
+              {t("New teacher")}
             </Button>
           </>
         }
@@ -246,12 +248,17 @@ function TeachersDirectory() {
 
 /** A teacher has no directory: this screen is their own profile (no list, Add teacher or Assign class teacher). */
 function MyTeacherProfileRedirect() {
+  const { t } = useTranslation("teachers");
   const { data: myStaffId, isLoading } = useQuery({ queryKey: ["staff", "me"], queryFn: getMyStaffId });
   if (isLoading) return <PageSkeleton />;
   if (!myStaffId) {
     return (
       <PageContainer>
-        <EmptyState icon={Users2} title="No teacher profile" description="Your login isn't linked to a staff record yet. Ask the school administrator to link it." />
+        <EmptyState
+          icon={Users2}
+          title={t("No teacher profile")}
+          description={t("Your login isn't linked to a staff record yet. Ask the school administrator to link it.")}
+        />
       </PageContainer>
     );
   }

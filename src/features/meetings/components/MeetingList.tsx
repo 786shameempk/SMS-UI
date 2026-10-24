@@ -7,8 +7,10 @@ import { formatDayLabel, formatDuration, formatTime } from "../utils";
 import { MeetingStatusBadge } from "./Badges";
 import JoinMeetingButton from "./JoinMeetingButton";
 
+import { useTranslation } from "react-i18next";
 /** One scannable row: time · coloured rail + title · who · status · join. */
 export function MeetingRow({ meeting, showDate }: { meeting: MeetingSummary; showDate?: boolean }) {
+  const { t } = useTranslation("meetings");
   const type = MEETING_TYPES[meeting.meetingType];
   const cancelled = meeting.status === "Cancelled";
   const who = meeting.myRelation === "Host" ? "You" : meeting.hostName;
@@ -17,8 +19,8 @@ export function MeetingRow({ meeting, showDate }: { meeting: MeetingSummary; sho
     // Stretched link: the whole row opens the meeting, while the Join button stays a real, separate button
     // (a <button> inside an <a> is invalid and confuses screen readers).
     <div className="group relative grid grid-cols-[4.25rem_minmax(0,1fr)] sm:grid-cols-[4.75rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 hover:bg-secondary/60 transition-colors has-[a:focus-visible]:bg-secondary/60">
-      <Link to={`/online-classes/${meeting.id}`} className="absolute inset-0 focus-visible:outline-none" aria-label={`Open ${meeting.title}`} />
-      <div className="text-right tabular-nums leading-tight">
+      <Link to={`/online-classes/${meeting.id}`} className="absolute inset-0 focus-visible:outline-none" aria-label={t("Open {{title}}", { title: meeting.title })} />
+      <div className="text-end tabular-nums leading-tight">
         {showDate && <div className="text-[11px] font-medium text-muted-foreground">{formatDayLabel(meeting.startUtc)}</div>}
         <div className={cn("text-sm font-semibold text-foreground", cancelled && "line-through text-muted-foreground")}>{formatTime(meeting.startUtc)}</div>
         <div className="text-[11px] text-muted-foreground">{formatDuration(meeting.durationMinutes)}</div>
@@ -32,13 +34,13 @@ export function MeetingRow({ meeting, showDate }: { meeting: MeetingSummary; sho
             {meeting.classLabel && <span className="font-normal text-muted-foreground"> · {meeting.classLabel}</span>}
           </p>
           <p className="flex items-center gap-2 truncate text-xs text-muted-foreground">
-            <span className="truncate">{type.label} · {who}</span>
+            <span className="truncate">{t(type.label)} · {who}</span>
             {meeting.participantCount > 0 && (
               <span className="inline-flex items-center gap-1 shrink-0">
                 <Users className="h-3 w-3" aria-hidden /> {meeting.participantCount}
               </span>
             )}
-            {meeting.isSeries && <Repeat className="h-3 w-3 shrink-0" aria-label="Repeats" />}
+            {meeting.isSeries && <Repeat className="h-3 w-3 shrink-0" aria-label={t("Repeats")} />}
           </p>
         </div>
       </div>

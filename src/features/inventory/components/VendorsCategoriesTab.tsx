@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
@@ -20,6 +21,7 @@ import CategoryFormDialog from "./CategoryFormDialog";
 import VendorFormDialog from "./VendorFormDialog";
 
 export default function VendorsCategoriesTab() {
+  const { t } = useTranslation("inventory");
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["inventory"] });
 
@@ -34,38 +36,38 @@ export default function VendorsCategoriesTab() {
     mutationFn: createCategory,
     onSuccess: () => {
       invalidate();
-      toast.success("Category added");
+      toast.success(t("Category added"));
       setCategoryForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add category"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add category")),
   });
   const categoryUpdate = useMutation({
     mutationFn: ({ id, values }: { id: string; values: ItemCategoryFormValues }) => updateCategory(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Category updated");
+      toast.success(t("Category updated"));
       setCategoryForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update category"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update category")),
   });
 
   const vendorCreate = useMutation({
     mutationFn: createVendor,
     onSuccess: () => {
       invalidate();
-      toast.success("Vendor added");
+      toast.success(t("Vendor added"));
       setVendorForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add vendor"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add vendor")),
   });
   const vendorUpdate = useMutation({
     mutationFn: ({ id, values }: { id: string; values: VendorFormValues }) => updateVendor(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Vendor updated");
+      toast.success(t("Vendor updated"));
       setVendorForm({ open: false, editing: null });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update vendor"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update vendor")),
   });
 
   const deleteMutation = useMutation({
@@ -73,10 +75,10 @@ export default function VendorsCategoriesTab() {
       target.kind === "category" ? deleteCategory(target.item.id) : deleteVendor(target.item.id),
     onSuccess: () => {
       invalidate();
-      toast.success("Deleted");
+      toast.success(t("Deleted"));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete")),
   });
 
   return (
@@ -85,17 +87,17 @@ export default function VendorsCategoriesTab() {
         <Card className="flex-1 min-w-[280px]">
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <div>
-              <CardTitle className="text-base">Categories</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Groups used to organize items.</p>
+              <CardTitle className="text-base">{t("Categories")}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("Groups used to organize items.")}</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setCategoryForm({ open: true, editing: null })}>
               <Plus className="w-3.5 h-3.5" />
-              Add
+              {t("Add")}
             </Button>
           </CardHeader>
           <CardContent className="space-y-1.5">
-            {categoriesLoading && <p className="text-sm text-muted-foreground py-2">Loading…</p>}
-            {!categoriesLoading && categories.length === 0 && <p className="text-sm text-muted-foreground py-2">No categories yet.</p>}
+            {categoriesLoading && <p className="text-sm text-muted-foreground py-2">{t("Loading…")}</p>}
+            {!categoriesLoading && categories.length === 0 && <p className="text-sm text-muted-foreground py-2">{t("No categories yet.")}</p>}
             {!categoriesLoading &&
               categories.map((c) => (
                 <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
@@ -119,17 +121,17 @@ export default function VendorsCategoriesTab() {
         <Card className="flex-1 min-w-[280px]">
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <div>
-              <CardTitle className="text-base">Vendors</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Suppliers you purchase items from.</p>
+              <CardTitle className="text-base">{t("Vendors")}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("Suppliers you purchase items from.")}</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setVendorForm({ open: true, editing: null })}>
               <Plus className="w-3.5 h-3.5" />
-              Add
+              {t("Add")}
             </Button>
           </CardHeader>
           <CardContent className="space-y-1.5">
-            {vendorsLoading && <p className="text-sm text-muted-foreground py-2">Loading…</p>}
-            {!vendorsLoading && vendors.length === 0 && <p className="text-sm text-muted-foreground py-2">No vendors yet.</p>}
+            {vendorsLoading && <p className="text-sm text-muted-foreground py-2">{t("Loading…")}</p>}
+            {!vendorsLoading && vendors.length === 0 && <p className="text-sm text-muted-foreground py-2">{t("No vendors yet.")}</p>}
             {!vendorsLoading &&
               vendors.map((v) => (
                 <div key={v.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
@@ -178,9 +180,9 @@ export default function VendorsCategoriesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title={`Delete ${deleteTarget?.kind ?? ""}`}
-        description={`Delete "${deleteTarget?.item.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={deleteTarget?.kind === "category" ? t("Delete category") : deleteTarget?.kind === "vendor" ? t("Delete vendor") : "Delete "}
+        description={t("Delete \"{{name}}\"? This cannot be undone.", { name: deleteTarget?.item.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

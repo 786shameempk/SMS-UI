@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -35,6 +36,7 @@ export default function AdmissionInterviewDialog({
   submitting: boolean;
   onSubmit: (values: AdmissionInterviewFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("students");
   const {
     register,
     handleSubmit,
@@ -60,10 +62,11 @@ export default function AdmissionInterviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Interview</DialogTitle>
+          <DialogTitle>{t("Interview")}</DialogTitle>
           <DialogDescription>
-            Schedule the interview for {application.applicantFirstName} {application.applicantLastName}, then reopen this to
-            record the outcome.
+            {t("Schedule the interview for {{name}}, then reopen this to record the outcome.", {
+              name: `${application.applicantFirstName} ${application.applicantLastName}`,
+            })}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -78,32 +81,32 @@ export default function AdmissionInterviewDialog({
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="int-date">Interview date</Label>
+              <Label htmlFor="int-date">{t("Interview date")}</Label>
               <Input id="int-date" type="date" aria-invalid={errors.interviewDate ? true : undefined} {...register("interviewDate")} />
-              {errors.interviewDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.interviewDate.message}</p>}
+              {errors.interviewDate && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.interviewDate.message ?? "")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="int-interviewer">Interviewer</Label>
+              <Label htmlFor="int-interviewer">{t("Interviewer")}</Label>
               <Input id="int-interviewer" aria-invalid={errors.interviewerName ? true : undefined} {...register("interviewerName")} />
-              {errors.interviewerName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.interviewerName.message}</p>}
+              {errors.interviewerName && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.interviewerName.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="int-rating" optional>Rating</Label>
+            <Label htmlFor="int-rating" optional>{t("Rating")}</Label>
             <Controller
               control={control}
               name="interviewRating"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="int-rating">
-                    <SelectValue placeholder="Not yet rated" />
+                    <SelectValue placeholder={t("Not yet rated")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>Not yet rated</SelectItem>
+                    <SelectItem value={NONE}>{t("Not yet rated")}</SelectItem>
                     {[1, 2, 3, 4, 5].map((n) => (
                       <SelectItem key={n} value={String(n)}>
-                        {n} / 5
+                        {t("{{rating}} / 5", { rating: n })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -113,16 +116,16 @@ export default function AdmissionInterviewDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="int-remarks" optional>Remarks</Label>
+            <Label htmlFor="int-remarks" optional>{t("Remarks")}</Label>
             <Textarea id="int-remarks" rows={3} {...register("interviewRemarks")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save
+              {t("Save")}
             </Button>
           </DialogFooter>
         </form>

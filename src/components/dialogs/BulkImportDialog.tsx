@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Download, FileUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ export default function BulkImportDialog<T>({
   importRow,
   onFinished,
 }: BulkImportDialogProps<T>) {
+  const { t } = useTranslation("common");
   const fileInput = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<PreviewRow<T>[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -90,9 +92,14 @@ export default function BulkImportDialog<T>({
     setFileName(file.name);
     const { records, missing } = rowsToRecords(parseCsv(await file.text()), columns);
     const missingRequired = columns.filter((c) => c.required && missing.includes(c.label)).map((c) => c.label);
-    if (missingRequired.length > 0) return setFileError(`Missing column${missingRequired.length > 1 ? "s" : ""}: ${missingRequired.join(", ")}. Use the template for the right headings.`);
-    if (records.length === 0) return setFileError("The file has no data rows.");
-    if (records.length > MAX_ROWS) return setFileError(`Import up to ${MAX_ROWS} rows at a time; this file has ${records.length}.`);
+    if (missingRequired.length > 0)
+      return setFileError(
+        missingRequired.length > 1
+          ? t("Missing columns: {{columns}}. Use the template for the right headings.", { columns: missingRequired.join(", ") })
+          : t("Missing column: {{columns}}. Use the template for the right headings.", { columns: missingRequired.join(", ") }),
+      );
+    if (records.length === 0) return setFileError(t("The file has no data rows."));
+    if (records.length > MAX_ROWS) return setFileError(t("Import up to {{max}} rows at a time; this file has {{count}}.", { max: MAX_ROWS, count: records.length }));
     // line = spreadsheet row number (header is line 1).
     setRows(records.map((record, i) => ({ line: i + 2, record, parsed: parseRow(record) })));
   };
@@ -107,7 +114,7 @@ export default function BulkImportDialog<T>({
         if (row.parsed.ok) await importRow(row.parsed.value);
         imported++;
       } catch (err) {
-        failures.push({ line: row.line, record: row.record, error: err instanceof Error ? err.message : "Could not import this row" });
+        failures.push({ line: row.line, record: row.record, error: err instanceof Error ? err.message : t("Could not import this row") });
       }
       setProgress(i + 1);
     }
@@ -132,21 +139,21 @@ export default function BulkImportDialog<T>({
         {result ? (
           <div className="space-y-3">
             <p role="status" className="rounded-lg bg-secondary/50 px-3 py-2 text-sm text-foreground">
-              Imported {result.imported} {result.imported === 1 ? "row" : "rows"}
-              {result.failures.length > 0 && <span className="text-muted-foreground">; {result.failures.length} could not be imported.</span>}
+              {result.imported === 1 ? t("Imported {{count}} row", { count: result.imported }) : t("Imported {{count}} rows", { count: result.imported })}
+              {result.failures.length > 0 && <span className="text-muted-foreground">{t("; {{count}} could not be imported.", { count: result.failures.length })}</span>}
             </p>
             {result.failures.length > 0 && (
               <>
                 <ul className="max-h-56 space-y-1 overflow-auto rounded-lg border border-border p-2 text-sm">
                   {result.failures.map((f) => (
                     <li key={f.line}>
-                      <span className="font-medium text-foreground">Row {f.line}:</span> <span className="text-destructive-strong">{f.error}</span>
+                      <span className="font-medium text-foreground">{t("Row {{line}}:", { line: f.line })}</span> <span className="text-destructive-strong">{f.error}</span>
                     </li>
                   ))}
                 </ul>
                 <Button type="button" variant="outline" size="sm" onClick={downloadFailures}>
                   <Download className="h-4 w-4" />
-                  Download failed rows
+                  {t("Download failed rows")}
                 </Button>
               </>
             )}
@@ -156,17 +163,19 @@ export default function BulkImportDialog<T>({
             <div className="flex flex-wrap items-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={downloadTemplate}>
                 <Download className="h-4 w-4" />
-                Download template
+                {t("Download template")}
               </Button>
               <Button type="button" size="sm" onClick={() => fileInput.current?.click()} disabled={running}>
                 <FileUp className="h-4 w-4" />
-                {fileName ? "Choose another file" : "Choose CSV file"}
+                {fileName ? t("Choose another file") : t("Choose CSV file")}
               </Button>
-              <input ref={fileInput} type="file" accept=".csv,text/csv" className="sr-only" aria-label="CSV file" onChange={(e) => void onFile(e.target.files?.[0])} />
+              <input ref={fileInput} type="file" accept=".csv,text/csv" className="sr-only" aria-label={t("CSV file")} onChange={(e) => void onFile(e.target.files?.[0])} />
               {fileName && <span className="truncate text-sm text-muted-foreground">{fileName}</span>}
             </div>
             <p className="text-xs text-muted-foreground">
-              Columns: {columns.map((c) => (c.required ? `${c.label}*` : c.label)).join(", ")}. * is required. Dates as yyyy-mm-dd or dd/mm/yyyy.
+              {t("Columns: {{columns}}. * is required. Dates as yyyy-mm-dd or dd/mm/yyyy.", {
+                columns: columns.map((c) => (c.required ? `${c.label}*` : c.label)).join(", "),
+              })}
             </p>
 
             {fileError && (
@@ -178,21 +187,21 @@ export default function BulkImportDialog<T>({
             {rows.length > 0 && (
               <>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <Badge variant="success">{valid.length} ready</Badge>
-                  {invalid.length > 0 && <Badge variant="danger">{invalid.length} with problems (skipped)</Badge>}
+                  <Badge variant="success">{t("{{count}} ready", { count: valid.length })}</Badge>
+                  {invalid.length > 0 && <Badge variant="danger">{t("{{count}} with problems (skipped)", { count: invalid.length })}</Badge>}
                 </div>
                 {invalid.length > 0 && (
                   <ul className="max-h-40 space-y-1 overflow-auto rounded-lg border border-border p-2 text-sm">
                     {invalid.map((r) => (
                       <li key={r.line}>
-                        <span className="font-medium text-foreground">Row {r.line}:</span> <span className="text-destructive-strong">{r.parsed.ok ? "" : r.parsed.error}</span>
+                        <span className="font-medium text-foreground">{t("Row {{line}}:", { line: r.line })}</span> <span className="text-destructive-strong">{r.parsed.ok ? "" : r.parsed.error}</span>
                       </li>
                     ))}
                   </ul>
                 )}
                 {running && (
                   <p role="status" className="text-sm text-muted-foreground">
-                    Importing {progress} of {valid.length}…
+                    {t("Importing {{progress}} of {{total}}…", { progress, total: valid.length })}
                   </p>
                 )}
               </>
@@ -202,11 +211,15 @@ export default function BulkImportDialog<T>({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => close(false)} disabled={running}>
-            {result ? "Close" : "Cancel"}
+            {result ? t("Close") : t("Cancel")}
           </Button>
           {!result && (
             <Button type="button" loading={running} disabled={valid.length === 0} onClick={() => void run()}>
-              {valid.length > 0 ? `Import ${valid.length} ${valid.length === 1 ? "row" : "rows"}` : "Import"}
+              {valid.length > 0
+                ? valid.length === 1
+                  ? t("Import {{count}} row", { count: valid.length })
+                  : t("Import {{count}} rows", { count: valid.length })
+                : t("Import")}
             </Button>
           )}
         </DialogFooter>

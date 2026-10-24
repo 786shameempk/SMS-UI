@@ -1,6 +1,7 @@
 import type { AuthUser, LoginCredentials, ModulePermissions, UserRole } from "@/types/auth";
 import { authHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { getTenantSubdomain } from "@/lib/tenantHost";
+import i18n from "@/i18n";
 import { mapDevice, mapSession, type ApiDevice, type ApiUserSession } from "@/features/administration/users/api";
 import type { DeviceRecord, SessionRecord } from "./types";
 
@@ -139,7 +140,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
       permissions: mapModulePermissions(data.user.permissions),
     };
   } catch (err) {
-    throw new Error(extractApiErrorMessage(err, "Invalid email or password"));
+    throw new Error(extractApiErrorMessage(err, i18n.t("Invalid email or password", { ns: "authentication" })));
   }
 }
 
@@ -149,16 +150,16 @@ export async function requestPasswordReset(email: string): Promise<{ message: st
   } catch (err) {
     throw new Error(extractApiErrorMessage(err));
   }
-  return { message: "If that email is registered, a reset link has been sent." };
+  return { message: i18n.t("If that email is registered, a reset link has been sent.", { ns: "authentication" }) };
 }
 
 export async function resetPassword(email: string, token: string, newPassword: string): Promise<{ message: string }> {
   try {
     await authHttpClient.post("/api/auth/reset-password", { email, token, newPassword });
   } catch (err) {
-    throw new Error(extractApiErrorMessage(err, "This reset link is invalid or has expired"));
+    throw new Error(extractApiErrorMessage(err, i18n.t("This reset link is invalid or has expired", { ns: "authentication" })));
   }
-  return { message: "Your password has been reset" };
+  return { message: i18n.t("Your password has been reset", { ns: "authentication" }) };
 }
 
 /** The signed-in user's own password (the server identifies them from the token, so `_email` is unused). */
@@ -170,9 +171,9 @@ export async function changePassword(
   try {
     await authHttpClient.post("/api/auth/change-password", { currentPassword, newPassword });
   } catch (err) {
-    throw new Error(extractApiErrorMessage(err, "Current password is incorrect"));
+    throw new Error(extractApiErrorMessage(err, i18n.t("Current password is incorrect", { ns: "authentication" })));
   }
-  return { message: "Password updated successfully" };
+  return { message: i18n.t("Password updated successfully", { ns: "authentication" }) };
 }
 
 async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
@@ -189,7 +190,7 @@ export async function listSessions(): Promise<SessionRecord[]> {
 
 export async function revokeSession(sessionId: string): Promise<{ message: string }> {
   await unwrap(authHttpClient.delete<void>(`/api/account/sessions/${sessionId}`));
-  return { message: "Session signed out" };
+  return { message: i18n.t("Session signed out", { ns: "authentication" }) };
 }
 
 export async function listDevices(): Promise<DeviceRecord[]> {
@@ -198,5 +199,5 @@ export async function listDevices(): Promise<DeviceRecord[]> {
 
 export async function revokeDevice(deviceId: string): Promise<{ message: string }> {
   await unwrap(authHttpClient.delete<void>(`/api/account/devices/${deviceId}`));
-  return { message: "Device signed out" };
+  return { message: i18n.t("Device signed out", { ns: "authentication" }) };
 }

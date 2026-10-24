@@ -13,11 +13,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { cancelOnlineExam, deleteOnlineExam, duplicateOnlineExam, publishExamResults, scheduleOnlineExam } from "../api";
 import { EXAM_STATUS_LABEL, EXAM_STATUS_TONE } from "../constants";
 import type { OnlineExamListItem, OnlineExamStatus } from "../types";
+import { useTranslation } from "react-i18next";
 
 export function ExamStatusBadge({ status }: { status: OnlineExamStatus }) {
+  const { t } = useTranslation("online-exams");
   return (
     <Badge variant={EXAM_STATUS_TONE[status]} dot>
-      {EXAM_STATUS_LABEL[status]}
+      {t(EXAM_STATUS_LABEL[status])}
     </Badge>
   );
 }
@@ -43,6 +45,7 @@ export function allowedActions(exam: OnlineExamListItem) {
  * Returns menu items for a row and one element holding every dialog.
  */
 export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
+  const { t } = useTranslation("online-exams");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [pending, setPending] = useState<Pending>(null);
@@ -50,13 +53,13 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
   const [reason, setReason] = useState("");
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["online-exams"] });
-  const onError = (err: unknown) => toast.error(err instanceof Error ? err.message : "Something went wrong");
+  const onError = (err: unknown) => toast.error(err instanceof Error ? err.message : t("Something went wrong"));
 
   const schedule = useMutation({
     mutationFn: ({ id, startNow }: { id: string; startNow: boolean }) => scheduleOnlineExam(id, startNow),
     onSuccess: (exam, vars) => {
       refresh();
-      toast.success(vars.startNow ? `${exam.name} is open now` : `${exam.name} scheduled - students have been notified`);
+      toast.success(vars.startNow ? t("{{name}} is open now", { name: exam.name }) : t("{{name}} scheduled - students have been notified", { name: exam.name }));
       setPending(null);
     },
     onError,
@@ -65,7 +68,7 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
     mutationFn: publishExamResults,
     onSuccess: (exam) => {
       refresh();
-      toast.success(`Results published for ${exam.name}`);
+      toast.success(t("Results published for {{name}}", { name: exam.name }));
       setPending(null);
     },
     onError,
@@ -74,7 +77,7 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
     mutationFn: ({ id, reason }: { id: string; reason: string }) => cancelOnlineExam(id, reason),
     onSuccess: (exam) => {
       refresh();
-      toast.success(`${exam.name} cancelled`);
+      toast.success(t("{{name}} cancelled", { name: exam.name }));
       setCancelTarget(null);
     },
     onError,
@@ -83,7 +86,7 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
     mutationFn: deleteOnlineExam,
     onSuccess: () => {
       refresh();
-      toast.success("Exam deleted");
+      toast.success(t("Exam deleted"));
       setPending(null);
       onDeleted?.();
     },
@@ -93,7 +96,7 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
     mutationFn: duplicateOnlineExam,
     onSuccess: (exam) => {
       refresh();
-      toast.success("Copy created as a draft");
+      toast.success(t("Copy created as a draft"));
       navigate(`/online-exams/exams/${exam.id}/edit`);
     },
     onError,
@@ -106,56 +109,56 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
         {includeView && (
           <DropdownMenuItem onClick={() => navigate(`/online-exams/exams/${exam.id}`)}>
             <Eye className="h-3.5 w-3.5" />
-            View
+            {t("View")}
           </DropdownMenuItem>
         )}
         {can.edit && (
           <DropdownMenuItem onClick={() => navigate(`/online-exams/exams/${exam.id}/edit`)}>
             <Pencil className="h-3.5 w-3.5" />
-            Edit
+            {t("Edit")}
           </DropdownMenuItem>
         )}
         {can.schedule && (
           <>
             <DropdownMenuItem onClick={() => setPending({ kind: "schedule", exam })}>
               <CalendarCheck2 className="h-3.5 w-3.5" />
-              Schedule
+              {t("Schedule")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setPending({ kind: "startNow", exam })}>
               <Rocket className="h-3.5 w-3.5" />
-              Publish &amp; open now
+              {t("Publish & open now")}
             </DropdownMenuItem>
           </>
         )}
         {can.publish && (
           <DropdownMenuItem onClick={() => setPending({ kind: "publish", exam })}>
             <Send className="h-3.5 w-3.5" />
-            Publish results
+            {t("Publish results")}
           </DropdownMenuItem>
         )}
         {can.results && (
           <DropdownMenuItem onClick={() => navigate(`/online-exams/exams/${exam.id}/results`)}>
             <Award className="h-3.5 w-3.5" />
-            View results
+            {t("View results")}
           </DropdownMenuItem>
         )}
         {can.duplicate && (
           <DropdownMenuItem onClick={() => duplicate.mutate(exam.id)}>
             <Copy className="h-3.5 w-3.5" />
-            Duplicate
+            {t("Duplicate")}
           </DropdownMenuItem>
         )}
         {(can.cancel || can.delete) && <DropdownMenuSeparator />}
         {can.cancel && (
           <DropdownMenuItem onClick={() => { setReason(""); setCancelTarget(exam); }}>
             <XCircle className="h-3.5 w-3.5" />
-            Cancel exam
+            {t("Cancel exam")}
           </DropdownMenuItem>
         )}
         {can.delete && (
           <DropdownMenuItem variant="destructive" onClick={() => setPending({ kind: "delete", exam })}>
             <Trash2 className="h-3.5 w-3.5" />
-            Delete
+            {t("Delete")}
           </DropdownMenuItem>
         )}
       </>
@@ -164,24 +167,24 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
 
   const confirmCopy: Record<NonNullable<Pending>["kind"], { title: string; description: (e: OnlineExamListItem) => string; label: string }> = {
     schedule: {
-      title: "Schedule this exam?",
-      description: (e) => `${e.name} becomes visible to its ${e.assignedCount} student${e.assignedCount === 1 ? "" : "s"}, who are notified now and reminded before it opens. Questions can still be edited until someone starts.`,
-      label: "Schedule exam",
+      title: t("Schedule this exam?"),
+      description: (e) => (e.assignedCount === 1 ? t("{{name}} becomes visible to its {{n}} student, who is notified now and reminded before it opens. Questions can still be edited until someone starts.", { name: e.name, n: e.assignedCount }) : t("{{name}} becomes visible to its {{n}} students, who are notified now and reminded before it opens. Questions can still be edited until someone starts.", { name: e.name, n: e.assignedCount })),
+      label: t("Schedule exam"),
     },
     startNow: {
-      title: "Publish and open now?",
-      description: (e) => `${e.name} opens immediately for its ${e.assignedCount} student${e.assignedCount === 1 ? "" : "s"}, with ${e.durationMinutes} minutes each once they start.`,
-      label: "Open exam now",
+      title: t("Publish and open now?"),
+      description: (e) => (e.assignedCount === 1 ? t("{{name}} opens immediately for its {{n}} student, with {{minutes}} minutes each once they start.", { name: e.name, n: e.assignedCount, minutes: e.durationMinutes }) : t("{{name}} opens immediately for its {{n}} students, with {{minutes}} minutes each once they start.", { name: e.name, n: e.assignedCount, minutes: e.durationMinutes })),
+      label: t("Open exam now"),
     },
     publish: {
-      title: "Publish results?",
-      description: (e) => `Students will see their marks for ${e.name}${e.pendingEvaluationCount ? " - but some answers still need evaluation first" : ""}. They're notified straight away.`,
-      label: "Publish results",
+      title: t("Publish results?"),
+      description: (e) => (e.pendingEvaluationCount ? t("Students will see their marks for {{name}} - but some answers still need evaluation first. They're notified straight away.", { name: e.name }) : t("Students will see their marks for {{name}}. They're notified straight away.", { name: e.name })),
+      label: t("Publish results"),
     },
     delete: {
-      title: "Delete this exam?",
-      description: (e) => `${e.name} and its questions will be removed. This can't be undone.`,
-      label: "Delete exam",
+      title: t("Delete this exam?"),
+      description: (e) => t("{{name}} and its questions will be removed. This can't be undone.", { name: e.name }),
+      label: t("Delete exam"),
     },
   };
 
@@ -208,20 +211,20 @@ export function useExamActions({ onDeleted }: { onDeleted?: () => void } = {}) {
       <Dialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Cancel {cancelTarget?.name}?</DialogTitle>
+            <DialogTitle>{t("Cancel {{name}}?", { name: cancelTarget?.name })}</DialogTitle>
             <DialogDescription>
-              Students can no longer start it, anyone writing it now is stopped (their answers are kept), and scheduled students are told it's cancelled.
+              {t("Students can no longer start it, anyone writing it now is stopped (their answers are kept), and scheduled students are told it's cancelled.")}
             </DialogDescription>
           </DialogHeader>
-          <FormField label="Reason" htmlFor="cancel-reason" optional hint="Included in the notification to students.">
+          <FormField label={t("Reason")} htmlFor="cancel-reason" optional hint={t("Included in the notification to students.")}>
             <Textarea id="cancel-reason" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} />
           </FormField>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelTarget(null)}>
-              Keep exam
+              {t("Keep exam")}
             </Button>
             <Button variant="destructive" loading={cancel.isPending} onClick={() => cancelTarget && cancel.mutate({ id: cancelTarget.id, reason })}>
-              Cancel exam
+              {t("Cancel exam")}
             </Button>
           </DialogFooter>
         </DialogContent>

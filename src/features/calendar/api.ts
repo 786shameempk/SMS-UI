@@ -4,7 +4,11 @@ import { listHomework } from "@/features/homework/api";
 import { listLeaveRequests, listStaff } from "@/features/staff/api";
 import { listStudents } from "@/features/students/api";
 import { listCalendarEvents as listMeetingEvents } from "@/features/meetings/api";
+import i18n from "@/i18n";
 import type { AggregatedCalendarEvent } from "./types";
+
+/** Event titles built here are shown as-is on the calendar, so the wording around the record's own data is translated. */
+const tc = (key: string, values?: Record<string, unknown>) => i18n.t(key, { ns: "calendar", ...values });
 
 /**
  * Read-only aggregator — pulls from every module that already owns date-bearing records and
@@ -54,9 +58,13 @@ export async function listAggregatedCalendarEvents(): Promise<AggregatedCalendar
     events.push({
       id: `examschedule-${schedule.id}`,
       date: schedule.date,
-      title: `${exam?.name ?? "Exam"} — ${subject?.name ?? "Subject"}${schoolClass ? ` (${schoolClass.name})` : ""}`,
+      title: schoolClass
+        ? tc("{{exam}} — {{subject}} ({{class}})", { exam: exam?.name ?? tc("Exam"), subject: subject?.name ?? tc("Subject"), class: schoolClass.name })
+        : tc("{{exam}} — {{subject}}", { exam: exam?.name ?? tc("Exam"), subject: subject?.name ?? tc("Subject") }),
       category: "exam",
-      description: schedule.room ? `Room ${schedule.room}, ${schedule.startTime}–${schedule.endTime}` : `${schedule.startTime}–${schedule.endTime}`,
+      description: schedule.room
+        ? tc("Room {{room}}, {{start}}–{{end}}", { room: schedule.room, start: schedule.startTime, end: schedule.endTime })
+        : `${schedule.startTime}–${schedule.endTime}`,
     });
   }
 
@@ -66,7 +74,7 @@ export async function listAggregatedCalendarEvents(): Promise<AggregatedCalendar
     events.push({
       id: `homework-${hw.id}`,
       date: hw.dueDate,
-      title: `${hw.title} due${subject ? ` (${subject.name})` : ""}`,
+      title: subject ? tc("{{title}} due ({{subject}})", { title: hw.title, subject: subject.name }) : tc("{{title}} due", { title: hw.title }),
       category: "homework",
       description: schoolClass ? `${schoolClass.name} · ${hw.description}` : hw.description,
     });
@@ -79,9 +87,9 @@ export async function listAggregatedCalendarEvents(): Promise<AggregatedCalendar
       id: `leave-${leave.id}`,
       date: leave.fromDate,
       endDate: leave.toDate,
-      title: `${member ? `${member.firstName} ${member.lastName}` : "Staff"} on leave (${leave.leaveType})`,
+      title: tc("{{name}} on leave ({{type}})", { name: member ? `${member.firstName} ${member.lastName}` : tc("Staff"), type: leave.leaveType }),
       category: "leave",
-      description: leave.status === "pending" ? `Pending approval — ${leave.reason}` : leave.reason,
+      description: leave.status === "pending" ? tc("Pending approval — {{reason}}", { reason: leave.reason }) : leave.reason,
     });
   }
 
@@ -92,7 +100,7 @@ export async function listAggregatedCalendarEvents(): Promise<AggregatedCalendar
     events.push({
       id,
       date: `${currentYear}-${String(dob.getMonth() + 1).padStart(2, "0")}-${String(dob.getDate()).padStart(2, "0")}`,
-      title: `${name}'s birthday`,
+      title: tc("{{name}}'s birthday", { name }),
       category: "birthday",
     });
   };
@@ -107,12 +115,13 @@ export async function listAggregatedCalendarEvents(): Promise<AggregatedCalendar
   for (const m of meetings) {
     if (m.status === "Draft") continue;
     const time = new Date(m.startUtc).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    const title = `${time} ${m.title}${m.classLabel ? ` · ${m.classLabel}` : ""}`;
     events.push({
       id: `online-${m.id}`,
       date: m.startUtc,
-      title: `${time} ${m.title}${m.classLabel ? ` · ${m.classLabel}` : ""}${m.status === "Cancelled" ? " (cancelled)" : ""}`,
+      title: m.status === "Cancelled" ? tc("{{title}} (cancelled)", { title }) : title,
       category: "online",
-      description: `Online · ${m.hostName}`,
+      description: tc("Online · {{host}}", { host: m.hostName }),
     });
   }
 

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Pencil, Phone, Plus, Trash2, User } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -38,6 +39,7 @@ function GuardianFormDialog({
   onSubmit: (values: GuardianFormValues) => void;
   submitting: boolean;
 }) {
+  const { t } = useTranslation("students");
   const {
     register,
     handleSubmit,
@@ -63,18 +65,18 @@ function GuardianFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{guardian ? "Edit guardian" : "Add guardian"}</DialogTitle>
-          <DialogDescription>Guardian and parent contact details for this student.</DialogDescription>
+          <DialogTitle>{guardian ? t("Edit guardian") : t("Add guardian")}</DialogTitle>
+          <DialogDescription>{t("Guardian and parent contact details for this student.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="g-name" required>Name</Label>
+            <Label htmlFor="g-name" required>{t("Name")}</Label>
             <Input id="g-name" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="g-relation" required>Relation</Label>
+              <Label htmlFor="g-relation" required>{t("Relation")}</Label>
               <Controller
                 control={control}
                 name="relation"
@@ -86,7 +88,7 @@ function GuardianFormDialog({
                     <SelectContent>
                       {GUARDIAN_RELATIONS.map((r) => (
                         <SelectItem key={r} value={r} className="capitalize">
-                          {r}
+                          {t(r)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -95,27 +97,27 @@ function GuardianFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="g-phone" required>Phone</Label>
+              <Label htmlFor="g-phone" required>{t("Phone")}</Label>
               <Input id="g-phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
-              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.phone.message}</p>}
+              {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.phone.message ?? "")}</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="g-email" optional>Email</Label>
+              <Label htmlFor="g-email" optional>{t("Email")}</Label>
               <Input id="g-email" type="email" {...register("email")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="g-occupation" optional>Occupation</Label>
+              <Label htmlFor="g-occupation" optional>{t("Occupation")}</Label>
               <Input id="g-occupation" {...register("occupation")} />
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Save
+              {t("Save")}
             </Button>
           </DialogFooter>
         </form>
@@ -125,6 +127,7 @@ function GuardianFormDialog({
 }
 
 export default function GuardianEmergencyTab({ student }: { student: Student }) {
+  const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editingGuardian, setEditingGuardian] = useState<GuardianDetails | null>(null);
@@ -139,7 +142,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
     mutationFn: (guardians: GuardianDetails[]) => updateGuardians(student.id, guardians),
     onSuccess: () => {
       invalidate();
-      toast.success("Guardian details saved");
+      toast.success(t("Guardian details saved"));
       setFormOpen(false);
       setEditingGuardian(null);
       setDeleteTarget(null);
@@ -168,7 +171,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
     mutationFn: (contact: EmergencyContact) => updateEmergencyContact(student.id, contact),
     onSuccess: () => {
       invalidate();
-      toast.success("Emergency contact saved");
+      toast.success(t("Emergency contact saved"));
     },
   });
 
@@ -177,8 +180,8 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Guardians</CardTitle>
-            <CardDescription>Parents or guardians associated with this student.</CardDescription>
+            <CardTitle>{t("Guardians")}</CardTitle>
+            <CardDescription>{t("Parents or guardians associated with this student.")}</CardDescription>
           </div>
           <Button
             size="sm"
@@ -188,11 +191,11 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
             }}
           >
             <Plus className="w-3.5 h-3.5" />
-            Add guardian
+            {t("Add guardian")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-2.5">
-          {student.guardians.length === 0 && <p className="text-sm text-muted-foreground">No guardians on file.</p>}
+          {student.guardians.length === 0 && <p className="text-sm text-muted-foreground">{t("No guardians on file.")}</p>}
           {student.guardians.map((g) => (
             <div key={g.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -201,7 +204,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
-                    {g.name} <span className="text-muted-foreground font-normal capitalize">&middot; {g.relation}</span>
+                    {g.name} <span className="text-muted-foreground font-normal capitalize">&middot; {t(g.relation)}</span>
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
                     {g.phone}
@@ -234,9 +237,9 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-4 h-4 text-muted-foreground" />
-            Emergency contact
+            {t("Emergency contact")}
           </CardTitle>
-          <CardDescription>Who to reach first in a medical or safety emergency.</CardDescription>
+          <CardDescription>{t("Who to reach first in a medical or safety emergency.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -244,21 +247,21 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
             className="grid grid-cols-1 sm:grid-cols-3 gap-3"
           >
             <div className="space-y-1.5">
-              <Label htmlFor="e-name" required>Name</Label>
+              <Label htmlFor="e-name" required>{t("Name")}</Label>
               <Input id="e-name" {...registerEmergency("name")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="e-relation" required>Relation</Label>
+              <Label htmlFor="e-relation" required>{t("Relation")}</Label>
               <Input id="e-relation" {...registerEmergency("relation")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="e-phone" required>Phone</Label>
+              <Label htmlFor="e-phone" required>{t("Phone")}</Label>
               <Input id="e-phone" {...registerEmergency("phone")} />
             </div>
             <div className="sm:col-span-3">
               <Button type="submit" size="sm" disabled={!emergencyDirty || emergencyMutation.isPending}>
                 {emergencyMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Save emergency contact
+                {t("Save emergency contact")}
               </Button>
             </div>
           </form>
@@ -279,9 +282,9 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Remove guardian"
-        description={`Remove ${deleteTarget?.name} from this student's guardian list?`}
-        confirmLabel="Remove"
+        title={t("Remove guardian")}
+        description={t("Remove {{name}} from this student's guardian list?", { name: deleteTarget?.name })}
+        confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={guardiansMutation.isPending}
         onConfirm={handleDeleteGuardian}

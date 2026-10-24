@@ -1,7 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, LogOut, Trash2, UserPlus } from "lucide-react";
+import { AlertTriangle, LogOut, QrCode, ScanLine, Trash2, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,15 +14,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/utils/format";
 import { PURPOSE_CONFIG, VISITOR_STATUS_CONFIG } from "../constants";
 import { checkInVisitor, checkOutVisitor, deleteVisitorEntry, listVisitorEntries } from "../api";
-import type { VisitorEntryRow } from "../types";
+import type { VisitorEntry, VisitorEntryRow } from "../types";
+import PassQrDialog, { type PassQrSubject } from "./PassQrDialog";
+import ScanPassDialog from "./ScanPassDialog";
 import CheckInDialog from "./CheckInDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function VisitorLogTab() {
+  const { t } = useTranslation("visitors");
   const queryClient = useQueryClient();
   const { data: entries = [], isLoading, isError, refetch } = useQuery({ queryKey: ["visitors", "entries"], queryFn: () => listVisitorEntries() });
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [badge, setBadge] = useState<PassQrSubject | null>(null);
+  const showBadge = (entry: VisitorEntry) => {
+    if (entry.passToken) {
+      setBadge({ kind: "badge", visitorName: entry.visitorName, badgeNumber: entry.badgeNumber, token: entry.passToken, at: entry.checkInAt, expiresAt: entry.passExpiresAt });
+    }
+  };
   const [deleteTarget, setDeleteTarget] = useState<VisitorEntryRow | null>(null);
 
   const invalidate = () => {
@@ -34,26 +45,27 @@ export default function VisitorLogTab() {
     mutationFn: checkInVisitor,
     onSuccess: (entry) => {
       invalidate();
-      toast.success(`${entry.visitorName} checked in — badge ${entry.badgeNumber}`);
+      toast.success(t("{{name}} checked in — badge {{badge}}", { name: entry.visitorName, badge: entry.badgeNumber }));
       setFormOpen(false);
+      showBadge(entry);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not check in visitor"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not check in visitor")),
   });
 
   const checkOutMutation = useMutation({
     mutationFn: checkOutVisitor,
     onSuccess: (entry) => {
       invalidate();
-      toast.success(`${entry.visitorName} checked out`);
+      toast.success(t("{{name}} checked out", { name: entry.visitorName }));
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not check out visitor"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not check out visitor")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteVisitorEntry,
     onSuccess: () => {
       invalidate();
-      toast.success("Visitor entry deleted");
+      toast.success(t("Visitor entry deleted"));
       setDeleteTarget(null);
     },
   });
@@ -64,7 +76,7 @@ export default function VisitorLogTab() {
   const columns: ColumnDef<VisitorEntryRow, unknown>[] = [
     {
       id: "visitor",
-      header: "Visitor",
+      header: t("Visitor"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -79,28 +91,28 @@ export default function VisitorLogTab() {
     },
     {
       id: "purpose",
-      header: "Purpose",
-      cell: ({ row }) => <span className="text-sm text-foreground">{PURPOSE_CONFIG[row.original.purpose].label}</span>,
+      header: t("Purpose"),
+      cell: ({ row }) => <span className="text-sm text-foreground">{t(PURPOSE_CONFIG[row.original.purpose].label)}</span>,
     },
     {
       id: "host",
-      header: "Here to see",
+      header: t("Here to see"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.hostLabel}</span>,
     },
     {
       accessorKey: "checkInAt",
-      header: "Check-in",
+      header: t("Check-in"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{formatDateTime(row.original.checkInAt)}</span>,
     },
     {
       id: "checkOutAt",
-      header: "Check-out",
+      header: t("Check-out"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.checkOutAt ? formatDateTime(row.original.checkOutAt) : "—"}</span>,
     },
     {
       id: "status",
-      header: "Status",
-      cell: ({ row }) => <Badge variant={VISITOR_STATUS_CONFIG[row.original.status].variant}>{VISITOR_STATUS_CONFIG[row.original.status].label}</Badge>,
+      header: t("Status"),
+      cell: ({ row }) => <Badge variant={VISITOR_STATUS_CONFIG[row.original.status].variant}>{t(VISITOR_STATUS_CONFIG[row.original.status].label)}</Badge>,
     },
     {
       id: "actions",
@@ -109,15 +121,21 @@ export default function VisitorLogTab() {
         const e = row.original;
         return (
           <RowActions>
+            {e.status === "checked-in" && e.passToken && (
+              <DropdownMenuItem onClick={() => showBadge(e)}>
+                <QrCode className="w-3.5 h-3.5" />
+                {t("Badge QR code")}
+              </DropdownMenuItem>
+            )}
             {e.status === "checked-in" && (
               <DropdownMenuItem onClick={() => checkOutMutation.mutate(e.id)}>
                 <LogOut className="w-3.5 h-3.5" />
-                Check out
+                {t("Check out")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => setDeleteTarget(e)} variant="destructive">
               <Trash2 className="w-3.5 h-3.5" />
-              Delete
+              {t("Delete")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -130,13 +148,13 @@ export default function VisitorLogTab() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-5">
-            <p className="text-xs font-medium text-muted-foreground">Currently on premises</p>
+            <p className="text-xs font-medium text-muted-foreground">{t("Currently on premises")}</p>
             <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading ? "—" : currentlyOnPremises}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-xs font-medium text-muted-foreground">Total logged visits</p>
+            <p className="text-xs font-medium text-muted-foreground">{t("Total logged visits")}</p>
             <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading ? "—" : entries.length}</p>
           </CardContent>
         </Card>
@@ -145,21 +163,25 @@ export default function VisitorLogTab() {
       <DataTableToolbar>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t("Status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="checked-in">Checked in</SelectItem>
-            <SelectItem value="checked-out">Checked out</SelectItem>
+            <SelectItem value="all">{t("All statuses")}</SelectItem>
+            <SelectItem value="checked-in">{t("Checked in")}</SelectItem>
+            <SelectItem value="checked-out">{t("Checked out")}</SelectItem>
           </SelectContent>
         </Select>
+        <Button variant="outline" onClick={() => setScanOpen(true)}>
+          <ScanLine className="w-4 h-4" />
+          {t("Scan pass")}
+        </Button>
         <Button onClick={() => setFormOpen(true)}>
           <UserPlus className="w-4 h-4" />
-          Check in visitor
+          {t("Check in visitor")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No visitor entries match your filter." pageSize={10} />
+      <DataTable searchable columns={columns} data={filtered} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No visitor entries match your filter.")} pageSize={10} />
 
       <CheckInDialog
         open={formOpen}
@@ -170,12 +192,15 @@ export default function VisitorLogTab() {
         }}
       />
 
+      <ScanPassDialog open={scanOpen} onOpenChange={setScanOpen} />
+      <PassQrDialog subject={badge} onClose={() => setBadge(null)} />
+
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete visitor entry"
-        description={`Delete the log entry for ${deleteTarget?.visitorName}? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t("Delete visitor entry")}
+        description={t("Delete the log entry for {{name}}? This cannot be undone.", { name: deleteTarget?.visitorName })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

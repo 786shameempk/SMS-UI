@@ -95,7 +95,7 @@ export default function AzureResourcesPage() {
                       <TableHead>Region</TableHead>
                       <TableHead>SKU</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Month cost</TableHead>
+                      <TableHead className="text-end">Month cost</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -107,7 +107,7 @@ export default function AzureResourcesPage() {
                         <TableCell className="text-muted-foreground">{r.location ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{r.sku ?? "—"}</TableCell>
                         <TableCell><HealthBadge state={r.status} /></TableCell>
-                        <TableCell className="text-right tabular-nums">{money(r.monthCost, currency)}</TableCell>
+                        <TableCell className="text-end tabular-nums">{money(r.monthCost, currency)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

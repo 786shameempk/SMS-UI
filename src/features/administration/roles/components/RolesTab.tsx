@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
@@ -14,6 +15,7 @@ import RoleFormDialog from "./RoleFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
 
 export default function RolesTab() {
+  const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
   const { data: roles = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
   const { data: userCounts = {} } = useQuery({ queryKey: ["admin", "roles", "user-counts"], queryFn: getRoleUserCounts });
@@ -28,44 +30,44 @@ export default function RolesTab() {
     mutationFn: createRole,
     onSuccess: () => {
       invalidate();
-      toast.success("Role created");
+      toast.success(t("Role created"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not create role"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not create role")),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: RoleFormValues }) => updateRole(id, values),
     onSuccess: () => {
       invalidate();
-      toast.success("Role updated");
+      toast.success(t("Role updated"));
       setFormOpen(false);
       setEditingRole(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not update role"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update role")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteRole(id),
     onSuccess: () => {
       invalidate();
-      toast.success(`${deleteTarget?.name} deleted`);
+      toast.success(t("{{name}} deleted", { name: deleteTarget?.name }));
       setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete role"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not delete role")),
   });
 
   const columns: ColumnDef<Role, unknown>[] = [
     {
       accessorKey: "name",
-      header: "Role",
+      header: t("Role"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{row.original.name}</span>
           {row.original.isSystem && (
             <Badge variant="info" className="gap-1">
               <ShieldCheck className="w-3 h-3" />
-              Built-in
+              {t("Built-in")}
             </Badge>
           )}
         </div>
@@ -73,12 +75,12 @@ export default function RolesTab() {
     },
     {
       accessorKey: "description",
-      header: "Description",
+      header: t("Description"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground">{row.original.description}</span>,
     },
     {
       id: "users",
-      header: "Users",
+      header: t("Users"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground tabular-nums">{userCounts[row.original.id] ?? 0}</span>,
     },
     {
@@ -97,14 +99,14 @@ export default function RolesTab() {
               }}
             >
               <Pencil className="w-3.5 h-3.5" />
-              Edit role
+              {t("Edit role")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setDeleteTarget(role)}
               variant="destructive"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Delete role
+              {t("Delete role")}
             </DropdownMenuItem>
           </RowActions>
         );
@@ -115,7 +117,7 @@ export default function RolesTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">{roles.length} roles defined</p>
+        <p className="text-sm text-muted-foreground">{t("{{count}} roles defined", { count: roles.length })}</p>
         <Button
           onClick={() => {
             setEditingRole(null);
@@ -123,11 +125,11 @@ export default function RolesTab() {
           }}
         >
           <Plus className="w-4 h-4" />
-          Add role
+          {t("Add role")}
         </Button>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={roles} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage="No roles yet." />
+      <DataTable searchable columns={columns} data={roles} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No roles yet.")} />
 
       <RoleFormDialog
         open={formOpen}
@@ -146,9 +148,9 @@ export default function RolesTab() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
-        title="Delete role"
-        description={`This will permanently remove the "${deleteTarget?.name}" role and its permission assignments.`}
-        confirmLabel="Delete"
+        title={t("Delete role")}
+        description={t("This will permanently remove the \"{{name}}\" role and its permission assignments.", { name: deleteTarget?.name })}
+        confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}
         onConfirm={() => {

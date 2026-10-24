@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -49,6 +50,7 @@ export default function DiscountFormDialog({
   submitting: boolean;
   onSubmit: (values: FeeDiscountFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("fees");
   const isEdit = Boolean(discount);
   const {
     register,
@@ -87,19 +89,19 @@ export default function DiscountFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit discount" : "New discount / scholarship"}</DialogTitle>
-          <DialogDescription>Apply a percentage or flat reduction to all students, or a specific list.</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit discount") : t("New discount / scholarship")}</DialogTitle>
+          <DialogDescription>{t("Apply a percentage or flat reduction to all students, or a specific list.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit((values) => onSubmit({ ...values, description: values.description?.trim() || undefined }))} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="disc-name" required>Name</Label>
-            <Input id="disc-name" placeholder="e.g. Merit Scholarship" aria-invalid={errors.name ? true : undefined} {...register("name")} />
-            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
+            <Label htmlFor="disc-name" required>{t("Name")}</Label>
+            <Input id="disc-name" placeholder={t("e.g. Merit Scholarship")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
+            {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.name.message ?? "")}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="disc-type" required>Type</Label>
+              <Label htmlFor="disc-type" required>{t("Type")}</Label>
               <Controller
                 control={control}
                 name="type"
@@ -111,7 +113,7 @@ export default function DiscountFormDialog({
                     <SelectContent>
                       {DISCOUNT_TYPE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                          {t(o.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -120,14 +122,14 @@ export default function DiscountFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="disc-value" required>Value</Label>
+              <Label htmlFor="disc-value" required>{t("Value")}</Label>
               <Input id="disc-value" type="number" step="1" min="0" aria-invalid={errors.value ? true : undefined} {...register("value")} />
-              {errors.value && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.value.message}</p>}
+              {errors.value && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.value.message ?? "")}</p>}
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="disc-appliesTo" required>Applies to</Label>
+            <Label htmlFor="disc-appliesTo" required>{t("Applies to")}</Label>
             <Controller
               control={control}
               name="appliesTo"
@@ -137,8 +139,8 @@ export default function DiscountFormDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All students</SelectItem>
-                    <SelectItem value="specific">Specific students</SelectItem>
+                    <SelectItem value="all">{t("All students")}</SelectItem>
+                    <SelectItem value="specific">{t("Specific students")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -147,7 +149,7 @@ export default function DiscountFormDialog({
 
           {appliesTo === "specific" && (
             <div className="space-y-1.5">
-              <Label>Students</Label>
+              <Label>{t("Students")}</Label>
               <div className="max-h-40 overflow-y-auto rounded-lg border border-border p-2 space-y-1.5">
                 {students.map((s) => (
                   <label key={s.id} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
@@ -160,16 +162,16 @@ export default function DiscountFormDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="disc-description" optional>Description</Label>
+            <Label htmlFor="disc-description" optional>{t("Description")}</Label>
             <Textarea id="disc-description" rows={2} {...register("description")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? "Save changes" : "Create discount"}
+              {isEdit ? t("Save changes") : t("Create discount")}
             </Button>
           </DialogFooter>
         </form>

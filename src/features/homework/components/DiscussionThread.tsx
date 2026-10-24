@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/utils/format";
 import { addDiscussionComment, listDiscussionComments } from "../api";
 
+import { useTranslation } from "react-i18next";
 export default function DiscussionThread({
   resourceId,
   authorName,
@@ -16,6 +17,7 @@ export default function DiscussionThread({
   authorName: string;
   authorRole: string;
 }) {
+  const { t } = useTranslation("homework");
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
 
@@ -30,14 +32,14 @@ export default function DiscussionThread({
       queryClient.invalidateQueries({ queryKey: ["homework", "discussion", resourceId] });
       setText("");
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not post comment"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not post comment")),
   });
 
   return (
     <div className="space-y-3">
       <div className="space-y-2.5 max-h-72 overflow-y-auto">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading discussion…</p>}
-        {!isLoading && comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet — start the discussion.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{t("Loading discussion…")}</p>}
+        {!isLoading && comments.length === 0 && <p className="text-sm text-muted-foreground">{t("No comments yet — start the discussion.")}</p>}
         {comments.map((c) => (
           <div key={c.id} className="rounded-lg border border-border p-2.5">
             <div className="flex items-center justify-between gap-2">
@@ -53,7 +55,7 @@ export default function DiscussionThread({
       <div className="flex items-end gap-2">
         <Textarea
           rows={2}
-          placeholder="Add a comment…"
+          placeholder={t("Add a comment…")}
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="flex-1"

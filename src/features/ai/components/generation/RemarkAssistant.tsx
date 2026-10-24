@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Check, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
@@ -20,6 +21,7 @@ const TONES: { value: RemarkTone; label: string }[] = [
  * into the remarks box when the teacher chooses "Use this remark", and is saved only when they press Save.
  */
 export default function RemarkAssistant({ examId, studentId, onUse }: { examId: string; studentId: string; onUse: (remark: string) => void }) {
+  const { t } = useTranslation("ai");
   const [open, setOpen] = useState(false);
   const [observations, setObservations] = useState("");
   const [tone, setTone] = useState<RemarkTone>("Encouraging");
@@ -33,39 +35,39 @@ export default function RemarkAssistant({ examId, studentId, onUse }: { examId: 
     return (
       <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
         <Sparkles className="h-3.5 w-3.5" />
-        Draft with AI
+        {t("Draft with AI")}
       </Button>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-border bg-secondary/30 p-3" aria-label="AI remark assistant" role="group">
+    <div className="space-y-3 rounded-lg border border-border bg-secondary/30 p-3" aria-label={t("AI remark assistant")} role="group">
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_9rem_9rem]">
-        <FormField label="Your observations" htmlFor="remark-observations" optional hint="Class work and behaviour you have seen. The AI also reads this exam's marks.">
-          <Textarea id="remark-observations" rows={2} maxLength={1000} value={observations} onChange={(e) => setObservations(e.target.value)} placeholder="e.g. Participates well, needs to revise grammar" />
+        <FormField label={t("Your observations")} htmlFor="remark-observations" optional hint={t("Class work and behaviour you have seen. The AI also reads this exam's marks.")}>
+          <Textarea id="remark-observations" rows={2} maxLength={1000} value={observations} onChange={(e) => setObservations(e.target.value)} placeholder={t("e.g. Participates well, needs to revise grammar")} />
         </FormField>
-        <FormField label="Tone" htmlFor="remark-tone">
+        <FormField label={t("Tone")} htmlFor="remark-tone">
           <Select value={tone} onValueChange={(v) => setTone(v as RemarkTone)}>
             <SelectTrigger id="remark-tone">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {TONES.map((t) => (
-                <SelectItem key={t.value} value={t.value}>
-                  {t.label}
+              {TONES.map((tn) => (
+                <SelectItem key={tn.value} value={tn.value}>
+                  {t(tn.label)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </FormField>
-        <FormField label="Length" htmlFor="remark-length">
+        <FormField label={t("Length")} htmlFor="remark-length">
           <Select value={length} onValueChange={(v) => setLength(v as RemarkLength)}>
             <SelectTrigger id="remark-length">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Short">Short</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Short">{t("Short")}</SelectItem>
+              <SelectItem value="Medium">{t("Medium")}</SelectItem>
             </SelectContent>
           </Select>
         </FormField>
@@ -74,11 +76,11 @@ export default function RemarkAssistant({ examId, studentId, onUse }: { examId: 
       <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" onClick={run} disabled={generate.isPending}>
           {generate.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : draft ? <RefreshCw className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-          {draft ? "Regenerate" : "Generate draft"}
+          {draft ? t("Regenerate") : t("Generate draft")}
         </Button>
         <Button type="button" size="sm" variant="ghost" onClick={() => { setOpen(false); setDraft(null); generate.reset(); }}>
           <X className="h-3.5 w-3.5" />
-          Close
+          {t("Close")}
         </Button>
       </div>
 
@@ -88,8 +90,8 @@ export default function RemarkAssistant({ examId, studentId, onUse }: { examId: 
         <div className="space-y-2 rounded-md border border-border bg-card p-3">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="info" dot>
-              <Sparkles className="mr-1 h-3 w-3" />
-              AI draft
+              <Sparkles className="me-1 h-3 w-3" />
+              {t("AI draft")}
             </Badge>
             {draft.basedOn.map((b) => (
               <Badge key={b} variant="neutral">
@@ -97,14 +99,14 @@ export default function RemarkAssistant({ examId, studentId, onUse }: { examId: 
               </Badge>
             ))}
           </div>
-          <p className="whitespace-pre-wrap text-sm" aria-label="Draft remark">
+          <p className="whitespace-pre-wrap text-sm" aria-label={t("Draft remark")}>
             {draft.remark}
           </p>
           <Button type="button" size="sm" variant="outline" onClick={() => { onUse(draft.remark); setOpen(false); setDraft(null); }}>
             <Check className="h-3.5 w-3.5" />
-            Use this remark
+            {t("Use this remark")}
           </Button>
-          <p className="text-xs text-muted-foreground">Check it before saving: it goes into the remarks box for you to edit.</p>
+          <p className="text-xs text-muted-foreground">{t("Check it before saving: it goes into the remarks box for you to edit.")}</p>
         </div>
       )}
     </div>

@@ -14,9 +14,11 @@ import { ENROLLMENT_STATUS_LABEL } from "../constants";
 import { SelectField, formatDate, options, useApiMutation, useExtracurricularAccess } from "../shared";
 import type { Enrollment, EnrollmentStatus } from "../types";
 
+import { useTranslation } from "react-i18next";
 const PAGE_SIZE = 25;
 
 export default function EnrollmentsPage() {
+  const { t } = useTranslation("extracurricular");
   const access = useExtracurricularAccess();
   const [status, setStatus] = useState<EnrollmentStatus | undefined>(access.isFamily ? undefined : "Requested");
   const [activityId, setActivityId] = useState<string | undefined>();
@@ -57,7 +59,7 @@ export default function EnrollmentsPage() {
       <div className="flex flex-wrap items-end gap-3">
         {!access.isFamily && (
           <div className="min-w-56 flex-1">
-            <SearchInput value={search} onValueChange={(v) => { setSearch(v); setPage(0); }} placeholder="Search by student" aria-label="Search by student" />
+            <SearchInput value={search} onValueChange={(v) => { setSearch(v); setPage(0); }} placeholder={t("Search by student")} aria-label={t("Search by student")} />
           </div>
         )}
         <div className="w-44">
@@ -69,12 +71,12 @@ export default function EnrollmentsPage() {
           </div>
         )}
         {access.canApprove && selected.size > 0 && (
-          <div className="ml-auto flex gap-2">
+          <div className="ms-auto flex gap-2">
             <Button onClick={() => decide.mutate({ ids: [...selected], approve: true })} loading={decide.isPending}>
-              <Check className="h-4 w-4" /> Approve {selected.size}
+              <Check className="h-4 w-4" /> {t("Approve")} {selected.size}
             </Button>
             <Button variant="outline" onClick={() => setRejecting([...selected])}>
-              <X className="h-4 w-4" /> Reject {selected.size}
+              <X className="h-4 w-4" /> {t("Reject")} {selected.size}
             </Button>
           </div>
         )}
@@ -83,30 +85,30 @@ export default function EnrollmentsPage() {
       {enrollments.isError && <ErrorState onRetry={() => enrollments.refetch()} retrying={enrollments.isFetching} />}
       {enrollments.isLoading && <Skeleton className="h-48 w-full" />}
       {data && rows.length === 0 && (
-        <EmptyState title="No enrollments here" description={access.isFamily ? "When you ask to join an activity it shows up here." : "Nothing matches these filters."} />
+        <EmptyState title={t("No enrollments here")} description={access.isFamily ? t("When you ask to join an activity it shows up here.") : t("Nothing matches these filters.")} />
       )}
 
       {rows.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-sm">
-            <thead className="border-b border-border bg-secondary/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="border-b border-border bg-secondary/50 text-start text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 {access.canApprove && (
                   <th className="w-10 px-3 py-2">
                     <Checkbox
-                      aria-label="Select all open requests"
+                      aria-label={t("Select all open requests")}
                       checked={allSelected}
                       onCheckedChange={(v) => setSelected(v === true ? new Set(pending.map((r) => r.id)) : new Set())}
                       disabled={pending.length === 0}
                     />
                   </th>
                 )}
-                <th className="px-3 py-2">Student</th>
-                <th className="px-3 py-2">Activity</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Requested</th>
-                <th className="px-3 py-2">By</th>
-                <th className="px-3 py-2 text-right">Actions</th>
+                <th className="px-3 py-2">{t("Student")}</th>
+                <th className="px-3 py-2">{t("Activity")}</th>
+                <th className="px-3 py-2">{t("Status")}</th>
+                <th className="px-3 py-2">{t("Requested")}</th>
+                <th className="px-3 py-2">{t("By")}</th>
+                <th className="px-3 py-2 text-end">{t("Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -116,7 +118,7 @@ export default function EnrollmentsPage() {
                   <tr key={e.id}>
                     {access.canApprove && (
                       <td className="px-3 py-2">
-                        <Checkbox aria-label={`Select ${e.studentName}`} checked={selected.has(e.id)} onCheckedChange={() => toggle(e.id)} disabled={!open} />
+                        <Checkbox aria-label={t("Select {{studentName}}", { studentName: e.studentName })} checked={selected.has(e.id)} onCheckedChange={() => toggle(e.id)} disabled={!open} />
                       </td>
                     )}
                     <td className="px-3 py-2">
@@ -134,21 +136,21 @@ export default function EnrollmentsPage() {
                         {access.canApprove && open && (
                           <>
                             <Button size="sm" variant="outline" onClick={() => decide.mutate({ ids: [e.id], approve: true })}>
-                              Approve
+                              {t("Approve")}
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => setRejecting([e.id])}>
-                              Reject
+                              {t("Reject")}
                             </Button>
                           </>
                         )}
                         {access.canManage && e.status === "Approved" && (
                           <Button size="sm" variant="ghost" onClick={() => complete.mutate(e.id)}>
-                            Mark completed
+                            {t("Mark completed")}
                           </Button>
                         )}
                         {(e.status === "Approved" || open) && (
                           <Button size="sm" variant="ghost" onClick={() => setWithdrawing(e)}>
-                            Withdraw
+                            {t("Withdraw")}
                           </Button>
                         )}
                       </div>
@@ -176,9 +178,9 @@ export default function EnrollmentsPage() {
       <ConfirmDialog
         open={Boolean(withdrawing)}
         onOpenChange={(v) => !v && setWithdrawing(null)}
-        title="Withdraw from activity"
-        description={`Withdraw ${withdrawing?.studentName} from ${withdrawing?.activityName}? Their place goes to the next student on the waiting list.`}
-        confirmLabel="Withdraw"
+        title={t("Withdraw from activity")}
+        description={t("Withdraw {{studentName}} from {{activityName}}? Their place goes to the next student on the waiting list.", { studentName: withdrawing?.studentName, activityName: withdrawing?.activityName })}
+        confirmLabel={t("Withdraw")}
         confirmVariant="destructive"
         submitting={withdraw.isPending}
         onConfirm={() => {
@@ -188,9 +190,9 @@ export default function EnrollmentsPage() {
       <ConfirmDialog
         open={Boolean(rejecting)}
         onOpenChange={(v) => !v && setRejecting(null)}
-        title="Reject requests"
-        description={`Reject ${rejecting?.length ?? 0} ${rejecting?.length === 1 ? "request" : "requests"}? They stay on record as rejected.`}
-        confirmLabel="Reject"
+        title={t("Reject requests")}
+        description={t("Reject {{v1}} {{v2}}? They stay on record as rejected.", { v1: rejecting?.length ?? 0, v2: rejecting?.length === 1 ? "request" : "requests" })}
+        confirmLabel={t("Reject")}
         confirmVariant="destructive"
         submitting={decide.isPending}
         onConfirm={() => {

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,6 +45,7 @@ export default function AllocateStudentDialog({
   submitting: boolean;
   onSubmit: (values: AllocateStudentFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation("hostel");
   const {
     register,
     handleSubmit,
@@ -74,8 +76,8 @@ export default function AllocateStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Allocate student to hostel</DialogTitle>
-          <DialogDescription>Pick a student, then a hostel and a room with a free bed.</DialogDescription>
+          <DialogTitle>{t("Allocate student to hostel")}</DialogTitle>
+          <DialogDescription>{t("Pick a student, then a hostel and a room with a free bed.")}</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={handleSubmit((values) =>
@@ -84,14 +86,14 @@ export default function AllocateStudentDialog({
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="hal-studentId" required>Student</Label>
+            <Label htmlFor="hal-studentId" required>{t("Student")}</Label>
             <Controller
               control={control}
               name="studentId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="hal-studentId">
-                    <SelectValue placeholder="Select a student" />
+                    <SelectValue placeholder={t("Select a student")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableStudents.map((s) => (
@@ -103,18 +105,18 @@ export default function AllocateStudentDialog({
                 </Select>
               )}
             />
-            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.studentId.message}</p>}
+            {errors.studentId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hal-hostelId" required>Hostel</Label>
+            <Label htmlFor="hal-hostelId" required>{t("Hostel")}</Label>
             <Controller
               control={control}
               name="hostelId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="hal-hostelId">
-                    <SelectValue placeholder="Select a hostel" />
+                    <SelectValue placeholder={t("Select a hostel")} />
                   </SelectTrigger>
                   <SelectContent>
                     {activeHostels.map((h) => (
@@ -126,18 +128,18 @@ export default function AllocateStudentDialog({
                 </Select>
               )}
             />
-            {errors.hostelId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.hostelId.message}</p>}
+            {errors.hostelId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.hostelId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hal-roomId" required>Room</Label>
+            <Label htmlFor="hal-roomId" required>{t("Room")}</Label>
             <Controller
               control={control}
               name="roomId"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange} disabled={!hostelId}>
                   <SelectTrigger id="hal-roomId">
-                    <SelectValue placeholder={hostelId ? "Select a room" : "Select a hostel first"} />
+                    <SelectValue placeholder={hostelId ? t("Select a room") : t("Select a hostel first")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableRooms.map((r) => (
@@ -150,22 +152,22 @@ export default function AllocateStudentDialog({
               )}
             />
             {hostelId && availableRooms.length === 0 && (
-              <p className="text-xs text-muted-foreground">No rooms with a free bed in this hostel.</p>
+              <p className="text-xs text-muted-foreground">{t("No rooms with a free bed in this hostel.")}</p>
             )}
-            {errors.roomId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.roomId.message}</p>}
+            {errors.roomId && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.roomId.message ?? "")}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="hal-monthlyFee" optional>Monthly fee</Label>
+            <Label htmlFor="hal-monthlyFee" optional>{t("Monthly fee")}</Label>
             <Input id="hal-monthlyFee" type="number" min="0" step="1" placeholder="e.g. 4500" {...register("monthlyFee")} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              Allocate
+              {t("Allocate")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, DoorOpen, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,7 @@ import { PURPOSE_CONFIG } from "../constants";
 import { getVisitorReportsSummary } from "../api";
 
 export default function ReportsTab() {
+  const { t } = useTranslation("visitors");
   const { data: summary, isLoading } = useQuery({ queryKey: ["visitors", "reports"], queryFn: getVisitorReportsSummary });
 
   return (
@@ -13,7 +15,7 @@ export default function ReportsTab() {
         <Card>
           <CardContent className="p-5 flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Currently on premises</p>
+              <p className="text-xs font-medium text-muted-foreground">{t("Currently on premises")}</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.currentlyOnPremises}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-accent text-primary-text flex items-center justify-center shrink-0">
@@ -24,7 +26,7 @@ export default function ReportsTab() {
         <Card>
           <CardContent className="p-5 flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Visits today</p>
+              <p className="text-xs font-medium text-muted-foreground">{t("Visits today")}</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.visitsToday}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-info-soft text-info-strong flex items-center justify-center shrink-0">
@@ -35,7 +37,7 @@ export default function ReportsTab() {
         <Card>
           <CardContent className="p-5 flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Visits (30 days)</p>
+              <p className="text-xs font-medium text-muted-foreground">{t("Visits (30 days)")}</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">{isLoading || !summary ? "—" : summary.visitsLast30Days}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-warning-soft text-warning-strong flex items-center justify-center shrink-0">
@@ -46,7 +48,7 @@ export default function ReportsTab() {
         <Card>
           <CardContent className="p-5 flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Avg. visit duration</p>
+              <p className="text-xs font-medium text-muted-foreground">{t("Avg. visit duration")}</p>
               <p className="text-2xl font-bold text-foreground mt-1.5 tabular-nums">
                 {isLoading || !summary ? "—" : summary.avgVisitDurationMinutes === null ? "—" : `${summary.avgVisitDurationMinutes}m`}
               </p>
@@ -61,14 +63,14 @@ export default function ReportsTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card>
           <CardHeader>
-            <CardTitle>Visits by purpose</CardTitle>
-            <CardDescription>All-time breakdown of why visitors came in.</CardDescription>
+            <CardTitle>{t("Visits by purpose")}</CardTitle>
+            <CardDescription>{t("All-time breakdown of why visitors came in.")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {!isLoading && summary?.visitsByPurpose.length === 0 && <p className="text-sm text-muted-foreground">No visits logged yet.</p>}
+            {!isLoading && summary?.visitsByPurpose.length === 0 && <p className="text-sm text-muted-foreground">{t("No visits logged yet.")}</p>}
             {summary?.visitsByPurpose.map((row) => (
               <div key={row.purpose} className="flex items-center justify-between text-sm">
-                <span className="text-foreground">{PURPOSE_CONFIG[row.purpose].label}</span>
+                <span className="text-foreground">{t(PURPOSE_CONFIG[row.purpose].label)}</span>
                 <span className="tabular-nums text-foreground font-medium">{row.count}</span>
               </div>
             ))}
@@ -77,15 +79,15 @@ export default function ReportsTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Most-visited hosts</CardTitle>
-            <CardDescription>Staff, students, or places visitors come to see most often.</CardDescription>
+            <CardTitle>{t("Most-visited hosts")}</CardTitle>
+            <CardDescription>{t("Staff, students, or places visitors come to see most often.")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {!isLoading && summary?.topHosts.length === 0 && <p className="text-sm text-muted-foreground">No visits logged yet.</p>}
+            {!isLoading && summary?.topHosts.length === 0 && <p className="text-sm text-muted-foreground">{t("No visits logged yet.")}</p>}
             {summary?.topHosts.map((row) => (
               <div key={row.label} className="flex items-center justify-between text-sm">
                 <span className="text-foreground truncate">{row.label}</span>
-                <span className="tabular-nums text-foreground font-medium shrink-0 ml-2">{row.count}</span>
+                <span className="tabular-nums text-foreground font-medium shrink-0 ms-2">{row.count}</span>
               </div>
             ))}
           </CardContent>

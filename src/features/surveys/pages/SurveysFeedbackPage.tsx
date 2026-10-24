@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SurveysTab from "../components/SurveysTab";
 import RecordResponseTab from "../components/RecordResponseTab";
@@ -5,18 +6,19 @@ import ReportsTab from "../components/ReportsTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 export default function SurveysFeedbackPage() {
+  const { t } = useTranslation("surveys");
   return (
     <PageContainer>
       <PageHeader
-        title="Surveys & Feedback"
-        description="Build surveys, collect responses, and review results."
+        title={t("Surveys & Feedback")}
+        description={t("Build surveys, collect responses, and review results.")}
       />
 
       <Tabs defaultValue="surveys">
         <TabsList variant="line">
-          <TabsTrigger value="surveys">Surveys</TabsTrigger>
-          <TabsTrigger value="respond">Record a Response</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="surveys">{t("Surveys")}</TabsTrigger>
+          <TabsTrigger value="respond">{t("Record a Response")}</TabsTrigger>
+          <TabsTrigger value="reports">{t("Reports")}</TabsTrigger>
         </TabsList>
         <TabsContent value="surveys">
           <SurveysTab />
