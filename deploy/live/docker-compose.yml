@@ -233,7 +233,7 @@ services:
       Push__Subject: mailto:${ACME_EMAIL}
       # Communication Center delivery: contact details come from AcademicService (service key above); providers call back on PublicBaseUrl.
       Services__AcademicServiceUrl: http://academicservice:8080/
-      Messaging__PublicBaseUrl: https://${APP_DOMAIN}
+      Messaging__PublicBaseUrl: ${MESSAGING_PUBLIC_BASE_URL:-https://${APP_DOMAIN}}
       # Provider secrets are encrypted with Data Protection keys kept on this volume. Losing it means re-entering provider secrets.
       DataProtection__KeysPath: /app/App_Data/keys
       # Optional platform-wide email default for schools that have not connected their own provider (empty = none).

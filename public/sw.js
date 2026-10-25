@@ -13,7 +13,7 @@ const SHELL_CACHE = "shell-v1";
 const ASSET_CACHE = "assets-v1";
 const MAX_ASSETS = 150;
 const KEEP = [SHELL_CACHE, ASSET_CACHE];
-const STANDALONE_PAGE = /^\/(founder|product)\/?$|\.[a-z0-9]+$/i;
+const STANDALONE_PAGE = /^\/(founder|product|privacy)\/?$|\.[a-z0-9]+$/i;
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -71,7 +71,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (!isShellRequest(request, url)) return;
 
-  // Every page of the single-page app is the same document. The standalone static pages (/founder, /product, *.html)
+  // Every page of the single-page app is the same document. The standalone static pages (/founder, /product, /privacy, *.html)
   // are not, so they are left to the network.
   if (request.mode === "navigate") {
     if (STANDALONE_PAGE.test(url.pathname)) return;

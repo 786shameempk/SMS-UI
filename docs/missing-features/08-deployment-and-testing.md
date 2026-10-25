@@ -25,6 +25,11 @@ Already present in `.env.docker.example`, `deploy/live/.env.example` and `deploy
 | `finance-keys` → `/app/App_Data/keys` | FinanceService | **New.** Data Protection keys that decrypt every school's saved gateway keys. Lose it and each school must re-enter its keys. Back it up with the database |
 | `messaging-keys` → `/app/App_Data/keys` | EngagementService | Same, for messaging provider secrets (feature 2) |
 
+The same variables and volumes are described in `deploy/live/README.md` and `deploy/azure/README.md` (section 6b) with the backup note for the key volumes.
+
+## Mobile apps
+Release builds of the Student, Teacher and Staff apps need `EXPO_PUBLIC_API_URL=https://<APP_DOMAIN>` (kept in each app's `.env.production` in SMS Mobile). Build steps, signing and checks: SMS Mobile `docs/release/ANDROID_BUILD.md`.
+
 ## Routing and proxies
 * Caddy already sends `/services/*` to the gateway and the gateway routes `/services/finance` and `/services/campus`; no Caddy change is needed. The new public paths are `/services/campus/api/public/certificates/<token>` and the web app's `/verify/certificate/<token>` (hidden from search by `robots.txt`).
 * **Gateway change (ApiGateway `Program.cs`):** the gateway now believes `X-Forwarded-For` from private networks (Caddy) and passes the client's address on, so CampusService rate-limits and audits the person rather than the proxy. Without this every visitor would share one rate-limit bucket. Add your proxy's network to `TrustedProxyNetworks` if it is not in a private range.

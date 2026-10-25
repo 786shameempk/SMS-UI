@@ -46,3 +46,28 @@ describe("SEO files", () => {
     expect(html).toContain(`<meta property="og:url" content="${SITE}/" />`);
   });
 });
+
+describe("Privacy policy page", () => {
+  const page = read("public/privacy.html");
+
+  it("is a standalone static page with the canonical URL and no scripts", () => {
+    expect(page).toContain(`<link rel="canonical" href="${SITE}/privacy" />`);
+    expect(page).toContain("<title>Privacy Policy");
+    expect(page).not.toMatch(/<script/i);
+  });
+
+  it("covers the required topics, with a way to get in touch", () => {
+    for (const heading of ["What we collect and why", "Children's data", "How long data is kept", "Your choices and rights", "Contact"]) {
+      expect(page).toContain(heading);
+    }
+    expect(page).toContain("mailto:");
+  });
+
+  it("is served at /privacy by nginx, the dev server, both Caddyfiles and the service worker, and listed in the sitemap", () => {
+    expect(read("nginx.conf")).toMatch(/location ~ \^\/privacy\/\?\$ \{\s*try_files \/privacy\.html/);
+    expect(read("vite.config.ts")).toContain('privacy: "/privacy.html"');
+    expect(read("public/sw.js")).toMatch(/\(founder\|product\|privacy\)/);
+    for (const caddyfile of ["deploy/live/Caddyfile", "deploy/azure/Caddyfile"]) expect(read(caddyfile)).toContain("/privacy /privacy/");
+    expect(read("public/sitemap.xml")).toContain(`${SITE}/privacy`);
+  });
+});
