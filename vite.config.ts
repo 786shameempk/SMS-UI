@@ -8,9 +8,10 @@ import helpCatalog from "./scripts/help/vite-plugin.mjs";
 const STATIC_PAGES: Record<string, string> = {
   founder: "/founder-card.html",
   product: "/schoolsphere.html",
+  privacy: "/privacy.html",
 };
 
-/** Dev-server twin of nginx.conf's /founder and /product rules. */
+/** Dev-server twin of nginx.conf's /founder, /product and /privacy rules. */
 function staticPages(): Plugin {
   return {
     name: "static-pages",

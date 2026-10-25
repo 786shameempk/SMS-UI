@@ -50,7 +50,7 @@ http://127.0.0.1:9123 {
 	import security_headers
 
 	@marketing {
-		path / /product /product/ /founder /founder/ /assets/* /favicon.svg /icons.svg /manifest.webmanifest /robots.txt /sitemap.xml /sw.js /config.js /google*.html
+		path / /product /product/ /founder /founder/ /privacy /privacy/ /assets/* /favicon.svg /icons.svg /manifest.webmanifest /robots.txt /sitemap.xml /sw.js /config.js /google*.html
 	}
 	handle @marketing {
 		reverse_proxy ui:80

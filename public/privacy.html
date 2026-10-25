@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#ECA427" />
+<meta name="description" content="How School Sphere and the School Sphere Student, Teacher and Staff apps handle personal data: what is collected, why, who sees it, how long it is kept and how to ask for a correction or deletion." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="canonical" href="https://sms-schoolsphere.com/privacy" />
+<title>Privacy Policy · School Sphere</title>
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --ink: #1D2028;
+    --muted: #5D6170;
+    --line: #E4E1D8;
+    --brand: #D68F14;
+    --brand-deep: #A06212;
+    --brand-soft: #FBEFD7;
+    --display: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --body: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15161A; --surface: #1E2026; --ink: #EDEBE6; --muted: #A3A5AE; --line: #30323A;
+      --brand: #ECA427; --brand-deep: #F3BC5A; --brand-soft: #3A2E17;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body {
+    margin: 0;
+    background: var(--bg); color: var(--ink);
+    font: 400 1rem/1.7 var(--body);
+    padding: 24px 16px 64px;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  header.top { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .logo {
+    width: 40px; height: 40px; border-radius: 10px; flex: none;
+    background: linear-gradient(135deg, #ECA427, #A06212);
+    display: grid; place-items: center;
+  }
+  .logo svg { width: 24px; height: 24px; }
+  .brandname { font: 700 1.05rem/1.2 var(--display); }
+  .brandname small { display: block; font: 400 0.8rem/1.3 var(--body); color: var(--muted); }
+  h1 { font: 800 clamp(1.8rem, 5vw, 2.4rem)/1.15 var(--display); letter-spacing: -0.02em; margin: 0 0 8px; text-wrap: balance; }
+  h2 { font: 700 1.3rem/1.3 var(--display); margin: 40px 0 10px; text-wrap: balance; }
+  h3 { font: 600 1.02rem/1.4 var(--display); margin: 22px 0 6px; }
+  p { margin: 0 0 12px; }
+  ul { margin: 0 0 12px; padding-left: 1.3em; }
+  li { margin-bottom: 6px; }
+  a { color: var(--brand-deep); }
+  a:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 4px; }
+  .meta { color: var(--muted); font-size: 0.92rem; margin-bottom: 20px; }
+  .summary {
+    background: var(--brand-soft); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px; margin: 20px 0 8px;
+  }
+  .summary p:last-child { margin-bottom: 0; }
+  nav.toc {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 18px; margin: 24px 0 8px;
+  }
+  nav.toc strong { display: block; margin-bottom: 6px; }
+  nav.toc ol { margin: 0; padding-left: 1.3em; columns: 2; column-gap: 28px; }
+  nav.toc li { margin-bottom: 3px; break-inside: avoid; }
+  @media (max-width: 560px) { nav.toc ol { columns: 1; } }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; font-size: 0.95rem; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; background: var(--surface); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .tablewrap table { margin: 0; }
+  td:first-child { width: 46%; }
+  /* On a phone each row becomes a card: the information on top, why it is used underneath. */
+  @media (max-width: 640px) {
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    td:first-child { width: 100%; }
+    tr { padding: 12px 4px; border-bottom: 1px solid var(--line); }
+    tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: 3px 10px; }
+    td + td { color: var(--muted); }
+    td + td::before { content: "Why: "; font-weight: 600; color: var(--ink); }
+  }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>
+    </div>
+    <div class="brandname">School Sphere<small>School management for schools, students and parents</small></div>
+  </header>
+
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: 25 October 2026 · Applies to the School Sphere web application and the School Sphere Student, Teacher and Staff mobile apps</p>
+
+    <div class="summary">
+      <p><strong>In short.</strong> School Sphere is school software. Your <strong>school</strong> decides what information it keeps about students, parents and staff and why; School Sphere stores and processes it on the school's behalf, and only for running the school's services. We do not show advertising, sell personal data, or track people across other apps or websites.</p>
+    </div>
+
+    <nav class="toc" aria-label="Contents">
+      <strong>Contents</strong>
+      <ol>
+        <li><a href="#who">Who this policy covers</a></li>
+        <li><a href="#data">What we collect and why</a></li>
+        <li><a href="#permissions">Phone permissions</a></li>
+        <li><a href="#children">Children's data</a></li>
+        <li><a href="#sharing">Who we share data with</a></li>
+        <li><a href="#retention">How long data is kept</a></li>
+        <li><a href="#rights">Your choices and rights</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#transfers">Where data is stored</a></li>
+        <li><a href="#changes">Changes to this policy</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="who">1. Who this policy covers</h2>
+    <p>School Sphere is used by schools. An account is created by the school for its students, parents or guardians, teachers and other staff; people cannot sign up on their own. You can only see information the school has linked to your account: a parent sees their own children, a teacher sees their own classes, and staff see only the areas their school's roles and permissions allow.</p>
+    <p>For the information held about the people in a school, <strong>the school is responsible for deciding what is collected and how it is used</strong>, and School Sphere acts as the school's processor, handling it on the school's instructions. For anything about your own records, please contact your school first.</p>
+
+    <h2 id="data">2. What we collect and why</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Information</th><th>Why it is used</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Account details</strong>: name, email address, role, the school and branch you belong to, and your chosen interface language</td><td>To sign you in, show the right information and show the app in your language.</td></tr>
+          <tr><td><strong>School records</strong>: class and section, timetable, attendance, homework and submissions, exam marks and results, online exam answers, fees and receipts, library loans, transport route, certificates; for teachers and staff also staff records and leave</td><td>To provide the school's day-to-day services in the apps and website.</td></tr>
+          <tr><td><strong>Student profile details</strong> entered by the school: date of birth, address, guardian contacts, emergency contact and health notes the school chooses to record</td><td>School administration, safety and contacting families. Health notes are shown only to staff the school authorises.</td></tr>
+          <tr><td><strong>Messages, notices and leave requests</strong> you send or receive, and delivery status of SMS, email, WhatsApp and push messages</td><td>To deliver them to the right teacher, parent or student and to show whether they were delivered.</td></tr>
+          <tr><td><strong>Attendance by QR pass, card or biometric device</strong>: scan time and result, which device or session recorded it</td><td>To mark attendance accurately and let the school review exceptions.</td></tr>
+          <tr><td><strong>Face attendance</strong> (only if your school switches it on): a face photo and a numeric template used for matching, together with the consent record</td><td>To recognise students or staff for attendance. It needs the consent of the person, or of a parent or guardian for a child, and can be withdrawn; the template is then removed.</td></tr>
+          <tr><td><strong>Online exam proctoring</strong> (only for exams that use it): events such as leaving the exam page or full-screen, and, for webcam exams, camera photos at set intervals</td><td>To help teachers review exam integrity. Students are shown exactly what is recorded and agree before a proctored exam starts. A flag is a prompt for a person to look, not a finding.</td></tr>
+          <tr><td><strong>Visitor records</strong>: name, phone number, ID-proof type and number, purpose of visit, who is being visited, arrival and departure times and a visitor pass</td><td>Campus safety. The school may check names against its own visitor watchlist.</td></tr>
+          <tr><td><strong>Payments</strong>: fee invoices, the result of an online payment, a payment reference and receipt number</td><td>To record fee payments. Card, UPI and bank details are entered only on the payment provider's own page and are never received or stored by School Sphere.</td></tr>
+          <tr><td><strong>Online classes</strong>: your camera and microphone while you are in a live class, if you turn them on</td><td>To take part in the class. Your school may record classes; recordings are kept by the school.</td></tr>
+          <tr><td><strong>Bus location</strong> (drivers only, if the school uses driver phone tracking): the phone's position while a trip is on</td><td>So parents and the school office can see where the bus is. Sharing stops when the driver ends the trip or closes the app, and only the latest position is kept.</td></tr>
+          <tr><td><strong>Device and notification token</strong></td><td>To send school notifications to your phone. It is removed when you sign out.</td></tr>
+          <tr><td><strong>Technical logs and crash reports</strong>: IP address, time, and a report with technical details if the app crashes</td><td>To keep the service secure and fix faults. Crash reports do not include names, emails, phone numbers or passwords.</td></tr>
+          <tr><td><strong>Public certificate checks</strong>: when someone scans or opens a certificate's verification link, a one-way fingerprint of their network address and the time</td><td>To limit abuse of the public check. The page shows only who the certificate was issued to, its type and number, and whether it is still valid.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>We do not use your contacts or photo library, and we do not use your data to build advertising profiles.</p>
+
+    <h2 id="permissions">3. Phone permissions</h2>
+    <p>The mobile apps ask for a permission only when a feature needs it, and you can change it at any time in your phone's settings.</p>
+    <ul>
+      <li><strong>Camera</strong>: to join a live class with video, or (Teacher and Staff apps) to scan QR codes for attendance, visitor passes and certificates. Pictures from QR scanning are read on the phone and are not saved or uploaded.</li>
+      <li><strong>Microphone</strong>: only in live classes and voice questions to the AI assistant.</li>
+      <li><strong>Location</strong>: only for bus drivers while a trip is running (foreground only).</li>
+      <li><strong>Notifications</strong>: school announcements, messages and reminders.</li>
+      <li><strong>Storage on your phone</strong>: a language choice and, for teachers, attendance registers saved while there is no connection, which are sent when you are back online. Signing out removes them.</li>
+    </ul>
+
+    <h2 id="children">4. Children's data</h2>
+    <p>Many students are under 18. The school collects and uses a child's data for education and school administration and, where the law requires, with the verifiable consent of a parent or guardian, for example for face attendance. Students and parents can ask the school to see, correct or delete the child's data (see section 7). We do not send advertising to children and do not track children's behaviour for advertising.</p>
+
+    <h2 id="sharing">5. Who we share data with</h2>
+    <p>We do not sell personal data. We use service providers that process data only to provide their service:</p>
+    <ul>
+      <li><strong>Hosting and storage</strong>: cloud servers, a managed database and file storage (Microsoft Azure).</li>
+      <li><strong>Payments</strong>: the payment provider(s) your school has chosen, such as Razorpay, Cashfree, PayU or Stripe, on their own secure pages.</li>
+      <li><strong>Messaging</strong>: the SMS, email and WhatsApp providers your school has chosen.</li>
+      <li><strong>Push notifications</strong>: Expo, Google (Firebase Cloud Messaging) and Apple.</li>
+      <li><strong>Live classes</strong>: a LiveKit media server.</li>
+      <li><strong>Crash reporting</strong>: Sentry.</li>
+      <li><strong>AI assistant</strong> (where a school has enabled it): questions are answered using only what your account is allowed to see.</li>
+    </ul>
+    <p>We may also disclose information when required by law or to protect safety. Within a school, information is shown only to people whose role allows it.</p>
+
+    <h2 id="retention">6. How long data is kept</h2>
+    <p>School records are kept for as long as the school needs them and as the law requires. Some records are removed automatically on a schedule, which the school can change; by default visitor ID-proof details and visitor scan records are removed after 90 days, public certificate-check records after 180 days, and proctoring photos and events after the retention period set for the exam. Face templates are removed when consent is withdrawn. When a school ends its service, its data is deleted or returned as agreed with the school.</p>
+
+    <h2 id="rights">7. Your choices and rights</h2>
+    <p>You can ask to access, correct or delete your information, withdraw a consent you gave (for example for face attendance), or close an account. Because the school is responsible for its records, <strong>please send requests to your school</strong>; the school can act on them directly and we will help the school do so. Under India's Digital Personal Data Protection Act, 2023 you also have the right to grievance redressal and to nominate someone to act for you. If you cannot reach your school, or are not satisfied, contact us (section 11).</p>
+    <p>You can turn off notifications, the camera, the microphone and location in your phone's settings, and sign out at any time.</p>
+
+    <h2 id="security">8. Security</h2>
+    <p>Data is sent over encrypted connections (HTTPS). Sign-in tokens are kept in the phone's secure storage (Keychain or Keystore). Payment-gateway keys and messaging-provider secrets saved by schools are encrypted. Access is limited by role and permission, sign-in and public look-ups are rate-limited, and changes to attendance are recorded. No system is perfectly secure; if we learn of a breach affecting personal data we will tell the affected school without undue delay.</p>
+
+    <h2 id="transfers">9. Where data is stored</h2>
+    <p>Data is stored on cloud servers in the region chosen for the deployment. Service providers listed above may process limited data (for example a push token or a crash report) in their own locations, under their own security terms.</p>
+
+    <h2 id="changes">10. Changes to this policy</h2>
+    <p>We may update this policy as the product changes. The date at the top shows the latest version. If a change is significant we will tell schools so they can inform their students and parents.</p>
+
+    <h2 id="contact">11. Contact</h2>
+    <p>For questions about this policy or to raise a privacy concern with School Sphere:</p>
+    <ul>
+      <li>Email: <a href="mailto:enquiry@sms-schoolsphere.com">enquiry@sms-schoolsphere.com</a></li>
+      <li>Phone: <a href="tel:+919656040881">+91 96560 40881</a></li>
+      <li>Website: <a href="https://sms-schoolsphere.com">sms-schoolsphere.com</a></li>
+    </ul>
+    <p>For anything about a student's or staff member's records, contact the school directly.</p>
+  </main>
+
+  <footer>© School Sphere. This page is a static document and does not collect any information from you.</footer>
+</div>
+</body>
+</html>

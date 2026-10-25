@@ -148,6 +148,36 @@ The services create and migrate their databases on first start.
 
 The office refresh cookie is sent only to `/services/identity/api/office/auth` (the gateway prefix) over https; do not change the gateway prefix without changing `Office__Cookie__Path` in the compose file. New schools are created in the office, not in the old platform console. A school that already exists is brought in with **Adopt existing school** on the office Schools page; until then the office raises an alert for it. Take a database backup before the first start of this version: it adds the office tables to `AuthServiceDb`.
 
+## 6b. Payments, messaging, attendance, certificates and the mobile apps
+
+New settings in `.env` (all optional; the defaults work and every secret defaults to empty):
+
+| Setting | What it does |
+|---|---|
+| `PAYMENTS_APP_BASE_URL`, `PAYMENTS_API_BASE_URL` | Where Cashfree, PayU and Stripe send the payer back to. Default to `https://$APP_DOMAIN` and `https://$APP_DOMAIN/services/finance`. |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Optional platform-wide Razorpay account. Schools normally save their own gateway keys in the app (Fees → Payment gateways). |
+| `PLATFORM_EMAIL_PROVIDER`, `SMTP_*` | Default e-mail provider for schools that have not set up their own (Messaging). SMS and WhatsApp are set per school in the app. |
+| `ATTENDANCE_SIGNING_KEY` | Signs QR attendance passes and card hashes. Empty = derived from the JWT key. Changing it invalidates printed passes. |
+| `FACE_RECOGNITION_PROVIDER`, `COMPREFACE_URL`, `COMPREFACE_API_KEY` | Face attendance. `None` by default (off). |
+| `RETENTION_VISITOR_ID_PROOF_DAYS`, `RETENTION_VISITOR_SCAN_DAYS`, `RETENTION_CERTIFICATE_VERIFICATION_DAYS` | How long visitor and certificate-check records are kept (90 / 90 / 180; `0` keeps them). |
+| `RATE_LIMIT_PUBLIC_VERIFY_PER_MINUTE` | Requests per minute per client for the public certificate check (20). |
+
+Two new volumes hold **encryption keys**: `finance-keys` (decrypts every school's saved payment-gateway keys) and `messaging-keys`
+(messaging provider secrets). If one is lost the schools must enter those keys again. Back them up with the databases.
+
+The gateway trusts `X-Forwarded-For` from private networks (Caddy and the container network), so rate limits and audit see the real
+client. If your proxy is outside the private ranges, add its network to `TrustedProxyNetworks`.
+
+Payment webhooks are public by design: register `https://<APP_DOMAIN>/services/finance/api/payments/<provider>/webhook` in each
+gateway's dashboard (the app shows the address with a copy button). The public certificate check is
+`https://<APP_DOMAIN>/verify/certificate/<token>`.
+
+### Mobile apps (Android / iOS)
+The Student, Teacher and Staff apps talk to `https://<APP_DOMAIN>` (Caddy sends `/services/*` to the gateway). A release build must be
+made with `EXPO_PUBLIC_API_URL=https://<APP_DOMAIN>`; without it the app falls back to the emulator address and will not connect. The value
+is kept in each app's `.env.production` in the SMS Mobile repo; change it there if `APP_DOMAIN` changes, then rebuild. See
+`docs/release/ANDROID_BUILD.md` in that repo.
+
 ## Updating
 
 ```bash
@@ -161,7 +191,8 @@ Pin `IMAGE_TAG` / `UI_IMAGE_TAG` in `.env` to a `sha-xxxxxxx` tag to deploy or r
 
 Uploaded files are in Azure Blob Storage (see section 5; turn on soft delete and versioning there). On the VM, the
 stateful volumes are `redis-data`, `meeting-files` (the meeting encryption key ring, and
-recordings until they're uploaded) and `caddy-data` (certificates).
+recordings until they're uploaded), `finance-keys` and `messaging-keys` (the keys that decrypt each school's saved
+payment-gateway and messaging secrets: **losing them means schools must re-enter those keys**) and `caddy-data` (certificates).
 Databases are on Azure SQL, which has automatic backups with point-in-time restore (check the retention setting on the
 server). Enable Azure Backup / disk snapshots for the VM as well.
 
