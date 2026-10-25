@@ -15,6 +15,7 @@ import { usePageIndex } from "@/components/tables/usePageIndex";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useClassSectionOptions } from "../hooks";
 import { createStudent, listStudentsPage, transferStudent, updateStudent } from "../api";
+import { notifyLoginIssues } from "@/utils/loginIssues";
 import { listClasses } from "@/features/academics/api";
 import type { Student, StudentFormValues, StudentStatus, TransferFormValues } from "../types";
 import StudentStatusBadge from "../components/StudentStatusBadge";
@@ -112,9 +113,10 @@ function StudentsTab() {
 
   const createMutation = useMutation({
     mutationFn: createStudent,
-    onSuccess: () => {
+    onSuccess: (created) => {
       invalidate();
       toast.success(t("Student registered"));
+      notifyLoginIssues(created, t("Registered, but a sign-in account needs attention:"));
       setFormOpen(false);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not register student")),

@@ -41,6 +41,11 @@ interface Failure {
   record: Record<string, string>;
   error: string;
 }
+/** A row that was imported but whose sign-in account could not be made or linked. */
+interface Warning {
+  line: number;
+  message: string;
+}
 
 const MAX_ROWS = 1000;
 
@@ -63,7 +68,7 @@ export default function BulkImportDialog<T>({
   const [fileName, setFileName] = useState("");
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState<{ imported: number; failures: Failure[] } | null>(null);
+  const [result, setResult] = useState<{ imported: number; failures: Failure[]; warnings: Warning[] } | null>(null);
 
   const valid = rows.filter((r) => r.parsed.ok);
   const invalid = rows.filter((r) => !r.parsed.ok);
@@ -108,10 +113,13 @@ export default function BulkImportDialog<T>({
     setRunning(true);
     setProgress(0);
     const failures: Failure[] = invalid.map((r) => ({ line: r.line, record: r.record, error: r.parsed.ok ? "" : r.parsed.error }));
+    const warnings: Warning[] = [];
     let imported = 0;
     for (const [i, row] of valid.entries()) {
       try {
-        if (row.parsed.ok) await importRow(row.parsed.value);
+        const created = row.parsed.ok ? await importRow(row.parsed.value) : undefined;
+        const issues = (created as { loginIssues?: string[] } | undefined)?.loginIssues ?? [];
+        if (issues.length > 0) warnings.push({ line: row.line, message: issues.join(" ") });
         imported++;
       } catch (err) {
         failures.push({ line: row.line, record: row.record, error: err instanceof Error ? err.message : t("Could not import this row") });
@@ -119,7 +127,7 @@ export default function BulkImportDialog<T>({
       setProgress(i + 1);
     }
     failures.sort((a, b) => a.line - b.line);
-    setResult({ imported, failures });
+    setResult({ imported, failures, warnings });
     setRunning(false);
     onFinished();
   };
@@ -142,6 +150,18 @@ export default function BulkImportDialog<T>({
               {result.imported === 1 ? t("Imported {{count}} row", { count: result.imported }) : t("Imported {{count}} rows", { count: result.imported })}
               {result.failures.length > 0 && <span className="text-muted-foreground">{t("; {{count}} could not be imported.", { count: result.failures.length })}</span>}
             </p>
+            {result.warnings.length > 0 && (
+              <div role="status" className="rounded-lg border border-border p-2 text-sm">
+                <p className="font-medium text-foreground">{t("Imported, but these sign-in accounts need attention:")}</p>
+                <ul className="max-h-40 space-y-1 overflow-auto">
+                  {result.warnings.map((w) => (
+                    <li key={w.line}>
+                      <span className="font-medium text-foreground">{t("Row {{line}}:", { line: w.line })}</span> <span className="text-muted-foreground">{w.message}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {result.failures.length > 0 && (
               <>
                 <ul className="max-h-56 space-y-1 overflow-auto rounded-lg border border-border p-2 text-sm">

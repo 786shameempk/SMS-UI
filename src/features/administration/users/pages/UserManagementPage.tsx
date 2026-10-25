@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { KeyRound, Lock, Pencil, Plus, Trash2, Unlock, UserCheck, UserCog, UserX } from "lucide-react";
+import { KeyRound, Lock, Pencil, Plus, Trash2, Unlock, UserCheck, UserCog, UserPlus, UserX } from "lucide-react";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ import { listRoles } from "@/features/administration/roles/api";
 import UserStatusBadge from "../components/UserStatusBadge";
 import UserFormDialog from "../components/UserFormDialog";
 import UserProfileDialog from "../components/UserProfileDialog";
+import MissingLoginsDialog from "../components/MissingLoginsDialog";
 import type { SystemUser, UserFormValues } from "../types";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { RowActions } from "@/components/ui/row-actions";
@@ -44,6 +45,7 @@ export default function UserManagementPage() {
   const { data: users = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "users"], queryFn: listUsers });
   const { data: roles = [] } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
 
+  const [missingOpen, setMissingOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -258,9 +260,13 @@ export default function UserManagementPage() {
     <PageContainer>
       <PageHeader
         title={t("User management")}
-        description={t("Create and manage staff and administrator accounts.")}
+        description={t("Sign-in accounts for students, parents, teachers, staff and administrators of this school.")}
         actions={
           <>
+            <Button variant="outline" onClick={() => setMissingOpen(true)}>
+              <UserPlus className="w-4 h-4" />
+              {t("Create missing accounts")}
+            </Button>
             <Button
               onClick={() => {
                 setEditingUser(null);
@@ -349,6 +355,8 @@ export default function UserManagementPage() {
           }
         }}
       />
+
+      <MissingLoginsDialog open={missingOpen} onOpenChange={setMissingOpen} />
 
       <UserProfileDialog
         user={profileUser}

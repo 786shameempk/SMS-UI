@@ -93,6 +93,8 @@ export interface StaffAttendanceSummary {
 
 export interface StaffMember {
   id: string;
+  /** Only on the response to creating a staff member: why a sign-in account could not be made or linked. */
+  loginIssues?: string[];
   tenantId: string;
   branchId: string;
   employeeId: string;
