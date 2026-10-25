@@ -121,6 +121,9 @@ services:
       ConnectionStrings__DefaultConnection: "Server=tcp:${AZURE_SQL_SERVER:-sms-schoolsphere.database.windows.net},1433;Initial Catalog=AuthServiceDb;Persist Security Info=False;User ID=${AZURE_SQL_USER:-sms};Password=${AZURE_SQL_PASSWORD:?AZURE_SQL_PASSWORD is required - set it in .env next to docker-compose.yml (see .env.example)};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
       ConnectionStrings__Redis: "redis:6379"
       Tenancy__BaseDomain: ${TENANT_BASE_DOMAIN:-sms-schoolsphere.com}
+      # Office bulk onboarding writes a school's structure through the academic service, authenticated with the shared service key.
+      Services__AcademicServiceUrl: http://academicservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
       ClientApp__BaseUrl: https://${DOMAIN}
       LeadNotifications__NotifyEmail: ${LEAD_NOTIFY_EMAIL:-info@schoolsphrere.com}
       LeadNotifications__NotifyWhatsAppNumber: ${LEAD_NOTIFY_WHATSAPP:-}

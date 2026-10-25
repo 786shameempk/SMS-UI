@@ -154,6 +154,7 @@ interface ApiResignationRecord {
 
 interface ApiStaffMember {
   id: string;
+  loginIssues?: string[];
   tenantId: string;
   branchId: string;
   employeeId: string;
@@ -197,6 +198,7 @@ interface ApiStaffLeaveRequest {
 function mapStaff(dto: ApiStaffMember): StaffMember {
   return {
     id: dto.id,
+    loginIssues: dto.loginIssues ?? [],
     tenantId: dto.tenantId,
     branchId: dto.branchId,
     employeeId: dto.employeeId,

@@ -131,6 +131,7 @@ export const ROUTES: readonly AppRoute[] = [
   r("account.reset-password", "/reset-password", "account", "Reset password", { public: true }),
   r("account.change-password", "/change-password", "account", "Set a new password", { fromScreen: "Sign in with a temporary password" }),
   r("account.security", "/account/security", "account", "Security settings", { fromScreen: "Account menu" }),
+  r("account.profile", "/account/profile", "account", "My profile", { fromScreen: "Account menu" }),
   r("account.attendance-pass", "/account/attendance-pass", "account", "My attendance pass", { fromScreen: "Account menu" }),
   r("dashboard.home", "/dashboard", "dashboard", "Dashboard", { menuItem: "Dashboard" }),
   r("ai-features.home", "/ai", "ai-features", "AI Features", { menuItem: "AI Features" }),

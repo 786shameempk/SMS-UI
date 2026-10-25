@@ -142,6 +142,7 @@ interface ApiTransferRecord {
 
 interface ApiStudent {
   id: string;
+  loginIssues?: string[];
   tenantId: string;
   branchId: string;
   admissionNumber: string;
@@ -204,6 +205,7 @@ function mapStudent(dto: ApiStudent, index: Awaited<ReturnType<typeof buildSecti
 
   return {
     id: dto.id,
+    loginIssues: dto.loginIssues ?? [],
     tenantId: dto.tenantId,
     branchId: dto.branchId,
     admissionNumber: dto.admissionNumber,

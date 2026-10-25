@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/utils/cn";
-import { BookOpenText, ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, QrCode, Search, ShieldCheck, Sun } from "lucide-react";
+import { BookOpenText, ChevronRight, CircleHelp, LifeBuoy, LogOut, Menu, Monitor, Moon, QrCode, Search, ShieldCheck, Sun, UserRound } from "lucide-react";
 import { LanguageMenu } from "@/i18n/LanguageMenu";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -271,6 +271,12 @@ export default function Header() {
             <DropdownMenuSeparator />
           </div>
           <LanguageMenu />
+          {user?.role !== "superAdmin" && (
+            <DropdownMenuItem onClick={() => navigate("/account/profile")}>
+              <UserRound />
+              {t("My profile")}
+            </DropdownMenuItem>
+          )}
           {user?.role !== "parent" && user?.role !== "superAdmin" && (
             <DropdownMenuItem onClick={() => navigate("/account/attendance-pass")}>
               <QrCode />

@@ -83,6 +83,8 @@ export interface TransferRecord {
 
 export interface Student {
   id: string;
+  /** Only on the response to creating a student: why a sign-in account could not be made or linked. */
+  loginIssues?: string[];
   tenantId: string;
   branchId: string;
   admissionNumber: string;

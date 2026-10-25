@@ -20,6 +20,7 @@ import StaffOverviewTab from "../components/profile/StaffOverviewTab";
 import QualificationsExperienceTab from "../components/profile/QualificationsExperienceTab";
 import StaffStatusBadge from "../components/StaffStatusBadge";
 import BulkStaffImportDialog from "../components/BulkStaffImportDialog";
+import { notifyLoginIssues } from "@/utils/loginIssues";
 import StaffFormDialog from "../components/StaffFormDialog";
 import PromoteStaffDialog from "../components/PromoteStaffDialog";
 import ResignStaffDialog from "../components/ResignStaffDialog";
@@ -60,9 +61,10 @@ function StaffDirectoryTab() {
 
   const createMutation = useMutation({
     mutationFn: createStaff,
-    onSuccess: () => {
+    onSuccess: (created) => {
       invalidate();
       toast.success(t("Staff member added"));
+      notifyLoginIssues(created, t("Added, but a sign-in account needs attention:"));
       setFormOpen(false);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add staff member")),

@@ -184,3 +184,31 @@ export async function getUserLinkedStudents(userId: string): Promise<UserLinkedS
     throw new Error(extractApiErrorMessage(err));
   }
 }
+
+export interface ReconcileItem {
+  kind: "staff" | "parent";
+  name: string;
+  email: string;
+  outcome: "Created" | "Linked" | "Skipped" | "Failed" | "WouldCreateOrLink";
+  message: string | null;
+}
+
+export interface ReconcileReport {
+  dryRun: boolean;
+  created: number;
+  linked: number;
+  skipped: number;
+  failed: number;
+  remaining: number;
+  studentsWithoutLogin: number;
+  items: ReconcileItem[];
+}
+
+/** AcademicService: creates or links the sign-in accounts missing for staff and parents (admin and principal only). Idempotent. */
+export async function reconcileLogins(dryRun: boolean): Promise<ReconcileReport> {
+  try {
+    return (await academicHttpClient.post<ReconcileReport>("api/people/reconcile-logins", null, { params: { dryRun } })).data;
+  } catch (err) {
+    throw new Error(extractApiErrorMessage(err));
+  }
+}

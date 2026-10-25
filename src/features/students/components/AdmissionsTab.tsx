@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CalendarCheck, CheckCircle2, Clock, GraduationCap, Plus, UserCheck, UserPlus, Users, Wallet, X } from "lucide-react";
 import toast from "react-hot-toast";
+import { notifyLoginIssues } from "@/utils/loginIssues";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -147,6 +148,7 @@ export default function AdmissionsTab() {
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["students"] });
       setConfirmTarget(null);
+      notifyLoginIssues(student, t("Enrolled, but the parent sign-in account needs attention:"));
       toast.success(
         (toastItem) => (
           <span className="flex items-center gap-2">

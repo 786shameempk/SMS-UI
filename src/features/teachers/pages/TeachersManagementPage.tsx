@@ -13,6 +13,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable } from "@/components/tables/DataTable";
 import { listClasses, listSubjects } from "@/features/academics/api";
 import { createStaff, getMyStaffId, updateStaff } from "@/features/staff/api";
+import { notifyLoginIssues } from "@/utils/loginIssues";
 import StaffFormDialog from "@/features/staff/components/StaffFormDialog";
 import StaffStatusBadge from "@/features/staff/components/StaffStatusBadge";
 import type { StaffFormValues, StaffMember } from "@/features/staff/types";
@@ -48,9 +49,10 @@ function TeachersDirectory() {
 
   const createMutation = useMutation({
     mutationFn: createStaff,
-    onSuccess: () => {
+    onSuccess: (created) => {
       invalidateTeachers();
       toast.success(t("Teacher added"));
+      notifyLoginIssues(created, t("Added, but a sign-in account needs attention:"));
       setFormOpen(false);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add teacher")),
