@@ -1,15 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { MapPinned, Play, Square } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TRACKING_POLL_MS } from "../constants";
-import { getMyDriverBuses, sendDriverPing } from "../trackingApi";
+import { getMyDriverBuses } from "../trackingApi";
+import { startTrip, stopTrip, useDriverTrip } from "../driverTripStore";
 import { useTrackingSettings } from "../useTrackingSettings";
-
-type TripState = "idle" | "starting" | "sharing";
 
 /** Where a driver starts and ends a trip. While it runs, this page reports the phone's location about every 10 seconds. */
 export default function DriverTripTab() {
@@ -20,66 +18,21 @@ export default function DriverTripTab() {
   const [chosen, setBusId] = useState("");
   // A driver of one bus never has to pick.
   const busId = chosen || (myBuses.length === 1 ? myBuses[0].busId : "");
-  const [state, setState] = useState<TripState>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const [lastSent, setLastSent] = useState<Date | null>(null);
-  const [sentCount, setSentCount] = useState(0);
-
-  const watchId = useRef<number | null>(null);
-  const lastSentAt = useRef(0);
-  const wakeLock = useRef<WakeLockSentinel | null>(null);
-
-  const stop = useCallback(() => {
-    if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
-    watchId.current = null;
-    wakeLock.current?.release().catch(() => undefined);
-    wakeLock.current = null;
-    setState("idle");
-  }, []);
-
-  useEffect(() => stop, [stop]);
+  // The trip itself lives in driverTripStore, so it keeps running when this tab or page is left.
+  const trip = useDriverTrip();
+  const { state, error, lastSent, sentCount } = trip;
 
   const supported = typeof navigator !== "undefined" && "geolocation" in navigator;
   const wrongSource = settings && settings.source !== "driver-phone";
 
-  const start = async () => {
+  const start = () => {
     if (!busId) return;
-    setError(null);
-    setState("starting");
-    try {
-      wakeLock.current = (await navigator.wakeLock?.request("screen")) ?? null;
-    } catch {
-      /* optional: the trip still works, the screen may just dim */
-    }
-    lastSentAt.current = 0;
-    watchId.current = navigator.geolocation.watchPosition(
-      async (pos) => {
-        setState("sharing");
-        const now = Date.now();
-        if (now - lastSentAt.current < TRACKING_POLL_MS) return;
-        lastSentAt.current = now;
-        try {
-          await sendDriverPing({
-            busId,
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            speedKmph: (pos.coords.speed ?? 0) * 3.6,
-            heading: pos.coords.heading ?? undefined,
-            accuracyMeters: pos.coords.accuracy,
-          });
-          setLastSent(new Date());
-          setSentCount((n) => n + 1);
-          setError(null);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : t("Could not send location"));
-        }
-      },
-      (err) => {
-        setError(err.code === err.PERMISSION_DENIED ? t("Location access was blocked. Allow it for this site in your browser settings, then start again.") : t("Could not get this phone's location."));
-        stop();
-      },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
-    );
+    const bus = myBuses.find((b) => b.busId === busId);
+    void startTrip(busId, bus ? `${bus.regNumber} (${bus.routeName})` : busId, {
+      blocked: t("Location access was blocked. Allow it for this site in your browser settings, then start again."),
+      unavailable: t("Could not get this phone's location."),
+      sendFailed: t("Could not send location"),
+    });
   };
 
   const sharing = state !== "idle";
@@ -91,7 +44,7 @@ export default function DriverTripTab() {
           <MapPinned className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           {t("Driver trip")}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">{t("Share this phone's location with parents while you drive. Keep this page open and the screen on.")}</p>
+        <p className="text-sm text-muted-foreground">{t("Share this phone's location with parents while you drive. It keeps running if you change tab or menu until you press End trip. Keep this browser tab open.")}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         {wrongSource && (
@@ -112,7 +65,7 @@ export default function DriverTripTab() {
           <label htmlFor="driver-bus" className="text-sm font-medium text-foreground">{t("Bus")}</label>
           <select
             id="driver-bus"
-            value={busId}
+            value={trip.busId ?? busId}
             disabled={sharing}
             onChange={(e) => setBusId(e.target.value)}
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-60"
@@ -127,7 +80,7 @@ export default function DriverTripTab() {
         </div>
 
         {sharing ? (
-          <Button variant="outline" className="w-full" onClick={stop}>
+          <Button variant="outline" className="w-full" onClick={stopTrip}>
             <Square className="h-4 w-4" aria-hidden="true" />
             {t("End trip")}
           </Button>
