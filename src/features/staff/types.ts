@@ -131,7 +131,11 @@ export interface StaffFormValues {
   phone: string;
   email: string;
   address: string;
+  /** Sign-in role for a new joiner; empty = the designation's own role (none for designations without one). */
+  loginRole?: StaffLoginRole | "";
 }
+
+export type StaffLoginRole = "teacher" | "principal" | "accountant" | "librarian" | "receptionist";
 
 export interface PromoteStaffFormValues {
   toDesignation: StaffDesignation;

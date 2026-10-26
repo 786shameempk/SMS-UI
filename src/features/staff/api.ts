@@ -318,6 +318,7 @@ export async function createStaff(values: StaffFormValues): Promise<StaffMember>
       phone: values.phone,
       email: values.email,
       address: values.address,
+      loginRole: values.loginRole || null,
     }),
   );
   return mapStaff(dto);

@@ -41,6 +41,15 @@ describe("import row validation", () => {
     expect(parseStaffRow({ ...staff, email: "nope" }).ok).toBe(false);
   });
 
+  it("reads the optional login role and rejects an unknown one", () => {
+    const hr = { ...staff, designation: "HR", loginRole: " Receptionist " };
+    const parsed = parseStaffRow(hr);
+    expect(parsed.ok && parsed.value).toMatchObject({ designation: "HR", loginRole: "receptionist" });
+    const blank = parseStaffRow({ ...staff, loginRole: "" });
+    expect(blank.ok && blank.value.loginRole).toBe("");
+    expect(parseStaffRow({ ...hr, loginRole: "admin" }).ok).toBe(false);
+  });
+
   const student = { firstName: "Rahul", lastName: "Menon", dateOfBirth: "2014-08-21", gender: "male", className: "Class 5", section: "A", rollNumber: "", address: "x", guardianName: "S", guardianRelation: "Father", guardianPhone: "1", studentEmail: "", parentEmail: "" };
   it("accepts a student row and leaves optional fields undefined", () => {
     const parsed = parseStudentRow(student);

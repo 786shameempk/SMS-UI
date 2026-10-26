@@ -4,7 +4,7 @@ import BulkImportDialog, { type ImportColumn, type ParsedRow } from "@/component
 import { normalizeDate } from "@/utils/csvParse";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { createStaff } from "../api";
-import { DESIGNATIONS } from "../constants";
+import { DESIGNATIONS, parseLoginRole, STAFF_LOGIN_ROLES } from "../constants";
 import type { Gender, StaffFormValues } from "../types";
 
 const COLUMNS: ImportColumn[] = [
@@ -17,6 +17,7 @@ const COLUMNS: ImportColumn[] = [
   { key: "phone", label: "Phone", required: true, example: "9876543210" },
   { key: "email", label: "Email", required: true, example: "asha.nair@example.com" },
   { key: "address", label: "Address", example: "12 Park Road" },
+  { key: "loginRole", label: "Login role", example: "" },
 ];
 
 const GENDERS: Gender[] = ["male", "female", "other"];
@@ -36,6 +37,8 @@ export function parseStaffRow(r: Record<string, string>, t: Translate = translat
   const designation = DESIGNATIONS.find((d) => d.toLowerCase() === r.designation.toLowerCase());
   if (!designation) return { ok: false, error: t("Designation \"{{value}}\" is not one of: {{values}}", { value: r.designation, values: DESIGNATIONS.join(", ") }) };
   if (!/^\S+@\S+\.\S+$/.test(r.email)) return { ok: false, error: t("Email \"{{value}}\" is not valid", { value: r.email }) };
+  const loginRole = parseLoginRole(r.loginRole);
+  if (loginRole === null) return { ok: false, error: t("Login role \"{{value}}\" is not one of: {{values}}", { value: r.loginRole, values: STAFF_LOGIN_ROLES.map((x) => x.value).join(", ") }) };
   return {
     ok: true,
     value: {
@@ -49,6 +52,7 @@ export function parseStaffRow(r: Record<string, string>, t: Translate = translat
       phone: r.phone,
       email: r.email,
       address: r.address,
+      loginRole,
     },
   };
 }
@@ -66,7 +70,7 @@ export default function BulkStaffImportDialog({ open, onOpenChange, onFinished }
       open={open}
       onOpenChange={onOpenChange}
       title={t("Import staff")}
-      description={t("Add many staff members from a CSV file. Designation is one of: {{values}}.", { values: DESIGNATIONS.join(", ") })}
+      description={t("Add many staff members from a CSV file. Designation is one of: {{values}}. A sign-in with an invitation email is created for teachers, principals, vice principals, accountants, librarians and receptionists; for any other designation it is created when Login role ({{roles}}) is filled in.", { values: DESIGNATIONS.join(", "), roles: STAFF_LOGIN_ROLES.map((x) => x.value).join(", ") })}
       templateFileName="staff-import-template"
       columns={COLUMNS}
       parseRow={(row) => parseStaffRow(row, t)}
