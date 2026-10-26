@@ -10,6 +10,7 @@ import { DataTable } from "@/components/tables/DataTable";
 import { getSectionRoster, listAttendanceRecords } from "../../api";
 import { todayDateKey } from "../../constants";
 import type { AttendanceRecord } from "../../types";
+import PrintRegisterButton from "./PrintRegisterButton";
 
 import { useTranslation } from "react-i18next";
 const ALL = "__all__";
@@ -137,6 +138,10 @@ export default function RangeAttendanceReport() {
       .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
   }, [records, roster, sections, classes, classId, studentView]);
 
+  const sectionObj = sections.find((s) => s.id === sectionId);
+  const classObj = classes.find((c) => c.id === classId);
+  const classLabel = sectionObj ? `${classObj?.name ?? "Class"} / ${sectionObj.name}` : "";
+
   return (
     <Card>
       <CardHeader className="flex-row flex-wrap items-end justify-between gap-3">
@@ -190,6 +195,14 @@ export default function RangeAttendanceReport() {
               </SelectContent>
             </Select>
           </div>
+          <PrintRegisterButton
+            sectionId={studentView ? sectionId : ""}
+            classLabel={classLabel}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            period={`${dateFrom} – ${dateTo}`}
+            disabled={!rangeValid}
+          />
         </div>
       </CardHeader>
       <CardContent>

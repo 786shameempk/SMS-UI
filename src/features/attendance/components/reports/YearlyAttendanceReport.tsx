@@ -5,6 +5,7 @@ import { listClasses, listSections } from "@/features/academics/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getYearlyTrend, listRosterSections } from "../../api";
+import PrintRegisterButton from "./PrintRegisterButton";
 
 import { useTranslation } from "react-i18next";
 export default function YearlyAttendanceReport() {
@@ -14,6 +15,7 @@ export default function YearlyAttendanceReport() {
   const { data: rosterSections = [] } = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: listRosterSections });
 
   const [sectionId, setSectionId] = useState("all");
+  const [year, setYear] = useState(new Date().getFullYear());
 
   const rosterSectionIds = useMemo(() => rosterSections.map((r) => r.sectionId), [rosterSections]);
 
@@ -35,6 +37,7 @@ export default function YearlyAttendanceReport() {
           <CardTitle>{t("Yearly attendance trend")}</CardTitle>
           <CardDescription>{t("Percentage present by month, across the recorded attendance history.")}</CardDescription>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
         <Select value={sectionId} onValueChange={setSectionId}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder={t("Section")} />
@@ -48,6 +51,27 @@ export default function YearlyAttendanceReport() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+          <SelectTrigger className="w-28">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map((v) => (
+              <SelectItem key={v} value={String(v)}>
+                {v}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <PrintRegisterButton
+          sectionId={sectionId === "all" ? "" : sectionId}
+          classLabel={sectionId === "all" ? "" : sectionLabel(sectionId).replace(" · ", " / ")}
+          dateFrom={`${year}-01-01`}
+          dateTo={`${year}-12-31`}
+          period={String(year)}
+          title="Student attendance register - yearly"
+        />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-72 w-full">

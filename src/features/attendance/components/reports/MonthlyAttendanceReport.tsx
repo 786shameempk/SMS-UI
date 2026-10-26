@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/utils/cn";
 import { getMonthlyStudentSummary, listRosterSections } from "../../api";
 import { statusToggleActiveClass } from "../../constants";
+import PrintRegisterButton from "./PrintRegisterButton";
 
 import { useTranslation } from "react-i18next";
 function daysInMonth(year: number, monthIndex: number): number {
@@ -58,6 +59,8 @@ export default function MonthlyAttendanceReport() {
   });
 
   const dayCount = daysInMonth(year, month - 1);
+  const monthKey = `${yearStr}-${monthStr}`;
+  const classLabel = `${classes.find((c) => c.id === classId)?.name ?? "Class"} / ${sections.find((s) => s.id === sectionId)?.name ?? ""}`;
   const days = Array.from({ length: dayCount }, (_, i) => i + 1);
 
   return (
@@ -105,6 +108,14 @@ export default function MonthlyAttendanceReport() {
               max={currentMonthValue}
             />
           </div>
+          <PrintRegisterButton
+            sectionId={sectionId}
+            classLabel={classLabel}
+            dateFrom={`${monthKey}-01`}
+            dateTo={`${monthKey}-${String(dayCount).padStart(2, "0")}`}
+            period={new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+            title="Student attendance register - monthly"
+          />
         </div>
       </CardHeader>
       <CardContent>
