@@ -15,6 +15,7 @@ import { useTour } from "@/features/help/tourStore";
 import RouteGate from "@/routes/RouteGate";
 import SubscriptionBanner from "@/features/settings/components/SubscriptionBanner";
 import { useAttendanceSyncDriver } from "@/features/attendance/offline/hooks";
+import DriverTripBanner from "@/features/transport/components/DriverTripBanner";
 
 // Only downloaded when a Help Center walkthrough is started.
 const WalkthroughHost = lazy(() => import("@/features/help/components/WalkthroughHost"));
@@ -105,6 +106,7 @@ export default function AppLayout() {
         {/* The pages of the section being viewed, like Talent Showcase's menu: right under the header. */}
         <SectionSubNav />
         <SubscriptionBanner />
+        <DriverTripBanner />
         <main id="main-content" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto bg-app-glow focus:outline-none">
           {/* Pages are lazy chunks: the shell stays put while the next page loads. */}
           <Suspense key={scopeKey} fallback={<PageSkeleton />}>

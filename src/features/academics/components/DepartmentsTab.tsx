@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
@@ -10,6 +10,8 @@ import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createDepartment, deleteDepartment, listDepartments, updateDepartment } from "../api";
 import type { Department, DepartmentFormValues } from "../types";
 import DepartmentFormDialog from "./DepartmentFormDialog";
+import DepartmentPeopleDialog from "./DepartmentPeopleDialog";
+import { Badge } from "@/components/ui/badge";
 import { RowActions } from "@/components/ui/row-actions";
 import { useIsTeacher } from "@/lib/roleAccess";
 
@@ -23,6 +25,7 @@ export default function DepartmentsTab() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Department | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
+  const [peopleOf, setPeopleOf] = useState<Department | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["academics", "departments"] });
 
@@ -56,6 +59,14 @@ export default function DepartmentsTab() {
 
   const columns: ColumnDef<Department, unknown>[] = [
     { accessorKey: "name", header: t("Name"), cell: ({ row }) => <span className="text-sm font-medium text-foreground">{row.original.name}</span> },
+    { accessorKey: "code", header: t("Code"), cell: ({ row }) => <span className="text-sm">{row.original.code || "—"}</span> },
+    { accessorKey: "headName", header: t("Department head"), cell: ({ row }) => <span className="text-sm">{row.original.headName || "—"}</span> },
+    { accessorKey: "employeeCount", header: t("Employees"), cell: ({ row }) => <span className="text-sm">{row.original.employeeCount}</span> },
+    {
+      accessorKey: "isActive",
+      header: t("Status"),
+      cell: ({ row }) => <Badge variant={row.original.isActive ? "success" : "neutral"}>{row.original.isActive ? t("Active") : t("Inactive")}</Badge>,
+    },
     {
       accessorKey: "description",
       header: t("Description"),
@@ -68,6 +79,10 @@ export default function DepartmentsTab() {
         const department = row.original;
         return (
           <RowActions>
+            <DropdownMenuItem onClick={() => setPeopleOf(department)}>
+              <Users className="w-3.5 h-3.5" />
+              {t("Head and employees")}
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 setEditing(department);
@@ -119,6 +134,8 @@ export default function DepartmentsTab() {
           else await createMutation.mutateAsync(values);
         }}
       />
+
+      {peopleOf && <DepartmentPeopleDialog department={peopleOf} onClose={() => setPeopleOf(null)} />}
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

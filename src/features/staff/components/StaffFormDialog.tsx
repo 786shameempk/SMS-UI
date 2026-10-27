@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -13,8 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
-import { listDepartments } from "@/features/academics/api";
-import { DESIGNATIONS } from "../constants";
+import { listDepartments, listReportingOptions } from "@/features/academics/api";
+import { DESIGNATIONS, DESIGNATION_LOGIN_ROLE, STAFF_LOGIN_ROLES } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
 import { FormSection } from "@/components/ui/form-field";
 
@@ -29,6 +29,8 @@ const staffFormSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
   address: z.string().min(1, "Address is required"),
+  loginRole: z.enum(["", "teacher", "principal", "accountant", "librarian", "receptionist"]).optional(),
+  reportingToStaffId: z.string().optional(),
 });
 
 interface StaffFormDialogProps {
@@ -61,12 +63,24 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
       phone: "",
       email: "",
       address: "",
+      loginRole: "",
+      reportingToStaffId: "",
     },
   });
+  const designation = useWatch({ control, name: "designation" });
+  const loginRole = useWatch({ control, name: "loginRole" });
+  const automaticRole = DESIGNATION_LOGIN_ROLE[designation];
 
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
   const { data: departments = [] } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
   // Chosen from the school's departments (Academic Management); a value saved earlier that is no longer listed stays selectable.
+  const departmentName = useWatch({ control, name: "department" });
+  const departmentId = departments.find((d) => d.name === departmentName)?.id;
+  const { data: reportingOptions = [] } = useQuery({
+    queryKey: ["academics", "reporting-options", staff?.id ?? "new", departmentId ?? "none"],
+    queryFn: () => listReportingOptions({ staffId: staff?.id, departmentId }),
+    enabled: open,
+  });
   const departmentNames = (current: string) => {
     const names = departments.map((d) => d.name);
     return current && !names.includes(current) ? [current, ...names] : names;
@@ -87,6 +101,8 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               phone: staff.phone,
               email: staff.email,
               address: staff.address,
+              loginRole: "",
+              reportingToStaffId: staff.reportingToStaffId ?? "",
             }
           : {
               branchId: getCurrentBranchId(),
@@ -99,6 +115,8 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               phone: "",
               email: "",
               address: "",
+              loginRole: "",
+              reportingToStaffId: "",
             },
       );
     }
@@ -232,6 +250,58 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                 {errors.department && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.department.message ?? "")}</p>}
               </div>
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="reportingToStaffId" optional>{t("Reporting person")}</Label>
+              <Controller
+                control={control}
+                name="reportingToStaffId"
+                render={({ field }) => (
+                  <Select value={field.value || "default"} onValueChange={(v) => field.onChange(v === "default" ? "" : v)}>
+                    <SelectTrigger id="reportingToStaffId">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">{isEdit ? t("Keep as it is") : t("Department head (suggested)")}</SelectItem>
+                      {reportingOptions.map((o) => (
+                        <SelectItem key={o.staffId} value={o.staffId}>
+                          {o.name} · {o.designation}{o.isDepartmentHead ? ` (${t("Department head")})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="text-xs text-muted-foreground">{t("Their profile changes are sent to this person for approval. With none, they go to the school administrators.")}</p>
+            </div>
+            {!isEdit && (
+              <div className="space-y-1.5">
+                <Label htmlFor="loginRole">{t("Sign-in role")}</Label>
+                <Controller
+                  control={control}
+                  name="loginRole"
+                  render={({ field }) => (
+                    <Select value={field.value || "auto"} onValueChange={(v) => field.onChange(v === "auto" ? "" : v)}>
+                      <SelectTrigger id="loginRole">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">{automaticRole ? t("Automatic ({{role}})", { role: t(automaticRole) }) : t("Automatic (no sign-in)")}</SelectItem>
+                        {STAFF_LOGIN_ROLES.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            {t(r.label)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {loginRole || automaticRole
+                    ? t("A sign-in is created for the email below and an invitation to set a password is sent.")
+                    : t("This designation has no sign-in of its own. Pick a sign-in role to give them access.")}
+                </p>
+              </div>
+            )}
           </FormSection>
 
           <FormSection title={t("Contact")}>

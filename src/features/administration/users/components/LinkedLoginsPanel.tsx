@@ -49,8 +49,15 @@ interface Row {
 const ROLES_FOR: Record<LinkKind, string[]> = {
   Student: ["student"],
   Guardian: ["parent"],
-  Staff: ["teacher", "principal", "accountant", "librarian", "receptionist", "admin"],
+  // Staff take any non-student/parent role (custom roles such as Driver included), so this is an exclusion list.
+  Staff: [],
 };
+const NON_STAFF_ROLES = ["student", "parent", "superAdmin"];
+
+function roleFits(kind: LinkKind, roles: string[], roleKey: string | null): boolean {
+  if (!roleKey) return false;
+  return kind === "Staff" ? !NON_STAFF_ROLES.includes(roleKey) : roles.includes(roleKey);
+}
 
 async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
@@ -82,7 +89,7 @@ function LinkRow({
   const candidates = useMemo(
     () =>
       users.filter((u) => {
-        if (!u.roleKey || !row.roles.includes(u.roleKey)) return false;
+        if (!roleFits(row.kind, row.roles, u.roleKey)) return false;
         if (row.kind === "Guardian") return true;
         return !taken.has(u.id);
       }),

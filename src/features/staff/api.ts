@@ -163,6 +163,8 @@ interface ApiStaffMember {
   photoUrl: string | null;
   designation: string;
   department: string;
+  departmentId?: string | null;
+  reportingToStaffId?: string | null;
   status: string;
   joiningDate: string;
   dateOfBirth: string;
@@ -207,6 +209,8 @@ function mapStaff(dto: ApiStaffMember): StaffMember {
     photoUrl: resolveFileUrl(dto.photoUrl, ACADEMIC_API_BASE_URL) ?? null,
     designation: DESIGNATION_FROM_API[dto.designation] ?? "Teacher",
     department: dto.department,
+    departmentId: dto.departmentId ?? undefined,
+    reportingToStaffId: dto.reportingToStaffId ?? undefined,
     status: STAFF_STATUS_FROM_API[dto.status] ?? "active",
     joiningDate: dto.joiningDate,
     dateOfBirth: dto.dateOfBirth,
@@ -318,6 +322,8 @@ export async function createStaff(values: StaffFormValues): Promise<StaffMember>
       phone: values.phone,
       email: values.email,
       address: values.address,
+      loginRole: values.loginRole || null,
+      reportingToStaffId: values.reportingToStaffId || null,
     }),
   );
   return mapStaff(dto);
@@ -336,6 +342,7 @@ export async function updateStaff(id: string, values: StaffFormValues): Promise<
       phone: values.phone,
       email: values.email,
       address: values.address,
+      reportingToStaffId: values.reportingToStaffId || null,
     }),
   );
   return mapStaff(dto);

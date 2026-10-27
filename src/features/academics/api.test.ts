@@ -41,13 +41,13 @@ describe("academics api", () => {
       client: academicHttpClient,
       base: "/api/departments",
       dto: { id: "d1", ...scoped, name: "Science", description: null },
-      values: { name: "Science" } as never,
+      values: { name: "Science", isActive: true } as never,
       list: academics.listDepartments,
       create: academics.createDepartment,
       update: academics.updateDepartment,
       remove: academics.deleteDepartment,
-      sent: { name: "Science", description: null },
-      mapped: { name: "Science", description: undefined },
+      sent: { name: "Science", description: null, code: null, isActive: true },
+      mapped: { name: "Science", description: undefined, isActive: true, employeeCount: 0 },
     }));
 
   it("classes", () =>

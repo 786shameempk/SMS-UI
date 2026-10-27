@@ -54,25 +54,25 @@ export default function MarkAttendanceTab() {
   const [preparing, setPreparing] = useState(false);
 
   const { data: academicYears = [] } = useQuery({
-    queryKey: ["attendance", "academic-years"],
+    queryKey: ["attendance", "academic-years", "with-device-fallback"],
     queryFn: () => withDeviceFallback("years", listAcademicYears),
     select: keepValue,
     ...offlineQuery,
   });
   const { data: classes = [] } = useQuery({
-    queryKey: ["attendance", "classes"],
+    queryKey: ["attendance", "classes", "with-device-fallback"],
     queryFn: () => withDeviceFallback("classes", listClasses),
     select: keepValue,
     ...offlineQuery,
   });
   const { data: sections = [] } = useQuery({
-    queryKey: ["attendance", "sections"],
+    queryKey: ["attendance", "sections", "with-device-fallback"],
     queryFn: () => withDeviceFallback("sections", listSections),
     select: keepValue,
     ...offlineQuery,
   });
   const { data: rosterSections = [] } = useQuery({
-    queryKey: ["attendance", "roster-sections"],
+    queryKey: ["attendance", "roster-sections", "with-device-fallback"],
     queryFn: () => withDeviceFallback("roster-sections", listRosterSections),
     select: keepValue,
     ...offlineQuery,

@@ -22,6 +22,7 @@ export const OFFICE_PAGES: Record<string, LazyExoticComponent<ComponentType>> = 
   settings: lazy(() => import("./OfficeSettingsPage")),
   users: lazy(() => import("./OfficeUsersPage")),
   roles: lazy(() => import("./OfficeRolesPage")),
+  advertisements: lazy(() => import("./AdvertisementsPage")),
   audit: lazy(() => import("./AuditLogsPage")),
   security: lazy(() => import("./SecurityPage")),
 };

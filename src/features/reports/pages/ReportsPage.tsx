@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReportLibraryTab from "../library/ReportLibraryTab";
 import AdmissionsTab from "../components/AdmissionsTab";
 import AttendanceTrendsTab from "../components/AttendanceTrendsTab";
 import DropoutAnalysisTab from "../components/DropoutAnalysisTab";
@@ -20,18 +21,22 @@ export default function ReportsPage() {
         description={t("Dashboards pulled live from every module — student performance, attendance, fees, teachers, admissions, dropout risk, library usage, transport, and hostel occupancy.")}
       />
 
-      <Tabs defaultValue="student-performance">
+      <Tabs defaultValue="library">
         <TabsList variant="line">
+          <TabsTrigger value="library">{t("Report library")}</TabsTrigger>
           <TabsTrigger value="student-performance">{t("Student Performance")}</TabsTrigger>
           <TabsTrigger value="attendance">{t("Attendance")}</TabsTrigger>
           <TabsTrigger value="fees">{t("Fee Collection")}</TabsTrigger>
           <TabsTrigger value="teachers">{t("Teacher Performance")}</TabsTrigger>
           <TabsTrigger value="admissions">{t("Admissions")}</TabsTrigger>
           <TabsTrigger value="dropout">{t("Dropout Analysis")}</TabsTrigger>
-          <TabsTrigger value="library">{t("Library Usage")}</TabsTrigger>
+          <TabsTrigger value="library-usage">{t("Library Usage")}</TabsTrigger>
           <TabsTrigger value="transport">{t("Transport")}</TabsTrigger>
           <TabsTrigger value="hostel">{t("Hostel Occupancy")}</TabsTrigger>
         </TabsList>
+        <TabsContent value="library">
+          <ReportLibraryTab />
+        </TabsContent>
         <TabsContent value="student-performance">
           <StudentPerformanceTab />
         </TabsContent>
@@ -50,7 +55,7 @@ export default function ReportsPage() {
         <TabsContent value="dropout">
           <DropoutAnalysisTab />
         </TabsContent>
-        <TabsContent value="library">
+        <TabsContent value="library-usage">
           <LibraryUsageTab />
         </TabsContent>
         <TabsContent value="transport">

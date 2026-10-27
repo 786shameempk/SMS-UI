@@ -17,6 +17,7 @@ const ChangePasswordRequiredPage = lazy(() => import("@/features/authentication/
 const SecuritySettingsPage = lazy(() => import("@/features/authentication/pages/SecuritySettingsPage"));
 const MyAttendancePassPage = lazy(() => import("@/features/attendance/pages/MyAttendancePassPage"));
 const MyProfilePage = lazy(() => import("@/features/profile/MyProfilePage"));
+const ProfileApprovalsPage = lazy(() => import("@/features/profile/ProfileApprovalsPage"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/DashboardPage"));
 const UserManagementPage = lazy(() => import("@/features/administration/users/pages/UserManagementPage"));
 const RolePermissionManagementPage = lazy(() => import("@/features/administration/roles/pages/RolePermissionManagementPage"));
@@ -192,6 +193,7 @@ export const router = createBrowserRouter([
       { path: "account/security", element: <SecuritySettingsPage /> },
       { path: "account/attendance-pass", element: <MyAttendancePassPage /> },
       { path: "account/profile", element: <MyProfilePage /> },
+      { path: "account/profile-approvals", element: <ProfileApprovalsPage /> },
       { path: "admin/users", element: <UserManagementPage /> },
       { path: "admin/roles", element: <RolePermissionManagementPage /> },
       { path: "admin/branches", element: <BranchManagementPage /> },

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { Download } from "lucide-react";
+import AzureExport from "../components/AzureExport";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { StatCard } from "@/components/ui/stat-card";
@@ -10,7 +9,7 @@ import { AzureCard, QueryBoundary, UsageBar } from "../components/AzureUi";
 import CostChart from "../components/CostChart";
 import { useAzureCost, useAzureCostBreakdown, useAzureDailyCost } from "../hooks";
 import type { CostLine } from "../types";
-import { downloadCsv, isoDate, money } from "../utils";
+import { isoDate, money } from "../utils";
 
 type Range = "7d" | "30d" | "month" | "last-month" | "custom";
 type Dimension = "byResource" | "byResourceGroup" | "byService" | "byLocation";
@@ -78,9 +77,7 @@ export default function AzureCostPage() {
         title="Daily cost"
         description={averagePerDay !== null ? `${money(total, currency)} in this period · ${money(averagePerDay, currency)} per day` : "Cost per day"}
         actions={
-          <Button variant="outline" size="sm" disabled={!daily.data?.length} onClick={() => downloadCsv("azure-daily-cost.csv", [["Date", `Cost (${currency})`], ...(daily.data ?? []).map((d) => [d.date, d.cost])])}>
-            <Download className="h-3.5 w-3.5" /> Export CSV
-          </Button>
+          <AzureExport fileName="azure-daily-cost.csv" title="Azure daily cost" disabled={!daily.data?.length} rows={[["Date", `Cost (${currency})`], ...(daily.data ?? []).map((d) => [d.date, d.cost])]} />
         }
       >
         <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -116,14 +113,7 @@ export default function AzureCostPage() {
         title="Where the money goes"
         description="Current month vs previous month, from Azure Cost Management"
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={lines.length === 0}
-            onClick={() => downloadCsv(`azure-cost-${dimension}.csv`, [[first, "Type", "Resource group", `Current (${currency})`, `Previous (${currency})`, "Change %"], ...lines.map((l) => [l.name, l.type, l.resourceGroup, l.cost, l.previousCost, l.changePercent])])}
-          >
-            <Download className="h-3.5 w-3.5" /> Export CSV
-          </Button>
+          <AzureExport fileName={`azure-cost-${dimension}.csv`} title={`Azure cost by ${dimension}`} disabled={lines.length === 0} rows={[[first, "Type", "Resource group", `Current (${currency})`, `Previous (${currency})`, "Change %"], ...lines.map((l) => [l.name, l.type, l.resourceGroup, l.cost, l.previousCost, l.changePercent])]} />
         }
       >
         <div className="mb-4">

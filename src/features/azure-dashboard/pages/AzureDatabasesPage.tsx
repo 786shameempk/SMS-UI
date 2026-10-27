@@ -1,10 +1,9 @@
-import { Download } from "lucide-react";
+import AzureExport from "../components/AzureExport";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AzureCard, KeyValue, QueryBoundary, UsageBar } from "../components/AzureUi";
 import { useAzureCost, useAzureDatabases } from "../hooks";
-import { downloadCsv, gb, money, percent, usagePercent } from "../utils";
+import { gb, money, percent, usagePercent } from "../utils";
 
 export default function AzureDatabasesPage() {
   const sql = useAzureDatabases();
@@ -45,14 +44,7 @@ export default function AzureDatabasesPage() {
             title="Databases"
             description="Single and pooled databases, discovered from Azure"
             actions={
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={data.databases.length === 0}
-                onClick={() => downloadCsv("azure-databases.csv", [["Database", "Server", "Tier", "Pool", "Storage used (GB)", "Storage limit (GB)", "CPU %", "Data IO %", "Log IO %", `Month cost (${currency})`], ...data.databases.map((d) => [d.name, d.server, d.tier, d.elasticPool, d.storageUsedGb, d.storageLimitGb, d.cpuPercent, d.dataIoPercent, d.logIoPercent, d.monthCost])])}
-              >
-                <Download className="h-3.5 w-3.5" /> Export CSV
-              </Button>
+              <AzureExport fileName="azure-databases.csv" title="Azure databases" disabled={data.databases.length === 0} rows={[["Database", "Server", "Tier", "Pool", "Storage used (GB)", "Storage limit (GB)", "CPU %", "Data IO %", "Log IO %", `Month cost (${currency})`], ...data.databases.map((d) => [d.name, d.server, d.tier, d.elasticPool, d.storageUsedGb, d.storageLimitGb, d.cpuPercent, d.dataIoPercent, d.logIoPercent, d.monthCost])]} />
             }
           >
             {data.databases.length === 0 ? (
