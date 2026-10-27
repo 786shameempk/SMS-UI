@@ -1,3 +1,4 @@
+import HomeAdvertisement from "@/features/advertisements/HomeAdvertisement";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -217,6 +218,7 @@ export default function DashboardPage() {
 
   return (
     <PageContainer width="wide">
+      <HomeAdvertisement />
       <WelcomeHero
         eyebrow={t("{{role}} dashboard", { role: ROLE_LABEL[role] ? t(ROLE_LABEL[role]) : role })}
         title={t("{{greeting}}, {{name}}", { greeting: t(timeOfDayGreeting()), name: user?.name.split(" ")[0] ?? t("there") })}

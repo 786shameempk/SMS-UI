@@ -30,7 +30,7 @@ export default function ReportsPage() {
           <TabsTrigger value="teachers">{t("Teacher Performance")}</TabsTrigger>
           <TabsTrigger value="admissions">{t("Admissions")}</TabsTrigger>
           <TabsTrigger value="dropout">{t("Dropout Analysis")}</TabsTrigger>
-          <TabsTrigger value="library">{t("Library Usage")}</TabsTrigger>
+          <TabsTrigger value="library-usage">{t("Library Usage")}</TabsTrigger>
           <TabsTrigger value="transport">{t("Transport")}</TabsTrigger>
           <TabsTrigger value="hostel">{t("Hostel Occupancy")}</TabsTrigger>
         </TabsList>
@@ -55,7 +55,7 @@ export default function ReportsPage() {
         <TabsContent value="dropout">
           <DropoutAnalysisTab />
         </TabsContent>
-        <TabsContent value="library">
+        <TabsContent value="library-usage">
           <LibraryUsageTab />
         </TabsContent>
         <TabsContent value="transport">

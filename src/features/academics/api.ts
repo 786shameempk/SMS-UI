@@ -8,6 +8,8 @@ import type {
   CalendarEventType,
   Department,
   DepartmentFormValues,
+  DepartmentMember,
+  ReportingOption,
   MergeSectionsResult,
   SchoolClass,
   SchoolClassFormValues,
@@ -96,6 +98,11 @@ interface ApiDepartment {
   branchId: string;
   name: string;
   description: string | null;
+  code?: string | null;
+  headStaffId?: string | null;
+  headName?: string | null;
+  isActive?: boolean;
+  employeeCount?: number;
 }
 
 interface ApiSchoolClass {
@@ -171,6 +178,11 @@ const mapDepartment = (dto: ApiDepartment): Department => ({
   branchId: dto.branchId,
   name: dto.name,
   description: dto.description ?? undefined,
+  code: dto.code ?? undefined,
+  headStaffId: dto.headStaffId ?? undefined,
+  headName: dto.headName ?? undefined,
+  isActive: dto.isActive ?? true,
+  employeeCount: dto.employeeCount ?? 0,
 });
 
 const mapSchoolClass = (dto: ApiSchoolClass): SchoolClass => ({
@@ -310,6 +322,8 @@ export async function createDepartment(values: DepartmentFormValues): Promise<De
     academicHttpClient.post<ApiDepartment>("/api/departments", {
       name: values.name,
       description: values.description ?? null,
+      code: values.code || null,
+      isActive: values.isActive,
     }),
   );
   return mapDepartment(dto);
@@ -320,6 +334,8 @@ export async function updateDepartment(id: string, values: DepartmentFormValues)
     academicHttpClient.put<ApiDepartment>(`/api/departments/${id}`, {
       name: values.name,
       description: values.description ?? null,
+      code: values.code || null,
+      isActive: values.isActive,
     }),
   );
   return mapDepartment(dto);
@@ -328,6 +344,24 @@ export async function updateDepartment(id: string, values: DepartmentFormValues)
 export async function deleteDepartment(id: string): Promise<void> {
   await unwrap(academicHttpClient.delete(`/api/departments/${id}`));
 }
+
+/** Makes a staff member the department head, or removes the head when `staffId` is null. */
+export async function assignDepartmentHead(id: string, staffId: string | null): Promise<Department> {
+  return mapDepartment(await unwrap(academicHttpClient.put<ApiDepartment>(`/api/departments/${id}/head`, { staffId })));
+}
+
+export const listDepartmentMembers = (id: string) => unwrap(academicHttpClient.get<DepartmentMember[]>(`/api/departments/${id}/members`));
+
+/** Adds a person to the department; by default their reporting person becomes the department head. */
+export const assignDepartmentMember = (id: string, staffId: string, reportingToStaffId?: string | null) =>
+  unwrap(academicHttpClient.post<DepartmentMember>(`/api/departments/${id}/members`, { staffId, reportingToStaffId: reportingToStaffId ?? null, useDepartmentHead: !reportingToStaffId }));
+
+export const setReportingPerson = (staffId: string, reportingToStaffId: string | null) =>
+  unwrap(academicHttpClient.put<DepartmentMember>(`/api/departments/staff/${staffId}/reporting-person`, { reportingToStaffId }));
+
+/** People who can be a staff member's reporting person, with the department head first. */
+export const listReportingOptions = (params: { staffId?: string; departmentId?: string }) =>
+  unwrap(academicHttpClient.get<ReportingOption[]>("/api/departments/reporting-options", { params }));
 
 // ── Classes ──────────────────────────────────────────────────────────────
 

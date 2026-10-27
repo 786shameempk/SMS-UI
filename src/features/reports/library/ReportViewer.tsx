@@ -11,20 +11,25 @@ import { EmptyState, ErrorState } from "@/components/ui/states";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatCard } from "@/components/ui/stat-card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listAcademicYears, listClasses, listSections, listSubjects, listTerms } from "@/features/academics/api";
 import { listExams } from "@/features/examinations/api";
 import { listBranches } from "@/features/administration/branches/api";
+import { listTeachers } from "@/features/teachers/api";
+import { listBuses, listRoutes } from "@/features/transport/api";
+import { listHostelMasters } from "@/features/hostel/api";
+import { listCategories as listBookCategories } from "@/features/library/api";
+import { listCategories as listItemCategories } from "@/features/inventory/api";
 import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
-import { downloadReportCsv, fetchAllRows, runReport, saveBlob, type AllRows } from "./api";
+import { downloadReportExport, fetchAllRows, runReport, saveBlob, type AllRows, type ExportFormat } from "./api";
 import { resolvePreset, toKey, validateRange, type DatePreset } from "./dateRanges";
 import { formatCell, isNumericColumn, rowsToCsv } from "./format";
 import ReportFilterPanel, { optionsFor, type FilterOptionLists } from "./ReportFilterPanel";
 import { printReport } from "./printReport";
-import { PAGE_SIZES, type ReportDescriptor, type ReportQuery } from "./types";
+import { PAGE_SIZES, type ReportAccess, type ReportDescriptor, type ReportQuery } from "./types";
 
 type Filters = Record<string, string>;
 
@@ -66,6 +71,12 @@ function useOptionLists(descriptor: ReportDescriptor): FilterOptionLists {
   const terms = useQuery({ queryKey: ["reports", "lists", "terms"], queryFn: listTerms, enabled: uses("terms"), staleTime: 5 * 60_000 });
   const exams = useQuery({ queryKey: ["reports", "lists", "exams"], queryFn: listExams, enabled: uses("exams"), staleTime: 5 * 60_000 });
   const subjects = useQuery({ queryKey: ["reports", "lists", "subjects"], queryFn: listSubjects, enabled: uses("subjects"), staleTime: 5 * 60_000 });
+  const teachers = useQuery({ queryKey: ["reports", "lists", "teachers"], queryFn: listTeachers, enabled: uses("teachers"), staleTime: 5 * 60_000 });
+  const routes = useQuery({ queryKey: ["reports", "lists", "routes"], queryFn: listRoutes, enabled: uses("routes"), staleTime: 5 * 60_000 });
+  const buses = useQuery({ queryKey: ["reports", "lists", "buses"], queryFn: listBuses, enabled: uses("buses"), staleTime: 5 * 60_000 });
+  const hostels = useQuery({ queryKey: ["reports", "lists", "hostels"], queryFn: listHostelMasters, enabled: uses("hostels"), staleTime: 5 * 60_000 });
+  const bookCategories = useQuery({ queryKey: ["reports", "lists", "bookCategories"], queryFn: listBookCategories, enabled: uses("bookCategories"), staleTime: 5 * 60_000 });
+  const itemCategories = useQuery({ queryKey: ["reports", "lists", "itemCategories"], queryFn: listItemCategories, enabled: uses("itemCategories"), staleTime: 5 * 60_000 });
   return useMemo(
     () => ({
       academicYears: (years.data ?? []).map((y) => ({ value: y.id, label: y.name, startDate: y.startDate, endDate: y.endDate, isCurrent: y.isCurrent })),
@@ -75,8 +86,14 @@ function useOptionLists(descriptor: ReportDescriptor): FilterOptionLists {
       terms: (terms.data ?? []).map((x) => ({ value: x.id, label: x.name })),
       exams: (exams.data ?? []).map((x) => ({ value: x.id, label: x.name, classId: x.classId })),
       subjects: (subjects.data ?? []).map((x) => ({ value: x.id, label: x.name })),
+      teachers: (teachers.data ?? []).map((x) => ({ value: x.id, label: `${x.firstName} ${x.lastName}`.trim() })).sort((a, b) => a.label.localeCompare(b.label)),
+      routes: (routes.data ?? []).map((x) => ({ value: x.id, label: x.name })),
+      buses: (buses.data ?? []).map((x) => ({ value: x.id, label: x.regNumber })),
+      hostels: (hostels.data ?? []).map((x) => ({ value: x.id, label: x.name })),
+      bookCategories: (bookCategories.data ?? []).map((x) => ({ value: x.id, label: x.name })),
+      itemCategories: (itemCategories.data ?? []).map((x) => ({ value: x.id, label: x.name })),
     }),
-    [years.data, classes.data, sections.data, branches.data, terms.data, exams.data, subjects.data],
+    [years.data, classes.data, sections.data, branches.data, terms.data, exams.data, subjects.data, teachers.data, routes.data, buses.data, hostels.data, bookCategories.data, itemCategories.data],
   );
 }
 
@@ -116,9 +133,13 @@ function ExportProgressDialog({ progress, onCancel }: { progress: ProgressState 
 interface Props {
   descriptor: ReportDescriptor;
   onBack: () => void;
+  /** What the server will allow this login to do; Print and Export are only offered when it will accept them. */
+  access?: ReportAccess;
 }
 
-export default function ReportViewer({ descriptor, onBack }: Props) {
+const FULL_ACCESS: ReportAccess = { canExport: true, canPrint: true, canSeeSensitive: true, canSeeAllBranches: true };
+
+export default function ReportViewer({ descriptor, onBack, access = FULL_ACCESS }: Props) {
   const { t, i18n } = useTranslation("reports");
   const branding = useTenantBranding();
   const user = useAuthStore((s) => s.user);
@@ -158,7 +179,7 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
 
   const result = useQuery({
     queryKey: ["reports", "run", descriptor.key, query],
-    queryFn: ({ signal }) => runReport(descriptor.key, query, signal),
+    queryFn: ({ signal }) => runReport(descriptor.key, query, signal, descriptor.service),
     enabled: runnable,
     placeholderData: (previous) => previous,
   });
@@ -208,9 +229,11 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
       try {
         const loaded = await fetchAllRows(
           descriptor.key,
-          baseQuery,
+          // Printing is its own permission on the server, so the pages that feed a print say so.
+          show ? baseQuery : { ...baseQuery, purpose: "print" },
           (done, of) => setProgress({ title, loaded: done, total: of }),
           controller.signal,
+          descriptor.service,
         );
         // Only the Load all button changes what the screen shows; printing just uses the rows.
         if (show) setAll(loaded);
@@ -223,7 +246,7 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
         setProgress(null);
       }
     },
-    [all, baseQuery, descriptor.key, t],
+    [all, baseQuery, descriptor.key, descriptor.service, t],
   );
 
   const filterLines = useMemo(() => {
@@ -271,12 +294,12 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
     saveBlob(new Blob([rowsToCsv(descriptor.columns, rows)], { type: "text/csv;charset=utf-8" }), `${descriptor.key}-page-${page}.csv`);
   };
 
-  const exportAll = async () => {
+  const exportAll = async (format: ExportFormat = "csv") => {
     const controller = new AbortController();
     abortRef.current = controller;
     setProgress({ title: t("Exporting all filtered records"), loaded: 0, total: data?.total ?? 0 });
     try {
-      await downloadReportCsv(descriptor.key, baseQuery, controller.signal);
+      await downloadReportExport(descriptor.key, baseQuery, format, controller.signal, descriptor.service);
       toast.success(t("Export downloaded."));
     } catch (err) {
       if (!axios.isCancel(err) && !controller.signal.aborted) toast.error(err instanceof Error ? err.message : t("The export failed."));
@@ -287,6 +310,9 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
   };
 
   const pagesTotal = data?.totalPages ?? 1;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // Opening a report from the library moves the keyboard (and screen reader) to its heading.
+  useEffect(() => headingRef.current?.focus(), []);
 
   return (
     <div className="space-y-4">
@@ -296,7 +322,7 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {t("All reports")}
           </Button>
-          <h2 className="text-lg font-semibold text-foreground">{descriptor.title}</h2>
+          <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold text-foreground outline-none">{descriptor.title}</h2>
           <p className="max-w-3xl text-sm text-muted-foreground">{descriptor.description}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -304,34 +330,50 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
             <RefreshCw className={cn("h-3.5 w-3.5", result.isFetching && "animate-spin")} aria-hidden="true" />
             {t("Refresh")}
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" variant="outline" size="sm" disabled={!runnable || total === 0}>
-                <Printer className="h-3.5 w-3.5" aria-hidden="true" />
-                {t("Print")}
-                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t("Opens a print preview; choose Save as PDF there to download")}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => void print("page")}>{t("Current page ({{count}} records)", { count: rows.length })}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void print("all")}>{t("All filtered records ({{count}})", { count: total })}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" variant="outline" size="sm" disabled={!runnable || total === 0}>
-                <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                {t("Export CSV")}
-                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={exportPage}>{t("Current page ({{count}} records)", { count: rows.length })}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void exportAll()}>{t("All filtered records ({{count}})", { count: total })}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {access.canPrint && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="sm" disabled={!runnable || total === 0}>
+                  <Printer className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("Print")}
+                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{t("Opens a print preview; choose Save as PDF there to download")}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void print("page")}>{t("Current page ({{count}} records)", { count: rows.length })}</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void print("all")}>{t("All filtered records ({{count}})", { count: total })}</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {access.canExport && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="sm" disabled={!runnable || total === 0}>
+                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("Export")}
+                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{t("CSV")}</DropdownMenuLabel>
+                <DropdownMenuItem onSelect={exportPage}>{t("Current page ({{count}} records)", { count: rows.length })}</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void exportAll("csv")}>{t("All filtered records ({{count}})", { count: total })}</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>{t("Excel (summary and data sheets)")}</DropdownMenuLabel>
+                <DropdownMenuItem onSelect={() => void exportAll("xlsx")}>{t("All filtered records ({{count}})", { count: total })}</DropdownMenuItem>
+                {access.canPrint && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>{t("PDF (choose Save as PDF)")}</DropdownMenuLabel>
+                    <DropdownMenuItem onSelect={() => void print("page")}>{t("Current page ({{count}} records)", { count: rows.length })}</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void print("all")}>{t("All filtered records ({{count}})", { count: total })}</DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -391,6 +433,7 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
       ) : (
         <>
           <Table stickyHeader containerClassName="rounded-xl border border-border">
+            <TableCaption className="sr-only">{descriptor.title}. {t("{{count}} records", { count: total })}</TableCaption>
             <TableHeader>
               <TableRow hover={false}>
                 {descriptor.columns.map((c) => {
@@ -398,7 +441,7 @@ export default function ReportViewer({ descriptor, onBack }: Props) {
                   return (
                     <TableHead key={c.key} className={cn(isNumericColumn(c.type) && "text-end")} aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : undefined}>
                       {c.sortable ? (
-                        <button type="button" className="inline-flex items-center gap-1 font-semibold hover:text-foreground" onClick={() => toggleSort(c.key)}>
+                        <button type="button" className="inline-flex items-center gap-1 rounded font-semibold hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("Sort by {{column}}", { column: c.label })} onClick={() => toggleSort(c.key)}>
                           {c.label}
                           {active && (sortDir === "asc" ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />)}
                         </button>

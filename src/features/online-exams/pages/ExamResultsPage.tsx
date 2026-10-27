@@ -3,7 +3,7 @@ import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, Award, BarChart3, CheckCircle2, ClipboardPenLine, Download, Printer, Send, TrendingDown, TrendingUp, UserX, Users, XCircle } from "lucide-react";
+import { ArrowLeft, Award, BarChart3, CheckCircle2, ClipboardPenLine, Printer, Send, TrendingDown, TrendingUp, UserX, Users, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { DataTable } from "@/components/tables/DataTable";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { ErrorState, PageSkeleton } from "@/components/ui/states";
 import { useAuthStore } from "@/store/authStore";
 import { getExamResults } from "../api";
 import { formatExamTime, formatMarks, formatPercent, isExamStaff, RESULT_STATUS_LABEL, RESULT_STATUS_TONE } from "../constants";
+import { ExportMenu } from "@/components/ui/export-menu";
 import { downloadResultsCsv, printResults } from "../exportResults";
 import type { ExamResultRow, ResultRowStatus } from "../types";
 import { allowedActions, ExamStatusBadge, useExamActions } from "../components/useExamActions";
@@ -111,10 +112,7 @@ export default function ExamResultsPage() {
               <BarChart3 className="h-4 w-4" />
               {t("Analysis")}
             </Button>
-            <Button variant="outline" onClick={() => downloadResultsCsv(r)} disabled={r.rows.length === 0}>
-              <Download className="h-4 w-4" />
-              {t("Export CSV")}
-            </Button>
+            <ExportMenu size="default" onCsv={() => downloadResultsCsv(r)} onPdf={() => printResults(r, branding)} disabled={r.rows.length === 0} />
             <Button variant="outline" onClick={() => printResults(r, branding) || toast.error(t("Allow pop-ups to print the results sheet"))} disabled={r.rows.length === 0}>
               <Printer className="h-4 w-4" />
               {t("Print")}

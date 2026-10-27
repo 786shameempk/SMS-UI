@@ -20,6 +20,14 @@ export interface FilterOptionLists {
   /** Exams carry their class so the list can follow the chosen class. */
   exams: (ReportOption & { classId: string })[];
   subjects: ReportOption[];
+  /** Teachers, for the Teacher filter. */
+  teachers: ReportOption[];
+  /** Transport routes, vehicles and hostels (CampusService), and the book and stock categories. */
+  routes: ReportOption[];
+  buses: ReportOption[];
+  hostels: ReportOption[];
+  bookCategories: ReportOption[];
+  itemCategories: ReportOption[];
 }
 
 /** The options a select filter offers, whether fixed by the report or taken from a list the page already loads. */
@@ -40,6 +48,18 @@ export function optionsFor(def: ReportFilterDef, lists: FilterOptionLists, value
       return values.classId ? lists.exams.filter((e) => e.classId === values.classId) : lists.exams;
     case "subjects":
       return lists.subjects;
+    case "teachers":
+      return lists.teachers;
+    case "routes":
+      return lists.routes;
+    case "buses":
+      return lists.buses;
+    case "hostels":
+      return lists.hostels;
+    case "bookCategories":
+      return lists.bookCategories;
+    case "itemCategories":
+      return lists.itemCategories;
     default:
       return [];
   }

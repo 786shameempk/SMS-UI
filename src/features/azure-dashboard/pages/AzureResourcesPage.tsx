@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Download } from "lucide-react";
+import AzureExport from "../components/AzureExport";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AzureCard, HealthBadge, QueryBoundary } from "../components/AzureUi";
 import { useAzureCost, useAzureResources } from "../hooks";
 import type { AzureResource } from "../types";
-import { azureResourcePath, downloadCsv, money } from "../utils";
+import { azureResourcePath, money } from "../utils";
 
 const PAGE_SIZE = 15;
 const ALL = "all";
@@ -59,17 +59,16 @@ export default function AzureResourcesPage() {
   const visible = filtered.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
   const reset = <T,>(setter: (v: T) => void) => (v: T) => { setter(v); setPage(0); };
 
-  const exportCsv = (rows: AzureResource[]) =>
-    downloadCsv("azure-resources.csv", [
-      ["Name", "Type", "Resource group", "Region", "SKU", "Status", `Month cost (${currency})`, "Resource ID"],
-      ...rows.map((r) => [r.name, r.typeLabel, r.resourceGroup, r.location, r.sku, r.status, r.monthCost, r.id]),
-    ]);
+  const resourceRows = (rows: AzureResource[]) => [
+    ["Name", "Type", "Resource group", "Region", "SKU", "Status", `Month cost (${currency})`, "Resource ID"],
+    ...rows.map((r) => [r.name, r.typeLabel, r.resourceGroup, r.location, r.sku, r.status, r.monthCost, r.id]),
+  ];
 
   return (
     <AzureCard
       title="All resources"
       description="Discovered live from Azure Resource Manager - nothing is hardcoded"
-      actions={<Button variant="outline" size="sm" disabled={filtered.length === 0} onClick={() => exportCsv(filtered)}><Download className="h-3.5 w-3.5" /> Export CSV</Button>}
+      actions={<AzureExport fileName="azure-resources.csv" title="Azure resources" disabled={filtered.length === 0} rows={resourceRows(filtered)} />}
     >
       <QueryBoundary query={resources} title="Resources" isEmpty={(d) => d.length === 0} emptyTitle="No resources found" emptyDescription="The subscription has no resources, or the identity can't read them.">
         {(data) => (

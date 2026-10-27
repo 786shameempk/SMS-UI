@@ -1,10 +1,10 @@
-import { academicHttpClient } from "@/lib/httpClient";
+import { academicHttpClient, campusHttpClient, engagementHttpClient, financeHttpClient, meetingHttpClient } from "@/lib/httpClient";
 import { stubClient } from "@/test/utils";
-import { fetchAllRows, runReport } from "./api";
+import { downloadReportExport, fetchAllRows, listReportCatalog, runReport } from "./api";
 import { monthRange, previousAcademicYear, resolvePreset, validateRange } from "./dateRanges";
 import { csvCell, formatCell, rowsToCsv } from "./format";
 import { buildReportPrintHtml } from "./printReport";
-import { matchesReport } from "./ReportLibraryTab";
+import { frequentReports, matchesReport } from "./ReportLibraryTab";
 import { defaultFilters, filterProblem } from "./ReportViewer";
 import type { ReportColumnDef, ReportDescriptor, ReportRow } from "./types";
 
@@ -178,6 +178,16 @@ describe("loading every record", () => {
     expect((calls[0].body as { filters: Record<string, string> }).filters).not.toHaveProperty("empty");
   });
 
+  it("marks the pages that feed a print, because printing is its own permission", async () => {
+    const calls = stubClient(academicHttpClient, {
+      "POST /api/reports/r3/query": { reportKey: "r3", rows: [], total: 0, page: 1, pageSize: 200, totalPages: 1, summary: [], generatedAtUtc: "" },
+    });
+    await fetchAllRows("r3", { filters: {}, purpose: "print" });
+    await fetchAllRows("r3", { filters: {} });
+    expect(calls[0].body).toMatchObject({ purpose: "print" });
+    expect((calls[1].body as { purpose?: string }).purpose).toBeUndefined();
+  });
+
   it("stops at an empty result instead of looping", async () => {
     stubClient(academicHttpClient, {
       "POST /api/reports/r2/query": { reportKey: "r2", rows: [], total: 0, page: 1, pageSize: 200, totalPages: 1, summary: [], generatedAtUtc: "" },
@@ -190,5 +200,123 @@ describe("loading every record", () => {
       Object.assign(new Error("x"), { isAxiosError: true, response: { status: 403, data: { title: "Your school's plan or your role does not include this report." } } }),
     );
     await expect(runReport("students.contacts", { filters: {}, page: 1, pageSize: 25 })).rejects.toThrow(/does not include this report/);
+  });
+
+  it("asks the owning service for the chosen export format and saves it under the server's file name", async () => {
+    const post = vi.spyOn(financeHttpClient, "post").mockResolvedValue({ data: new Blob(["x"]), headers: { "content-disposition": 'attachment; filename="fees.collection-20261027.xlsx"' } });
+    const create = vi.fn(() => "blob:x");
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: create, revokeObjectURL: vi.fn() }));
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+
+    const name = await downloadReportExport("fees.collection", { filters: { year: "2026" }, sortBy: "name" }, "xlsx", undefined, "finance");
+
+    expect(name).toBe("fees.collection-20261027.xlsx");
+    expect(post).toHaveBeenCalledWith("/api/reports/fees.collection/export", expect.anything(), expect.objectContaining({ params: { format: "xlsx" }, responseType: "blob" }));
+    expect(click).toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("the report catalogue", () => {
+  beforeEach(() => {
+    stubClient(engagementHttpClient, {});
+    stubClient(meetingHttpClient, {});
+  });
+
+  it("tags each report with the service that owns it and keeps that service's access", async () => {
+    stubClient(academicHttpClient, {
+      "GET /api/reports": [descriptor({ key: "students.register" })],
+      "GET /api/reports/access": { canExport: true, canPrint: false, canSeeSensitive: false, canSeeAllBranches: false },
+    });
+    stubClient(financeHttpClient, {
+      "GET /api/reports": [descriptor({ key: "fees.collection", category: "fees", categoryTitle: "Fees and Financial Reports" })],
+      "GET /api/reports/access": { canExport: false, canPrint: true, canSeeSensitive: false, canSeeAllBranches: false },
+    });
+    stubClient(engagementHttpClient, {
+      "GET /api/reports": [descriptor({ key: "comms.deliveries", category: "communication", categoryTitle: "Communication and Notification Reports" })],
+      "GET /api/reports/access": { canExport: true, canPrint: true, canSeeSensitive: false, canSeeAllBranches: false },
+    });
+    stubClient(meetingHttpClient, {
+      "GET /api/reports": [descriptor({ key: "meetings.register", category: "meetings", categoryTitle: "Online Classes and Meetings Reports" })],
+      "GET /api/reports/access": { canExport: false, canPrint: true, canSeeSensitive: false, canSeeAllBranches: false },
+    });
+    stubClient(campusHttpClient, {
+      "GET /api/reports": [descriptor({ key: "hostel.rooms", category: "hostel", categoryTitle: "Hostel Reports" })],
+      "GET /api/reports/access": { canExport: true, canPrint: true, canSeeSensitive: true, canSeeAllBranches: false },
+    });
+
+    const catalog = await listReportCatalog();
+
+    expect(catalog.reports.map((r) => [r.key, r.service])).toEqual([["students.register", "academic"], ["fees.collection", "finance"], ["hostel.rooms", "campus"], ["comms.deliveries", "engagement"], ["meetings.register", "meeting"]]);
+    expect(catalog.access.campus.canSeeSensitive).toBe(true);
+    expect(catalog.access.academic).toEqual({ canExport: true, canPrint: false, canSeeSensitive: false, canSeeAllBranches: false });
+    expect(catalog.access.finance.canPrint).toBe(true);
+    expect(catalog.access.finance.canExport).toBe(false);   // each service's own rights, never merged
+  });
+
+  it("keeps the other services' reports when one service is refusing or down", async () => {
+    stubClient(academicHttpClient, {
+      "GET /api/reports": [descriptor({ key: "students.register" })],
+      "GET /api/reports/access": { canExport: true, canPrint: true, canSeeSensitive: false, canSeeAllBranches: false },
+    });
+    stubClient(campusHttpClient, {});
+    vi.spyOn(financeHttpClient, "get").mockRejectedValue(
+      Object.assign(new Error("x"), { isAxiosError: true, response: { status: 403, data: { title: "You don't have access to this area." } } }),
+    );
+
+    const catalog = await listReportCatalog();
+
+    expect(catalog.reports.map((r) => r.key)).toEqual(["students.register"]);
+    expect(catalog.access.finance).toBeUndefined();
+  });
+
+  it("sends a campus report to the campus service only", async () => {
+    const campus = stubClient(campusHttpClient, {
+      "POST /api/reports/hostel.rooms/query": { reportKey: "hostel.rooms", rows: [], total: 0, page: 1, pageSize: 25, totalPages: 1, summary: [], generatedAtUtc: "" },
+    });
+    const academic = stubClient(academicHttpClient, {});
+    const finance = stubClient(financeHttpClient, {});
+
+    await runReport("hostel.rooms", { filters: {}, page: 1, pageSize: 25 }, undefined, "campus");
+
+    expect(campus).toHaveLength(1);
+    expect(academic).toHaveLength(0);
+    expect(finance).toHaveLength(0);
+  });
+
+  it("sends a finance report to the finance service, not AcademicService", async () => {
+    const finance = stubClient(financeHttpClient, {
+      "POST /api/reports/fees.collection/query": { reportKey: "fees.collection", rows: [], total: 0, page: 1, pageSize: 25, totalPages: 1, summary: [], generatedAtUtc: "" },
+    });
+    const academic = stubClient(academicHttpClient, {});
+
+    await runReport("fees.collection", { filters: {}, page: 1, pageSize: 25 }, undefined, "finance");
+
+    expect(finance).toHaveLength(1);
+    expect(academic).toHaveLength(0);
+  });
+
+  it("offers nothing extra when the access call fails: no export, no print", async () => {
+    stubClient(financeHttpClient, {});
+    stubClient(campusHttpClient, {});
+    vi.spyOn(academicHttpClient, "get").mockImplementation(async (url: string) => {
+      if (url === "/api/reports") return { data: [descriptor()] };
+      throw Object.assign(new Error("x"), { isAxiosError: true, response: { status: 500, data: {} } });
+    });
+    const catalog = await listReportCatalog();
+    expect(catalog.access.academic).toMatchObject({ canExport: false, canPrint: false });
+  });
+});
+
+describe("frequently used reports", () => {
+  const reports = [descriptor({ key: "a", title: "A" }), descriptor({ key: "b", title: "B" }), descriptor({ key: "c", title: "C" }), descriptor({ key: "d", title: "D" })];
+
+  it("lists reports opened at least twice, most used first, at most three", () => {
+    expect(frequentReports(reports, { a: 2, b: 5, c: 1, d: 3 }).map((r) => r.key)).toEqual(["b", "d", "a"]);
+    expect(frequentReports(reports, { a: 1 })).toEqual([]);
+  });
+
+  it("leaves out reports the login can no longer use", () => {
+    expect(frequentReports(reports, { gone: 9, a: 2 }).map((r) => r.key)).toEqual(["a"]);
   });
 });

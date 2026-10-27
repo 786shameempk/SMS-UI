@@ -125,7 +125,7 @@ describe("Monitoring", () => {
 });
 
 describe("Reports", () => {
-  it("runs the first report and offers a CSV download", async () => {
+  it("runs the first report and offers a CSV or PDF download", async () => {
     asUser(["reports.view"]);
     api.listReports.mockResolvedValue([
       { key: "revenue", title: "Revenue collected", description: "Verified payments.", usesDates: true },
@@ -135,7 +135,7 @@ describe("Reports", () => {
     renderWithProviders(<ReportsPage />);
     expect(await screen.findByText("Green Valley")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Download CSV/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Download" })).toBeEnabled();
     expect(screen.getByLabelText("From")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Plans performance/ }));
     await waitFor(() => expect(api.runReport).toHaveBeenLastCalledWith("plans", {}));

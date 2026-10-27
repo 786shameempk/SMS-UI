@@ -47,11 +47,40 @@ export interface Department {
   branchId: string;
   name: string;
   description?: string;
+  code?: string;
+  headStaffId?: string;
+  headName?: string;
+  isActive: boolean;
+  employeeCount: number;
 }
 
 export interface DepartmentFormValues {
   name: string;
   description?: string;
+  code?: string;
+  isActive: boolean;
+}
+
+export interface DepartmentMember {
+  staffId: string;
+  name: string;
+  employeeId: string;
+  designation: string;
+  status: string;
+  hasLogin: boolean;
+  isHead: boolean;
+  reportingToStaffId: string | null;
+  reportingToName: string | null;
+}
+
+export interface ReportingOption {
+  staffId: string;
+  name: string;
+  employeeId: string;
+  designation: string;
+  department: string;
+  isDepartmentHead: boolean;
+  suggested: boolean;
 }
 
 export interface SchoolClass {

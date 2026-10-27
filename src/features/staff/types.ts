@@ -103,6 +103,8 @@ export interface StaffMember {
   photoUrl?: string | null;
   designation: StaffDesignation;
   department: string;
+  departmentId?: string;
+  reportingToStaffId?: string;
   status: StaffStatus;
   joiningDate: string;
   dateOfBirth: string;
@@ -131,6 +133,8 @@ export interface StaffFormValues {
   phone: string;
   email: string;
   address: string;
+  /** Who the person reports to. Empty keeps the current one (or, for a new joiner, suggests the department head). */
+  reportingToStaffId?: string;
   /** Sign-in role for a new joiner; empty = the designation's own role (none for designations without one). */
   loginRole?: StaffLoginRole | "";
 }

@@ -288,6 +288,12 @@ services:
     environment:
       <<: *dotnet-env
       Services__FinanceServiceUrl: http://financeservice:8080/
+      # The report catalogue (GET /api/report-catalog) asks each of these services which reports the caller may use.
+      ReportServices__academic: http://academicservice:8080/
+      ReportServices__finance: http://financeservice:8080/
+      ReportServices__campus: http://campusservice:8080/
+      ReportServices__engagement: http://engagementservice:8080/
+      ReportServices__meeting: http://meetingservice:8080/
       # Expo web preview of the mobile apps (npm run student:web) calls the gateway from the Metro dev server origin.
       Cors__AllowedOrigins__2: http://localhost:8081
       Cors__AllowedOrigins__3: http://127.0.0.1:8081

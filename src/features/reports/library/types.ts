@@ -39,6 +39,16 @@ export interface ReportDescriptor {
   orientation: "portrait" | "landscape";
   sensitive: boolean;
   supportsDateRange: boolean;
+  /** Which service owns the report (set by the client from where the catalogue came from); absent means AcademicService. */
+  service?: string;
+}
+
+/** What this login may do with reports, from the owning service. */
+export interface ReportAccess {
+  canExport: boolean;
+  canPrint: boolean;
+  canSeeSensitive: boolean;
+  canSeeAllBranches: boolean;
 }
 
 export type ReportRow = Record<string, string | number | boolean | null>;
@@ -68,6 +78,8 @@ export interface ReportQuery {
   sortBy?: string;
   sortDirection?: "asc" | "desc";
   search?: string;
+  /** "print" marks page requests that feed a print, which is its own permission on the server. */
+  purpose?: "print";
 }
 
 export const PAGE_SIZES = [10, 25, 50, 100, 200] as const;

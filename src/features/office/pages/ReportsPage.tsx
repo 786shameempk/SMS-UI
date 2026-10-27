@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { BarChart3, Download } from "lucide-react";
+import { BarChart3 } from "lucide-react";
+import { ExportMenu } from "@/components/ui/export-menu";
+import { exportPdf } from "@/utils/pdfExport";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,7 +40,7 @@ export default function ReportsPage() {
 
   return (
     <PageContainer>
-      <PageHeader icon={BarChart3} title="Reports" description="Operational reports from the live data. Each can be downloaded as CSV." />
+      <PageHeader icon={BarChart3} title="Reports" description="Operational reports from the live data. Each can be downloaded as CSV or PDF." />
       {reports.isLoading ? (
         <Skeleton className="h-48 rounded-xl" />
       ) : reports.isError ? (
@@ -68,7 +69,7 @@ export default function ReportsPage() {
                   <label className="space-y-1 text-sm"><span className="font-medium">To</span><Input type="date" className="w-44" value={to} onChange={(e) => setTo(e.target.value)} /></label>
                 </>
               )}
-              <Button variant="outline" className="ms-auto" onClick={() => csv.mutate()} loading={csv.isPending} disabled={!table.data}><Download className="h-4 w-4" aria-hidden="true" />Download CSV</Button>
+              <ExportMenu className="ms-auto" label="Download" size="default" onCsv={() => csv.mutate()} onPdf={() => exportPdf({ title: selected?.title ?? "Report", subtitle: selected?.usesDates ? `${from} to ${to}` : undefined, headers: table.data!.columns, rows: table.data!.rows as unknown[][] })} disabled={!table.data || csv.isPending} />
             </div>
             {table.isLoading ? (
               <Skeleton className="h-64 rounded-xl" />

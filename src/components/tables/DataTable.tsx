@@ -15,7 +15,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ChevronsUpDown, Download, FilterX, RotateCw, SearchX, Settings2, X, type LucideIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, FilterX, RotateCw, SearchX, Settings2, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -31,7 +31,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { tableClasses } from "@/components/ui/table-classes";
 import { useHorizontalOverflow } from "@/hooks/useHorizontalOverflow";
+import { ExportMenu } from "@/components/ui/export-menu";
+import { useTenantBranding } from "@/features/tenant/TenantProvider";
 import { downloadCsv } from "@/utils/csv";
+import { exportPdf } from "@/utils/pdfExport";
 import { cn } from "@/utils/cn";
 import { FilterChips, type ActiveFilter } from "./FilterChips";
 import { Pagination } from "./Pagination";
@@ -267,9 +270,16 @@ export function DataTable<TData>({
   const hasToolbarContent = Boolean(showSearch || toolbar || filters || actions || showColumnMenu || exportFileName || onRefresh || hasFilters);
   const showPageSize = server ? Boolean(server.onPageSizeChange) : Boolean(pageSizeOptions) || (pageSize >= 10 && filteredCount > pageSize);
 
+  const branding = useTenantBranding();
   const exportCsv = (source: Row<TData>[]) => {
     const { headers, rows: lines } = exportRows(source, table.getVisibleLeafColumns());
     downloadCsv(exportFileName ?? "export", headers, lines);
+  };
+  /** The same rows and columns as the CSV, as a printable PDF titled after the file name ("overdue-fees" becomes "Overdue fees"). */
+  const exportPdfOf = (source: Row<TData>[]) => {
+    const { headers, rows: lines } = exportRows(source, table.getVisibleLeafColumns());
+    const name = (exportFileName ?? "export").replace(/[-_]+/g, " ");
+    return exportPdf({ title: name.charAt(0).toUpperCase() + name.slice(1), headers, rows: lines, branding });
   };
 
   // Without a maxHeight the header sticks to the page while scrolling - possible only while this table isn't
@@ -364,11 +374,7 @@ export function DataTable<TData>({
         </DropdownMenu>
       )}
       {exportFileName && (
-        <Button variant="outline" size="sm" onClick={() => exportCsv(filteredRows)} disabled={filteredRows.length === 0}>
-          <Download className="h-3.5 w-3.5" />
-          <span className="hidden lg:inline">{t("Export")}</span>
-          <span className="sr-only lg:hidden">{t("Export")}</span>
-        </Button>
+        <ExportMenu onCsv={() => exportCsv(filteredRows)} onPdf={() => exportPdfOf(filteredRows)} disabled={filteredRows.length === 0} compactLabel />
       )}
     </>
   );
@@ -420,10 +426,7 @@ export function DataTable<TData>({
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {exportFileName && (
-                  <Button variant="outline" size="sm" onClick={() => exportCsv(selectedRows)}>
-                    <Download className="h-3.5 w-3.5" />
-                    {t("Export")}
-                  </Button>
+                  <ExportMenu onCsv={() => exportCsv(selectedRows)} onPdf={() => exportPdfOf(selectedRows)} />
                 )}
                 {bulkActions?.(
                   selectedRows.map((r) => r.original),

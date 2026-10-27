@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
-import { listDepartments } from "@/features/academics/api";
+import { listDepartments, listReportingOptions } from "@/features/academics/api";
 import { DESIGNATIONS, DESIGNATION_LOGIN_ROLE, STAFF_LOGIN_ROLES } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
 import { FormSection } from "@/components/ui/form-field";
@@ -30,6 +30,7 @@ const staffFormSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
   address: z.string().min(1, "Address is required"),
   loginRole: z.enum(["", "teacher", "principal", "accountant", "librarian", "receptionist"]).optional(),
+  reportingToStaffId: z.string().optional(),
 });
 
 interface StaffFormDialogProps {
@@ -63,6 +64,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
       email: "",
       address: "",
       loginRole: "",
+      reportingToStaffId: "",
     },
   });
   const designation = useWatch({ control, name: "designation" });
@@ -72,6 +74,13 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
   const { data: departments = [] } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
   // Chosen from the school's departments (Academic Management); a value saved earlier that is no longer listed stays selectable.
+  const departmentName = useWatch({ control, name: "department" });
+  const departmentId = departments.find((d) => d.name === departmentName)?.id;
+  const { data: reportingOptions = [] } = useQuery({
+    queryKey: ["academics", "reporting-options", staff?.id ?? "new", departmentId ?? "none"],
+    queryFn: () => listReportingOptions({ staffId: staff?.id, departmentId }),
+    enabled: open,
+  });
   const departmentNames = (current: string) => {
     const names = departments.map((d) => d.name);
     return current && !names.includes(current) ? [current, ...names] : names;
@@ -93,6 +102,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               email: staff.email,
               address: staff.address,
               loginRole: "",
+              reportingToStaffId: staff.reportingToStaffId ?? "",
             }
           : {
               branchId: getCurrentBranchId(),
@@ -106,6 +116,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               email: "",
               address: "",
               loginRole: "",
+              reportingToStaffId: "",
             },
       );
     }
@@ -238,6 +249,29 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                 )}
                 {errors.department && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.department.message ?? "")}</p>}
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="reportingToStaffId" optional>{t("Reporting person")}</Label>
+              <Controller
+                control={control}
+                name="reportingToStaffId"
+                render={({ field }) => (
+                  <Select value={field.value || "default"} onValueChange={(v) => field.onChange(v === "default" ? "" : v)}>
+                    <SelectTrigger id="reportingToStaffId">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">{isEdit ? t("Keep as it is") : t("Department head (suggested)")}</SelectItem>
+                      {reportingOptions.map((o) => (
+                        <SelectItem key={o.staffId} value={o.staffId}>
+                          {o.name} · {o.designation}{o.isDepartmentHead ? ` (${t("Department head")})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <p className="text-xs text-muted-foreground">{t("Their profile changes are sent to this person for approval. With none, they go to the school administrators.")}</p>
             </div>
             {!isEdit && (
               <div className="space-y-1.5">

@@ -14,9 +14,11 @@ import { useTranslation } from "react-i18next";
 const departmentFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
+  code: z.string().max(20, "The code is at most 20 characters").optional(),
+  isActive: z.boolean(),
 });
 
-const emptyValues: DepartmentFormValues = { name: "", description: "" };
+const emptyValues: DepartmentFormValues = { name: "", description: "", code: "", isActive: true };
 
 export default function DepartmentFormDialog({
   open,
@@ -41,7 +43,7 @@ export default function DepartmentFormDialog({
   } = useForm<DepartmentFormValues>({ resolver: zodResolver(departmentFormSchema), defaultValues: emptyValues });
 
   useEffect(() => {
-    if (open) reset(department ? { name: department.name, description: department.description ?? "" } : emptyValues);
+    if (open) reset(department ? { name: department.name, description: department.description ?? "", code: department.code ?? "", isActive: department.isActive } : emptyValues);
   }, [open, department, reset]);
 
   return (
@@ -58,9 +60,18 @@ export default function DepartmentFormDialog({
             {errors.name && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="code" optional>{t("Code")}</Label>
+            <Input id="code" placeholder={t("e.g. SCI")} aria-invalid={errors.code ? true : undefined} {...register("code")} />
+            {errors.code && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.code.message}</p>}
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="description" optional>{t("Description")}</Label>
             <Textarea id="description" rows={2} {...register("description")} />
           </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" {...register("isActive")} />
+            {t("Active (inactive departments cannot take new members)")}
+          </label>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t("Cancel")}
