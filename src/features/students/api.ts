@@ -410,6 +410,15 @@ export async function getStudent(id: string): Promise<Student> {
   return mapStudent(dto, index);
 }
 
+/** The signed-in student's (or a parent's child's) full record (AcademicService GET /api/my-profile/student/{id}/record), for My profile. */
+export async function getMyStudentRecord(id: string): Promise<Student> {
+  const [dto, index] = await Promise.all([
+    unwrap(academicHttpClient.get<ApiStudent>(`/api/my-profile/student/${id}/record`)),
+    buildSectionIndex(),
+  ]);
+  return mapStudent(dto, index);
+}
+
 export async function createStudent(values: StudentFormValues): Promise<Student> {
   const [sectionId, index] = await Promise.all([
     resolveSectionId(values.className, values.section, values.branchId),

@@ -24,7 +24,9 @@ export const PERMISSION_MODULES = [
   "Homework",
   "Study Materials",
   "Online Exams",
+  "Syllabus & Portions",
   "Staff Management",
+  "Performance & Appraisal",
   "Payroll",
   "Fee Management",
   "Accounting",
@@ -74,3 +76,6 @@ function buildPermissions(): Permission[] {
 }
 
 export const PERMISSION_CATALOG: Permission[] = buildPermissions();
+
+/** The module name is a stored permission key, so it keeps its original spelling; this is how it reads on screen. */
+export const moduleLabel = (module: string) => (module === "Extra-Curricular" ? "Co-Curricular" : module);

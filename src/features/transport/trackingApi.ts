@@ -1,5 +1,5 @@
 import { campusHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
-import type { BusPosition, MyDriverBus, BusTrackingStatus, ChildBusTracking, DriverPingValues, TrackingSettings, TrackingSource } from "./types";
+import type { BusPosition, BusTripProgress, MyDriverBus, StopProgress, BusTrackingStatus, ChildBusTracking, DriverPingValues, TrackingSettings, TrackingSource } from "./types";
 
 // Position tracking sits beside the simulated live status in api.ts. The school chooses the source (demo,
 // driver's phone or hardware tracker); only the first one needs no server support beyond what already exists.
@@ -123,12 +123,15 @@ interface ApiMyTransport {
   startTime: string;
   endTime: string;
   stopId: string;
-  stops: { id: string; name: string; sequence: number; arrivalTime: string; landmark: string | null }[];
+  stops: { id: string; name: string; sequence: number; arrivalTime: string; landmark: string | null; progress?: string; reachedAt?: string | null }[];
   bus: { id: string; regNumber: string; model: string; capacity: number } | null;
   live: { status: string; currentStopIndex: number; speedKmph: number; lastUpdated: string } | null;
   source: string;
   position: { latitude: number; longitude: number; speedKmph: number; heading: number | null; recordedAt: string } | null;
+  trip?: { startedAt: string; endedAt: string | null; running: boolean } | null;
 }
+
+const STOP_PROGRESS_FROM_API: Record<string, StopProgress> = { Pending: "pending", Reached: "reached", Skipped: "skipped" };
 
 const TRACKING_STATUS_FROM_API: Record<string, BusTrackingStatus> = { Idle: "idle", OnRoute: "on-route", AtStop: "at-stop", Completed: "completed" };
 
@@ -145,14 +148,52 @@ export async function getChildBusTracking(studentId: string): Promise<ChildBusTr
   if (!row) return null;
   return {
     ...row,
-    stops: [...row.stops].sort((x, y) => x.sequence - y.sequence).map((st) => ({ ...st, landmark: st.landmark ?? undefined })),
+    stops: [...row.stops].sort((x, y) => x.sequence - y.sequence).map((st) => ({
+      id: st.id,
+      name: st.name,
+      sequence: st.sequence,
+      arrivalTime: st.arrivalTime,
+      landmark: st.landmark ?? undefined,
+      progress: STOP_PROGRESS_FROM_API[st.progress ?? ""] ?? "none",
+      reachedAt: st.reachedAt ? asUtc(st.reachedAt) : undefined,
+    })),
     live: row.live ? { ...row.live, status: TRACKING_STATUS_FROM_API[row.live.status] ?? "idle", lastUpdated: asUtc(row.live.lastUpdated) } : null,
     source: SOURCE_FROM_API[row.source] ?? "mock",
     position: row.position ? { ...row.position, heading: row.position.heading ?? undefined, speedKmph: Math.round(row.position.speedKmph), recordedAt: asUtc(row.position.recordedAt) } : null,
+    trip: row.trip ? { startedAt: asUtc(row.trip.startedAt), endedAt: row.trip.endedAt ? asUtc(row.trip.endedAt) : undefined, running: row.trip.running } : null,
   };
 }
 
 /** The bus (or buses) this login drives. Empty when the login is not set up as a driver: the server never lists another driver's bus. */
 export async function getMyDriverBuses(): Promise<MyDriverBus[]> {
   return unwrap(campusHttpClient.get<MyDriverBus[]>("/api/buspositions/my-buses"));
+}
+
+interface ApiTripProgress {
+  busId: string;
+  routeId: string;
+  startedAt: string;
+  endedAt: string | null;
+  stops: { stopId: string; status: string; at: string }[];
+}
+
+/** The latest trip of every bus in the branch with the stops it reached or skipped, keyed by bus id. Empty if the server has none. */
+export async function listTripProgress(): Promise<Record<string, BusTripProgress>> {
+  try {
+    const rows = (await campusHttpClient.get<ApiTripProgress[]>("/api/buspositions/progress")).data;
+    return Object.fromEntries(
+      rows.map((r) => [
+        r.busId,
+        {
+          busId: r.busId,
+          routeId: r.routeId,
+          startedAt: asUtc(r.startedAt),
+          endedAt: r.endedAt ? asUtc(r.endedAt) : undefined,
+          stops: r.stops.map((x) => ({ stopId: x.stopId, status: x.status === "Skipped" ? ("skipped" as const) : ("reached" as const), at: asUtc(x.at) })),
+        },
+      ] as const),
+    );
+  } catch {
+    return {};
+  }
 }

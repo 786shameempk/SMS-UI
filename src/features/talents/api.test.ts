@@ -153,12 +153,12 @@ describe("talents api", () => {
 
   it("school settings", async () => {
     const calls = stubClient(engagementHttpClient, {
-      "GET /api/talents/settings": { tenantId: "t", studentReviewScope: "TeachersAndAdmins", displayName: null, tagline: null, allowStudentPublic: true, allowTeacherPublic: true, autoHideReportThreshold: 3 },
-      "PUT /api/talents/settings": { tenantId: "t", studentReviewScope: "AdminsOnly", displayName: "GVS", tagline: "Shine", allowStudentPublic: false, allowTeacherPublic: true, autoHideReportThreshold: 5 },
+      "GET /api/talents/settings": { tenantId: "t", studentReviewScope: "TeachersAndAdmins", displayName: null, tagline: null, allowStudentPublic: true, allowTeacherPublic: true, allowStudentSharing: false, autoHideReportThreshold: 3 },
+      "PUT /api/talents/settings": { tenantId: "t", studentReviewScope: "AdminsOnly", displayName: "GVS", tagline: "Shine", allowStudentPublic: false, allowTeacherPublic: true, allowStudentSharing: false, autoHideReportThreshold: 5 },
     });
 
     expect(await talents.getTalentSettings()).toMatchObject({ studentReviewScope: "teachers_and_admins", displayName: undefined });
-    const updated = await talents.updateTalentSettings({ studentReviewScope: "admins_only", displayName: "GVS", tagline: "Shine", allowStudentPublic: false, allowTeacherPublic: true, autoHideReportThreshold: 5 } as never);
+    const updated = await talents.updateTalentSettings({ studentReviewScope: "admins_only", displayName: "GVS", tagline: "Shine", allowStudentPublic: false, allowTeacherPublic: true, allowStudentSharing: false, autoHideReportThreshold: 5 } as never);
 
     expect(updated).toMatchObject({ studentReviewScope: "admins_only", displayName: "GVS" });
     expect(calls[1].body).toMatchObject({ studentReviewScope: "AdminsOnly" });

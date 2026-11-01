@@ -82,13 +82,23 @@ export interface RouteStop {
   sequence: number;
   arrivalTime: string;
   landmark?: string;
+  /** Optional map position; with it, the bus counts as having reached the stop once it comes within the radius. */
+  latitude?: number;
+  longitude?: number;
+  arrivalRadiusMeters: number;
 }
 
 export interface RouteStopFormValues {
   name: string;
   arrivalTime: string;
   landmark?: string;
+  latitude?: number;
+  longitude?: number;
+  arrivalRadiusMeters?: number;
 }
+
+/** How far the bus has got with one stop on its current trip. "none" = the stop has no map location. */
+export type StopProgress = "none" | "pending" | "reached" | "skipped";
 
 export type TransportAssignmentStatus = "active" | "inactive";
 
@@ -172,6 +182,9 @@ export interface ChildStop {
   /** "07:35" (scheduled). */
   arrivalTime: string;
   landmark?: string;
+  progress: StopProgress;
+  /** When the bus reached the stop (ISO, UTC). */
+  reachedAt?: string;
 }
 
 /** One child's bus, from GET /api/transport/mine (the only transport endpoint a parent login may call). */
@@ -191,6 +204,17 @@ export interface ChildBusTracking {
   source: TrackingSource;
   /** Latest real fix; null in Demo mode or before the bus has reported. */
   position: { latitude: number; longitude: number; speedKmph: number; heading?: number; recordedAt: string } | null;
+  /** The bus's latest trip (real sources only); null before any trip started. */
+  trip: { startedAt: string; endedAt?: string; running: boolean } | null;
+}
+
+/** The latest trip of one bus with the stops it has reached or skipped, for the office fleet view. */
+export interface BusTripProgress {
+  busId: string;
+  routeId: string;
+  startedAt: string;
+  endedAt?: string;
+  stops: { stopId: string; status: "reached" | "skipped"; at: string }[];
 }
 
 /** A bus the signed-in driver drives (from their driver profile's active routes); never another driver's bus. */

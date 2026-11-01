@@ -358,6 +358,12 @@ export async function saveStaffAttendance(params: SaveStaffAttendanceParams): Pr
   return records.map(mapStaffRecord);
 }
 
+/** The signed-in staff member's own last 90 days (AcademicService GET /api/my-profile/staff/{id}/attendance), for My profile. */
+export async function listMyStaffAttendanceRecords(staffId: string): Promise<StaffAttendanceRecord[]> {
+  const records = await unwrap(academicHttpClient.get<ApiStaffAttendanceRecord[]>(`/api/my-profile/staff/${staffId}/attendance`));
+  return records.map(mapStaffRecord);
+}
+
 export async function listStaffAttendanceRecords(filters?: StaffAttendanceFilters): Promise<StaffAttendanceRecord[]> {
   const records = await unwrap(
     academicHttpClient.get<ApiStaffAttendanceRecord[]>("/api/attendance/staff/records", {

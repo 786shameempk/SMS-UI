@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getMyDriverBuses } from "../trackingApi";
 import { startTrip, stopTrip, useDriverTrip } from "../driverTripStore";
 import { useTrackingSettings } from "../useTrackingSettings";
+import { NativeSelect } from "@/components/ui/native-select";
 
 /** Where a driver starts and ends a trip. While it runs, this page reports the phone's location about every 10 seconds. */
 export default function DriverTripTab() {
@@ -63,7 +64,7 @@ export default function DriverTripTab() {
 
         <div className="space-y-1.5">
           <label htmlFor="driver-bus" className="text-sm font-medium text-foreground">{t("Bus")}</label>
-          <select
+          <NativeSelect
             id="driver-bus"
             value={trip.busId ?? busId}
             disabled={sharing}
@@ -76,7 +77,7 @@ export default function DriverTripTab() {
                 {b.regNumber} ({b.routeName})
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
 
         {sharing ? (

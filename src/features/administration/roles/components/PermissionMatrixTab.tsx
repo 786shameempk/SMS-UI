@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Info } from "lucide-react";
 import { PLAN_MODULE_GROUPS } from "@/features/platform/constants";
 import { getMatrixModules, getRolePermissions, listPermissions, listRoles, MATRIX_MODULES_QUERY_KEY, putRolePermission, setRolePermission } from "../api";
-import { CATEGORY_DESCRIPTION, CATEGORY_LABEL } from "../constants";
+import { CATEGORY_DESCRIPTION, CATEGORY_LABEL, moduleLabel } from "../constants";
 import type { PermissionCategory } from "../types";
 
 const CATEGORIES: PermissionCategory[] = ["menu", "api", "screen", "action"];
@@ -159,7 +159,7 @@ export default function PermissionMatrixTab() {
                 </TableRow>,
                 ...group.rows.map((perm) => (
                 <TableRow key={perm.id}>
-                  <TableCell className="sticky start-0 bg-card font-medium">{t(perm.module)}</TableCell>
+                  <TableCell className="sticky start-0 bg-card font-medium">{t(moduleLabel(perm.module))}</TableCell>
                   {roles.map((role) => {
                     const granted = (rolePermissions[role.id] ?? []).includes(perm.id);
                     return (
@@ -169,7 +169,7 @@ export default function PermissionMatrixTab() {
                           onCheckedChange={(checked) =>
                             toggleMutation.mutate({ roleId: role.id, permissionId: perm.id, granted: checked === true })
                           }
-                          aria-label={t("{{permission}} for {{role}}", { permission: `${t(perm.module)} — ${t(CATEGORY_LABEL[perm.category])}`, role: role.name })}
+                          aria-label={t("{{permission}} for {{role}}", { permission: `${t(moduleLabel(perm.module))} — ${t(CATEGORY_LABEL[perm.category])}`, role: role.name })}
                         />
                       </TableCell>
                     );

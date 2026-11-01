@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { submitLead } from "../api";
 import { COUNTRY_CODES, DEMO_HIGHLIGHTS, STUDENT_COUNT_OPTIONS } from "../data";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const demoSchema = z.object({
   name: z.string().trim().min(1, "Your name is required"),
@@ -139,7 +140,7 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
                     control={control}
                     name="dialCode"
                     render={({ field }) => (
-                      <select
+                      <NativeSelect
                         {...field}
                         aria-label={t("Country code")}
                         className="cursor-pointer border-e border-input bg-secondary/60 ps-2 pe-1 text-sm text-foreground outline-none"
@@ -149,7 +150,7 @@ export default function RequestDemoDialog({ open, onOpenChange }: { open: boolea
                             {c.flag} {c.dial}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     )}
                   />
                   <input

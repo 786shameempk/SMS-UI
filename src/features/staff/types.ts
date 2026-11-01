@@ -136,10 +136,12 @@ export interface StaffFormValues {
   /** Who the person reports to. Empty keeps the current one (or, for a new joiner, suggests the department head). */
   reportingToStaffId?: string;
   /** Sign-in role for a new joiner; empty = the designation's own role (none for designations without one). */
-  loginRole?: StaffLoginRole | "";
+  loginRole?: string;
 }
 
-export type StaffLoginRole = "teacher" | "principal" | "accountant" | "librarian" | "receptionist";
+/** A built-in staff role, or any other role key the school offers (custom roles). */
+export type StaffLoginRole = string;
+export type BuiltInStaffLoginRole = "teacher" | "principal" | "accountant" | "librarian" | "receptionist";
 
 export interface PromoteStaffFormValues {
   toDesignation: StaffDesignation;

@@ -41,7 +41,8 @@ function MasterSelect({ id, value, onChange, options, placeholder, disabled }: {
   );
 }
 
-export default function TransportHostelTab({ student }: { student: Student }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function TransportHostelTab({ student, readOnly = false }: { student: Student; readOnly?: boolean }) {
   const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const invalidate = () => {
@@ -60,13 +61,13 @@ export default function TransportHostelTab({ student }: { student: Student }) {
   const routeName = watchTransport("routeName");
 
   // Routes and pickup points come from the transport master. An account that cannot read it (no transport module) keeps free-text fields.
-  const routes = useQuery({ queryKey: ["students", "masters", "routes"], queryFn: listRoutes, enabled: transportRequired, retry: false, staleTime: 60_000 });
+  const routes = useQuery({ queryKey: ["students", "masters", "routes"], queryFn: listRoutes, enabled: !readOnly && transportRequired, retry: false, staleTime: 60_000 });
   const activeRoutes = (routes.data ?? []).filter((r) => r.status === "active");
   const selectedRoute = (routes.data ?? []).find((r) => r.name === routeName);
   const stops = useQuery({
     queryKey: ["students", "masters", "stops", selectedRoute?.id],
     queryFn: () => listStops(selectedRoute!.id),
-    enabled: transportRequired && !!selectedRoute,
+    enabled: !readOnly && transportRequired && !!selectedRoute,
     retry: false,
     staleTime: 60_000,
   });
@@ -89,13 +90,13 @@ export default function TransportHostelTab({ student }: { student: Student }) {
   const hostelRequired = watchHostel("required");
   const hostelName = watchHostel("hostelName");
 
-  const hostels = useQuery({ queryKey: ["students", "masters", "hostels"], queryFn: listHostelMasters, enabled: hostelRequired, retry: false, staleTime: 60_000 });
+  const hostels = useQuery({ queryKey: ["students", "masters", "hostels"], queryFn: listHostelMasters, enabled: !readOnly && hostelRequired, retry: false, staleTime: 60_000 });
   const activeHostels = (hostels.data ?? []).filter((h) => h.status === "active");
   const selectedHostel = (hostels.data ?? []).find((h) => h.name === hostelName);
   const rooms = useQuery({
     queryKey: ["students", "masters", "rooms", selectedHostel?.id],
     queryFn: () => listRooms(selectedHostel!.id),
-    enabled: hostelRequired && !!selectedHostel,
+    enabled: !readOnly && hostelRequired && !!selectedHostel,
     retry: false,
     staleTime: 60_000,
   });
@@ -120,6 +121,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmitTransport((values) => transportMutation.mutate(values))} className="space-y-4 max-w-lg">
+            <fieldset disabled={readOnly} className="space-y-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="transport-required">{t("Requires school transport")}</Label>
               <Controller
@@ -177,9 +179,12 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                 </div>
               </div>
             )}
+            </fieldset>
+            {!readOnly && (
             <Button type="submit" size="sm" loading={transportMutation.isPending}>
               {t("Save transport details")}
             </Button>
+            )}
           </form>
         </CardContent>
       </Card>
@@ -194,6 +199,7 @@ export default function TransportHostelTab({ student }: { student: Student }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmitHostel((values) => hostelMutation.mutate(values))} className="space-y-4 max-w-lg">
+            <fieldset disabled={readOnly} className="space-y-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="hostel-required">{t("Resides in hostel")}</Label>
               <Controller
@@ -253,9 +259,12 @@ export default function TransportHostelTab({ student }: { student: Student }) {
                 </div>
               </div>
             )}
+            </fieldset>
+            {!readOnly && (
             <Button type="submit" size="sm" loading={hostelMutation.isPending}>
               {t("Save hostel details")}
             </Button>
+            )}
           </form>
         </CardContent>
       </Card>

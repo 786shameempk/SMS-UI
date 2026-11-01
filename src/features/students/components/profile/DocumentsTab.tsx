@@ -11,7 +11,8 @@ import { DOCUMENT_CATEGORIES } from "../../constants";
 import { deleteStudentDocument, uploadStudentDocument } from "../../api";
 import type { DocumentCategory, Student, StudentDocument } from "../../types";
 
-export default function DocumentsTab({ student }: { student: Student }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function DocumentsTab({ student, readOnly = false }: { student: Student; readOnly?: boolean }) {
   const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,6 +67,7 @@ export default function DocumentsTab({ student }: { student: Student }) {
         <CardDescription>{t("Birth certificate, transfer certificate, ID proof, and other records on file.")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {!readOnly && (
         <div className="flex items-center gap-2">
           <Select value={category} onValueChange={(v) => setCategory(v as DocumentCategory)}>
             <SelectTrigger className="w-52">
@@ -85,9 +87,10 @@ export default function DocumentsTab({ student }: { student: Student }) {
           </Button>
           <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
         </div>
+        )}
 
         <div className="space-y-2">
-          {student.documents.length === 0 && <p className="text-sm text-muted-foreground">{t("No documents uploaded yet.")}</p>}
+          {student.documents.length === 0 && <p className="text-sm text-muted-foreground">{readOnly ? t("No documents on file.") : t("No documents uploaded yet.")}</p>}
           {student.documents.map((doc) => (
             <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -107,9 +110,11 @@ export default function DocumentsTab({ student }: { student: Student }) {
                   </p>
                 </div>
               </div>
+              {!readOnly && (
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong shrink-0" onClick={() => setDeleteTarget(doc)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
+              )}
             </div>
           ))}
         </div>

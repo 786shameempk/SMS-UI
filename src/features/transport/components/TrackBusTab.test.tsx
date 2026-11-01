@@ -8,9 +8,9 @@ vi.mock("./BusMap", () => ({ default: ({ markers }: { markers: { label: string }
 vi.mock("../trackingApi");
 
 const stops = [
-  { id: "s1", name: "Mavoor Road", sequence: 1, arrivalTime: "07:00" },
-  { id: "s2", name: "Kunnamangalam", sequence: 2, arrivalTime: "07:15" },
-  { id: "s3", name: "Medical College", sequence: 3, arrivalTime: "07:30" },
+  { id: "s1", name: "Mavoor Road", sequence: 1, arrivalTime: "07:00", progress: "none" as const },
+  { id: "s2", name: "Kunnamangalam", sequence: 2, arrivalTime: "07:15", progress: "none" as const },
+  { id: "s3", name: "Medical College", sequence: 3, arrivalTime: "07:30", progress: "none" as const },
 ];
 
 function child(over: Partial<ChildBusTracking> = {}): ChildBusTracking {
@@ -26,6 +26,7 @@ function child(over: Partial<ChildBusTracking> = {}): ChildBusTracking {
     live: null,
     source: "mock",
     position: null,
+    trip: null,
     ...over,
   };
 }
@@ -77,5 +78,32 @@ describe("TrackBusTab", () => {
     setup(child({ source: "hardware" }));
     expect(await screen.findByText("Waiting for the bus to share its location")).toBeInTheDocument();
     expect(screen.getByText(/GPS tracker hasn't reported yet/)).toBeInTheDocument();
+  });
+
+  describe("stop progress with real GPS", () => {
+    const located = (progress: [string, string, string], reachedAt = "2026-10-28T02:10:00Z") =>
+      stops.map((st, i) => ({ ...st, progress: progress[i] as "pending" | "reached" | "skipped", reachedAt: progress[i] === "reached" ? reachedAt : undefined }));
+
+    it("says how many stops come before the child, and highlights the next stop", async () => {
+      setup(child({ source: "driver-phone", position: fix(), stops: located(["reached", "pending", "pending"]), trip: { startedAt: new Date().toISOString(), running: true } }));
+      expect(await screen.findByText("Your child's stop is the next one.")).toBeInTheDocument();
+      expect(screen.getByText("Next stop")).toBeInTheDocument();
+    });
+
+    it("tells the parent when the bus reached or passed their child's stop", async () => {
+      setup(child({ source: "hardware", position: fix(), stops: located(["reached", "reached", "pending"]), trip: { startedAt: new Date().toISOString(), running: true } }));
+      expect(await screen.findByText("The bus reached your child's stop.")).toBeInTheDocument();
+    });
+
+    it("marks a stop the bus drove past", async () => {
+      setup(child({ source: "hardware", position: fix(), stops: located(["reached", "skipped", "pending"]), trip: { startedAt: new Date().toISOString(), running: true } }));
+      expect(await screen.findByText("The bus passed your child's stop.")).toBeInTheDocument();
+      expect(screen.getByText(/Passed without stopping/)).toBeInTheDocument();
+    });
+
+    it("explains why there is no progress when no stop has a map location", async () => {
+      setup(child({ source: "hardware", position: fix() }));
+      expect(await screen.findByText(/hasn.t set map locations/)).toBeInTheDocument();
+    });
   });
 });

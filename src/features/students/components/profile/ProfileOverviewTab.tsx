@@ -21,7 +21,8 @@ function calculateAge(dateOfBirth: string): number {
   return age;
 }
 
-export default function ProfileOverviewTab({ student }: { student: Student }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function ProfileOverviewTab({ student, readOnly = false }: { student: Student; readOnly?: boolean }) {
   const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +70,8 @@ export default function ProfileOverviewTab({ student }: { student: Student }) {
               {student.photoUrl && <AvatarImage src={student.photoUrl} alt={student.firstName} />}
               <AvatarFallback className="text-base">{initialsOf(student.firstName, student.lastName)}</AvatarFallback>
             </Avatar>
+            {!readOnly && (
+            <>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -79,6 +82,8 @@ export default function ProfileOverviewTab({ student }: { student: Student }) {
               {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            </>
+            )}
           </div>
           <div>
             <p className="text-base font-semibold text-foreground">

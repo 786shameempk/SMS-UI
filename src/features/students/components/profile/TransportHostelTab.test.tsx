@@ -2,6 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test/utils";
 import type { Student } from "../../types";
+import { listRoutes } from "@/features/transport/api";
 import TransportHostelTab from "./TransportHostelTab";
 
 vi.mock("@/features/transport/api", () => ({
@@ -72,5 +73,14 @@ describe("Transport & Hostel tab", () => {
     renderWithProviders(<TransportHostelTab student={student({ transport: { required: false }, hostel: { required: false } })} />);
     expect(screen.queryByRole("combobox", { name: "Route" })).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox", { name: "Hostel" })).not.toBeInTheDocument();
+  });
+
+  it("read-only (My profile) shows what was saved without the master lists or any save button", () => {
+    renderWithProviders(<TransportHostelTab student={student()} readOnly />);
+    expect(screen.getByRole("combobox", { name: "Route" })).toHaveTextContent("Route North");
+    expect(screen.getByRole("combobox", { name: "Route" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Requires school transport" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Save/ })).not.toBeInTheDocument();
+    expect(listRoutes).not.toHaveBeenCalled();
   });
 });

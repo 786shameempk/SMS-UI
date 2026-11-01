@@ -90,13 +90,13 @@ describe("transport api", () => {
 
     expect((await transport.listStops("rt1")).map((s) => s.id)).toEqual(["s1", "s2"]);
     await transport.addStop("rt1", { name: "Temple", arrivalTime: "07:20", landmark: " Near temple " } as never);
-    await transport.updateStop("s1", { name: "Junction", arrivalTime: "07:05" } as never);
+    await transport.updateStop("s1", { name: "Junction", arrivalTime: "07:05", latitude: 11.25, longitude: 75.78, arrivalRadiusMeters: 12 } as never);
     await transport.deleteStop("s1");
     expect((await transport.moveStop("s2", "up")).map((s) => s.id)).toEqual(["s2", "s1"]);
 
     expect((calls[0].config as { params: unknown }).params).toEqual({ routeId: "rt1" });
-    expect(calls[1].body).toEqual({ routeId: "rt1", name: "Temple", arrivalTime: "07:20", landmark: "Near temple" });
-    expect(calls[2].body).toEqual({ name: "Junction", arrivalTime: "07:05", landmark: null });
+    expect(calls[1].body).toEqual({ routeId: "rt1", name: "Temple", arrivalTime: "07:20", landmark: "Near temple", latitude: null, longitude: null, arrivalRadiusMeters: null });
+    expect(calls[2].body).toEqual({ name: "Junction", arrivalTime: "07:05", landmark: null, latitude: 11.25, longitude: 75.78, arrivalRadiusMeters: 12 });
     expect(calls[4].body).toEqual({ direction: "up" });
   });
 

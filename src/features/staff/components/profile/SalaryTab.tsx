@@ -16,7 +16,8 @@ function currentMonthKey(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export default function SalaryTab({ staff }: { staff: StaffMember }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function SalaryTab({ staff, readOnly = false }: { staff: StaffMember; readOnly?: boolean }) {
   const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const invalidate = () => {
@@ -61,6 +62,7 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit((values) => salaryMutation.mutate(values))} className="space-y-4 max-w-lg">
+            <fieldset disabled={readOnly} className="space-y-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <Label htmlFor="basic">{t("Basic")}</Label>
@@ -85,10 +87,13 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
                 <Input id="bankAccountNumber" {...register("bankAccountNumber")} />
               </div>
             </div>
+            </fieldset>
+            {!readOnly && (
             <Button type="submit" size="sm" disabled={!isDirty || salaryMutation.isPending}>
               {salaryMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               {t("Save salary structure")}
             </Button>
+            )}
           </form>
         </CardContent>
       </Card>
@@ -99,10 +104,12 @@ export default function SalaryTab({ staff }: { staff: StaffMember }) {
             <CardTitle>{t("Payment history")}</CardTitle>
             <CardDescription>{t("Monthly salary payments on record.")}</CardDescription>
           </div>
+{!readOnly && (
           <Button size="sm" disabled={alreadyPaidThisMonth || paymentMutation.isPending} onClick={() => paymentMutation.mutate()}>
             {paymentMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             {alreadyPaidThisMonth ? t("Paid this month") : t("Record this month's payment")}
           </Button>
+)}
         </CardHeader>
         <CardContent className="space-y-2">
           {staff.salaryHistory.length === 0 && <p className="text-sm text-muted-foreground">{t("No payments recorded yet.")}</p>}

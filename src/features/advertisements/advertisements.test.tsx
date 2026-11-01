@@ -82,12 +82,13 @@ describe("the advertisement banner", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
-  it("fills a standard 4:5 frame and tells its owner when the image cannot load", () => {
+  it("opens in a 70% x 60% window with the whole image shown and tells its owner when the image cannot load", () => {
     const onImageError = vi.fn();
     render(banner({ onImageError }));
     const image = screen.getByAltText("Advertisement");
-    expect(image.className).toContain("aspect-[4/5]");
-    expect(image.className).toContain("object-cover");
+    expect(screen.getByTestId("advertisement").className).toContain("sm:w-[70vw]");
+    expect(screen.getByTestId("advertisement").className).toContain("sm:h-[60dvh]");
+    expect(image.className).toContain("object-contain");
 
     act(() => void image.dispatchEvent(new Event("error")));
 

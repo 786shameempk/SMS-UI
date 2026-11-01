@@ -23,6 +23,8 @@ interface ComboboxProps {
   "aria-label": string;
   className?: string;
   disabled?: boolean;
+  /** Lets a <label htmlFor> point at the control. */
+  id?: string;
 }
 
 /**
@@ -39,6 +41,7 @@ export function Combobox({
   "aria-label": ariaLabel,
   className,
   disabled,
+  id,
 }: ComboboxProps) {
   const { t } = useTranslation("common");
   const placeholder = placeholderProp ?? t("Select…");
@@ -88,6 +91,7 @@ export function Combobox({
       <PopoverTrigger asChild>
         <button
           type="button"
+          id={id}
           role="combobox"
           aria-label={ariaLabel}
           aria-expanded={open}

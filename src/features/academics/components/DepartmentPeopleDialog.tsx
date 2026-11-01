@@ -10,6 +10,7 @@ import { ErrorState } from "@/components/ui/states";
 import { listStaff } from "@/features/staff/api";
 import { assignDepartmentHead, assignDepartmentMember, listDepartmentMembers, listReportingOptions, setReportingPerson } from "../api";
 import type { Department } from "../types";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const selectClass = "h-9 w-full rounded-md border bg-background px-3 text-sm";
 
@@ -56,12 +57,12 @@ export default function DepartmentPeopleDialog({ department, onClose }: { depart
         <section className="space-y-2">
           <label htmlFor="dept-head" className="text-sm font-medium">{t("Department head")}</label>
           <div className="flex gap-2">
-            <select id="dept-head" className={selectClass} value={headId} onChange={(e) => setHeadId(e.target.value)} disabled={!department.isActive}>
+            <NativeSelect id="dept-head" className={selectClass} value={headId} onChange={(e) => setHeadId(e.target.value)} disabled={!department.isActive}>
               <option value="">{t("No head")}</option>
               {(options.data ?? []).map((o) => (
                 <option key={o.staffId} value={o.staffId}>{o.name} · {o.designation} · {o.employeeId}</option>
               ))}
-            </select>
+            </NativeSelect>
             <Button onClick={() => head.mutate()} loading={head.isPending} disabled={headId === (department.headStaffId ?? "")}>{t("Save head")}</Button>
           </div>
           {!department.isActive && <p className="text-xs text-muted-foreground">{t("Activate the department to change its head.")}</p>}
@@ -79,7 +80,7 @@ export default function DepartmentPeopleDialog({ department, onClose }: { depart
                   {m.isHead && <Badge variant="brand" className="ml-2">{t("Head")}</Badge>}
                   {!m.hasLogin && <Badge variant="warning" className="ml-2">{t("No sign-in")}</Badge>}
                 </span>
-                <select
+                <NativeSelect
                   aria-label={`${t("Reporting person")} - ${m.name}`}
                   className="h-8 w-56 rounded-md border bg-background px-2 text-sm"
                   value={m.reportingToStaffId ?? ""}
@@ -90,18 +91,18 @@ export default function DepartmentPeopleDialog({ department, onClose }: { depart
                   {(options.data ?? []).filter((o) => o.staffId !== m.staffId).map((o) => (
                     <option key={o.staffId} value={o.staffId}>{o.name}{o.isDepartmentHead ? ` (${t("Head")})` : ""}</option>
                   ))}
-                </select>
+                </NativeSelect>
               </li>
             ))}
           </ul>
           {department.isActive && (
             <div className="flex gap-2">
-              <select aria-label={t("Add an employee")} className={selectClass} value={newMember} onChange={(e) => setNewMember(e.target.value)}>
+              <NativeSelect aria-label={t("Add an employee")} className={selectClass} value={newMember} onChange={(e) => setNewMember(e.target.value)}>
                 <option value="">{t("Add an employee…")}</option>
                 {candidates.map((s) => (
                   <option key={s.id} value={s.id}>{s.firstName} {s.lastName} · {s.employeeId}</option>
                 ))}
-              </select>
+              </NativeSelect>
               <Button variant="outline" onClick={() => add.mutate()} loading={add.isPending} disabled={!newMember}>{t("Add")}</Button>
             </div>
           )}

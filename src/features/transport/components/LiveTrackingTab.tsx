@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TRACKING_POLL_MS, TRACKING_STATUS_CONFIG, TRACKING_SOURCE_CONFIG } from "../constants";
 import { LoadingState } from "@/components/ui/states";
-import { listBusPositions } from "../trackingApi";
+import { listBusPositions, listTripProgress } from "../trackingApi";
 import { POSITION_STALE_AFTER_MS } from "../constants";
 import type { BusMapMarker } from "./BusMap";
 import { useTrackingSettings } from "../useTrackingSettings";
@@ -44,6 +44,13 @@ export default function LiveTrackingTab() {
   const { data: positions = {} } = useQuery({
     queryKey: ["transport", "positions"],
     queryFn: listBusPositions,
+    enabled: real,
+    refetchInterval: TRACKING_POLL_MS,
+  });
+
+  const { data: progress = {} } = useQuery({
+    queryKey: ["transport", "trip-progress"],
+    queryFn: listTripProgress,
     enabled: real,
     refetchInterval: TRACKING_POLL_MS,
   });
@@ -148,6 +155,18 @@ export default function LiveTrackingTab() {
                       {next && <p className="text-xs text-muted-foreground">{next}</p>}
                     </div>
                   </div>
+                )}
+                {real && progress[row.busId] && (
+                  <p className="text-xs text-muted-foreground">
+                    {(() => {
+                      const trip = progress[row.busId];
+                      const reached = trip.stops.filter((x) => x.status === "reached");
+                      const lastId = reached[reached.length - 1]?.stopId;
+                      const last = row.stops.find((st) => st.id === lastId);
+                      const text = t("{{done}} of {{total}} stops done", { done: trip.stops.length, total: row.stops.length });
+                      return last ? `${text} · ${t("last reached {{stop}}", { stop: last.name })}` : text;
+                    })()}
+                  </p>
                 )}
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">

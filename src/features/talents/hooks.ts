@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
-import { reactToTalent, recordTalentView } from "./api";
+import { getTalentSettings, reactToTalent, recordTalentView } from "./api";
 import { ADMIN_ROLES, CREATOR_BLOCKED_ROLES, REVIEWER_ROLES } from "./constants";
 import type { TalentCard, TalentReactionType } from "./types";
 
@@ -10,10 +10,13 @@ import type { TalentCard, TalentReactionType } from "./types";
 export function useTalentRole() {
   const user = useAuthStore((s) => s.user);
   const role = user?.role;
+  // Students and parents only get the share entry points when the school switches them on; a failed settings load keeps them hidden.
+  const restricted = role === "student" || role === "parent";
+  const { data: settings } = useQuery({ queryKey: ["talents", "settings"], queryFn: getTalentSettings, retry: false, enabled: restricted, staleTime: 60_000 });
   return {
     user,
     userId: user?.id,
-    canCreate: !!role && !CREATOR_BLOCKED_ROLES.has(role),
+    canCreate: !!role && !CREATOR_BLOCKED_ROLES.has(role) && (!restricted || !!settings?.allowStudentSharing),
     isReviewer: !!role && REVIEWER_ROLES.has(role),
     isAdmin: !!role && ADMIN_ROLES.has(role),
     creatorSubtitle: role === "student" ? "Student" : role === "teacher" ? "Teacher" : role ? role.charAt(0).toUpperCase() + role.slice(1) : undefined,

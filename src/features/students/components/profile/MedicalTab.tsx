@@ -13,7 +13,8 @@ import { BLOOD_GROUPS } from "../../constants";
 import { updateMedical } from "../../api";
 import type { MedicalInfo, Student } from "../../types";
 
-export default function MedicalTab({ student }: { student: Student }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function MedicalTab({ student, readOnly = false }: { student: Student; readOnly?: boolean }) {
   const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const {
@@ -40,6 +41,7 @@ export default function MedicalTab({ student }: { student: Student }) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit((values) => mutation.mutate(values))} className="space-y-4 max-w-xl">
+          <fieldset disabled={readOnly} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="bloodGroup">{t("Blood group")}</Label>
@@ -89,10 +91,13 @@ export default function MedicalTab({ student }: { student: Student }) {
             </div>
           </div>
 
+          </fieldset>
+          {!readOnly && (
           <Button type="submit" disabled={!isDirty || mutation.isPending}>
             {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             {t("Save medical information")}
           </Button>
+          )}
         </form>
       </CardContent>
     </Card>

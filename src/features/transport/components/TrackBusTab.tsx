@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState, LoadingState } from "@/components/ui/states";
 import { cn } from "@/utils/cn";
-import { POSITION_STALE_AFTER_MS, TRACKING_POLL_MS, TRACKING_SOURCE_CONFIG, TRACKING_STATUS_CONFIG } from "../constants";
+import { POSITION_STALE_AFTER_MS, STOP_PROGRESS_CONFIG, TRACKING_POLL_MS, TRACKING_SOURCE_CONFIG, TRACKING_STATUS_CONFIG } from "../constants";
 import { getChildBusTracking } from "../trackingApi";
 import type { ChildBusTracking } from "../types";
 
@@ -39,20 +39,38 @@ function demoSummary(tracking: ChildBusTracking, t: TFunction<"transport">): { h
   };
 }
 
+/** Plain-language progress for a real GPS source, from the stops the bus has reached or skipped on its current trip. */
+function liveSummary(tracking: ChildBusTracking, t: TFunction<"transport">): string | null {
+  const { stops, stopId, trip } = tracking;
+  if (!trip || stops.every((s) => s.progress === "none")) return null;
+  const mineIndex = stops.findIndex((s) => s.id === stopId);
+  const mine = stops[mineIndex];
+  if (mine?.progress === "reached") return t("The bus reached your child's stop.");
+  if (mine?.progress === "skipped") return t("The bus passed your child's stop.");
+  if (!trip.running) return t("This trip is complete.");
+  const away = stops.slice(0, mineIndex).filter((s) => s.progress === "pending").length + 1;
+  return away === 1 ? t("Your child's stop is the next one.") : t("{{away}} stops before your child's stop.", { away });
+}
+
 function StopProgress({ t: tracking, showProgress }: { t: ChildBusTracking; showProgress: boolean }) {
   const { t } = useTranslation("transport");
   const { stops, live, stopId } = tracking;
-  const reached = !showProgress || !live ? 0 : live.status === "completed" ? stops.length : live.currentStopIndex + (live.status === "at-stop" ? 1 : 0);
+  // Real sources: the server marks each stop reached or skipped as the bus comes within range. Demo: derived from the simulated stop index.
+  const demoReached = !showProgress || !live ? 0 : live.status === "completed" ? stops.length : live.currentStopIndex + (live.status === "at-stop" ? 1 : 0);
+  const nextIndex = showProgress ? -1 : stops.findIndex((s) => s.progress === "pending");
   return (
     <ol>
       {stops.map((stop, i) => {
-        const done = i < reached;
+        const status = showProgress ? (i < demoReached ? "reached" : "pending") : stop.progress;
+        const style = STOP_PROGRESS_CONFIG[status];
+        const done = status === "reached" || status === "skipped";
         const isMine = stop.id === stopId;
+        const isNext = i === nextIndex && tracking.trip?.running;
         return (
           <li key={stop.id} className="flex gap-3">
             <div className="flex flex-col items-center">
-              <span className={cn("mt-1 h-3 w-3 rounded-full border-2", done ? "bg-primary border-primary" : "bg-background border-border", isMine && "ring-2 ring-primary/30")} />
-              {i < stops.length - 1 && <span className={cn("w-0.5 flex-1 min-h-6", done ? "bg-primary" : "bg-border")} />}
+              <span className={cn("mt-1 h-3 w-3 rounded-full border-2", style.dot, isNext && "border-primary ring-2 ring-primary/30", isMine && !isNext && "ring-2 ring-primary/30")} />
+              {i < stops.length - 1 && <span className={cn("w-0.5 flex-1 min-h-6", done ? style.line : "bg-border")} />}
             </div>
             <div className="pb-3">
               <p className="text-sm text-foreground">
@@ -62,8 +80,17 @@ function StopProgress({ t: tracking, showProgress }: { t: ChildBusTracking; show
                     {t("Your stop")}
                   </Badge>
                 )}
+                {isNext && (
+                  <Badge variant="info" className="ms-2">
+                    {t("Next stop")}
+                  </Badge>
+                )}
               </p>
-              <p className="text-xs text-muted-foreground">{stop.arrivalTime}</p>
+              <p className="text-xs text-muted-foreground">
+                {stop.arrivalTime}
+                {status === "reached" && stop.reachedAt && !showProgress ? ` · ${t("Reached {{time}}", { time: new Date(stop.reachedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })}` : ""}
+                {status === "skipped" ? ` · ${t(style.label)}` : ""}
+              </p>
             </div>
           </li>
         );
@@ -102,6 +129,7 @@ export default function TrackBusTab({ studentId }: { studentId: string }) {
   const real = trip.source !== "mock";
   const stale = position ? now - new Date(position.recordedAt).getTime() > POSITION_STALE_AFTER_MS : false;
   const demo = demoSummary(trip, t);
+  const progressLine = real ? liveSummary(trip, t) : null;
   const liveStatus = TRACKING_STATUS_CONFIG[trip.live?.status ?? "idle"];
   const myStop = trip.stops.find((s) => s.id === trip.stopId);
 
@@ -153,6 +181,7 @@ export default function TrackBusTab({ studentId }: { studentId: string }) {
             <>
               <div aria-live="polite">
                 <p className="text-sm font-medium text-foreground">{stale ? t("Last seen {{when}}", { when: timeAgo(position.recordedAt, now, t) }) : t("The bus is on its way.")}</p>
+                {progressLine && <p className="text-sm text-foreground">{progressLine}</p>}
                 {stale && <p className="text-sm text-muted-foreground">{t("The location hasn't updated recently, so the bus may be out of signal.")}</p>}
                 {myStop && (
                   <p className="text-sm text-muted-foreground">
@@ -191,6 +220,9 @@ export default function TrackBusTab({ studentId }: { studentId: string }) {
         </CardHeader>
         <CardContent>
           {trip.stops.length === 0 ? <p className="text-sm text-muted-foreground">{t("No stops set up for this route.")}</p> : <StopProgress t={trip} showProgress={!real} />}
+          {real && trip.stops.every((st) => st.progress === "none") && trip.stops.length > 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">{t("The school hasn't set map locations for these stops, so progress along the route isn't shown.")}</p>
+          )}
           {!real && trip.live?.status === "completed" && (
             <p className="mt-2 flex items-center gap-1.5 text-xs text-success">
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />

@@ -182,7 +182,8 @@ function ExperienceFormDialog({
   );
 }
 
-export default function QualificationsExperienceTab({ staff }: { staff: StaffMember }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function QualificationsExperienceTab({ staff, readOnly = false }: { staff: StaffMember; readOnly?: boolean }) {
   const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const invalidate = () => {
@@ -236,10 +237,12 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
             <GraduationCap className="w-4 h-4 text-muted-foreground" />
             {t("Qualifications")}
           </CardTitle>
+{!readOnly && (
           <Button size="sm" onClick={() => setQualFormOpen(true)}>
             <Plus className="w-3.5 h-3.5" />
             {t("Add")}
           </Button>
+)}
         </CardHeader>
         <CardContent className="space-y-2">
           {staff.qualifications.length === 0 && <p className="text-sm text-muted-foreground">{t("No qualifications on file.")}</p>}
@@ -251,9 +254,11 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
                   {q.institution} &middot; {q.yearCompleted}
                 </p>
               </div>
+{!readOnly && (
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setDeleteQualId(q.id)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
+)}
             </div>
           ))}
         </CardContent>
@@ -265,10 +270,12 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
             <Briefcase className="w-4 h-4 text-muted-foreground" />
             {t("Experience")}
           </CardTitle>
+{!readOnly && (
           <Button size="sm" onClick={() => setExpFormOpen(true)}>
             <Plus className="w-3.5 h-3.5" />
             {t("Add")}
           </Button>
+)}
         </CardHeader>
         <CardContent className="space-y-2">
           {staff.experience.length === 0 && <p className="text-sm text-muted-foreground">{t("No prior experience on file.")}</p>}
@@ -283,9 +290,11 @@ export default function QualificationsExperienceTab({ staff }: { staff: StaffMem
                   {e.description ? ` · ${e.description}` : ""}
                 </p>
               </div>
+{!readOnly && (
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setDeleteExpId(e.id)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
+)}
             </div>
           ))}
         </CardContent>

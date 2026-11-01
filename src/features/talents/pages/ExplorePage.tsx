@@ -11,6 +11,7 @@ import { TalentGrid } from "../components/TalentCard";
 import type { TalentCategory, TalentCreatorType, TalentSort, TalentVisibility } from "../types";
 
 import { useTranslation } from "react-i18next";
+import { NativeSelect } from "@/components/ui/native-select";
 const PAGE_SIZE = 24;
 
 /** Search & categories. Every filter lives in the URL, so results are shareable and back-button friendly. */
@@ -135,7 +136,7 @@ export default function ExplorePage() {
               { value: "public", label: tr("Public") },
             ]}
           />
-          <select
+          <NativeSelect
             value={sort}
             onChange={(e) => update({ sort: e.target.value, page: null })}
             className="ms-auto h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground cursor-pointer"
@@ -146,7 +147,7 @@ export default function ExplorePage() {
                 {tr(o.label)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       </header>
 
