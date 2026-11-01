@@ -34,9 +34,9 @@ export const AVAILABLE_MODULE_LABELS: string[] = PERMISSION_MODULES.filter((m) =
  */
 export const PLAN_MODULE_GROUPS: ReadonlyArray<{ title: string; modules: string[] }> = [
   { title: "Everyday", modules: ["Dashboard", "AI Features", "Notifications", "Calendar", "Online Classes", "Talent Showcase", "Extra-Curricular", "Parent Portal", "Study Materials"] },
-  { title: "Academics", modules: ["Homework", "Students", "Academic Setup", "Attendance", "Teachers", "Timetable", "Examinations"] },
+  { title: "Academics", modules: ["Homework", "Students", "Academic Setup", "Attendance", "Teachers", "Timetable", "Examinations", "Syllabus & Portions"] },
   { title: "Online Exams", modules: ["Online Exams"] },
-  { title: "Human Resources", modules: ["Staff Management", "Payroll"] },
+  { title: "Human Resources", modules: ["Staff Management", "Performance & Appraisal", "Payroll"] },
   { title: "Finance", modules: ["Fee Management", "Accounting"] },
   { title: "Campus Operations", modules: ["Library Management", "Transport Management", "Hostel Management", "Inventory Management", "Visitor Management", "Health & Medical"] },
   { title: "Engagement", modules: ["Communication Center", "Surveys & Feedback", "Complaint / Help Desk", "Certificate Generator"] },

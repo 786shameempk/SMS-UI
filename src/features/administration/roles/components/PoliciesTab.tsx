@@ -11,6 +11,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { DataTableToolbar } from "@/components/tables/DataTable";
 import { createPolicy, deletePolicy, listPolicies, listRoles, setPolicyEnabled, updatePolicy } from "../api";
+import { moduleLabel } from "../constants";
 import type { Policy, PolicyFormValues } from "../types";
 import PolicyFormDialog from "./PolicyFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
@@ -88,7 +89,7 @@ export default function PoliciesTab() {
               <div className="min-w-0 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-semibold text-foreground">{policy.name}</p>
-                  <Badge variant="neutral">{t(policy.module)}</Badge>
+                  <Badge variant="neutral">{t(moduleLabel(policy.module))}</Badge>
                 </div>
                 <p className="text-sm text-secondary-foreground">{policy.description}</p>
                 <code className="inline-block text-[11px] bg-muted border border-border rounded px-2 py-1 text-secondary-foreground">

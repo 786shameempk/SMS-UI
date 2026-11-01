@@ -17,6 +17,7 @@ import {
   Cloud,
   ClipboardPenLine,
   Award,
+  ClipboardCheck,
   FileQuestionMark,
   ListChecks,
   MonitorCheck,
@@ -82,10 +83,14 @@ export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Calendar", to: "/calendar", icon: CalendarDays },
   { label: "Online Classes", to: "/online-classes", icon: Video, permissionKey: "meetings" },
   { label: "Talent Showcase", to: "/talents", icon: Star, permissionKey: "talents" },
-  { label: "Extra-Curricular", to: "/extracurricular", icon: Trophy, permissionKey: "extracurricular" },
+  { label: "Co-Curricular", to: "/extracurricular", icon: Trophy, permissionKey: "extracurricular" },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
   // Parents and students read the syllabus the school publishes; staff reach the module from Academics.
   { label: "Syllabus Progress", to: "/lesson-portions/family", icon: BookMarked, permissionKey: "portions", audience: "family" },
+  // Top-level (not under Human Resources) because teachers and other staff fill in reviews and see their own appraisal here, and they can't see that section.
+  { label: "Performance & Appraisal", to: "/appraisal", icon: Award, permissionKey: "appraisal", audience: "school" },
+  // Parents and students only give feedback on the teachers they were asked about; staff reach the module from Human Resources.
+  { label: "Teacher Feedback", to: "/appraisal/feedback", icon: ClipboardCheck, permissionKey: "appraisal", audience: "family" },
   { label: "My Homework", to: "/my-homework", icon: BookOpenCheck, permissionKey: "homework" },
   // Top-level (not under Academics) because students and parents use it and can't see that section.
   { label: "Study Materials", to: "/study-materials", icon: LibraryBig, permissionKey: "studyMaterials" },

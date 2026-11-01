@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/utils/cn";
 import { submitLead } from "../api";
 import { COUNTRY_CODES } from "../data";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const BRAND_GRADIENT = "linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-700) 100%)";
 
@@ -177,7 +178,7 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                             control={control}
                             name="dialCode"
                             render={({ field }) => (
-                              <select
+                              <NativeSelect
                                 {...field}
                                 aria-label={t("Country code")}
                                 className="cursor-pointer border-e border-input bg-secondary/60 ps-2 pe-1 text-sm text-foreground outline-none"
@@ -187,7 +188,7 @@ export default function ContactWidget({ open, onOpenChange }: { open: boolean; o
                                     {c.flag} {c.dial}
                                   </option>
                                 ))}
-                              </select>
+                              </NativeSelect>
                             )}
                           />
                           <input

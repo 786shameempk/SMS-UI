@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
 import { listDepartments, listReportingOptions } from "@/features/academics/api";
+import { listAssignableLoginRoles } from "../api";
 import { DESIGNATIONS, DESIGNATION_LOGIN_ROLE, STAFF_LOGIN_ROLES } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
 import { FormSection } from "@/components/ui/form-field";
@@ -29,7 +30,7 @@ const staffFormSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
   address: z.string().min(1, "Address is required"),
-  loginRole: z.enum(["", "teacher", "principal", "accountant", "librarian", "receptionist"]).optional(),
+  loginRole: z.string().optional(),
   reportingToStaffId: z.string().optional(),
 });
 
@@ -71,6 +72,10 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
   const loginRole = useWatch({ control, name: "loginRole" });
   const automaticRole = DESIGNATION_LOGIN_ROLE[designation];
 
+  // Built-in staff roles and the school's custom roles; the fixed list is the fallback while it loads or if it can't.
+  const { data: loginRoleOptions } = useQuery({ queryKey: ["staff", "login-roles"], queryFn: listAssignableLoginRoles, staleTime: 60_000, retry: false });
+  const roleChoices = loginRoleOptions ?? STAFF_LOGIN_ROLES.map((r) => ({ key: r.value, name: t(r.label) }));
+  const automaticRoleName = automaticRole ? roleChoices.find((r) => r.key === automaticRole)?.name ?? automaticRole : undefined;
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
   const { data: departments = [] } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
   // Chosen from the school's departments (Academic Management); a value saved earlier that is no longer listed stays selectable.
@@ -285,10 +290,10 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="auto">{automaticRole ? t("Automatic ({{role}})", { role: t(automaticRole) }) : t("Automatic (no sign-in)")}</SelectItem>
-                        {STAFF_LOGIN_ROLES.map((r) => (
-                          <SelectItem key={r.value} value={r.value}>
-                            {t(r.label)}
+                        <SelectItem value="auto">{automaticRoleName ? t("Automatic ({{role}})", { role: automaticRoleName }) : t("Automatic (no sign-in)")}</SelectItem>
+                        {roleChoices.map((r) => (
+                          <SelectItem key={r.key} value={r.key}>
+                            {r.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

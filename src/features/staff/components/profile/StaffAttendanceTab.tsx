@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/utils/cn";
-import { getStaffAttendance } from "../../api";
+import { getMyStaffAttendance, getStaffAttendance } from "../../api";
 
 const STATUS_STYLE: Record<string, string> = {
   present: "bg-success",
@@ -18,11 +18,12 @@ const STATUS_LABEL: Record<string, string> = {
   holiday: "Holiday / weekend",
 };
 
-export default function StaffAttendanceTab({ staffId }: { staffId: string }) {
+/** `mine` reads the signed-in staff member's own attendance (My profile), which needs no attendance-reports permission. */
+export default function StaffAttendanceTab({ staffId, mine = false }: { staffId: string; mine?: boolean }) {
   const { t } = useTranslation("staff");
   const { data, isLoading } = useQuery({
-    queryKey: ["staff", "attendance", staffId],
-    queryFn: () => getStaffAttendance(staffId),
+    queryKey: ["staff", "attendance", staffId, mine ? "mine" : "all"],
+    queryFn: () => (mine ? getMyStaffAttendance(staffId) : getStaffAttendance(staffId)),
   });
 
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">{t("Loading attendance…")}</p>;

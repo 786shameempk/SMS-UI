@@ -19,6 +19,7 @@ import ReviewPanel from "../components/ReviewPanel";
 import type { TalentCard, TalentCategory, TalentCreatorType, TalentReport, TalentSchoolSettings, TalentStatus } from "../types";
 
 import { useTranslation } from "react-i18next";
+import { NativeSelect } from "@/components/ui/native-select";
 type Tab = "queue" | "history" | "reports" | "settings";
 
 export default function ReviewCenterPage() {
@@ -117,27 +118,27 @@ function QueueList({ status: initialStatus, onOpen, allowStatusSwitch }: { statu
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         {allowStatusSwitch && (
-          <select value={status} onChange={(e) => setStatus(e.target.value as TalentStatus)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Status")}>
+          <NativeSelect value={status} onChange={(e) => setStatus(e.target.value as TalentStatus)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Status")}>
             <option value="approved">{tr("Approved")}</option>
             <option value="needs_changes">{tr("Changes requested")}</option>
             <option value="rejected">{tr("Declined")}</option>
             <option value="archived">{tr("Archived")}</option>
-          </select>
+          </NativeSelect>
         )}
-        <select value={creatorType ?? ""} onChange={(e) => setCreatorType((e.target.value || undefined) as TalentCreatorType | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Creator")}>
+        <NativeSelect value={creatorType ?? ""} onChange={(e) => setCreatorType((e.target.value || undefined) as TalentCreatorType | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Creator")}>
           <option value="">{tr("Everyone")}</option>
           <option value="student">{tr("Students")}</option>
           <option value="teacher">{tr("Teachers")}</option>
           <option value="parent">{tr("Parents")}</option>
-        </select>
-        <select value={category ?? ""} onChange={(e) => setCategory((e.target.value || undefined) as TalentCategory | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Category")}>
+        </NativeSelect>
+        <NativeSelect value={category ?? ""} onChange={(e) => setCategory((e.target.value || undefined) as TalentCategory | undefined)} className="h-9 rounded-full border border-border bg-card px-3 text-sm cursor-pointer" aria-label={tr("Category")}>
           <option value="">{tr("All categories")}</option>
           {CATEGORY_ORDER.map((c) => (
             <option key={c} value={c}>
               {CATEGORY_CONFIG[c].emoji} {tr(CATEGORY_CONFIG[c].label)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       {error && <EmptyState emoji="🔒" title={tr("Can't open the queue")} body={(error as Error).message} />}
@@ -267,7 +268,7 @@ function SettingsForm() {
   const { data } = useQuery({ queryKey: ["talents", "settings"], queryFn: getTalentSettings });
   const [form, setForm] = useState<Omit<TalentSchoolSettings, "tenantId"> | null>(null);
   useEffect(() => {
-    if (data) setForm({ displayName: data.displayName, tagline: data.tagline, studentReviewScope: data.studentReviewScope, allowStudentPublic: data.allowStudentPublic, allowTeacherPublic: data.allowTeacherPublic, autoHideReportThreshold: data.autoHideReportThreshold });
+    if (data) setForm({ displayName: data.displayName, tagline: data.tagline, studentReviewScope: data.studentReviewScope, allowStudentPublic: data.allowStudentPublic, allowTeacherPublic: data.allowTeacherPublic, allowStudentSharing: data.allowStudentSharing, autoHideReportThreshold: data.autoHideReportThreshold });
   }, [data]);
 
   const save = useMutation({
@@ -326,6 +327,7 @@ function SettingsForm() {
           <p className="text-xs text-muted-foreground">{t("Teacher submissions are always reviewed by a school admin. Nobody can approve their own work.")}</p>
         </fieldset>
         <ToggleRow label={t("Students may request Public visibility")} hint={t("Off = student work can only be shared School Only.")} checked={form.allowStudentPublic} onChange={(v) => set("allowStudentPublic", v)} />
+        <ToggleRow label={t("Students and parents can share talents")} hint={t("Off = the Share your talent button is hidden for student and parent logins.")} checked={form.allowStudentSharing} onChange={(v) => set("allowStudentSharing", v)} />
         <ToggleRow label={t("Teachers may request Public visibility")} checked={form.allowTeacherPublic} onChange={(v) => set("allowTeacherPublic", v)} />
         <div className="space-y-1.5">
           <Label htmlFor="cc-threshold">{t("Auto-hide after this many open reports")}</Label>

@@ -92,6 +92,9 @@ interface ApiRouteStop {
   sequence: number;
   arrivalTime: string;
   landmark: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  arrivalRadiusMeters: number;
 }
 
 interface ApiStudentTransportAssignment {
@@ -171,6 +174,18 @@ function mapStop(dto: ApiRouteStop): RouteStop {
     sequence: dto.sequence,
     arrivalTime: dto.arrivalTime,
     landmark: dto.landmark ?? undefined,
+    latitude: dto.latitude ?? undefined,
+    longitude: dto.longitude ?? undefined,
+    arrivalRadiusMeters: dto.arrivalRadiusMeters ?? 10,
+  };
+}
+
+function stopLocationPayload(values: RouteStopFormValues) {
+  const located = values.latitude != null && values.longitude != null;
+  return {
+    latitude: located ? values.latitude : null,
+    longitude: located ? values.longitude : null,
+    arrivalRadiusMeters: located ? (values.arrivalRadiusMeters ?? 10) : null,
   };
 }
 
@@ -364,6 +379,7 @@ export async function addStop(routeId: string, values: RouteStopFormValues): Pro
       name: values.name,
       arrivalTime: values.arrivalTime,
       landmark: values.landmark?.trim() || null,
+      ...stopLocationPayload(values),
     }),
   );
   return mapStop(dto);
@@ -375,6 +391,7 @@ export async function updateStop(id: string, values: RouteStopFormValues): Promi
       name: values.name,
       arrivalTime: values.arrivalTime,
       landmark: values.landmark?.trim() || null,
+      ...stopLocationPayload(values),
     }),
   );
   return mapStop(dto);

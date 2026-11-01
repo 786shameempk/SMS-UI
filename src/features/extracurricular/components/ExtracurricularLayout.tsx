@@ -40,14 +40,14 @@ export default function ExtracurricularLayout() {
   return (
     <PageContainer>
       <PageHeader
-        title={t("Extra-Curricular")}
+        title={t("Co-Curricular")}
         description={
           access.isFamily
             ? t("Browse activities, ask to join, and follow your child's sessions, events and achievements.")
             : t("Activities, houses and teams, schedules and attendance, events, achievements and green campus programs.")
         }
       />
-      <nav aria-label={t("Extra-Curricular sections")} className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px">
+      <nav aria-label={t("Co-Curricular sections")} className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-px">
         {sections.map((s) => (
           <NavLink
             key={s.to}

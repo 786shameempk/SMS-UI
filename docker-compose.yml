@@ -87,6 +87,7 @@ services:
       Office__PortalBaseUrl: ${OFFICE_PORTAL_URL:-http://localhost:8080}
       Office__Payments__WebhookSecret: ${OFFICE_PAYMENT_WEBHOOK_SECRET:-}
       Office__Jobs__Enabled: ${OFFICE_JOBS_ENABLED:-true}
+      Office__GrantNewModulesOnStart: ${OFFICE_GRANT_NEW_MODULES:-true}
     depends_on:
       sqlserver:
         condition: service_healthy

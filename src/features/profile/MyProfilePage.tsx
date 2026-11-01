@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, UserRound } from "lucide-react";
+import { CheckCircle2, Clock, Pencil, UserRound } from "lucide-react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { Textarea } from "@/components/ui/textarea";
+import { MyStaffRecord, MyStudentRecord } from "./components/MyRecordView";
 import { cancelChange, listMyProfiles, listMyRequests, saveProfile, submitProfile, type ChangeStatus, type Profile, type ProfileChange, type ProfileField, type ProfileStatus } from "./api";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const STATUS_TONE: Record<ProfileStatus, BadgeVariant> = { Incomplete: "warning", PendingApproval: "info", ChangesRequested: "danger", Approved: "success" };
 const STATUS_LABEL: Record<ProfileStatus, string> = {
@@ -28,24 +31,108 @@ const isMissing = (key: string, value: string | null | undefined) => !value || !
 /** "Not provided" is shown as an empty box so the person fills it in rather than keeping the placeholder. */
 const fieldValue = (f: ProfileField) => (f.value === NOT_PROVIDED || (f.key === "blood_group" && f.value === "unknown") ? "" : (f.value ?? ""));
 
+const keyOf = (p: Profile) => `${p.personType}:${p.personId}`;
+
 /**
- * Profile completion for people the school's office imported: the person (or a parent, for a child) adds what the import could
- * not know, submits, and the office approves. Everything shown as read-only (IDs, role, class) can only be changed by the office.
+ * My profile: for a student (or a parent's child) and a staff member, exactly the Students / Staff detail page in read-only mode.
+ * Changes go through "Update my details", which opens the profile editor: completion for people the school's office imported
+ * (the office approves), a change request to the approver otherwise. Guardian-only and plain accounts have no detail page, so
+ * they get the editor card itself.
  */
 export default function MyProfilePage() {
   const { t } = useTranslation();
   const profiles = useQuery({ queryKey: ["my-profile"], queryFn: listMyProfiles });
+  const [selected, setSelected] = useState<string | null>(null);
+  const list = profiles.data ?? [];
+  const current = list.find((p) => keyOf(p) === selected) ?? list[0];
+
+  if (profiles.isLoading || profiles.isError || list.length === 0) {
+    return (
+      <PageContainer>
+        <PageHeader title={t("My profile")} icon={UserRound} />
+        {profiles.isLoading && <Skeleton className="h-64 w-full" />}
+        {profiles.isError && <ErrorState description={(profiles.error as Error).message} onRetry={() => void profiles.refetch()} />}
+        {profiles.data?.length === 0 && (
+          <EmptyState icon={UserRound} title={t("No profile found")} description={t("No profile is linked to this account yet. Ask the school's office to check your account.")} />
+        )}
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
-      <PageHeader title={t("My profile")} description={t("Check your details and fill in anything missing. Changes are reviewed by your approver before they take effect.")} icon={UserRound} />
-      {profiles.isLoading && <Skeleton className="h-64 w-full" />}
-      {profiles.isError && <ErrorState description={(profiles.error as Error).message} onRetry={() => void profiles.refetch()} />}
-      {profiles.data?.length === 0 && (
-        <EmptyState icon={UserRound} title={t("No profile found")} description={t("No profile is linked to this account yet. Ask the school's office to check your account.")} />
+      {list.length > 1 && (
+        <div role="tablist" aria-label={t("Whose profile")} className="flex flex-wrap gap-2">
+          {list.map((p) => (
+            <Button key={keyOf(p)} role="tab" aria-selected={p === current} size="sm" variant={p === current ? "default" : "outline"} onClick={() => setSelected(keyOf(p))}>
+              {p.displayName}
+              {p.relation === "child" && <span className="text-xs opacity-80">· {t("Your child")}</span>}
+            </Button>
+          ))}
+        </div>
       )}
-      {profiles.data?.map((p) => (p.mode === "approval" ? <ApprovalCard key={`${p.personType}:${p.personId}`} profile={p} /> : <ProfileCard key={`${p.personType}:${p.personId}`} profile={p} />))}
+      <PersonProfile key={keyOf(current)} profile={current} />
     </PageContainer>
+  );
+}
+
+function Editor({ profile }: { profile: Profile }) {
+  return profile.mode === "approval" ? <ApprovalCard profile={profile} /> : <ProfileCard profile={profile} />;
+}
+
+/** What is waiting on the profile editor, shown under the name so the read-only page never hides an open request. */
+function noticeFor(profile: Profile): { tone: "info" | "danger" | "warning"; text: string } | null {
+  if (profile.mode === "approval") {
+    if (profile.pending) return { tone: "info", text: "A change to your details is waiting for approval." };
+    if (profile.lastRejected) return { tone: "danger", text: "Your last change was rejected." };
+    return null;
+  }
+  if (profile.status === "ChangesRequested") return { tone: "danger", text: "The school's office asked for changes" };
+  if (profile.status === "PendingApproval") return { tone: "info", text: "Sent for review. You can edit again once the office replies." };
+  if (profile.status === "Incomplete") return { tone: "warning", text: "Some of your details are still needed." };
+  return null;
+}
+
+const NOTICE_STYLE = {
+  info: "border-border bg-muted/40",
+  warning: "border-warning/40 bg-warning/5",
+  danger: "border-destructive/40 bg-destructive/5",
+} as const;
+
+function PersonProfile({ profile }: { profile: Profile }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  if (profile.personType !== "student" && profile.personType !== "staff") return <Editor profile={profile} />;
+
+  const editable = profile.fields.some((f) => f.editable);
+  const notice = noticeFor(profile);
+  const actions = editable && (
+    <Button variant="outline" onClick={() => setOpen(true)}>
+      <Pencil className="w-3.5 h-3.5" />
+      {t("Update my details")}
+    </Button>
+  );
+  const noticeNode = notice && (
+    <div role="status" className={`flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm ${NOTICE_STYLE[notice.tone]}`}>
+      <span>{t(notice.text)}</span>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>{t("View details")}</Button>
+    </div>
+  );
+  const View = profile.personType === "student" ? MyStudentRecord : MyStaffRecord;
+
+  return (
+    <>
+      <View personId={profile.personId} actions={actions} notice={noticeNode} />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("Update my details")}</DialogTitle>
+            <DialogDescription>{t("Check your details and fill in anything missing. Changes are reviewed by your approver before they take effect.")}</DialogDescription>
+          </DialogHeader>
+          <Editor profile={profile} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -56,6 +143,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
   const dirtyKeys = Object.keys(draft).filter((k) => draft[k] !== fieldValue(profile.fields.find((f) => f.key === k)!));
   const refresh = (updated: Profile) => {
     qc.setQueryData<Profile[]>(["my-profile"], (old) => old?.map((p) => (p.personId === updated.personId && p.personType === updated.personType ? updated : p)));
+    void qc.invalidateQueries({ queryKey: ["my-profile", updated.personType, updated.personId] });
     setDraft({});
   };
   const save = useMutation({
@@ -169,14 +257,14 @@ function FieldRow({ field, value, missing, onChange }: { field: ProfileField; va
       {field.kind === "textarea" ? (
         <Textarea id={id} value={value} onChange={(e) => onChange(e.target.value)} rows={2} maxLength={500} />
       ) : field.kind === "select" ? (
-        <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className="h-9 w-full rounded-md border bg-background px-3 text-sm">
+        <NativeSelect id={id} value={value} onChange={(e) => onChange(e.target.value)} className="h-9 w-full rounded-md border bg-background px-3 text-sm">
           <option value="">{t("Choose…")}</option>
           {field.options?.map((o) => (
             <option key={o} value={o}>
               {o === "unknown" ? t("Unknown") : o}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       ) : (
         <Input id={id} type={field.kind === "date" ? "date" : field.kind === "phone" ? "tel" : "text"} value={value} onChange={(e) => onChange(e.target.value)} />
       )}
@@ -218,6 +306,7 @@ function ApprovalCard({ profile }: { profile: Profile }) {
   const stop = () => { setEditing(false); setDraft({}); setErrors({}); setServerError(null); };
   const refresh = (updated: Profile) => {
     qc.setQueryData<Profile[]>(["my-profile"], (old) => old?.map((p) => (p.personId === updated.personId && p.personType === updated.personType ? updated : p)));
+    void qc.invalidateQueries({ queryKey: ["my-profile", updated.personType, updated.personId] });
     void qc.invalidateQueries({ queryKey: ["my-profile-requests"] });
   };
   const save = useMutation({
@@ -263,7 +352,7 @@ function ApprovalCard({ profile }: { profile: Profile }) {
               <Badge variant={waiting.length > 0 ? "info" : "success"}>{waiting.length > 0 ? t("Change waiting for approval") : t("Up to date")}</Badge>
             </CardTitle>
             <CardDescription>
-              {profile.relation === "child" ? `${t("Your child")} Â· ` : ""}
+              {profile.relation === "child" ? `${t("Your child")} · ` : ""}
               {profile.subtitle}
             </CardDescription>
           </div>
@@ -281,7 +370,7 @@ function ApprovalCard({ profile }: { profile: Profile }) {
             </p>
             <ul className="list-disc pl-6">
               {profile.pending.changes.map((c) => (
-                <li key={c.key}>{t(c.label)}: <span className="text-muted-foreground line-through">{c.from || "â€”"}</span> â†’ <strong>{c.to || "â€”"}</strong></li>
+                <li key={c.key}>{t(c.label)}: <span className="text-muted-foreground line-through">{c.from || "—"}</span> → <strong>{c.to || "—"}</strong></li>
               ))}
             </ul>
             <p className="text-xs text-muted-foreground">{t("Your profile keeps the current values until it is approved.")}</p>
@@ -314,8 +403,8 @@ function ApprovalCard({ profile }: { profile: Profile }) {
                 ) : (
                   <div key={f.key} className={f.kind === "textarea" ? "sm:col-span-2" : undefined}>
                     <p className="mb-1 text-sm font-medium">{t(f.label)}</p>
-                    <p className="rounded-md border bg-muted/30 px-3 py-2 text-sm">{f.value && f.value !== NOT_PROVIDED ? f.value : "â€”"}</p>
-                    {f.pending && <p className="mt-1 text-xs text-muted-foreground">{t("Requested")}: <strong>{f.pendingValue || "â€”"}</strong></p>}
+                    <p className="rounded-md border bg-muted/30 px-3 py-2 text-sm">{f.value && f.value !== NOT_PROVIDED ? f.value : "—"}</p>
+                    {f.pending && <p className="mt-1 text-xs text-muted-foreground">{t("Requested")}: <strong>{f.pendingValue || "—"}</strong></p>}
                   </div>
                 ),
               )}
@@ -339,7 +428,7 @@ function ApprovalCard({ profile }: { profile: Profile }) {
                   <Badge variant={CHANGE_TONE[r.status]}>{t(r.status)}</Badge>
                   <span>{r.changes.map((c) => t(c.label)).join(", ")}</span>
                   <span className="text-xs text-muted-foreground">{new Date(r.submittedAt).toLocaleDateString()}</span>
-                  {r.status === "Rejected" && r.reviewerComment && <span className="text-xs text-muted-foreground">â€” {r.reviewerComment}</span>}
+                  {r.status === "Rejected" && r.reviewerComment && <span className="text-xs text-muted-foreground">— {r.reviewerComment}</span>}
                 </li>
               ))}
             </ul>

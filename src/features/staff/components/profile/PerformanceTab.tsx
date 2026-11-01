@@ -44,7 +44,8 @@ function ReviewStars({ rating }: { rating: number }) {
   );
 }
 
-export default function PerformanceTab({ staff }: { staff: StaffMember }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function PerformanceTab({ staff, readOnly = false }: { staff: StaffMember; readOnly?: boolean }) {
   const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
@@ -78,10 +79,12 @@ export default function PerformanceTab({ staff }: { staff: StaffMember }) {
           <CardTitle>{t("Performance reviews")}</CardTitle>
           <CardDescription>{t("Periodic performance evaluations for this staff member.")}</CardDescription>
         </div>
+{!readOnly && (
         <Button size="sm" onClick={() => setFormOpen(true)}>
           <Plus className="w-3.5 h-3.5" />
           {t("Add review")}
         </Button>
+)}
       </CardHeader>
       <CardContent className="space-y-2.5">
         {staff.performanceReviews.length === 0 && <p className="text-sm text-muted-foreground">{t("No reviews on file yet.")}</p>}

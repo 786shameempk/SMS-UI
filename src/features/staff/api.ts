@@ -1,5 +1,5 @@
-import { ACADEMIC_API_BASE_URL, academicHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
-import { listStaffAttendanceRecords } from "@/features/attendance/api";
+import { ACADEMIC_API_BASE_URL, academicHttpClient, authHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
+import { listMyStaffAttendanceRecords, listStaffAttendanceRecords } from "@/features/attendance/api";
 import type {
   Experience,
   ExperienceFormValues,
@@ -309,6 +309,22 @@ export async function getStaffMember(id: string): Promise<StaffMember> {
   return mapStaff(dto);
 }
 
+/** The signed-in staff member's own full record (AcademicService GET /api/my-profile/staff/{id}/record), for the read-only My profile page. */
+export async function getMyStaffRecord(id: string): Promise<StaffMember> {
+  const dto = await unwrap(academicHttpClient.get<ApiStaffMember>(`/api/my-profile/staff/${id}/record`));
+  return mapStaff(dto);
+}
+
+export interface AssignableLoginRole {
+  key: string;
+  name: string;
+}
+
+/** Every role HR may give a new joiner: the built-in staff roles and the school's custom roles. */
+export async function listAssignableLoginRoles(): Promise<AssignableLoginRole[]> {
+  return unwrap(authHttpClient.get<AssignableLoginRole[]>("/api/person-logins/roles"));
+}
+
 export async function createStaff(values: StaffFormValues): Promise<StaffMember> {
   const dto = await unwrap(
     academicHttpClient.post<ApiStaffMember>("/api/staff", {
@@ -440,10 +456,15 @@ const STAFF_ATTENDANCE_RECENT_DAYS = 14;
 export async function getStaffAttendance(id: string): Promise<StaffAttendanceSummary> {
   const from = new Date();
   from.setDate(from.getDate() - STAFF_ATTENDANCE_WINDOW_DAYS);
-  const records = (await listStaffAttendanceRecords({ dateFrom: from.toISOString().slice(0, 10) }))
-    .filter((r) => r.staffId === id)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  return summarizeStaffAttendance(await listStaffAttendanceRecords({ dateFrom: from.toISOString().slice(0, 10) }), id);
+}
 
+export async function getMyStaffAttendance(id: string): Promise<StaffAttendanceSummary> {
+  return summarizeStaffAttendance(await listMyStaffAttendanceRecords(id), id);
+}
+
+function summarizeStaffAttendance(all: Awaited<ReturnType<typeof listStaffAttendanceRecords>>, id: string): StaffAttendanceSummary {
+  const records = all.filter((r) => r.staffId === id).sort((a, b) => a.date.localeCompare(b.date));
   return {
     presentDays: records.filter((r) => r.status === "present").length,
     absentDays: records.filter((r) => r.status === "absent").length,

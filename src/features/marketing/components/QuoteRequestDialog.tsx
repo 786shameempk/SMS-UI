@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/utils/cn";
 import { submitLead } from "../api";
 import { COUNTRY_CODES, PLAN_KEYS, QUOTE_MODULE_OPTIONS, STAFF_COUNT_OPTIONS, STUDENT_COUNT_OPTIONS } from "../data";
+import { NativeSelect } from "@/components/ui/native-select";
 
 const NOT_SURE = "Not sure yet";
 
@@ -174,13 +175,13 @@ export default function QuoteRequestDialog({ open, onOpenChange, defaults, varia
                       control={control}
                       name="dialCode"
                       render={({ field }) => (
-                        <select {...field} aria-label={t("Country code")} className="cursor-pointer border-e border-input bg-secondary/60 ps-2 pe-1 text-sm text-foreground outline-none">
+                        <NativeSelect {...field} aria-label={t("Country code")} className="cursor-pointer border-e border-input bg-secondary/60 ps-2 pe-1 text-sm text-foreground outline-none">
                           {COUNTRY_CODES.map((c) => (
                             <option key={c.code} value={c.dial}>
                               {c.flag} {c.dial}
                             </option>
                           ))}
-                        </select>
+                        </NativeSelect>
                       )}
                     />
                     <input

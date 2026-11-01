@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
 
 const Select = SelectPrimitive.Root;
@@ -55,10 +56,46 @@ const SelectScrollDownButton = React.forwardRef<
 ));
 SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
 
+/** What the search box in an open list has typed; items use it to hide themselves. */
+const SelectSearchContext = React.createContext("");
+
+/** The visible text of an item, so the search can match it whatever the item renders. */
+function textOf(node: React.ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join(" ");
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) return textOf(node.props.children);
+  return "";
+}
+
+/**
+ * Every list is searchable: a search box sits above the options and narrows them as you type. Options that don't match stay mounted
+ * (so the trigger can still show the chosen value) but are hidden and skipped by the arrow keys.
+ */
 const SelectContent = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = "popper", ...props }, ref) => (
+>(({ className, children, position = "popper", ...props }, ref) => {
+  const { t } = useTranslation("common");
+  const [query, setQuery] = React.useState("");
+  const [noMatch, setNoMatch] = React.useState(false);
+  const listRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const shown = listRef.current?.querySelectorAll("[role=option]:not([data-filtered])").length ?? 0;
+    setNoMatch(query.trim() !== "" && shown === 0);
+  }, [query, children]);
+
+  // Radix puts focus on the chosen option when the list opens; move it to the search box so typing searches
+  // (not on touch screens, where it would raise the keyboard).
+  React.useEffect(() => {
+    if (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches) return;
+    const id = window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  return (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
@@ -72,29 +109,55 @@ const SelectContent = React.forwardRef<
       position={position}
       {...props}
     >
+      <div className="relative border-b border-border">
+        <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        <input
+          ref={inputRef}
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            // Radix would treat letters as type-ahead and jump focus to an option; keep them for the box. Arrows and Escape still reach the list.
+            if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Escape") e.stopPropagation();
+          }}
+          placeholder={t("Search…")}
+          aria-label={t("Search options")}
+          autoComplete="off"
+          className="h-9 w-full bg-transparent ps-9 pe-3 text-sm outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
+        />
+      </div>
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
+        ref={listRef}
         className={cn("p-1", position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)]")}
       >
-        {children}
+        <SelectSearchContext.Provider value={query.trim().toLowerCase()}>{children}</SelectSearchContext.Provider>
+        {noMatch && <div className="px-3 py-6 text-center text-sm text-muted-foreground">{t("No matches")}</div>}
       </SelectPrimitive.Viewport>
       <SelectScrollDownButton />
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
-));
+  );
+});
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 
 const SelectItem = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => {
+  const query = React.useContext(SelectSearchContext);
+  const filtered = query !== "" && !(props.textValue ?? textOf(children)).toLowerCase().includes(query);
+  return (
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-md py-1.5 ps-8 pe-2 text-sm outline-none focus:bg-secondary focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      filtered && "hidden",
       className,
     )}
     {...props}
+    disabled={props.disabled || filtered}
+    data-filtered={filtered ? "" : undefined}
   >
     <span className="absolute start-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
@@ -103,7 +166,8 @@ const SelectItem = React.forwardRef<
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
-));
+  );
+});
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
 const SelectLabel = React.forwardRef<

@@ -1,4 +1,5 @@
-import { screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test/utils";
 import MyProfilePage from "./MyProfilePage";
@@ -6,6 +7,17 @@ import type { Profile, ProfileField } from "./api";
 
 const api = vi.hoisted(() => ({ listMyProfiles: vi.fn(), saveProfile: vi.fn(), submitProfile: vi.fn(), listMyRequests: vi.fn(), cancelChange: vi.fn() }));
 vi.mock("./api", () => api);
+// The record views (the Students / Staff detail tabs) are covered in MyRecordView.test.tsx; here they only place the header actions.
+vi.mock("./components/MyRecordView", () => {
+  const view = (kind: string) =>
+    function Record({ personId, actions, notice }: { personId: string; actions?: ReactNode; notice?: ReactNode }) {
+      return <div><h1>{`${kind} record ${personId}`}</h1>{actions}{notice}</div>;
+    };
+  return { MyStudentRecord: view("student"), MyStaffRecord: view("staff") };
+});
+
+/** The editor lives behind "Update my details" now that the page itself is the read-only record. */
+const openEditor = async () => userEvent.click(await screen.findByRole("button", { name: "Update my details" }));
 
 const field = (over: Partial<ProfileField>): ProfileField => ({
   key: "x", label: "X", group: "Contact", kind: "text", value: "", editable: true, sensitive: false, required: true, missing: false, options: null, ...over,
@@ -31,6 +43,7 @@ describe("My profile", () => {
   it("shows an imported child with read-only identifiers and the missing details as empty boxes", async () => {
     api.listMyProfiles.mockResolvedValue([profile()]);
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
 
     expect(await screen.findByText("Ravi Kumar")).toBeInTheDocument();
     expect(screen.getByText(/Your child/)).toBeInTheDocument();
@@ -43,6 +56,7 @@ describe("My profile", () => {
     api.listMyProfiles.mockResolvedValue([profile()]);
     api.saveProfile.mockResolvedValue(profile({ fields: profile().fields.map((f) => (f.key === "address" ? { ...f, value: "12 Lake Road", missing: false } : f)), missingFields: ["blood_group"] }));
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
     const send = await screen.findByRole("button", { name: "Send for approval" });
     expect(send).toBeDisabled();
 
@@ -58,17 +72,20 @@ describe("My profile", () => {
     api.listMyProfiles.mockResolvedValue([complete]);
     api.submitProfile.mockResolvedValue({ ...complete, status: "PendingApproval", locked: true, fields: complete.fields.map((f) => ({ ...f, editable: false })) });
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
 
     await userEvent.click(await screen.findByRole("button", { name: "Send for approval" }));
 
-    expect(await screen.findByText(/Sent for review/)).toBeInTheDocument();
+    expect(await within(screen.getByRole("dialog")).findByText(/Sent for review/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
   });
 
   it("shows the office's reason when changes were requested", async () => {
     api.listMyProfiles.mockResolvedValue([profile({ status: "ChangesRequested", feedback: { decision: "ChangesRequested", reason: "Add the pin code.", decidedAt: "2026-10-25T10:00:00Z", decidedBy: "Ops" } })]);
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
     expect(await screen.findByRole("alert")).toHaveTextContent("Add the pin code.");
+    expect(screen.getByRole("status", { hidden: true })).toHaveTextContent("asked for changes");   // the page notice, behind the open panel
   });
 
   it("never claims the account needs a bulk import: an empty answer is a neutral message", async () => {
@@ -100,6 +117,7 @@ describe("My profile - a profile whose edits are approved", () => {
   it("is read-only until Edit profile, and shows who will review a change", async () => {
     api.listMyProfiles.mockResolvedValue([approvalProfile()]);
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
 
     expect(await screen.findByText("Asha Nair")).toBeInTheDocument();
     expect(screen.getByText("9876543210")).toBeInTheDocument();
@@ -116,6 +134,7 @@ describe("My profile - a profile whose edits are approved", () => {
     api.listMyProfiles.mockResolvedValue([approvalProfile()]);
     api.saveProfile.mockResolvedValue(waiting);
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
     await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
 
     const phone = screen.getByLabelText(/Mobile number/);
@@ -133,6 +152,7 @@ describe("My profile - a profile whose edits are approved", () => {
   it("checks formats before sending, and Cancel throws the edits away", async () => {
     api.listMyProfiles.mockResolvedValue([approvalProfile()]);
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
     await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
 
     await userEvent.clear(screen.getByLabelText(/Mobile number/));
@@ -151,6 +171,7 @@ describe("My profile - a profile whose edits are approved", () => {
     api.listMyProfiles.mockResolvedValue([approvalProfile()]);
     api.saveProfile.mockRejectedValue(new Error("Mobile number already has a change waiting for approval."));
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
     await userEvent.click(await screen.findByRole("button", { name: "Edit profile" }));
     const phone = screen.getByLabelText(/Mobile number/);
     await userEvent.clear(phone);
@@ -166,6 +187,7 @@ describe("My profile - a profile whose edits are approved", () => {
   it("shows a rejection with the approver's reason and says nothing was changed", async () => {
     api.listMyProfiles.mockResolvedValue([approvalProfile({ lastRejected: { id: "r0", status: "Rejected", personType: "staff", personId: "t1", subjectName: "Asha Nair", subjectDetail: null, requesterName: "Asha Nair", requesterRole: null, approverName: "Hari Rao", approverRule: "DepartmentHead", submittedAt: "2026-10-26T10:00:00Z", reviewedAt: "2026-10-26T12:00:00Z", reviewedByName: "Hari Rao", reviewerComment: "That is the old office number.", canDecide: false, changes: [] } })]);
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("That is the old office number.");
     expect(screen.getByText(/profile was not changed/i)).toBeInTheDocument();
@@ -176,9 +198,44 @@ describe("My profile - a profile whose edits are approved", () => {
     api.listMyProfiles.mockResolvedValue([waiting]);
     api.cancelChange.mockResolvedValue(undefined);
     renderWithProviders(<MyProfilePage />);
+    await openEditor();
 
     await userEvent.click(await screen.findByRole("button", { name: "Withdraw request" }));
 
     await waitFor(() => expect(api.cancelChange).toHaveBeenCalledWith("r1"));
+  });
+});
+
+describe("My profile - the page itself", () => {
+  it("shows a student or staff member their detail record, with the editor only behind Update my details", async () => {
+    api.listMyProfiles.mockResolvedValue([approvalProfile()]);
+    renderWithProviders(<MyProfilePage />);
+
+    expect(await screen.findByRole("heading", { name: "staff record t1" })).toBeInTheDocument();
+    expect(screen.queryByText("9876543210")).not.toBeInTheDocument();
+    await openEditor();
+    expect(screen.getByRole("dialog")).toHaveTextContent("9876543210");
+  });
+
+  it("says when a change is waiting, so the read-only page never hides it", async () => {
+    api.listMyProfiles.mockResolvedValue([approvalProfile({ pending: { id: "r1", status: "Pending", personType: "staff", personId: "t1", subjectName: "Asha Nair", subjectDetail: null, requesterName: "Asha Nair", requesterRole: null, approverName: "Hari Rao", approverRule: "DepartmentHead", submittedAt: "2026-10-27T10:00:00Z", reviewedAt: null, reviewedByName: null, reviewerComment: null, canDecide: false, changes: [] } })]);
+    renderWithProviders(<MyProfilePage />);
+    expect(await screen.findByRole("status")).toHaveTextContent("waiting for approval");
+  });
+
+  it("lets a parent switch between their children", async () => {
+    api.listMyProfiles.mockResolvedValue([profile(), profile({ personId: "s2", displayName: "Anu Kumar" })]);
+    renderWithProviders(<MyProfilePage />);
+
+    expect(await screen.findByRole("heading", { name: "student record s1" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("tab", { name: /Anu Kumar/ }));
+    expect(await screen.findByRole("heading", { name: "student record s2" })).toBeInTheDocument();
+  });
+
+  it("keeps the editor card for a guardian-only account, which has no detail page", async () => {
+    api.listMyProfiles.mockResolvedValue([approvalProfile({ personType: "guardian", personId: "u1", displayName: "Meera Kumar" })]);
+    renderWithProviders(<MyProfilePage />);
+    expect(await screen.findByRole("button", { name: "Edit profile" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Update my details" })).not.toBeInTheDocument();
   });
 });

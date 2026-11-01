@@ -238,6 +238,8 @@ export interface TalentSchoolSettings {
   studentReviewScope: TalentStudentReviewScope;
   allowStudentPublic: boolean;
   allowTeacherPublic: boolean;
+  /** Whether students and parents get the "Share your talent" entry points. */
+  allowStudentSharing: boolean;
   autoHideReportThreshold: number;
 }
 

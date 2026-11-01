@@ -13,7 +13,8 @@ function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
 }
 
-export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function StaffOverviewTab({ staff, readOnly = false }: { staff: StaffMember; readOnly?: boolean }) {
   const { t } = useTranslation("staff");
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +63,8 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
                 {staff.photoUrl && <AvatarImage src={staff.photoUrl} alt={staff.firstName} />}
                 <AvatarFallback className="text-base">{initialsOf(staff.firstName, staff.lastName)}</AvatarFallback>
               </Avatar>
+              {!readOnly && (
+              <>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -72,6 +75,8 @@ export default function StaffOverviewTab({ staff }: { staff: StaffMember }) {
                 {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+              </>
+              )}
             </div>
             <div>
               <p className="text-base font-semibold text-foreground">

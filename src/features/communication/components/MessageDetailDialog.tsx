@@ -13,6 +13,7 @@ import { cancelQueued, listDeliveries, retryFailed } from "../messaging/api";
 import type { BroadcastMessage, Channel, DeliveryStatus } from "../types";
 
 import { useTranslation } from "react-i18next";
+import { NativeSelect } from "@/components/ui/native-select";
 const CHANNEL_ICONS: Record<Channel, LucideIcon> = {
   email: Mail,
   sms: MessageSquare,
@@ -154,7 +155,7 @@ export default function MessageDetailDialog({
 
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <p className="flex-1 text-sm font-medium text-foreground">{t("Recipients")}</p>
-                <select
+                <NativeSelect
                   className="h-8 rounded-md border border-input bg-card px-2 text-xs"
                   value={filter}
                   onChange={(e) => setFilter(e.target.value as DeliveryStatus | "all")}
@@ -166,7 +167,7 @@ export default function MessageDetailDialog({
                       {STATUS_LABEL[s]}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
               <div className="max-h-72 divide-y divide-border overflow-y-auto rounded-lg border border-border">
                 {(deliveries.data ?? []).map((d) => (

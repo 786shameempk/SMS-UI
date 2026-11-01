@@ -27,6 +27,7 @@ import { CHANNEL_TITLES, PROVIDERS, providersFor } from "../messaging/providers"
 import type { Channel } from "../types";
 
 import { useTranslation } from "react-i18next";
+import { NativeSelect } from "@/components/ui/native-select";
 /** Administrators: connect a provider per channel, prove it with a real test message, and manage opt-outs and opt-ins. */
 export default function MessagingSettingsTab() {
   const { t } = useTranslation("communication");
@@ -258,11 +259,11 @@ function SuppressionsCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-2">
-          <select className="h-9 rounded-md border border-input bg-card px-2 text-sm" value={channel} onChange={(e) => setChannel(e.target.value as Channel)} aria-label={t("Channel")}>
+          <NativeSelect className="h-9 rounded-md border border-input bg-card px-2 text-sm" value={channel} onChange={(e) => setChannel(e.target.value as Channel)} aria-label={t("Channel")}>
             <option value="email">{t("Email")}</option>
             <option value="sms">{t("SMS")}</option>
             <option value="whatsapp">{t("WhatsApp")}</option>
-          </select>
+          </NativeSelect>
           <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("Address or number")} aria-label={t("Address to suppress")} />
           <Button variant="outline" onClick={() => add.mutate()} disabled={!address.trim() || add.isPending}>
             {t("Add")}

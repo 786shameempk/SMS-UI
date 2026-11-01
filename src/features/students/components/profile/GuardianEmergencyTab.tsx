@@ -126,7 +126,8 @@ function GuardianFormDialog({
   );
 }
 
-export default function GuardianEmergencyTab({ student }: { student: Student }) {
+/** `readOnly` is the My profile view: the same tab with every edit control hidden. */
+export default function GuardianEmergencyTab({ student, readOnly = false }: { student: Student; readOnly?: boolean }) {
   const { t } = useTranslation("students");
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
@@ -183,6 +184,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
             <CardTitle>{t("Guardians")}</CardTitle>
             <CardDescription>{t("Parents or guardians associated with this student.")}</CardDescription>
           </div>
+{!readOnly && (
           <Button
             size="sm"
             onClick={() => {
@@ -193,6 +195,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
             <Plus className="w-3.5 h-3.5" />
             {t("Add guardian")}
           </Button>
+)}
         </CardHeader>
         <CardContent className="space-y-2.5">
           {student.guardians.length === 0 && <p className="text-sm text-muted-foreground">{t("No guardians on file.")}</p>}
@@ -212,6 +215,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
                   </p>
                 </div>
               </div>
+              {!readOnly && (
               <div className="flex items-center gap-1 shrink-0">
                 <Button
                   variant="ghost"
@@ -228,6 +232,7 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
+              )}
             </div>
           ))}
         </CardContent>
@@ -244,8 +249,8 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
         <CardContent>
           <form
             onSubmit={handleSubmitEmergency((values) => emergencyMutation.mutate(values))}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-3"
           >
+            <fieldset disabled={readOnly} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="e-name" required>{t("Name")}</Label>
               <Input id="e-name" {...registerEmergency("name")} />
@@ -258,12 +263,15 @@ export default function GuardianEmergencyTab({ student }: { student: Student }) 
               <Label htmlFor="e-phone" required>{t("Phone")}</Label>
               <Input id="e-phone" {...registerEmergency("phone")} />
             </div>
+            {!readOnly && (
             <div className="sm:col-span-3">
               <Button type="submit" size="sm" disabled={!emergencyDirty || emergencyMutation.isPending}>
                 {emergencyMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 {t("Save emergency contact")}
               </Button>
             </div>
+            )}
+            </fieldset>
           </form>
         </CardContent>
       </Card>

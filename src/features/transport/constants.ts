@@ -1,4 +1,4 @@
-import type { BusStatus, BusTrackingStatus, DriverStatus, RouteStatus, TrackingSource, TransportAssignmentStatus } from "./types";
+import type { BusStatus, BusTrackingStatus, DriverStatus, RouteStatus, StopProgress, TrackingSource, TransportAssignmentStatus } from "./types";
 
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "neutral";
 
@@ -59,3 +59,14 @@ export const TRACKING_SOURCE_OPTIONS = (Object.keys(TRACKING_SOURCE_CONFIG) as T
 export const POSITION_STALE_AFTER_MS = 2 * 60 * 1000;
 /** How often the parent screen and the driver phone refresh / report. */
 export const TRACKING_POLL_MS = 10_000;
+
+/**
+ * How a stop looks on the parent's route list as the bus moves. The classes are the colours of the stop dot and of the line
+ * leading to the next stop; change them here to restyle the progress everywhere.
+ */
+export const STOP_PROGRESS_CONFIG: Record<StopProgress, { label: string; dot: string; line: string }> = {
+  none: { label: "", dot: "bg-background border-border", line: "bg-border" },
+  pending: { label: "Not reached yet", dot: "bg-background border-border", line: "bg-border" },
+  reached: { label: "Reached", dot: "bg-success border-success", line: "bg-success" },
+  skipped: { label: "Passed without stopping", dot: "bg-warning border-warning", line: "bg-warning" },
+};

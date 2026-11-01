@@ -54,7 +54,7 @@ function QuestionBody({ q, answer, onChange }: { q: AttemptQuestion; answer: Ans
             <label
               key={o.id}
               className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+                "relative flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
                 checked ? "border-primary bg-accent/70 font-medium text-foreground" : "border-border/80 hover:border-primary/40 hover:bg-secondary/40",
               )}
             >

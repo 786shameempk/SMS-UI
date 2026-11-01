@@ -67,6 +67,19 @@ const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage")
 const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
 const StudyMaterialsPage = lazy(() => import("@/features/study-materials/pages/StudyMaterialsPage"));
 const SettingsPage = lazy(() => import("@/features/settings/pages/SettingsPage"));
+const AppraisalLayout = lazy(() => import("@/features/appraisal/components/AppraisalLayout"));
+const AppraisalHome = lazy(() => import("@/features/appraisal/components/AppraisalLayout").then((m) => ({ default: m.AppraisalHome })));
+const AppraisalDashboardPage = lazy(() => import("@/features/appraisal/pages/DashboardPage"));
+const AppraisalCyclesPage = lazy(() => import("@/features/appraisal/pages/CyclesPage"));
+const AppraisalCycleDetailPage = lazy(() => import("@/features/appraisal/pages/CycleDetailPage"));
+const AppraisalConfigurationPage = lazy(() => import("@/features/appraisal/pages/ConfigurationPage"));
+const AppraisalQuestionBankPage = lazy(() => import("@/features/appraisal/pages/QuestionBankPage"));
+const AppraisalPendingPage = lazy(() => import("@/features/appraisal/pages/PendingReviewsPage"));
+const AppraisalReviewFormPage = lazy(() => import("@/features/appraisal/pages/ReviewFormPage"));
+const AppraisalMinePage = lazy(() => import("@/features/appraisal/pages/MyAppraisalsPage"));
+const AppraisalResultPage = lazy(() => import("@/features/appraisal/pages/ResultPage"));
+const AppraisalReportsPage = lazy(() => import("@/features/appraisal/pages/ReportsPage"));
+const AppraisalHistoryPage = lazy(() => import("@/features/appraisal/pages/HistoryPage"));
 const PortionsLayout = lazy(() => import("@/features/lesson-portions/components/PortionsLayout"));
 const PortionsDashboardPage = lazy(() => import("@/features/lesson-portions/pages/DashboardPage"));
 const PortionsSyllabusPage = lazy(() => import("@/features/lesson-portions/pages/SyllabusSetupPage"));
@@ -240,6 +253,26 @@ export const router = createBrowserRouter([
         ],
       },
       { path: "ai", element: <RequireModule module="aiFeatures"><AIFeaturesPage /></RequireModule> },
+      {
+        // Performance & Appraisal: staff manage cycles; everyone assigned a review (including students and parents) fills it in here.
+        path: "appraisal",
+        element: <RequireModule module="appraisal"><AppraisalLayout /></RequireModule>,
+        children: [
+          { index: true, element: <AppraisalHome /> },
+          { path: "dashboard", element: <AppraisalDashboardPage /> },
+          { path: "cycles", element: <AppraisalCyclesPage /> },
+          { path: "cycles/:cycleId", element: <AppraisalCycleDetailPage /> },
+          { path: "configuration", element: <AppraisalConfigurationPage /> },
+          { path: "questions", element: <AppraisalQuestionBankPage /> },
+          { path: "pending", element: <AppraisalPendingPage /> },
+          { path: "feedback", element: <AppraisalPendingPage /> },
+          { path: "review/:assignmentId", element: <AppraisalReviewFormPage /> },
+          { path: "mine", element: <AppraisalMinePage /> },
+          { path: "results/:participantId", element: <AppraisalResultPage /> },
+          { path: "reports", element: <AppraisalReportsPage /> },
+          { path: "history", element: <AppraisalHistoryPage /> },
+        ],
+      },
       {
         path: "lesson-portions",
         element: <RequireModule module="portions"><PortionsLayout /></RequireModule>,

@@ -20,6 +20,7 @@ import {
   setRoleSubMenus,
   SUB_MENUS_QUERY_KEY,
 } from "../api";
+import { moduleLabel } from "../constants";
 import { menuPermissionId, SUB_MENU_CATALOG, type SubMenuPage } from "../subMenus";
 
 /** Roles whose tabs can't be hidden: the school's administrators always keep every tab, so they can't be locked out. */
@@ -139,7 +140,7 @@ export default function SubMenusTab() {
 
       {byModule.map(([module, modulePages]) => (
         <div key={module} className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t(module)}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t(moduleLabel(module))}</p>
           {modulePages.map((page) => {
             const shown = page.tabs.filter((tab) => !hidden.has(tabKey(page.routeId, tab.value))).length;
             return (

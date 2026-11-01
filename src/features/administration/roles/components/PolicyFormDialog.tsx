@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { PERMISSION_MODULES } from "../constants";
+import { PERMISSION_MODULES, moduleLabel } from "../constants";
 import { getMatrixModules, MATRIX_MODULES_QUERY_KEY } from "../api";
 import type { Policy, PolicyFormValues, Role } from "../types";
 
@@ -102,7 +102,7 @@ export default function PolicyFormDialog({ open, onOpenChange, policy, roles, on
                   <SelectContent>
                     {moduleOptions.map((m) => (
                       <SelectItem key={m} value={m}>
-                        {t(m)}
+                        {t(moduleLabel(m))}
                       </SelectItem>
                     ))}
                   </SelectContent>

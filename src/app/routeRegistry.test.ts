@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseNav, parseRoutes } from "../../scripts/help/lib/sources.mjs";
+import { canOpenRoute } from "@/features/help/access";
 import { MODULES, ROUTES, getModule, menuPathOf, routeForPath } from "./routeRegistry";
 
 const read = (...parts: string[]) => readFileSync(join(import.meta.dirname, ...parts), "utf8").replace(/\r\n/g, "\n");
@@ -65,5 +66,12 @@ describe("route registry", () => {
     expect(routeForPath("/talents/42")?.id).toBe("talent-showcase.detail");
     expect(routeForPath("/online-classes/5/room?x=1")?.id).toBe("online-classes.room");
     expect(routeForPath("/nowhere")).toBeUndefined();
+  });
+
+  it("lets staff open the pending-reviews list (self-assessment and assigned reviews), not only parents and students", () => {
+    const route = routeForPath("/appraisal/pending")!;
+    for (const role of ["teacher", "admin", "principal", "accountant", "parent", "student"] as const) {
+      expect(canOpenRoute(route, { role, permissions: null }), role).toBe(true);
+    }
   });
 });
