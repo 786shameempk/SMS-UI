@@ -1,4 +1,4 @@
-export const FEE_TYPES = ["tuition", "bus", "hostel", "library", "exam", "miscellaneous"] as const;
+export const FEE_TYPES = ["tuition", "bus", "hostel", "library", "exam", "miscellaneous", "previous_dues"] as const;
 export type FeeType = (typeof FEE_TYPES)[number];
 
 export type FeeFrequency = "one_time" | "monthly" | "term_wise" | "annual";
@@ -84,6 +84,19 @@ export interface FeeInvoice {
   installments?: InvoiceInstallment[];
   paidOn?: string;
   paidAmount?: number;
+}
+
+/** One student's old balance, carried forward from an earlier year or from before the school used this system. */
+export interface PreviousDueItem {
+  studentId: string;
+  amount: number;
+}
+
+export interface AddPreviousDuesParams {
+  /** Names the balance (e.g. "2023-24 balance"); the same label never bills a student twice. */
+  label: string;
+  dueDate: string;
+  items: PreviousDueItem[];
 }
 
 export interface GenerateInvoicesParams {

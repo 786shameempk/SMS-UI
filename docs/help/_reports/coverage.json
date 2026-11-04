@@ -1,36 +1,36 @@
 {
   "summary": {
     "appVersion": "0.0.0",
-    "revision": "283bd343eb",
+    "revision": "0074b4ea33",
     "modules": {
-      "total": 41,
-      "withArticles": 41,
-      "withOverview": 8
+      "total": 42,
+      "withArticles": 42,
+      "withOverview": 9
     },
     "routes": {
-      "total": 113,
-      "countedScreens": 111,
-      "documented": 68,
+      "total": 131,
+      "countedScreens": 129,
+      "documented": 77,
       "excluded": 2
     },
     "actions": {
-      "identified": 399,
-      "documented": 248,
+      "identified": 24,
+      "documented": 14,
       "heuristic": true
     },
     "articles": {
-      "total": 90,
+      "total": 104,
       "draft": 0,
-      "reviewed": 90,
+      "reviewed": 104,
       "verified": 0,
-      "tasks": 149
+      "tasks": 163
     },
     "assets": {
       "screenshotsCaptured": 12,
       "screenshotsReferencedButMissing": 0,
       "videosRecorded": 0,
-      "taskArticlesWithoutScreenshot": 67,
-      "taskArticlesWithoutVideo": 76
+      "taskArticlesWithoutScreenshot": 79,
+      "taskArticlesWithoutVideo": 88
     },
     "problems": {
       "errors": 0,
@@ -42,6 +42,7 @@
   },
   "modulesWithoutArticles": [],
   "routesUndocumented": [
+    "certificates.verify",
     "online-classes.calendar",
     "online-classes.reports",
     "online-classes.details",
@@ -64,6 +65,7 @@
     "online-exams.list",
     "online-exams.detail",
     "online-exams.edit",
+    "online-exams.monitor",
     "online-exams.exam-results",
     "online-exams.attempt",
     "online-exams.reports",
@@ -71,6 +73,13 @@
     "online-exams.my-completed",
     "online-exams.my-result",
     "online-exams.take",
+    "appraisal.dashboard",
+    "appraisal.cycle",
+    "appraisal.questions",
+    "appraisal.review",
+    "appraisal.result",
+    "appraisal.reports",
+    "appraisal.history",
     "staff.profile",
     "azure.cost",
     "azure.resources",
@@ -86,7 +95,7 @@
     "help-center.role",
     "help-center.article"
   ],
-  "actionsOpen": 151,
+  "actionsOpen": 10,
   "drift": [],
   "metadataIssues": [],
   "errors": [],

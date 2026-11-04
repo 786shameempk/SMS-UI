@@ -151,6 +151,19 @@ services:
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-info@schoolsphrere.com}
       Smtp__FromName: ${SMTP_FROM_NAME:-School Sphere}
+      # Sign-in with a one-time code (SMS / email): off until OTP_ENABLED=true. See docs/OTP_ROLLOUT.md.
+      Otp__Enabled: ${OTP_ENABLED:-false}
+      Otp__HashKey: ${OTP_HASH_KEY:-}
+      Otp__PilotTenants: ${OTP_PILOT_TENANTS:-}
+      Otp__AllowAdminSignIn: ${OTP_ALLOW_ADMIN_SIGN_IN:-false}
+      Otp__ExposeCodeInLogs: ${OTP_EXPOSE_CODE_IN_LOGS:-false}
+      Sms__Provider: ${SMS_PROVIDER:-Logging}
+      Sms__Msg91__AuthKey: ${MSG91_AUTH_KEY:-}
+      Sms__Msg91__OtpTemplateId: ${MSG91_OTP_TEMPLATE_ID:-}
+      Sms__Msg91__SenderId: ${MSG91_SENDER_ID:-}
+      Sms__Twilio__AccountSid: ${TWILIO_ACCOUNT_SID:-}
+      Sms__Twilio__AuthToken: ${TWILIO_AUTH_TOKEN:-}
+      Sms__Twilio__From: ${TWILIO_FROM:-}
       # SuperAdmin Azure Infrastructure dashboard (read-only). No Azure secret here: the VM's system-assigned managed identity signs in
       # (it needs Reader + Cost Management Reader on the subscription). Empty subscription id = the page shows "not configured".
       AzureDashboard__SubscriptionId: ${AZURE_SUBSCRIPTION_ID:-}
@@ -370,6 +383,8 @@ services:
       Ai__AzureOpenAI__Deployment: ${AZURE_OPENAI_DEPLOYMENT:-}
       # Study-material search. Mock = keyword-style demo vectors; OpenAI / AzureOpenAI for real semantic search
       # (Anthropic has no embeddings API). Vectors live in SQL Server; the files in blob storage (dotnet-env above).
+      # A self-hosted OpenAI-compatible model (Ollama, vLLM) when AI_PROVIDER=Local.
+      Ai__Local__BaseUrl: ${LOCAL_LLM_URL:-http://localhost:11434/v1/}
       Ai__Embeddings__Provider: ${AI_EMBEDDINGS_PROVIDER:-Mock}
       Ai__Embeddings__Model: ${AI_EMBEDDINGS_MODEL:-text-embedding-3-small}
       Ai__Embeddings__AzureDeployment: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-}

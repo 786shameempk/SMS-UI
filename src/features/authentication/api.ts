@@ -27,7 +27,7 @@ interface ApiUserDto {
 }
 
 /** Shape of AuthService's AuthResponseDto (see AuthService.Application/DTO/AuthResponseDto.cs). */
-interface ApiAuthResponseDto {
+export interface ApiAuthResponseDto {
   accessToken: string;
   refreshToken: string;
   accessTokenExpiresAt: string;
@@ -126,6 +126,16 @@ function mapAuthUser(dto: ApiUserDto): AuthUser {
   };
 }
 
+/** AuthService's session response (password or one-time code sign-in alike) as the app's login result. */
+export function toLoginResult(data: ApiAuthResponseDto): LoginResult {
+  return {
+    user: mapAuthUser(data.user),
+    token: data.accessToken,
+    refreshToken: data.refreshToken,
+    permissions: mapModulePermissions(data.user.permissions),
+  };
+}
+
 export async function login(credentials: LoginCredentials): Promise<LoginResult> {
   try {
     const { data } = await authHttpClient.post<ApiAuthResponseDto>("/api/auth/login", {
@@ -134,12 +144,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginResult>
       // On a school's address only that school's members can sign in; the server re-checks it against the account.
       subdomain: getTenantSubdomain(),
     });
-    return {
-      user: mapAuthUser(data.user),
-      token: data.accessToken,
-      refreshToken: data.refreshToken,
-      permissions: mapModulePermissions(data.user.permissions),
-    };
+    return toLoginResult(data);
   } catch (err) {
     throw new Error(extractApiErrorMessage(err, i18n.t("Invalid email or password", { ns: "authentication" })));
   }

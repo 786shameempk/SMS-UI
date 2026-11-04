@@ -6,6 +6,7 @@ import InvoicesTab from "../components/InvoicesTab";
 import ReceiptsTab from "../components/ReceiptsTab";
 import RefundsTab from "../components/RefundsTab";
 import OverdueTab from "../components/OverdueTab";
+import PreviousDuesTab from "../components/PreviousDuesTab";
 import PaymentGatewaysTab from "../components/PaymentGatewaysTab";
 import PaymentTransactionsTab from "../components/PaymentTransactionsTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
@@ -24,6 +25,7 @@ export default function FeeManagementPage() {
           <TabsTrigger value="structures">{t("Fee Structures")}</TabsTrigger>
           <TabsTrigger value="discounts">{t("Discounts & Scholarships")}</TabsTrigger>
           <TabsTrigger value="invoices">{t("Student Invoices")}</TabsTrigger>
+          <TabsTrigger value="previous-dues">{t("Previous dues")}</TabsTrigger>
           <TabsTrigger value="overdue">{t("Overdue")}</TabsTrigger>
           <TabsTrigger value="receipts">{t("Receipts")}</TabsTrigger>
           <TabsTrigger value="refunds">{t("Refunds")}</TabsTrigger>
@@ -38,6 +40,9 @@ export default function FeeManagementPage() {
         </TabsContent>
         <TabsContent value="invoices">
           <InvoicesTab />
+        </TabsContent>
+        <TabsContent value="previous-dues">
+          <PreviousDuesTab />
         </TabsContent>
         <TabsContent value="overdue">
           <OverdueTab />

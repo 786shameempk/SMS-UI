@@ -167,6 +167,20 @@ made with `EXPO_PUBLIC_API_URL=https://<APP_DOMAIN>`; without it the app falls b
 is kept in each app's `.env.production` in the SMS Mobile repo; change it there if `APP_DOMAIN` changes, then rebuild. See
 `docs/release/ANDROID_BUILD.md` in that repo.
 
+## 6c. Sign-in keys, office portal and one-time-code sign-in
+
+Set these in `.env` before pulling the latest images:
+
+| Setting | What it does |
+|---|---|
+| `OFFICE_SIGNING_KEY` | **Required.** 32+ characters, different from `JWT_SECRET`. AuthService refuses to start in Production without it (it serves the office portal at `/adminLogin`). Also derives the key that encrypts office TOTP secrets. |
+| `OFFICE_BOOTSTRAP_EMAIL`, `OFFICE_BOOTSTRAP_PASSWORD` | Creates the first office Super Admin on an empty office. Remove the password after the first sign-in. See `AuthService/docs/OFFICE_PORTAL.md`. |
+| `JWT_PUBLIC_KEY_PEM`, `JWT_PRIVATE_KEY_PEM`, `JWT_ACCEPT_LEGACY_HS256` | Optional RS256 token signing. Until a key pair is set, tokens stay HS256 with `JWT_SECRET`. Follow `AuthService/docs/JWT_KEY_ROLLOUT.md` in order. |
+| `OTP_ENABLED`, `OTP_HASH_KEY`, `OTP_PILOT_TENANTS`, `OTP_ALLOW_ADMIN_SIGN_IN`, `SMS_PROVIDER`, `MSG91_*`, `TWILIO_*` | Mobile-number and email one-time-code sign-in. **Off by default**; password sign-in is unchanged. Production needs a real SMS provider and working SMTP before it is switched on. Rollout order, smoke test and rollback: [`docs/OTP_ROLLOUT.md`](../../docs/OTP_ROLLOUT.md). |
+| `LOCAL_LLM_URL` | Only for `AI_PROVIDER=Local` (a self-hosted OpenAI-compatible model). |
+
+The gateway also needs to reach every service that offers reports (Reports & Analytics): the compose file sets `ReportServices__*` for you.
+
 ## Updating
 
 ```bash

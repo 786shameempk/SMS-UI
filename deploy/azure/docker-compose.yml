@@ -28,7 +28,12 @@ x-dotnet-service: &dotnet-service
 
 x-dotnet-env: &dotnet-env
   ASPNETCORE_ENVIRONMENT: Production
+  # Token signing. RS256 (preferred): AuthService alone holds JWT_PRIVATE_KEY_PEM; every service verifies with JWT_PUBLIC_KEY_PEM and
+  # can never mint a token. JWT_SECRET is the older shared HS256 secret: keep it until every service runs the RS256 build, then set
+  # JWT_ACCEPT_LEGACY_HS256=false and remove it. Make a pair with AuthService/scripts/new-jwt-keypair.mjs (see AuthService/docs/JWT_KEY_ROLLOUT.md).
   Jwt__Secret: ${JWT_SECRET:?JWT_SECRET is required - set it in .env next to docker-compose.yml (see .env.example)}
+  Jwt__PublicKeyPem: ${JWT_PUBLIC_KEY_PEM:-}
+  Jwt__AcceptLegacyHs256: ${JWT_ACCEPT_LEGACY_HS256:-true}
   Cors__AllowedOrigins__0: https://${DOMAIN:?DOMAIN is required - set it in .env next to docker-compose.yml (see .env.example)}
   # A second site allowed to call the APIs from another origin (e.g. the Azure Static Web Apps frontend).
   # Unset = just the main domain again (harmless duplicate).
@@ -97,6 +102,12 @@ services:
     environment:
       <<: *dotnet-env
       Services__FinanceServiceUrl: http://financeservice:8080/
+      # The report catalogue (GET /api/report-catalog) asks each of these services which reports the caller may use.
+      ReportServices__academic: http://academicservice:8080/
+      ReportServices__finance: http://financeservice:8080/
+      ReportServices__campus: http://campusservice:8080/
+      ReportServices__engagement: http://engagementservice:8080/
+      ReportServices__meeting: http://meetingservice:8080/
       ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address: http://authservice:8080/
       ReverseProxy__Clusters__academic-cluster__Destinations__destination1__Address: http://academicservice:8080/
       ReverseProxy__Clusters__finance-cluster__Destinations__destination1__Address: http://financeservice:8080/
@@ -135,6 +146,31 @@ services:
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-info@schoolsphrere.com}
       Smtp__FromName: ${SMTP_FROM_NAME:-School Sphere}
+      # Sign-in with a one-time code (SMS / email): off until OTP_ENABLED=true. See docs/OTP_ROLLOUT.md.
+      Otp__Enabled: ${OTP_ENABLED:-false}
+      Otp__HashKey: ${OTP_HASH_KEY:-}
+      Otp__PilotTenants: ${OTP_PILOT_TENANTS:-}
+      Otp__AllowAdminSignIn: ${OTP_ALLOW_ADMIN_SIGN_IN:-false}
+      Otp__ExposeCodeInLogs: ${OTP_EXPOSE_CODE_IN_LOGS:-false}
+      Sms__Provider: ${SMS_PROVIDER:-Logging}
+      Sms__Msg91__AuthKey: ${MSG91_AUTH_KEY:-}
+      Sms__Msg91__OtpTemplateId: ${MSG91_OTP_TEMPLATE_ID:-}
+      Sms__Msg91__SenderId: ${MSG91_SENDER_ID:-}
+      Sms__Twilio__AccountSid: ${TWILIO_ACCOUNT_SID:-}
+      Sms__Twilio__AuthToken: ${TWILIO_AUTH_TOKEN:-}
+      Sms__Twilio__From: ${TWILIO_FROM:-}
+      # Only AuthService signs tokens (RS256) when this is set; the other services hold the public key only.
+      Jwt__PrivateKeyPem: ${JWT_PRIVATE_KEY_PEM:-}
+      # School Sphere office portal (/adminLogin). The signing key must be 32+ characters and different from every other secret;
+      # outside Development the API refuses to start without it. The first Super Admin is created from the bootstrap pair on an empty
+      # office, so remove OFFICE_BOOTSTRAP_PASSWORD after first sign-in. See AuthService/docs/OFFICE_PORTAL.md.
+      Office__Jwt__SigningKey: ${OFFICE_SIGNING_KEY:?OFFICE_SIGNING_KEY is required - set it in .env next to docker-compose.yml (see .env.example)}
+      Office__Bootstrap__Email: ${OFFICE_BOOTSTRAP_EMAIL:-}
+      Office__Bootstrap__Password: ${OFFICE_BOOTSTRAP_PASSWORD:-}
+      Office__PortalBaseUrl: https://${APP_DOMAIN}
+      Office__Payments__WebhookSecret: ${OFFICE_PAYMENT_WEBHOOK_SECRET:-}
+      Office__Jobs__Enabled: ${OFFICE_JOBS_ENABLED:-true}
+      Office__GrantNewModulesOnStart: ${OFFICE_GRANT_NEW_MODULES:-true}
     depends_on:
       redis:
         condition: service_started
@@ -334,6 +370,8 @@ services:
       Ai__Embeddings__Provider: ${AI_EMBEDDINGS_PROVIDER:-Mock}
       Ai__Embeddings__Model: ${AI_EMBEDDINGS_MODEL:-text-embedding-3-small}
       Ai__Embeddings__AzureDeployment: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-}
+      # A self-hosted OpenAI-compatible model (Ollama, vLLM) when AI_PROVIDER=Local.
+      Ai__Local__BaseUrl: ${LOCAL_LLM_URL:-http://localhost:11434/v1/}
       Ai__Limits__DailyRequestsPerUser: ${AI_DAILY_REQUESTS_PER_USER:-100}
       Ai__Limits__MonthlyTokenLimitPerSchool: ${AI_MONTHLY_TOKENS_PER_SCHOOL:-1000000}
     volumes:

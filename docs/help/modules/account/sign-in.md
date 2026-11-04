@@ -8,7 +8,7 @@ route: account.login
 summary: Sign in with your email address and password.
 order: 10
 status: reviewed
-related: [account-forgot-password, account-sign-in-problems, account-overview]
+related: [account-sign-in-with-code, account-forgot-password, account-sign-in-problems, account-overview]
 tasks:
   - id: sign-in
     label: Sign in
@@ -45,6 +45,7 @@ After a short "Signed in" confirmation and a welcome message with your first nam
 
 ## Other options on the page
 
+- If your school has turned on code sign-in, **Mobile OTP** and **Email OTP** options appear above the form. See [Sign in with a one-time code](help:account-sign-in-with-code).
 - **Forgot password?** opens [Reset a forgotten password](help:account-forgot-password).
 - **Sign in with Google** is shown, but selecting it only shows the message "Google sign-in isn't enabled for your school yet."
 - **Exploring the demo? Use a sample account** is for demonstration sites. It fills the form with a sample account so you can look around.

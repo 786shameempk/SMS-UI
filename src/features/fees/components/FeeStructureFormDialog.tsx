@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AcademicYear, SchoolClass } from "@/features/academics/types";
-import { FEE_TYPE_OPTIONS, FREQUENCY_OPTIONS } from "../constants";
+import { STRUCTURE_FEE_TYPE_OPTIONS, FREQUENCY_OPTIONS } from "../constants";
 import type { FeeFrequency, FeeStructure, FeeStructureFormValues, FeeType } from "../types";
 
 const ALL_CLASSES = "__all__";
@@ -19,7 +19,7 @@ const structureSchema = z.object({
   name: z.string().min(1, "Name is required"),
   academicYearId: z.string().min(1, "Select an academic year"),
   classId: z.string().optional(),
-  feeType: z.enum(FEE_TYPE_OPTIONS.map((o) => o.value) as [FeeType, ...FeeType[]]),
+  feeType: z.enum(STRUCTURE_FEE_TYPE_OPTIONS.map((o) => o.value) as [FeeType, ...FeeType[]]),
   amount: z.coerce.number().positive("Amount must be greater than zero"),
   frequency: z.enum(FREQUENCY_OPTIONS.map((o) => o.value) as [FeeFrequency, ...FeeFrequency[]]),
   lateFineFlat: z.coerce.number().min(0).optional(),
@@ -167,7 +167,7 @@ export default function FeeStructureFormDialog({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {FEE_TYPE_OPTIONS.map((o) => (
+                      {STRUCTURE_FEE_TYPE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
                           {t(o.label)}
                         </SelectItem>

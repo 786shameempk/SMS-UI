@@ -30,3 +30,10 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## Documentation
+
+- `docs/help/README.md`: the user guide (Help Center, PDF manual, Ask School AI index) and how to publish it.
+- `docs/OTP_LOGIN_PLAN.md`, `docs/OTP_ROLLOUT.md`: sign-in with a one-time code (mobile or email), design and rollout.
+- `deploy/azure/README.md`: deploying everything to an Azure Linux VM (settings in `deploy/azure/.env.example`).
+- `PROGRESS.md`: build log. Other feature folders under `docs/` hold per-feature notes.

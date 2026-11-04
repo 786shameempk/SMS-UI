@@ -178,6 +178,10 @@ made with `EXPO_PUBLIC_API_URL=https://<APP_DOMAIN>`; without it the app falls b
 is kept in each app's `.env.production` in the SMS Mobile repo; change it there if `APP_DOMAIN` changes, then rebuild. See
 `docs/release/ANDROID_BUILD.md` in that repo.
 
+## 6c. Sign-in with a one-time code
+
+Mobile and email one-time-code sign-in is **off** until you set `OTP_ENABLED=true` in `.env`. Before turning it on set `OTP_HASH_KEY` (32+ characters, not the JWT secret), working SMTP for email codes and, for SMS codes, a real provider (`SMS_PROVIDER=Msg91` or `Twilio` with its keys; production refuses `Logging`). Use `OTP_PILOT_TENANTS` to try it with a few schools first. Mobile codes only go to a verified phone number. Full rollout steps are in `docs/OTP_ROLLOUT.md`.
+
 ## Updating
 
 ```bash
