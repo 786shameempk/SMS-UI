@@ -21,7 +21,7 @@ import { ONBOARDING_STAGES } from "../onboarding";
 import type { SchoolRequest } from "../salesTypes";
 
 const blank: SchoolRequest = {
-  schoolName: "", code: "", subdomain: "", schoolType: null, board: null, country: "India", state: null, city: null, address: null, contactName: null, contactEmail: null,
+  schoolName: "", code: "", subdomain: "", schoolType: null, board: null, country: "India", state: null, city: null, district: null, postalCode: null, address: null, contactName: null, contactEmail: null,
   contactPhone: null, billingContactName: null, billingContactEmail: null, taxId: null, expectedStudents: null, branches: 1, internalNotes: null,
 };
 
@@ -197,7 +197,9 @@ function AddSchoolDialog({ onClose }: { onClose: () => void }) {
           </Field>
           <Field label="Board"><Input value={form.board ?? ""} onChange={text("board")} placeholder="CBSE, ICSE, State…" /></Field>
           <Field label="City"><Input value={form.city ?? ""} onChange={text("city")} /></Field>
+          <Field label="District"><Input value={form.district ?? ""} onChange={text("district")} /></Field>
           <Field label="State"><Input value={form.state ?? ""} onChange={text("state")} /></Field>
+          <Field label="PIN code"><Input inputMode="numeric" maxLength={10} value={form.postalCode ?? ""} onChange={text("postalCode")} placeholder="6-digit PIN" /></Field>
           <Field label="Contact person"><Input value={form.contactName ?? ""} onChange={text("contactName")} /></Field>
           <Field label="Contact email"><Input type="email" value={form.contactEmail ?? ""} onChange={text("contactEmail")} /></Field>
           <Field label="Contact phone"><Input value={form.contactPhone ?? ""} onChange={text("contactPhone")} /></Field>

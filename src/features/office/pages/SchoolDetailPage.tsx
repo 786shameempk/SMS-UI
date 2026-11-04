@@ -132,7 +132,7 @@ export default function SchoolDetailPage() {
         <TabsContent value="overview" className="pt-4">
           <dl className="grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-3">
             <Fact label="Board">{s.board}</Fact>
-            <Fact label="Location">{[s.city, s.state, s.country].filter(Boolean).join(", ") || null}</Fact>
+            <Fact label="Location">{[s.city, s.district, s.state, s.postalCode, s.country].filter(Boolean).join(", ") || null}</Fact>
             <Fact label="Expected students">{s.expectedStudents}</Fact>
             <Fact label="Branches">{s.branches}</Fact>
             <Fact label="Contact">{[s.contactName, s.contactEmail, s.contactPhone].filter(Boolean).join(" · ") || null}</Fact>

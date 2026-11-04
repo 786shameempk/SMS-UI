@@ -11,6 +11,8 @@ export interface SchoolRequest {
   country: string | null;
   state: string | null;
   city: string | null;
+  district: string | null;
+  postalCode: string | null;
   address: string | null;
   contactName: string | null;
   contactEmail: string | null;
