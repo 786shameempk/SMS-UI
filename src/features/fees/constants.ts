@@ -7,7 +7,11 @@ export const FEE_TYPE_OPTIONS: Array<{ value: FeeType; label: string }> = [
   { value: "library", label: "Library" },
   { value: "exam", label: "Exam" },
   { value: "miscellaneous", label: "Miscellaneous" },
+  { value: "previous_dues", label: "Previous dues" },
 ];
+
+/** What a fee structure can be billed as: previous dues are added through the Previous dues tab instead. */
+export const STRUCTURE_FEE_TYPE_OPTIONS = FEE_TYPE_OPTIONS.filter((o) => o.value !== "previous_dues");
 
 export const FREQUENCY_OPTIONS: Array<{ value: FeeFrequency; label: string }> = [
   { value: "one_time", label: "One time" },

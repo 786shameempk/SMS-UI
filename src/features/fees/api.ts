@@ -3,6 +3,7 @@ import { listClasses } from "@/features/academics/api";
 import { listStudents } from "@/features/students/api";
 import type { ApiPage, Page } from "@/types/paging";
 import type {
+  AddPreviousDuesParams,
   DiscountAppliesTo,
   DiscountType,
   FeeDiscount,
@@ -37,6 +38,7 @@ const FEE_TYPE_TO_API: Record<FeeType, string> = {
   library: "Library",
   exam: "Exam",
   miscellaneous: "Miscellaneous",
+  previous_dues: "PreviousDues",
 };
 const FEE_TYPE_FROM_API: Record<string, FeeType> = {
   Tuition: "tuition",
@@ -45,6 +47,7 @@ const FEE_TYPE_FROM_API: Record<string, FeeType> = {
   Library: "library",
   Exam: "exam",
   Miscellaneous: "miscellaneous",
+  PreviousDues: "previous_dues",
 };
 
 const FREQUENCY_TO_API: Record<FeeFrequency, string> = {
@@ -373,6 +376,7 @@ export interface InvoicePageParams {
   pageSize: number;
   classId?: string;
   status?: FeeInvoiceStatus;
+  feeType?: FeeType;
 }
 
 /** One page of invoices, newest due date first, filtered server-side (GET /api/feeinvoices?pageNumber=…). */
@@ -384,6 +388,7 @@ export async function listInvoicesPage(params: InvoicePageParams): Promise<Page<
         pageSize: params.pageSize,
         classId: params.classId,
         status: params.status ? INVOICE_STATUS_TO_API[params.status] : undefined,
+        feeType: params.feeType ? FEE_TYPE_TO_API[params.feeType] : undefined,
       },
     }),
   );
@@ -433,6 +438,18 @@ export async function generateInvoicesForStructure(params: GenerateInvoicesParam
       term: params.term,
       dueDate: params.dueDate,
       eligibleStudentIds: eligible.map((s) => s.id),
+    }),
+  );
+  return { createdCount: dto.createdCount, skippedCount: dto.skippedCount };
+}
+
+/** Opening balances: carries what students still owe from earlier years forward as ordinary invoices. */
+export async function addPreviousDues(params: AddPreviousDuesParams): Promise<GenerateInvoicesResult> {
+  const dto = await unwrap(
+    financeHttpClient.post<{ createdCount: number; skippedCount: number }>("/api/feeinvoices/previous-dues", {
+      label: params.label.trim(),
+      dueDate: params.dueDate,
+      items: params.items,
     }),
   );
   return { createdCount: dto.createdCount, skippedCount: dto.skippedCount };

@@ -1,7 +1,7 @@
 import type { HelpReply } from "@/features/help/assistant";
 import type { NavigationAction } from "@/features/help/navigation";
 
-export type AssistantSource = "timetable" | "attendance" | "fees" | "exams" | "notices" | "homework" | "materials" | "admissions" | "at-risk students" | "leave" | "messages" | "guide";
+export type AssistantSource = "timetable" | "attendance" | "fees" | "exams" | "notices" | "homework" | "materials" | "admissions" | "at-risk students" | "leave" | "messages" | "guide" | "staff attendance" | "staff leave" | "appraisal" | "hostel" | "campus" | "extra-curricular" | "lesson-portions" | "profile" | "sustainability";
 
 /** Which assistant: Ask School AI, or the admin analytics assistant (school-wide figures, admins only). */
 export type AssistantMode = "chat" | "analytics";

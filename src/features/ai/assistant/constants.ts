@@ -14,6 +14,15 @@ export const SOURCE_LABELS: Record<AssistantSource, string> = {
   leave: "Leave",
   messages: "Messages",
   guide: "User guide",
+  "staff attendance": "Staff attendance",
+  "staff leave": "Staff leave",
+  appraisal: "Performance & Appraisal",
+  hostel: "Hostel",
+  campus: "Campus",
+  "extra-curricular": "Co-Curricular",
+  "lesson-portions": "Syllabus & Portions",
+  profile: "Profile",
+  sustainability: "Sustainability",
 };
 
 const ANALYTICS_PROMPTS = [
@@ -33,10 +42,12 @@ const LEARNER_PROMPTS = [
 ];
 
 const STAFF_PROMPTS = [
+  "Which invoices are overdue?",
+  "Who is absent today?",
+  "Who was present on the last working day?",
+  "Which teachers are on leave today?",
   "Which classes have attendance below 80% this week?",
-  "How many students are absent today?",
-  "Which fee invoices are overdue?",
-  "What notices were published this week?",
+  "How far along is the staff appraisal?",
 ];
 
 export function suggestedPrompts(role: UserRole | undefined, mode: "chat" | "analytics" = "chat"): string[] {

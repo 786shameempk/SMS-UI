@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/authStore";
 import { changePassword, listDevices, listSessions, revokeDevice, revokeSession } from "../api";
 import type { DeviceRecord, SessionRecord } from "../types";
+import PhoneVerificationCard from "../components/PhoneVerificationCard";
 
 const passwordSchema = z
   .object({
@@ -212,8 +213,9 @@ export default function SecuritySettingsPage() {
           <TabsTrigger value="sessions">{t("Sessions")}</TabsTrigger>
           <TabsTrigger value="devices">{t("Devices")}</TabsTrigger>
         </TabsList>
-        <TabsContent value="password">
+        <TabsContent value="password" className="space-y-6">
           <ChangePasswordTab />
+          <PhoneVerificationCard />
         </TabsContent>
         <TabsContent value="sessions">
           <SessionsTab />

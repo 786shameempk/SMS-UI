@@ -41,6 +41,12 @@ const GATEWAY_COPY: Record<string, { keyId: string; secret: string; webhookNote:
     keyPlaceholder: "pk_test_… or pk_live_…",
     webhookNote: "Stripe: Developers → Webhooks → add this endpoint for the checkout.session and refund events, and enter its signing secret (whsec_…) here.",
   },
+  phonepe: {
+    keyId: "Client id",
+    secret: "Client secret",
+    keyPlaceholder: "From PhonePe Business: Developer Settings → API keys",
+    webhookNote: "PhonePe pays through UPI (PhonePe, Google Pay and other UPI apps), cards and netbanking. In the PhonePe dashboard add this URL as the webhook with a username and password, and enter them here as username:password.",
+  },
 };
 
 export default function PaymentGatewaysTab() {

@@ -170,6 +170,21 @@ describe("fees api", () => {
     expect(calls[4].body).toEqual({ provider: "razorpay", orderId: "order_1", paymentId: "pay_1", signature: "sig" });
   });
 
+  it("adds previous dues as opening-balance invoices and lists them by fee type", async () => {
+    const calls = stubClient(financeHttpClient, {
+      "POST /api/feeinvoices/previous-dues": { createdCount: 2, skippedCount: 1 },
+      "GET /api/feeinvoices": { items: [invoice({ feeType: "PreviousDues", term: "2023-24 balance" })], totalCount: 1 },
+    });
+
+    const result = await fees.addPreviousDues({ label: " 2023-24 balance ", dueDate: "2026-04-01", items: [{ studentId: "s1", amount: 1500 }] });
+    const page = await fees.listInvoicesPage({ pageIndex: 0, pageSize: 25, feeType: "previous_dues" });
+
+    expect(result).toEqual({ createdCount: 2, skippedCount: 1 });
+    expect(calls[0].body).toEqual({ label: "2023-24 balance", dueDate: "2026-04-01", items: [{ studentId: "s1", amount: 1500 }] });
+    expect((calls[1].config as { params: unknown }).params).toMatchObject({ feeType: "PreviousDues" });
+    expect(page.items[0]).toMatchObject({ feeType: "previous_dues", term: "2023-24 balance" });
+  });
+
   it("wraps failures in a readable error", async () => {
     vi.spyOn(financeHttpClient, "get").mockRejectedValue(apiError(400, { title: "x", errors: { amount: ["Amount must be positive"] } }));
     await expect(fees.listInvoices()).rejects.toThrow("Amount must be positive");

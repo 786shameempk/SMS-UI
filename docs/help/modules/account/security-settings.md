@@ -8,7 +8,7 @@ route: account.security
 summary: Change your password, see where you are signed in, and remove devices.
 order: 40
 status: reviewed
-related: [account-overview, account-sign-in-problems]
+related: [account-overview, account-sign-in-problems, account-verify-mobile-number]
 tasks:
   - id: change-password
     label: Change my password
@@ -37,6 +37,10 @@ The page has three tabs: **Password**, **Sessions** and **Devices**.
 | **Confirm new password** | "Please confirm your new password" or "Passwords do not match" |
 
 If the current password is wrong or the change is refused, the error appears as a message at the top of the screen and nothing changes.
+
+## Mobile number
+
+The **Password** tab also has a **Mobile number** card for signing in with a code. See [Verify your mobile number](help:account-verify-mobile-number).
 
 ## See where you are signed in
 

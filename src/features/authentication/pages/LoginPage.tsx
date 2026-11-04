@@ -5,17 +5,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowRight, Check, ChevronDown, Clock, Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, ArrowRight, Check, ChevronDown, Clock, Eye, EyeOff, Lock, Mail, ShieldCheck, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/utils/cn";
 import { SIGN_OUT_REASON_KEY, useAuthStore } from "@/store/authStore";
-import { login } from "../api";
+import { login, type LoginResult } from "../api";
+import { getAuthMethods } from "../otpApi";
 import LoginShowcase, { BrandMark } from "../components/LoginShowcase";
+import OtpSignIn from "../components/OtpSignIn";
 
 const loginSchema = z.object({
   email: z.string().trim().min(1, "Enter your email address").email("That doesn't look like a valid email"),
@@ -292,6 +296,65 @@ function CredentialsForm() {
   );
 }
 
+type SignInMethod = "password" | "mobile" | "email";
+
+const METHOD_KEY = "sms.signInMethod";
+
+function readSavedMethod(): SignInMethod | null {
+  try {
+    const saved = localStorage.getItem(METHOD_KEY);
+    return saved === "mobile" || saved === "email" || saved === "password" ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveMethod(method: SignInMethod) {
+  try {
+    localStorage.setItem(METHOD_KEY, method);
+  } catch {
+    // private window or blocked storage: the choice just isn't remembered
+  }
+}
+
+/** Password sign-in, plus the one-time-code options when the server offers them. Password stays the default and is all there is if the server says nothing. */
+function SignInMethods() {
+  const { t } = useTranslation("authentication");
+  const navigate = useNavigate();
+  const setSession = useAuthStore((s) => s.setSession);
+  const { data: methods } = useQuery({ queryKey: ["auth", "methods"], queryFn: getAuthMethods, staleTime: Infinity, retry: false });
+  const [chosen, setChosen] = useState<SignInMethod>(() => readSavedMethod() ?? "password");
+
+  const options: Array<{ value: SignInMethod; label: string; icon: typeof Lock }> = [{ value: "password", label: t("Password"), icon: Lock }];
+  if (methods?.otpMobile) options.push({ value: "mobile", label: t("Mobile OTP"), icon: Smartphone });
+  if (methods?.otpEmail) options.push({ value: "email", label: t("Email OTP"), icon: Mail });
+  const method = options.some((o) => o.value === chosen) ? chosen : "password";
+
+  const signedIn = (result: LoginResult) => {
+    setSession(result.user, result.token, result.permissions, true, result.refreshToken);
+    toast.success(t("Welcome back, {{name}}", { name: result.user.name.split(" ")[0] }));
+    window.setTimeout(() => navigate("/dashboard", { replace: true }), SUCCESS_PAUSE_MS);
+  };
+
+  return (
+    <div className="space-y-5">
+      {options.length > 1 && (
+        <SegmentedControl
+          aria-label={t("Sign-in method")}
+          value={method}
+          onValueChange={(value) => {
+            setChosen(value);
+            saveMethod(value);
+          }}
+          options={options}
+          className="w-full [&>button]:flex-1"
+        />
+      )}
+      {method === "password" ? <CredentialsForm /> : <OtpSignIn key={method} channel={method} onSignedIn={signedIn} />}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const [expired] = useState(() => readSignOutReason() === "expired");
   const { t } = useTranslation("authentication");
@@ -329,7 +392,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <CredentialsForm />
+            <SignInMethods />
 
             <p className="mx-auto mt-8 flex max-w-xs items-start gap-2 text-xs leading-relaxed text-muted-foreground lg:mx-0 lg:max-w-none">
               <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0 text-success" aria-hidden="true" />

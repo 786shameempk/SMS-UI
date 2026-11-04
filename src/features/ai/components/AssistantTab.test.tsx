@@ -24,12 +24,12 @@ describe("AssistantTab", () => {
     const user = userEvent.setup();
     renderWithProviders(<AssistantTab />);
 
-    await user.click(screen.getByRole("button", { name: "How many students are absent today?" }));
+    await user.click(screen.getByRole("button", { name: "Who is absent today?" }));
 
     expect(await screen.findByText("12 students are absent.")).toBeInTheDocument();
     expect(screen.getByText("Attendance")).toBeInTheDocument();
     // React Query passes extra arguments to the mutation function, so look at the first one only.
-    expect(vi.mocked(assistantApi.sendAssistantMessage).mock.calls[0][0]).toEqual({ conversationId: undefined, message: "How many students are absent today?", studentId: undefined });
+    expect(vi.mocked(assistantApi.sendAssistantMessage).mock.calls[0][0]).toEqual({ conversationId: undefined, message: "Who is absent today?", studentId: undefined });
   });
 
   it("keeps the conversation id for follow-up questions", async () => {
