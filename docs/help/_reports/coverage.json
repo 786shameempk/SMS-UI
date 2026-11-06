@@ -1,7 +1,7 @@
 {
   "summary": {
     "appVersion": "0.0.0",
-    "revision": "0074b4ea33",
+    "revision": "88b2e0d84a",
     "modules": {
       "total": 42,
       "withArticles": 42,
@@ -10,27 +10,27 @@
     "routes": {
       "total": 131,
       "countedScreens": 129,
-      "documented": 77,
+      "documented": 84,
       "excluded": 2
     },
     "actions": {
       "identified": 24,
-      "documented": 14,
+      "documented": 15,
       "heuristic": true
     },
     "articles": {
-      "total": 104,
+      "total": 115,
       "draft": 0,
-      "reviewed": 104,
+      "reviewed": 115,
       "verified": 0,
-      "tasks": 163
+      "tasks": 185
     },
     "assets": {
       "screenshotsCaptured": 12,
       "screenshotsReferencedButMissing": 0,
       "videosRecorded": 0,
-      "taskArticlesWithoutScreenshot": 79,
-      "taskArticlesWithoutVideo": 88
+      "taskArticlesWithoutScreenshot": 90,
+      "taskArticlesWithoutVideo": 99
     },
     "problems": {
       "errors": 0,
@@ -47,7 +47,6 @@
     "online-classes.reports",
     "online-classes.details",
     "online-classes.room",
-    "extracurricular.teams",
     "talent-showcase.explore",
     "talent-showcase.mine",
     "talent-showcase.creator",
@@ -55,30 +54,24 @@
     "talent-showcase.detail",
     "talent-showcase.edit",
     "lesson-portions.syllabus-detail",
-    "lesson-portions.calendar",
     "lesson-portions.subject-report",
     "lesson-portions.teacher-report",
-    "lesson-portions.resources",
     "students.profile",
     "teachers.profile",
-    "online-exams.dashboard",
     "online-exams.list",
     "online-exams.detail",
     "online-exams.edit",
     "online-exams.monitor",
     "online-exams.exam-results",
     "online-exams.attempt",
-    "online-exams.reports",
     "online-exams.my-upcoming",
     "online-exams.my-completed",
     "online-exams.my-result",
     "online-exams.take",
-    "appraisal.dashboard",
     "appraisal.cycle",
     "appraisal.questions",
     "appraisal.review",
     "appraisal.result",
-    "appraisal.reports",
     "appraisal.history",
     "staff.profile",
     "azure.cost",
@@ -95,7 +88,7 @@
     "help-center.role",
     "help-center.article"
   ],
-  "actionsOpen": 10,
+  "actionsOpen": 9,
   "drift": [],
   "metadataIssues": [],
   "errors": [],
