@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
 import { listDepartments, listReportingOptions } from "@/features/academics/api";
+import DepartmentSelect from "@/features/academics/components/DepartmentSelect";
 import { listAssignableLoginRoles } from "../api";
 import { DESIGNATIONS, DESIGNATION_LOGIN_ROLE, STAFF_LOGIN_ROLES } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
@@ -86,10 +87,6 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
     queryFn: () => listReportingOptions({ staffId: staff?.id, departmentId }),
     enabled: open,
   });
-  const departmentNames = (current: string) => {
-    const names = departments.map((d) => d.name);
-    return current && !names.includes(current) ? [current, ...names] : names;
-  };
 
   useEffect(() => {
     if (open) {
@@ -229,29 +226,11 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="department" required>{t("Department")}</Label>
-                {departments.length === 0 ? (
-                  // A school with no departments set up yet (or non-teaching staff): keep typing it, rather than blocking the form.
-                  <Input id="department" aria-invalid={errors.department ? true : undefined} {...register("department")} />
-                ) : (
                 <Controller
                   control={control}
                   name="department"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="department" aria-invalid={errors.department ? true : undefined}>
-                        <SelectValue placeholder={t("Select a department")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departmentNames(field.value).map((name) => (
-                          <SelectItem key={name} value={name}>
-                            {name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  render={({ field }) => <DepartmentSelect id="department" value={field.value} onChange={field.onChange} invalid={Boolean(errors.department)} />}
                 />
-                )}
                 {errors.department && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.department.message ?? "")}</p>}
               </div>
             </div>

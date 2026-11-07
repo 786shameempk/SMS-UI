@@ -51,16 +51,16 @@ export default function MergeSectionsDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Merge className="w-4 h-4 text-muted-foreground" />
-            {t("Merge sections")}
+            {t("Merge divisions")}
           </DialogTitle>
           <DialogDescription>
-            {t("Combine two sections of the same class into one. Student records are not migrated automatically in this preview.")}
+            {t("Combine two divisions of the same standard into one. Student records are not migrated automatically in this preview.")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="mergeClass">{t("Class")}</Label>
+            <Label htmlFor="mergeClass">{t("Standard")}</Label>
             <Select
               value={classId}
               onValueChange={(value) => {
@@ -70,7 +70,7 @@ export default function MergeSectionsDialog({
               }}
             >
               <SelectTrigger id="mergeClass">
-                <SelectValue placeholder={t("Select a class")} />
+                <SelectValue placeholder={t("Select a standard")} />
               </SelectTrigger>
               <SelectContent>
                 {classes.map((c) => (
@@ -84,10 +84,10 @@ export default function MergeSectionsDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="primarySection">{t("Keep section")}</Label>
+              <Label htmlFor="primarySection">{t("Keep division")}</Label>
               <Select value={primarySectionId} onValueChange={setPrimarySectionId} disabled={!classId}>
                 <SelectTrigger id="primarySection">
-                  <SelectValue placeholder={t("Select a section")} />
+                  <SelectValue placeholder={t("Select a division")} />
                 </SelectTrigger>
                 <SelectContent>
                   {sectionsInClass.map((s) => (
@@ -102,7 +102,7 @@ export default function MergeSectionsDialog({
               <Label htmlFor="secondarySection">{t("Merge into it")}</Label>
               <Select value={secondarySectionId} onValueChange={setSecondarySectionId} disabled={!classId}>
                 <SelectTrigger id="secondarySection">
-                  <SelectValue placeholder={t("Select a section")} />
+                  <SelectValue placeholder={t("Select a division")} />
                 </SelectTrigger>
                 <SelectContent>
                   {sectionsInClass.map((s) => (
@@ -125,7 +125,7 @@ export default function MergeSectionsDialog({
             {t("Cancel")}
           </Button>
           <Button type="button" disabled={!canMerge} onClick={() => setConfirmOpen(true)}>
-            {t("Merge sections")}
+            {t("Merge divisions")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -133,7 +133,7 @@ export default function MergeSectionsDialog({
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title={t("Confirm section merge")}
+        title={t("Confirm division merge")}
         description={
           primarySection && secondarySection
             ? t("Merge {{name}} into {{name1}} for {{className}}? This action cannot be undone.", { name: secondarySection.name, name1: primarySection.name, className })

@@ -108,7 +108,7 @@ export default function AcademicYearsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">{t("Define academic years to anchor terms, classes, and the calendar.")}</p>
+        <p className="text-sm text-muted-foreground">{t("Define academic years to anchor terms, standards, and the calendar.")}</p>
         {!readOnly && (
           <Button
           onClick={() => {
@@ -142,7 +142,7 @@ export default function AcademicYearsTab() {
         open={Boolean(deleteTarget)}
         onOpenChange={(v) => !v && setDeleteTarget(null)}
         title={t("Delete academic year")}
-        description={t("This will permanently delete \"{{name}}\". Classes and terms linked to it will remain but point to a missing year.", { name: deleteTarget?.name })}
+        description={t("This will permanently delete \"{{name}}\". Standards and terms linked to it will remain but point to a missing year.", { name: deleteTarget?.name })}
         confirmLabel={t("Delete")}
         confirmVariant="destructive"
         submitting={deleteMutation.isPending}

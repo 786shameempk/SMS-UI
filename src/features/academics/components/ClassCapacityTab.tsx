@@ -58,7 +58,7 @@ export default function ClassCapacityTab() {
   const columns: ColumnDef<CapacityRow, unknown>[] = [
     {
       id: "section",
-      header: t("Section"),
+      header: t("Division"),
       cell: ({ row }) => (
         <div>
           <p className="text-sm font-medium text-foreground">{row.original.className}</p>
@@ -98,7 +98,7 @@ export default function ClassCapacityTab() {
       <Card>
         <CardHeader>
           <CardTitle>{t("Overall enrollment")}</CardTitle>
-          <CardDescription>{t("Total enrolled students against seat capacity across all sections.")}</CardDescription>
+          <CardDescription>{t("Total enrolled students against seat capacity across all divisions.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-6">
@@ -123,10 +123,10 @@ export default function ClassCapacityTab() {
       <DataTableToolbar>
         <Select value={classFilter} onValueChange={setClassFilter}>
           <SelectTrigger className="w-44">
-            <SelectValue placeholder={t("Filter by class")} />
+            <SelectValue placeholder={t("Filter by standard")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t("All classes")}</SelectItem>
+            <SelectItem value="all">{t("All standards")}</SelectItem>
             {classes.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -136,7 +136,7 @@ export default function ClassCapacityTab() {
         </Select>
       </DataTableToolbar>
 
-      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No sections match this filter.")} />
+      <DataTable searchable columns={columns} data={rows} isLoading={isLoading} isError={isError} onRetry={() => refetch()} emptyMessage={t("No divisions match this filter.")} />
     </div>
   );
 }

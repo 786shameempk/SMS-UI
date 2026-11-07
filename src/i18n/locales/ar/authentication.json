@@ -104,5 +104,8 @@
   "Your session has expired. Please sign in again to continue where you left off.": "انتهت جلستك. سجّل الدخول مجددًا للمتابعة من حيث توقفت.",
   "last active {{time}}": "آخر نشاط {{time}}",
   "last used {{time}}": "آخر استخدام {{time}}",
-  "{{device}} removed": "تمت إزالة {{device}}"
+  "{{device}} removed": "تمت إزالة {{device}}",
+  "WhatsApp OTP": "رمز OTP عبر واتساب",
+  "If {{destination}} is registered, we've sent a {{count}}-digit code to it on WhatsApp. It expires in {{minutes}} minutes.": "إذا كان {{destination}} مسجلاً، فقد أرسلنا إليه رمزاً من {{count}} أرقام عبر واتساب. تنتهي صلاحيته خلال {{minutes}} دقائق.",
+  "We'll send a code on WhatsApp if this number is registered and verified.": "سنرسل رمزاً عبر واتساب إذا كان هذا الرقم مسجلاً وموثقاً."
 }

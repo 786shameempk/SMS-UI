@@ -69,5 +69,19 @@
   "Dropout Analysis": "ड्रॉपआउट विश्लेषण",
   "Library Usage": "पुस्तकालय उपयोग",
   "Transport": "परिवहन",
-  "Hostel Occupancy": "हॉस्टल अधिभोग"
+  "Hostel Occupancy": "हॉस्टल अधिभोग",
+  "Favourites": "पसंदीदा",
+  "Add {{name}} to favourites": "{{name}} को पसंदीदा में जोड़ें",
+  "Remove {{name}} from favourites": "{{name}} को पसंदीदा से हटाएँ",
+  "Add to favourites": "पसंदीदा में जोड़ें",
+  "Remove from favourites": "पसंदीदा से हटाएँ",
+  "We couldn't update your favourites. Please try again.": "पसंदीदा अपडेट नहीं हो सके। कृपया फिर कोशिश करें।",
+  "No favourite reports yet": "अभी कोई पसंदीदा रिपोर्ट नहीं",
+  "Select the star on a report in the Report library to keep it here.": "रिपोर्ट लाइब्रेरी में किसी रिपोर्ट पर तारा चुनें, वह यहाँ रहेगी।",
+  "Browse the report library": "रिपोर्ट लाइब्रेरी देखें",
+  "Search your favourite reports…": "अपनी पसंदीदा रिपोर्ट खोजें…",
+  "Search favourite reports": "पसंदीदा रिपोर्ट खोजें",
+  "{{count}} favourite reports": "{{count}} पसंदीदा रिपोर्ट",
+  "Try a different word.": "कोई दूसरा शब्द आज़माएँ।",
+  "Select the star on a report to add it to your Favourites tab.": "किसी रिपोर्ट को अपने पसंदीदा टैब में जोड़ने के लिए उसका तारा चुनें।"
 }

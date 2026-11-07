@@ -5,21 +5,23 @@ import { toLoginResult, type ApiAuthResponseDto, type LoginResult } from "./api"
 
 // Sign-in (and number verification) with a one-time code sent by SMS or email - see AuthService's AuthController.
 
-export type OtpChannel = "email" | "mobile";
+/** "mobile" sends the code by SMS, "whatsapp" sends it to the same kind of number on WhatsApp. */
+export type OtpChannel = "email" | "mobile" | "whatsapp";
 
 export interface AuthMethods {
   password: boolean;
   otpEmail: boolean;
   otpMobile: boolean;
+  otpWhatsApp: boolean;
 }
 
-const PASSWORD_ONLY: AuthMethods = { password: true, otpEmail: false, otpMobile: false };
+const PASSWORD_ONLY: AuthMethods = { password: true, otpEmail: false, otpMobile: false, otpWhatsApp: false };
 
 /** Which sign-in methods the server offers. Any failure means "password only": the code options must never get in the way of signing in. */
 export async function getAuthMethods(): Promise<AuthMethods> {
   try {
     const { data } = await authHttpClient.get<AuthMethods>("/api/auth/methods", { params: { subdomain: getTenantSubdomain() } });
-    return { password: true, otpEmail: data.otpEmail === true, otpMobile: data.otpMobile === true };
+    return { password: true, otpEmail: data.otpEmail === true, otpMobile: data.otpMobile === true, otpWhatsApp: data.otpWhatsApp === true };
   } catch {
     return PASSWORD_ONLY;
   }

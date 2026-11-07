@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Star } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReportLibraryTab from "../library/ReportLibraryTab";
 import AdmissionsTab from "../components/AdmissionsTab";
@@ -14,6 +16,7 @@ import { PageContainer, PageHeader } from "@/components/ui/page";
 import { useTranslation } from "react-i18next";
 export default function ReportsPage() {
   const { t } = useTranslation("reports");
+  const [tab, setTab] = useState("library");
   return (
     <PageContainer>
       <PageHeader
@@ -21,9 +24,13 @@ export default function ReportsPage() {
         description={t("Dashboards pulled live from every module — student performance, attendance, fees, teachers, admissions, dropout risk, library usage, transport, and hostel occupancy.")}
       />
 
-      <Tabs defaultValue="library">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList variant="line">
           <TabsTrigger value="library">{t("Report library")}</TabsTrigger>
+          <TabsTrigger value="favourites">
+            <Star className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("Favourites")}
+          </TabsTrigger>
           <TabsTrigger value="student-performance">{t("Student Performance")}</TabsTrigger>
           <TabsTrigger value="attendance">{t("Attendance")}</TabsTrigger>
           <TabsTrigger value="fees">{t("Fee Collection")}</TabsTrigger>
@@ -36,6 +43,9 @@ export default function ReportsPage() {
         </TabsList>
         <TabsContent value="library">
           <ReportLibraryTab />
+        </TabsContent>
+        <TabsContent value="favourites">
+          <ReportLibraryTab view="favourites" onBrowseLibrary={() => setTab("library")} />
         </TabsContent>
         <TabsContent value="student-performance">
           <StudentPerformanceTab />

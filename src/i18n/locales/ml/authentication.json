@@ -104,5 +104,8 @@
   "Your session has expired. Please sign in again to continue where you left off.": "നിങ്ങളുടെ സെഷൻ കാലഹരണപ്പെട്ടു. നിർത്തിയിടത്ത് നിന്ന് തുടരാൻ വീണ്ടും സൈൻ ഇൻ ചെയ്യുക.",
   "last active {{time}}": "അവസാനം സജീവമായത് {{time}}",
   "last used {{time}}": "അവസാനം ഉപയോഗിച്ചത് {{time}}",
-  "{{device}} removed": "{{device}} നീക്കം ചെയ്തു"
+  "{{device}} removed": "{{device}} നീക്കം ചെയ്തു",
+  "WhatsApp OTP": "വാട്സ്ആപ്പ് OTP",
+  "If {{destination}} is registered, we've sent a {{count}}-digit code to it on WhatsApp. It expires in {{minutes}} minutes.": "{{destination}} രജിസ്റ്റർ ചെയ്തിട്ടുണ്ടെങ്കിൽ, ഞങ്ങൾ വാട്സ്ആപ്പിൽ {{count}} അക്ക കോഡ് അയച്ചിട്ടുണ്ട്. ഇത് {{minutes}} മിനിറ്റിനുള്ളിൽ കാലഹരണപ്പെടും.",
+  "We'll send a code on WhatsApp if this number is registered and verified.": "ഈ നമ്പർ രജിസ്റ്റർ ചെയ്ത് സ്ഥിരീകരിച്ചതാണെങ്കിൽ ഞങ്ങൾ വാട്സ്ആപ്പിൽ കോഡ് അയയ്ക്കും."
 }

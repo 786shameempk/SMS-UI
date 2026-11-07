@@ -24,9 +24,10 @@ Already added to `docker-compose.yml` and `deploy/azure/docker-compose.yml`; all
 | `OTP_PILOT_TENANTS` | empty | Comma-separated tenant ids (e.g. `tenant-greenvalley,tenant-hillview`). Empty = every school |
 | `OTP_ALLOW_ADMIN_SIGN_IN` | `false` | Administrator, Principal and SuperAdmin keep to their password unless this is `true` |
 | `OTP_EXPOSE_CODE_IN_LOGS` | `false` | Development only. **Startup refuses `true` in Production** |
-| `SMS_PROVIDER` | `Logging` | `Msg91`, `Twilio` or `Logging` (sends nothing). Production refuses `Logging` while codes are on |
+| `SMS_PROVIDER` | `Logging` | `Msg91`, `Twilio` (SMS), `TwilioWhatsApp` or `Logging` (sends nothing). Production refuses `Logging` while codes are on |
 | `MSG91_AUTH_KEY`, `MSG91_OTP_TEMPLATE_ID`, `MSG91_SENDER_ID` | empty | MSG91. The template has one variable, `OTP` (`##OTP##`) |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | empty | Twilio alternative |
+| `TWILIO_WHATSAPP_FROM`, `TWILIO_WHATSAPP_CONTENT_SID` | empty | With `SMS_PROVIDER=TwilioWhatsApp`: sender number and the approved WhatsApp authentication template (Content SID `HX...`, variable `{{1}}` = code). Template is mandatory in Production; sandbox works without one |
 
 Limits (in `appsettings.json` under `Otp` / `RateLimiting`, change only with a reason): 6-digit code, 5-minute life, 60-second resend wait, 5 wrong guesses per code, 5 codes per destination per hour and 10 per day, 20 wrong guesses per destination per hour, per-IP 5 requests and 10 checks a minute.
 
@@ -101,3 +102,18 @@ Cost: each SMS costs money and is only sent for real, verified, eligible account
 - Mobile numbers must be verified by their owner; admin-typed numbers do nothing until then. Parent/student phones that live only in AcademicService are not copied across.
 - Refresh tokens are stored unhashed (pre-existing; D6 in the plan) and the Student/Teacher apps' audience check is still client-side. Both are unchanged by this feature.
 - Not yet exercised: a real SMS provider, the apps on devices, the full flow through the API gateway.
+
+## WhatsApp code option (wa-api.me)
+
+A fourth sign-in choice, "WhatsApp OTP", sends the same kind of code to the same verified mobile number on WhatsApp. It is off until `OTP_WHATSAPP_ENABLED=true`.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OTP_WHATSAPP_ENABLED` | `false` | Shows the option (web and the three apps) |
+| `OTP_MOBILE_SMS_ENABLED` | `true` | Set `false` to hide "Mobile OTP" (SMS) and refuse SMS code requests; email and WhatsApp codes keep working |
+| `WHATSAPP_OTP_PROVIDER` | `Logging` | `WaApi` for wa-api.me. Production refuses `Logging` while the option is on |
+| `WAAPI_TOKEN` | empty | API token from the wa-api.me dashboard. Keep it in `.env` only, never commit it |
+| `WAAPI_MODE` | `Text` | `Text` posts a plain message to `/api/wa-accounts/messages`; `Otp` uses `/messages/send-otp` with an approved template |
+| `WAAPI_TEMPLATE` | `auth_otp` | Template name for `Otp` mode |
+
+Same rules as SMS apply: only verified numbers get codes, the pilot list applies, and limits count both channels together. Rotate the token in the wa-api.me dashboard if it is ever shared.

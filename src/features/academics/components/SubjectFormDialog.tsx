@@ -17,7 +17,7 @@ const subjectFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   code: z.string().min(1, "Code is required"),
   type: z.enum(SUBJECT_TYPES),
-  classIds: z.array(z.string()).min(1, "Select at least one class"),
+  classIds: z.array(z.string()).min(1, "Select at least one standard"),
 });
 
 const emptyValues: SubjectFormValues = { name: "", code: "", type: "core", classIds: [] };
@@ -58,7 +58,7 @@ export default function SubjectFormDialog({
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? tr("Edit subject") : tr("New subject")}</DialogTitle>
-          <DialogDescription>{tr("Subjects are core or elective and can be linked to one or more classes.")}</DialogDescription>
+          <DialogDescription>{tr("Subjects are core or elective and can be linked to one or more standards.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -97,7 +97,7 @@ export default function SubjectFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>{tr("Classes")}</Label>
+            <Label>{tr("Standards")}</Label>
             <Controller
               control={control}
               name="classIds"

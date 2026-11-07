@@ -89,10 +89,6 @@ services:
       ENGAGEMENT_API_URL: https://${APP_DOMAIN}/services/engagement/
       MEETING_API_URL: https://${APP_DOMAIN}/services/meetings/
       AI_API_URL: https://${APP_DOMAIN}/services/ai/
-      # Sample dashboard figures are enabled in production (see src/features/dashboard/dataSource.ts): each browser can switch
-      # between demo and live from the dashboard toolbar. Set ALLOW_DEMO_DATA=false in .env to hide the switch and force live data.
-      ALLOW_DEMO_DATA: ${ALLOW_DEMO_DATA:-true}
-      DASHBOARD_DATA_SOURCE: ${DASHBOARD_DATA_SOURCE:-mock}
       # Schools open the app at {subdomain}.TENANT_BASE_DOMAIN. PLATFORM_SUBDOMAINS are hosts that belong to the platform,
       # not a school (no tenant lookup, any account may sign in there): the marketing "www" and the shared demo host.
       # Remove "demo" once it is a real tenant.
@@ -156,6 +152,12 @@ services:
       Otp__HashKey: ${OTP_HASH_KEY:-}
       Otp__PilotTenants: ${OTP_PILOT_TENANTS:-}
       Otp__AllowAdminSignIn: ${OTP_ALLOW_ADMIN_SIGN_IN:-false}
+      Otp__MobileSmsEnabled: ${OTP_MOBILE_SMS_ENABLED:-true}
+      Otp__WhatsAppEnabled: ${OTP_WHATSAPP_ENABLED:-false}
+      WhatsAppOtp__Provider: ${WHATSAPP_OTP_PROVIDER:-Logging}
+      WhatsAppOtp__WaApi__ApiToken: ${WAAPI_TOKEN:-}
+      WhatsAppOtp__WaApi__Mode: ${WAAPI_MODE:-Text}
+      WhatsAppOtp__WaApi__TemplateName: ${WAAPI_TEMPLATE:-auth_otp}
       Otp__ExposeCodeInLogs: ${OTP_EXPOSE_CODE_IN_LOGS:-false}
       Sms__Provider: ${SMS_PROVIDER:-Logging}
       Sms__Msg91__AuthKey: ${MSG91_AUTH_KEY:-}
@@ -164,6 +166,8 @@ services:
       Sms__Twilio__AccountSid: ${TWILIO_ACCOUNT_SID:-}
       Sms__Twilio__AuthToken: ${TWILIO_AUTH_TOKEN:-}
       Sms__Twilio__From: ${TWILIO_FROM:-}
+      Sms__Twilio__WhatsAppFrom: ${TWILIO_WHATSAPP_FROM:-}
+      Sms__Twilio__WhatsAppContentSid: ${TWILIO_WHATSAPP_CONTENT_SID:-}
       # SuperAdmin Azure Infrastructure dashboard (read-only). No Azure secret here: the VM's system-assigned managed identity signs in
       # (it needs Reader + Cost Management Reader on the subscription). Empty subscription id = the page shows "not configured".
       AzureDashboard__SubscriptionId: ${AZURE_SUBSCRIPTION_ID:-}

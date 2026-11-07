@@ -67,7 +67,7 @@ export default function AcademicYearFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEdit ? t("Edit academic year") : t("New academic year")}</DialogTitle>
-          <DialogDescription>{t("Academic years anchor terms, classes, and the school calendar.")}</DialogDescription>
+          <DialogDescription>{t("Academic years anchor terms, standards, and the school calendar.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">

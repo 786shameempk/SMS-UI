@@ -3,25 +3,11 @@ import { useUiStore } from "@/store/useUiStore";
 /**
  * Where the dashboard's figures come from: the real services ("live") or built-in sample data ("mock").
  *
- * Deployment decides first, resolved like the API addresses in lib/httpClient.ts:
- *   1. runtime config (public/config.js → window.__EDUCORE_CONFIG__, rewritten by the Docker image at start from
- *      ALLOW_DEMO_DATA / DASHBOARD_DATA_SOURCE),
- *   2. build-time VITE_ALLOW_DEMO_DATA / VITE_DASHBOARD_DATA_SOURCE,
- *   3. defaults: demo data allowed only in a development build, live data in production.
- *
- * When demo data is allowed, each browser can flip between the two from the dashboard toolbar (remembered in
- * useUiStore). When it isn't, the dashboard is always live and the switch is hidden - production can never show
- * sample figures by accident.
+ * The product dashboard is always live: there is no Demo option on the page, and the runtime config (config.js, ALLOW_DEMO_DATA
+ * in the Docker image) is ignored, so an old deployment setting can never bring back unlabelled sample figures. The sample source
+ * (sources/mock.ts) stays for the unit tests, which turn it on with the build-time VITE_ALLOW_DEMO_DATA (see vitest.config.ts).
  */
 export type DashboardDataSource = "live" | "mock";
-
-type RuntimeConfig = Partial<Record<string, string>>;
-const runtimeConfig: RuntimeConfig =
-  (typeof window !== "undefined" && (window as Window & { __EDUCORE_CONFIG__?: RuntimeConfig }).__EDUCORE_CONFIG__) || {};
-
-function setting(runtimeKey: string, buildTime: string | undefined): string | undefined {
-  return runtimeConfig[runtimeKey]?.trim() || buildTime?.trim() || undefined;
-}
 
 function parseBool(value: string | undefined): boolean | undefined {
   if (value === undefined) return undefined;
@@ -46,9 +32,9 @@ export function resolveDataSourceConfig(input: {
 }
 
 const resolved = resolveDataSourceConfig({
-  allowDemo: setting("allowDemoData", import.meta.env.VITE_ALLOW_DEMO_DATA),
-  source: setting("dashboardDataSource", import.meta.env.VITE_DASHBOARD_DATA_SOURCE),
-  isDev: import.meta.env.DEV,
+  allowDemo: import.meta.env.VITE_ALLOW_DEMO_DATA,
+  source: import.meta.env.VITE_DASHBOARD_DATA_SOURCE,
+  isDev: false,
 });
 
 export const ALLOW_DEMO_DATA = resolved.allowDemoData;

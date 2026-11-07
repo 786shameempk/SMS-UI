@@ -69,5 +69,19 @@
   "Dropout Analysis": "تحليل التسرب",
   "Library Usage": "استخدام المكتبة",
   "Transport": "النقل",
-  "Hostel Occupancy": "إشغال السكن"
+  "Hostel Occupancy": "إشغال السكن",
+  "Favourites": "المفضلة",
+  "Add {{name}} to favourites": "أضف {{name}} إلى المفضلة",
+  "Remove {{name}} from favourites": "أزل {{name}} من المفضلة",
+  "Add to favourites": "أضف إلى المفضلة",
+  "Remove from favourites": "أزل من المفضلة",
+  "We couldn't update your favourites. Please try again.": "تعذّر تحديث المفضلة. حاول مرة أخرى.",
+  "No favourite reports yet": "لا توجد تقارير مفضلة بعد",
+  "Select the star on a report in the Report library to keep it here.": "اختر النجمة على أي تقرير في مكتبة التقارير ليبقى هنا.",
+  "Browse the report library": "تصفّح مكتبة التقارير",
+  "Search your favourite reports…": "ابحث في تقاريرك المفضلة…",
+  "Search favourite reports": "البحث في التقارير المفضلة",
+  "{{count}} favourite reports": "{{count}} تقارير مفضلة",
+  "Try a different word.": "جرّب كلمة أخرى.",
+  "Select the star on a report to add it to your Favourites tab.": "اختر النجمة على أي تقرير لإضافته إلى تبويب المفضلة."
 }

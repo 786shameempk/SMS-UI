@@ -105,7 +105,7 @@ export default function DepartmentsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">{t("Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.")}</p>
+        <p className="text-sm text-muted-foreground">{t("Departments and streams group standards, e.g. Primary, Secondary, Science, Commerce.")}</p>
         {!readOnly && (
           <Button
           onClick={() => {

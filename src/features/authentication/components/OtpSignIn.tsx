@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, ArrowRight, Mail, Smartphone } from "lucide-react";
+import { AlertCircle, ArrowRight, Mail, MessageCircle, Smartphone } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,7 @@ type Step = "destination" | "code" | "accounts";
 export default function OtpSignIn({ channel, onSignedIn }: { channel: OtpChannel; onSignedIn: (result: LoginResult) => void }) {
   const { t } = useTranslation("authentication");
   const isEmail = channel === "email";
+  const isWhatsApp = channel === "whatsapp";
   const [step, setStep] = useState<Step>("destination");
   const [destination, setDestination] = useState("");
   const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
@@ -167,7 +168,9 @@ export default function OtpSignIn({ channel, onSignedIn }: { channel: OtpChannel
           <p id="otp-hint" className="text-xs text-muted-foreground">
             {isEmail
               ? t("If {{destination}} is registered, we've emailed a {{count}}-digit code to it. It expires in {{minutes}} minutes.", { destination: challenge.maskedDestination, count: OTP_LENGTH, minutes: Math.round(challenge.expiresInSeconds / 60) })
-              : t("If {{destination}} is registered, we've sent a {{count}}-digit code to it. It expires in {{minutes}} minutes.", { destination: challenge.maskedDestination, count: OTP_LENGTH, minutes: Math.round(challenge.expiresInSeconds / 60) })}
+              : isWhatsApp
+                ? t("If {{destination}} is registered, we've sent a {{count}}-digit code to it on WhatsApp. It expires in {{minutes}} minutes.", { destination: challenge.maskedDestination, count: OTP_LENGTH, minutes: Math.round(challenge.expiresInSeconds / 60) })
+                : t("If {{destination}} is registered, we've sent a {{count}}-digit code to it. It expires in {{minutes}} minutes.", { destination: challenge.maskedDestination, count: OTP_LENGTH, minutes: Math.round(challenge.expiresInSeconds / 60) })}
           </p>
         </div>
 
@@ -198,7 +201,7 @@ export default function OtpSignIn({ channel, onSignedIn }: { channel: OtpChannel
     );
   }
 
-  const Icon = isEmail ? Mail : Smartphone;
+  const Icon = isEmail ? Mail : isWhatsApp ? MessageCircle : Smartphone;
   return (
     <form onSubmit={sendCode} className="space-y-5" noValidate>
       <FormError message={error} />
@@ -221,7 +224,11 @@ export default function OtpSignIn({ channel, onSignedIn }: { channel: OtpChannel
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          {isEmail ? t("We'll email you a code if this address is registered.") : t("We'll text you a code if this number is registered and verified.")}
+          {isEmail
+            ? t("We'll email you a code if this address is registered.")
+            : isWhatsApp
+              ? t("We'll send a code on WhatsApp if this number is registered and verified.")
+              : t("We'll text you a code if this number is registered and verified.")}
         </p>
       </div>
       <Button type="submit" size="lg" loading={busy} disabled={busy || !destination.trim()} className="h-11 w-full rounded-xl text-[15px]">

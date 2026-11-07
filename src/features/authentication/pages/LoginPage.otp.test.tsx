@@ -36,11 +36,11 @@ describe("LoginPage - sign in with a code", () => {
     signOut();
     localStorage.clear();
     vi.clearAllMocks();
-    vi.mocked(getAuthMethods).mockResolvedValue({ password: true, otpEmail: true, otpMobile: true });
+    vi.mocked(getAuthMethods).mockResolvedValue({ password: true, otpEmail: true, otpMobile: true, otpWhatsApp: true });
   });
 
   it("offers only the password form while the server has codes switched off", async () => {
-    vi.mocked(getAuthMethods).mockResolvedValue({ password: true, otpEmail: false, otpMobile: false });
+    vi.mocked(getAuthMethods).mockResolvedValue({ password: true, otpEmail: false, otpMobile: false, otpWhatsApp: false });
     renderLogin();
 
     expect(await screen.findByLabelText("Password")).toBeInTheDocument();
@@ -48,12 +48,12 @@ describe("LoginPage - sign in with a code", () => {
     expect(screen.queryByRole("radiogroup", { name: "Sign-in method" })).not.toBeInTheDocument();
   });
 
-  it("shows the three methods, keeps password as the default, and remembers the last choice", async () => {
+  it("shows every method, keeps password as the default, and remembers the last choice", async () => {
     const user = userEvent.setup();
     const { unmount } = renderLogin();
 
     const group = await screen.findByRole("radiogroup", { name: "Sign-in method" });
-    expect(group.querySelectorAll('[role="radio"]')).toHaveLength(3);
+    expect(group.querySelectorAll('[role="radio"]')).toHaveLength(4);
     expect(screen.getByRole("radio", { name: "Password" })).toBeChecked();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
 
@@ -63,6 +63,28 @@ describe("LoginPage - sign in with a code", () => {
 
     renderLogin();
     expect(await screen.findByLabelText("Mobile number")).toBeInTheDocument();
+  });
+
+  it("sends the code on WhatsApp for the same kind of number", async () => {
+    const user = userEvent.setup();
+    vi.mocked(requestOtp).mockResolvedValue({ ...challenge(), maskedDestination: "+91 *****0881" });
+    renderLogin();
+
+    await user.click(await screen.findByRole("radio", { name: "WhatsApp OTP" }));
+    await user.type(screen.getByLabelText("Mobile number"), "98960 40881");
+    expect(screen.getByText(/on WhatsApp if this number is registered/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /send code/i }));
+
+    expect(requestOtp).toHaveBeenCalledWith("whatsapp", "98960 40881");
+    expect(await screen.findByText(/on WhatsApp\. It expires/i)).toBeInTheDocument();
+  });
+
+  it("hides the WhatsApp option when the server does not offer it", async () => {
+    vi.mocked(getAuthMethods).mockResolvedValue({ password: true, otpEmail: true, otpMobile: true, otpWhatsApp: false });
+    renderLogin();
+
+    await screen.findByRole("radiogroup", { name: "Sign-in method" });
+    expect(screen.queryByRole("radio", { name: "WhatsApp OTP" })).not.toBeInTheDocument();
   });
 
   it("signs in with an emailed code: send, count down, verify", async () => {
@@ -188,7 +210,7 @@ describe("LoginPage - sign in with a code", () => {
   });
 
   it("falls back to the password form if the server cannot be asked what it offers", async () => {
-    vi.mocked(getAuthMethods).mockResolvedValue({ password: true, otpEmail: false, otpMobile: false });
+    vi.mocked(getAuthMethods).mockResolvedValue({ password: true, otpEmail: false, otpMobile: false, otpWhatsApp: false });
     localStorage.setItem("sms.signInMethod", "email"); // a remembered choice that is no longer on offer
     renderLogin();
 

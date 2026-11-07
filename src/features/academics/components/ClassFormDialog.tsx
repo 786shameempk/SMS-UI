@@ -76,8 +76,8 @@ export default function ClassFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEdit ? t("Edit class") : t("New class")}</DialogTitle>
-          <DialogDescription>{t("Classes belong to an academic year and, optionally, a department or stream.")}</DialogDescription>
+          <DialogTitle>{isEdit ? t("Edit standard") : t("New standard")}</DialogTitle>
+          <DialogDescription>{t("Standards belong to an academic year and, optionally, a department or stream.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
@@ -137,7 +137,7 @@ export default function ClassFormDialog({
               {t("Cancel")}
             </Button>
             <Button type="submit" loading={submitting}>
-              {isEdit ? t("Save changes") : t("Create class")}
+              {isEdit ? t("Save changes") : t("Create standard")}
             </Button>
           </DialogFooter>
         </form>
