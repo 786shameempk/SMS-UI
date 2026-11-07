@@ -164,5 +164,16 @@
   "User": "المستخدم",
   "View": "عرض",
   "We couldn't load this": "تعذر تحميل هذا",
-  "Yes": "نعم"
+  "Yes": "نعم",
+  "Login account": "حساب تسجيل الدخول",
+  "Account linked": "الحساب مرتبط",
+  "Not linked": "غير مرتبط",
+  "All login accounts": "جميع حسابات تسجيل الدخول",
+  "Filter by login account": "تصفية حسب حساب تسجيل الدخول",
+  "Reset password": "إعادة تعيين كلمة المرور",
+  "Reset password?": "إعادة تعيين كلمة المرور؟",
+  "Could not reset password": "تعذّرت إعادة تعيين كلمة المرور",
+  "Password reset for {{name}}. A temporary password has been emailed.": "تمت إعادة تعيين كلمة مرور {{name}}. أُرسلت كلمة مرور مؤقتة بالبريد الإلكتروني.",
+  "{{name}} will be emailed a temporary password and signed out everywhere. They choose a new password when they next sign in.": "سيتلقى {{name}} كلمة مرور مؤقتة بالبريد الإلكتروني وسيتم تسجيل خروجه من كل مكان. سيختار كلمة مرور جديدة عند تسجيل الدخول في المرة القادمة.",
+  "Enter a valid mobile number": "أدخل رقم جوال صالحًا"
 }

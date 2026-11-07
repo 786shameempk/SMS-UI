@@ -1,5 +1,6 @@
 import { ACADEMIC_API_BASE_URL, academicHttpClient, authHttpClient, extractApiErrorMessage, resolveFileUrl } from "@/lib/httpClient";
 import { listMyStaffAttendanceRecords, listStaffAttendanceRecords } from "@/features/attendance/api";
+import { loginConflictFrom } from "@/features/login-accounts/loginConflict";
 import type {
   Experience,
   ExperienceFormValues,
@@ -154,6 +155,7 @@ interface ApiResignationRecord {
 
 interface ApiStaffMember {
   id: string;
+  userId?: string | null;
   loginIssues?: string[];
   tenantId: string;
   branchId: string;
@@ -200,6 +202,7 @@ interface ApiStaffLeaveRequest {
 function mapStaff(dto: ApiStaffMember): StaffMember {
   return {
     id: dto.id,
+    userId: dto.userId ?? undefined,
     loginIssues: dto.loginIssues ?? [],
     tenantId: dto.tenantId,
     branchId: dto.branchId,
@@ -287,7 +290,7 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
   try {
     return (await request).data;
   } catch (err) {
-    throw new Error(extractApiErrorMessage(err));
+    throw loginConflictFrom(err) ?? new Error(extractApiErrorMessage(err));
   }
 }
 
@@ -326,6 +329,7 @@ export async function listAssignableLoginRoles(): Promise<AssignableLoginRole[]>
 }
 
 export async function createStaff(values: StaffFormValues): Promise<StaffMember> {
+  // A taken email / mobile number comes back as a typed error so the form can mark the field and offer "save without a sign-in account".
   const dto = await unwrap(
     academicHttpClient.post<ApiStaffMember>("/api/staff", {
       branchId: values.branchId,
@@ -340,6 +344,7 @@ export async function createStaff(values: StaffFormValues): Promise<StaffMember>
       address: values.address,
       loginRole: values.loginRole || null,
       reportingToStaffId: values.reportingToStaffId || null,
+      createWithoutLogin: values.createWithoutLogin ?? false,
     }),
   );
   return mapStaff(dto);

@@ -248,5 +248,13 @@
   "View student": "عرض الطالب",
   "Who to reach first in a medical or safety emergency.": "من يجب الاتصال به أولًا في حالة طوارئ طبية أو أمنية.",
   "Withdraw": "سحب",
-  "Withdraw application": "سحب الطلب"
+  "Withdraw application": "سحب الطلب",
+  "Guardian mobile": "جوال ولي الأمر",
+  "Student mobile": "جوال الطالب",
+  "Student login": "حساب الطالب",
+  "Parent login": "حساب ولي الأمر",
+  "Reset student password": "إعادة تعيين كلمة مرور الطالب",
+  "Reset parent password": "إعادة تعيين كلمة مرور ولي الأمر",
+  "Parent": "ولي الأمر",
+  "The parent's login comes from the parent email and the guardian mobile. If a parent login with either one already exists (a brother or sister), this student is linked to it instead of a new one being made. An email gets an invitation to set a password; a mobile number signs in with a one-time code.": "يُنشأ حساب ولي الأمر من بريده الإلكتروني وجوال ولي الأمر. وإذا كان لأيٍّ منهما حساب ولي أمر قائم (أخ أو أخت)، يُربط هذا الطالب به بدل إنشاء حساب جديد. يصل البريد دعوة لتعيين كلمة مرور؛ ويسجّل رقم الجوال الدخول برمز لمرة واحدة."
 }

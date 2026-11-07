@@ -104,13 +104,13 @@ export default function TeacherProfilePage() {
           <QualificationsExperienceTab staff={staff} />
         </TabsContent>
         <TabsContent value="salary">
-          <SalaryTab staff={staff} />
+          <SalaryTab staff={staff} readOnly={isTeacher} />
         </TabsContent>
         <TabsContent value="attendance">
           <StaffAttendanceTab staffId={staff.id} />
         </TabsContent>
         <TabsContent value="performance">
-          <PerformanceTab staff={staff} />
+          <PerformanceTab staff={staff} readOnly={isTeacher} />
         </TabsContent>
         <TabsContent value="documents">
           <StaffDocumentsTab staff={staff} />

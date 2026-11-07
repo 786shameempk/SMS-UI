@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ import { listAssignableLoginRoles } from "../api";
 import { DESIGNATIONS, DESIGNATION_LOGIN_ROLE, STAFF_LOGIN_ROLES } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
 import { FormSection } from "@/components/ui/form-field";
+import { LoginConflictError } from "@/features/login-accounts/loginConflict";
 
 const staffFormSchema = z.object({
   branchId: z.string().min(1, "Select a branch"),
@@ -28,8 +29,9 @@ const staffFormSchema = z.object({
   gender: z.enum(["male", "female", "other"]),
   designation: z.enum(DESIGNATIONS as unknown as [StaffDesignation, ...StaffDesignation[]]),
   department: z.string().min(1, "Department is required"),
-  phone: z.string().min(1, "Phone is required"),
-  email: z.string().min(1, "Email is required").email("Enter a valid email"),
+  // Either, both or neither: they decide whether (and how) the person can sign in.
+  phone: z.string().refine((v) => v.trim() === "" || /^\+?[\d\s().-]{8,20}$/.test(v.trim()), "Enter a valid mobile number"),
+  email: z.string().refine((v) => v.trim() === "" || z.string().email().safeParse(v.trim()).success, "Enter a valid email"),
   address: z.string().min(1, "Address is required"),
   loginRole: z.string().optional(),
   reportingToStaffId: z.string().optional(),
@@ -51,6 +53,8 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
     handleSubmit,
     reset,
     control,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<StaffFormValues>({
     resolver: zodResolver(staffFormSchema),
@@ -69,6 +73,8 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
       reportingToStaffId: "",
     },
   });
+  // The email / mobile number is already taken: which field, and whether the person can still be saved without a sign-in account.
+  const [conflict, setConflict] = useState<LoginConflictError | null>(null);
   const designation = useWatch({ control, name: "designation" });
   const loginRole = useWatch({ control, name: "loginRole" });
   const automaticRole = DESIGNATION_LOGIN_ROLE[designation];
@@ -90,6 +96,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
 
   useEffect(() => {
     if (open) {
+      setConflict(null);
       reset(
         staff
           ? {
@@ -124,6 +131,19 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
     }
   }, [open, staff, reset]);
 
+  /** Saves; a taken email / mobile number marks its field instead of just failing, and may offer to save without a sign-in account. */
+  const submit = async (values: StaffFormValues, createWithoutLogin = false) => {
+    setConflict(null);
+    try {
+      await onSubmit(createWithoutLogin ? { ...values, createWithoutLogin: true } : values);
+    } catch (err) {
+      if (!(err instanceof LoginConflictError)) throw err;
+      setConflict(err);
+      if (err.fields.email) setError("email", { type: "server", message: err.fields.email });
+      if (err.fields.phone) setError("phone", { type: "server", message: err.fields.phone });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
@@ -133,7 +153,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
             {isEdit ? t("Update this staff member's details.") : t("Onboard a new staff member.")}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit((v) => submit(v))} className="space-y-6">
           <FormSection title={t("School")}>
             <div className="space-y-1.5">
               <Label htmlFor="branchId" required>{t("Branch")}</Label>
@@ -291,16 +311,30 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
           <FormSection title={t("Contact")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="phone" required>{t("Phone")}</Label>
-                <Input id="phone" aria-invalid={errors.phone ? true : undefined} {...register("phone")} />
+                <Label htmlFor="phone" optional>{t("Mobile number")}</Label>
+                <Input id="phone" type="tel" inputMode="tel" aria-invalid={errors.phone ? true : undefined} {...register("phone", { onChange: () => clearErrors("phone") })} />
                 {errors.phone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.phone.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="email" required>{t("Email")}</Label>
-                <Input id="email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email")} />
+                <Label htmlFor="email" optional>{t("Email")}</Label>
+                <Input id="email" type="email" aria-invalid={errors.email ? true : undefined} {...register("email", { onChange: () => clearErrors("email") })} />
                 {errors.email && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.email.message ?? "")}</p>}
               </div>
             </div>
+
+            {!isEdit && (
+              <p className="text-xs text-muted-foreground">
+                {t("Give an email, a mobile number or both. An email gets an invitation to set a password; a mobile number signs in with a one-time code. With neither, no sign-in account is created.")}
+              </p>
+            )}
+            {conflict?.canSkipLogin && (
+              <div role="alert" className="rounded-md border border-warning/40 bg-warning-soft p-3 text-sm text-warning-strong space-y-2">
+                <p>{t("This email or mobile number already has a sign-in account, so it can't be given to a new staff member. Change it, or save the person without a sign-in account.")}</p>
+                <Button type="button" size="sm" variant="outline" loading={submitting} onClick={handleSubmit((v) => submit(v, true))}>
+                  {t("Save without a sign-in account")}
+                </Button>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label htmlFor="address" required>{t("Address")}</Label>

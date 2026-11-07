@@ -164,5 +164,16 @@
   "User": "उपयोगकर्ता",
   "View": "देखें",
   "We couldn't load this": "हम इसे लोड नहीं कर सके",
-  "Yes": "हाँ"
+  "Yes": "हाँ",
+  "Login account": "लॉगिन खाता",
+  "Account linked": "खाता लिंक है",
+  "Not linked": "लिंक नहीं है",
+  "All login accounts": "सभी लॉगिन खाते",
+  "Filter by login account": "लॉगिन खाते के अनुसार फ़िल्टर करें",
+  "Reset password": "पासवर्ड रीसेट करें",
+  "Reset password?": "पासवर्ड रीसेट करें?",
+  "Could not reset password": "पासवर्ड रीसेट नहीं हो सका",
+  "Password reset for {{name}}. A temporary password has been emailed.": "{{name}} का पासवर्ड रीसेट हो गया। अस्थायी पासवर्ड ईमेल कर दिया गया है।",
+  "{{name}} will be emailed a temporary password and signed out everywhere. They choose a new password when they next sign in.": "{{name}} को अस्थायी पासवर्ड ईमेल किया जाएगा और वे हर जगह से साइन आउट हो जाएँगे। अगली बार साइन इन करते समय वे नया पासवर्ड चुनेंगे।",
+  "Enter a valid mobile number": "मान्य मोबाइल नंबर दर्ज करें"
 }

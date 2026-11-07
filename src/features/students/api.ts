@@ -123,6 +123,7 @@ interface ApiGuardian {
   phone: string;
   email: string | null;
   occupation: string | null;
+  userId?: string | null;
 }
 
 interface ApiStudentDocument {
@@ -142,6 +143,7 @@ interface ApiTransferRecord {
 
 interface ApiStudent {
   id: string;
+  userId?: string | null;
   loginIssues?: string[];
   tenantId: string;
   branchId: string;
@@ -205,6 +207,7 @@ function mapStudent(dto: ApiStudent, index: Awaited<ReturnType<typeof buildSecti
 
   return {
     id: dto.id,
+    userId: dto.userId ?? undefined,
     loginIssues: dto.loginIssues ?? [],
     tenantId: dto.tenantId,
     branchId: dto.branchId,
@@ -227,6 +230,7 @@ function mapStudent(dto: ApiStudent, index: Awaited<ReturnType<typeof buildSecti
       phone: g.phone,
       email: g.email ?? undefined,
       occupation: g.occupation ?? undefined,
+      userId: g.userId ?? undefined,
     })),
     emergencyContact: {
       name: dto.emergencyContact.name,
@@ -373,6 +377,8 @@ export interface StudentPageParams {
   search?: string;
   classId?: string;
   status?: StudentStatus;
+  /** true = only students with a sign-in account linked (their own or a parent's); false = only those without. */
+  loginLinked?: boolean;
 }
 
 /** GET /api/students?pageNumber=… - filtered, ordered and paged server-side - mapped for the UI. */
@@ -392,6 +398,7 @@ export function listStudentsPage(params: StudentPageParams): Promise<Page<Studen
     search: params.search?.trim() || undefined,
     classId: params.classId,
     status: params.status ? STUDENT_STATUS_TO_API[params.status] : undefined,
+    loginLinked: params.loginLinked === undefined ? undefined : String(params.loginLinked),
   });
 }
 
@@ -438,6 +445,7 @@ export async function createStudent(values: StudentFormValues): Promise<Student>
       guardianRelation: GUARDIAN_RELATION_TO_API[values.guardianRelation],
       guardianPhone: values.guardianPhone.trim(),
       studentEmail: values.studentEmail?.trim() || null,
+      studentMobile: values.studentMobile?.trim() || null,
       parentEmail: values.parentEmail?.trim() || null,
     }),
   );

@@ -16,6 +16,10 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useClassSectionOptions } from "../hooks";
 import { createStudent, listStudentsPage, transferStudent, updateStudent } from "../api";
 import { notifyLoginIssues } from "@/utils/loginIssues";
+import LoginAccountBadge from "@/features/login-accounts/LoginAccountBadge";
+import LoginAccountFilter, { loginFilterLabel, type LoginFilter } from "@/features/login-accounts/LoginAccountFilter";
+import { ResetPasswordMenuItem, useResetPasswordDialog } from "@/features/login-accounts/ResetPasswordAction";
+import { useLoginStatuses } from "@/features/login-accounts/useLoginStatuses";
 import { listClasses } from "@/features/academics/api";
 import type { Student, StudentFormValues, StudentStatus, TransferFormValues } from "../types";
 import StudentStatusBadge from "../components/StudentStatusBadge";
@@ -54,8 +58,9 @@ function StudentsTab() {
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loginFilter, setLoginFilter] = useState<LoginFilter>("all");
   const [pageSize, setPageSize] = useState(25);
-  const [pageIndex, setPageIndex] = usePageIndex(JSON.stringify([search, classFilter, statusFilter, pageSize]));
+  const [pageIndex, setPageIndex] = usePageIndex(JSON.stringify([search, classFilter, statusFilter, loginFilter, pageSize]));
 
   // Debounce typing so each keystroke doesn't hit the API.
   useEffect(() => {
@@ -70,6 +75,7 @@ function StudentsTab() {
     search,
     classId: classFilter === "all" ? undefined : classes.find((c) => c.name === classFilter)?.id,
     status: statusFilter === "all" ? undefined : (statusFilter as StudentStatus),
+    loginLinked: loginFilter === "all" ? undefined : loginFilter === "linked",
   };
   const { data: page, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["students", "page", filters],
@@ -78,6 +84,8 @@ function StudentsTab() {
   });
   const students = page?.items ?? [];
   const totalCount = page?.totalCount ?? 0;
+  const loginStatuses = useLoginStatuses(students.flatMap((s) => [s.userId, ...s.guardians.map((g) => g.userId)]));
+  const resetPassword = useResetPasswordDialog();
 
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -99,6 +107,7 @@ function StudentsTab() {
     clearSearch();
     setClassFilter("all");
     setStatusFilter("all");
+    setLoginFilter("all");
   };
   const activeFilters: ActiveFilter[] = [];
   if (search) activeFilters.push({ id: "search", label: t("Search"), value: search, onRemove: clearSearch });
@@ -108,6 +117,9 @@ function StudentsTab() {
     const label = option ? t(option.label) : statusFilter;
     activeFilters.push({ id: "status", label: t("Status"), value: label, onRemove: () => setStatusFilter("all") });
   }
+
+  if (loginFilter !== "all")
+    activeFilters.push({ id: "login", label: t("Login account"), value: loginFilterLabel(loginFilter, t), onRemove: () => setLoginFilter("all") });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["students"] });
 
@@ -203,10 +215,22 @@ function StudentsTab() {
       },
     },
     {
+      id: "loginAccount",
+      header: t("Login account"),
+      meta: { exportValue: (s) => (s.userId || s.guardians.some((g) => g.userId) ? "Account linked" : "Not linked") },
+      cell: ({ row }) => {
+        const s = row.original;
+        const parent = s.guardians.some((g) => g.userId);
+        const detail = [s.userId ? t("Student login") : null, parent ? t("Parent login") : null].filter(Boolean).join(" · ");
+        return <LoginAccountBadge linked={Boolean(s.userId) || parent} detail={detail || undefined} />;
+      },
+    },
+    {
       id: "actions",
       header: "",
       cell: ({ row }) => {
         const s = row.original;
+        const parentUserId = s.guardians.find((g) => g.userId)?.userId;
         return (
           <RowActions label={t("Actions for {{name}}", { name: `${s.firstName} ${s.lastName}` })}>
             <DropdownMenuItem onClick={() => setQuickView(s)}>
@@ -222,6 +246,24 @@ function StudentsTab() {
                 <Pencil className="w-3.5 h-3.5" />
                 {t("Edit details")}
               </DropdownMenuItem>
+            )}
+            {!isTeacher && (
+              <>
+                <ResetPasswordMenuItem
+                  userId={s.userId}
+                  status={s.userId ? loginStatuses.get(s.userId) : undefined}
+                  personName={`${s.firstName} ${s.lastName}`}
+                  label={t("Reset student password")}
+                  onRequest={resetPassword.request}
+                />
+                <ResetPasswordMenuItem
+                  userId={parentUserId}
+                  status={parentUserId ? loginStatuses.get(parentUserId) : undefined}
+                  personName={s.guardians.find((g) => g.userId)?.name ?? t("Parent")}
+                  label={t("Reset parent password")}
+                  onRequest={resetPassword.request}
+                />
+              </>
             )}
             {!isTeacher && s.status === "active" && (
               <DropdownMenuItem onClick={() => setTransferTarget(s)} className="text-warning-strong focus:bg-warning-soft focus:text-warning-strong">
@@ -284,6 +326,7 @@ function StudentsTab() {
                 ))}
               </SelectContent>
             </Select>
+            <LoginAccountFilter value={loginFilter} onChange={setLoginFilter} />
           </>
         }
         activeFilters={activeFilters}
@@ -321,6 +364,8 @@ function StudentsTab() {
         onOpenProfile={(s) => navigate(`/students/${s.id}`)}
         onEdit={isTeacher ? undefined : openEdit}
       />
+
+      {resetPassword.dialog}
 
       <BulkStudentImportDialog open={importOpen} onOpenChange={setImportOpen} onFinished={invalidate} />
 

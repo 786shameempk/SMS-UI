@@ -164,5 +164,16 @@
   "User": "பயனர்",
   "View": "பார்",
   "We couldn't load this": "இதை ஏற்ற இயலவில்லை",
-  "Yes": "ஆம்"
+  "Yes": "ஆம்",
+  "Login account": "உள்நுழைவு கணக்கு",
+  "Account linked": "கணக்கு இணைக்கப்பட்டது",
+  "Not linked": "இணைக்கப்படவில்லை",
+  "All login accounts": "அனைத்து உள்நுழைவு கணக்குகளும்",
+  "Filter by login account": "உள்நுழைவு கணக்கு மூலம் வடிகட்டு",
+  "Reset password": "கடவுச்சொல்லை மீட்டமை",
+  "Reset password?": "கடவுச்சொல்லை மீட்டமைக்கவா?",
+  "Could not reset password": "கடவுச்சொல்லை மீட்டமைக்க முடியவில்லை",
+  "Password reset for {{name}}. A temporary password has been emailed.": "{{name}} இன் கடவுச்சொல் மீட்டமைக்கப்பட்டது. தற்காலிக கடவுச்சொல் மின்னஞ்சலில் அனுப்பப்பட்டது.",
+  "{{name}} will be emailed a temporary password and signed out everywhere. They choose a new password when they next sign in.": "{{name}} க்கு தற்காலிக கடவுச்சொல் மின்னஞ்சலில் அனுப்பப்பட்டு, எல்லா இடங்களிலிருந்தும் வெளியேற்றப்படுவார். அடுத்த முறை உள்நுழையும்போது புதிய கடவுச்சொல்லைத் தேர்வு செய்வார்.",
+  "Enter a valid mobile number": "சரியான மொபைல் எண்ணை உள்ளிடவும்"
 }
