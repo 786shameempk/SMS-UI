@@ -248,5 +248,13 @@
   "View student": "மாணவரைப் பார்",
   "Who to reach first in a medical or safety emergency.": "மருத்துவ அல்லது பாதுகாப்பு அவசரத்தில் முதலில் யாரைத் தொடர்பு கொள்ள வேண்டும்.",
   "Withdraw": "திரும்பப் பெறு",
-  "Withdraw application": "விண்ணப்பத்தைத் திரும்பப் பெறு"
+  "Withdraw application": "விண்ணப்பத்தைத் திரும்பப் பெறு",
+  "Guardian mobile": "பாதுகாவலர் மொபைல்",
+  "Student mobile": "மாணவரின் மொபைல்",
+  "Student login": "மாணவரின் உள்நுழைவு",
+  "Parent login": "பெற்றோரின் உள்நுழைவு",
+  "Reset student password": "மாணவரின் கடவுச்சொல்லை மீட்டமை",
+  "Reset parent password": "பெற்றோரின் கடவுச்சொல்லை மீட்டமை",
+  "Parent": "பெற்றோர்",
+  "The parent's login comes from the parent email and the guardian mobile. If a parent login with either one already exists (a brother or sister), this student is linked to it instead of a new one being made. An email gets an invitation to set a password; a mobile number signs in with a one-time code.": "பெற்றோரின் உள்நுழைவு பெற்றோர் மின்னஞ்சல் மற்றும் பாதுகாவலர் மொபைலிலிருந்து உருவாகும். இவற்றில் ஒன்றுடன் பெற்றோர் உள்நுழைவு ஏற்கனவே இருந்தால் (சகோதரன் அல்லது சகோதரி), புதியது உருவாக்காமல் இந்த மாணவர் அதனுடன் இணைக்கப்படுவார். மின்னஞ்சலுக்கு கடவுச்சொல் அமைக்க அழைப்பு அனுப்பப்படும்; மொபைல் எண் ஒருமுறை குறியீட்டுடன் உள்நுழையும்."
 }

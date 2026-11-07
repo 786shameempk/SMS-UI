@@ -14,6 +14,11 @@ import { DataTable } from "@/components/tables/DataTable";
 import { listClasses, listSubjects } from "@/features/academics/api";
 import { createStaff, getMyStaffId, updateStaff } from "@/features/staff/api";
 import { notifyLoginIssues } from "@/utils/loginIssues";
+import LoginAccountBadge from "@/features/login-accounts/LoginAccountBadge";
+import LoginAccountFilter, { loginFilterLabel, matchesLoginFilter, type LoginFilter } from "@/features/login-accounts/LoginAccountFilter";
+import { ResetPasswordMenuItem, useResetPasswordDialog } from "@/features/login-accounts/ResetPasswordAction";
+import { LoginConflictError } from "@/features/login-accounts/loginConflict";
+import { useLoginStatuses } from "@/features/login-accounts/useLoginStatuses";
 import StaffFormDialog from "@/features/staff/components/StaffFormDialog";
 import StaffStatusBadge from "@/features/staff/components/StaffStatusBadge";
 import type { StaffFormValues, StaffMember } from "@/features/staff/types";
@@ -35,6 +40,7 @@ function TeachersDirectory() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
+  const [loginFilter, setLoginFilter] = useState<LoginFilter>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<StaffMember | null>(null);
   const [assignSubjectTarget, setAssignSubjectTarget] = useState<StaffMember | null>(null);
@@ -44,6 +50,9 @@ function TeachersDirectory() {
   const { data: assignments = [] } = useQuery({ queryKey: ["teachers", "subject-assignments"], queryFn: () => listSubjectAssignments() });
   const { data: subjects = [] } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
+
+  const loginStatuses = useLoginStatuses(teachers.map((teacher) => teacher.userId));
+  const resetPassword = useResetPasswordDialog();
 
   const invalidateTeachers = () => queryClient.invalidateQueries({ queryKey: ["teachers"] });
 
@@ -55,7 +64,8 @@ function TeachersDirectory() {
       notifyLoginIssues(created, t("Added, but a sign-in account needs attention:"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add teacher")),
+    // A taken email / mobile number is shown on the form itself, not as a toast.
+    onError: (err) => !(err instanceof LoginConflictError) && toast.error(err instanceof Error ? err.message : t("Could not add teacher")),
   });
 
   const updateMutation = useMutation({
@@ -66,7 +76,7 @@ function TeachersDirectory() {
       setFormOpen(false);
       setEditingTeacher(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update teacher")),
+    onError: (err) => !(err instanceof LoginConflictError) && toast.error(err instanceof Error ? err.message : t("Could not update teacher")),
   });
 
   const assignSubjectMutation = useMutation({
@@ -93,12 +103,13 @@ function TeachersDirectory() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return teachers;
     return teachers.filter((teacher) => {
+      if (!matchesLoginFilter(Boolean(teacher.userId), loginFilter)) return false;
+      if (!q) return true;
       const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
       return fullName.includes(q) || teacher.employeeId.toLowerCase().includes(q) || teacher.department.toLowerCase().includes(q);
     });
-  }, [teachers, search]);
+  }, [teachers, search, loginFilter]);
 
   const columns: ColumnDef<StaffMember, unknown>[] = [
     {
@@ -147,6 +158,12 @@ function TeachersDirectory() {
       cell: ({ row }) => <StaffStatusBadge status={row.original.status} />,
     },
     {
+      id: "loginAccount",
+      header: t("Login account"),
+      meta: { exportValue: (teacher) => (teacher.userId ? "Account linked" : "Not linked") },
+      cell: ({ row }) => <LoginAccountBadge linked={Boolean(row.original.userId)} />,
+    },
+    {
       id: "actions",
       header: "",
       cell: ({ row }) => {
@@ -170,6 +187,12 @@ function TeachersDirectory() {
               <BookOpen className="w-3.5 h-3.5" />
               {t("Assign subject")}
             </DropdownMenuItem>
+            <ResetPasswordMenuItem
+              userId={teacher.userId}
+              status={teacher.userId ? loginStatuses.get(teacher.userId) : undefined}
+              personName={`${teacher.firstName} ${teacher.lastName}`}
+              onRequest={resetPassword.request}
+            />
           </RowActions>
         );
       },
@@ -192,10 +215,21 @@ function TeachersDirectory() {
         getRowId={(teacher) => teacher.id}
         empty={{ icon: Users2, title: t("No teachers yet"), description: t("Add your first teacher to start assigning subjects and classes.") }}
         filters={
-          <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by name, ID, or department")} containerClassName="sm:w-72" />
+          <>
+            <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by name, ID, or department")} containerClassName="sm:w-72" />
+            <LoginAccountFilter value={loginFilter} onChange={setLoginFilter} />
+          </>
         }
-        activeFilters={search.trim() ? [{ id: "search", label: t("Search"), value: search.trim(), onRemove: () => setSearch("") }] : []}
-        onClearFilters={() => setSearch("")}
+        activeFilters={[
+          ...(search.trim() ? [{ id: "search", label: t("Search"), value: search.trim(), onRemove: () => setSearch("") }] : []),
+          ...(loginFilter !== "all"
+            ? [{ id: "login", label: t("Login account"), value: loginFilterLabel(loginFilter, t), onRemove: () => setLoginFilter("all") }]
+            : []),
+        ]}
+        onClearFilters={() => {
+          setSearch("");
+          setLoginFilter("all");
+        }}
         actions={
           <>
             <Button variant="outline" onClick={() => setClassTeacherDialogOpen(true)}>
@@ -217,6 +251,8 @@ function TeachersDirectory() {
         exportFileName="teachers"
         pageSize={25}
       />
+
+      {resetPassword.dialog}
 
       <StaffFormDialog
         open={formOpen}

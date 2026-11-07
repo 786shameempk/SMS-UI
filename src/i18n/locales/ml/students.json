@@ -248,5 +248,13 @@
   "View student": "വിദ്യാർത്ഥിയെ കാണുക",
   "Who to reach first in a medical or safety emergency.": "മെഡിക്കൽ അല്ലെങ്കിൽ സുരക്ഷാ അടിയന്തര ഘട്ടത്തിൽ ആദ്യം ആരെ ബന്ധപ്പെടണം.",
   "Withdraw": "പിൻവലിക്കുക",
-  "Withdraw application": "അപേക്ഷ പിൻവലിക്കുക"
+  "Withdraw application": "അപേക്ഷ പിൻവലിക്കുക",
+  "Guardian mobile": "രക്ഷിതാവിന്റെ മൊബൈൽ",
+  "Student mobile": "വിദ്യാർത്ഥിയുടെ മൊബൈൽ",
+  "Student login": "വിദ്യാർത്ഥിയുടെ ലോഗിൻ",
+  "Parent login": "രക്ഷിതാവിന്റെ ലോഗിൻ",
+  "Reset student password": "വിദ്യാർത്ഥിയുടെ പാസ്‌വേഡ് റീസെറ്റ് ചെയ്യുക",
+  "Reset parent password": "രക്ഷിതാവിന്റെ പാസ്‌വേഡ് റീസെറ്റ് ചെയ്യുക",
+  "Parent": "രക്ഷിതാവ്",
+  "The parent's login comes from the parent email and the guardian mobile. If a parent login with either one already exists (a brother or sister), this student is linked to it instead of a new one being made. An email gets an invitation to set a password; a mobile number signs in with a one-time code.": "രക്ഷിതാവിന്റെ ലോഗിൻ രക്ഷിതാവിന്റെ ഇമെയിലിൽ നിന്നും രക്ഷിതാവിന്റെ മൊബൈലിൽ നിന്നുമാണ് ഉണ്ടാകുന്നത്. ഇവയിലൊന്നുള്ള രക്ഷിതാവിന്റെ ലോഗിൻ ഇതിനകം ഉണ്ടെങ്കിൽ (സഹോദരനോ സഹോദരിയോ), പുതിയത് ഉണ്ടാക്കാതെ ഈ വിദ്യാർത്ഥിയെ അതുമായി ബന്ധിപ്പിക്കും. ഇമെയിലിന് പാസ്‌വേഡ് സജ്ജമാക്കാനുള്ള ക്ഷണം ലഭിക്കും; മൊബൈൽ നമ്പർ വൺ-ടൈം കോഡ് ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യും."
 }

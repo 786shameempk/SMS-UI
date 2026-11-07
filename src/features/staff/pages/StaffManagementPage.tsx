@@ -21,6 +21,11 @@ import QualificationsExperienceTab from "../components/profile/QualificationsExp
 import StaffStatusBadge from "../components/StaffStatusBadge";
 import BulkStaffImportDialog from "../components/BulkStaffImportDialog";
 import { notifyLoginIssues } from "@/utils/loginIssues";
+import LoginAccountBadge from "@/features/login-accounts/LoginAccountBadge";
+import LoginAccountFilter, { loginFilterLabel, matchesLoginFilter, type LoginFilter } from "@/features/login-accounts/LoginAccountFilter";
+import { ResetPasswordMenuItem, useResetPasswordDialog } from "@/features/login-accounts/ResetPasswordAction";
+import { LoginConflictError } from "@/features/login-accounts/loginConflict";
+import { useLoginStatuses } from "@/features/login-accounts/useLoginStatuses";
 import StaffFormDialog from "../components/StaffFormDialog";
 import PromoteStaffDialog from "../components/PromoteStaffDialog";
 import ResignStaffDialog from "../components/ResignStaffDialog";
@@ -50,6 +55,9 @@ function StaffDirectoryTab() {
   const [search, setSearch] = useState("");
   const [designationFilter, setDesignationFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [loginFilter, setLoginFilter] = useState<LoginFilter>("all");
+  const loginStatuses = useLoginStatuses(staffList.map((s) => s.userId));
+  const resetPassword = useResetPasswordDialog();
 
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -67,7 +75,8 @@ function StaffDirectoryTab() {
       notifyLoginIssues(created, t("Added, but a sign-in account needs attention:"));
       setFormOpen(false);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not add staff member")),
+    // A taken email / mobile number is shown on the form itself, not as a toast.
+    onError: (err) => !(err instanceof LoginConflictError) && toast.error(err instanceof Error ? err.message : t("Could not add staff member")),
   });
 
   const updateMutation = useMutation({
@@ -78,7 +87,7 @@ function StaffDirectoryTab() {
       setFormOpen(false);
       setEditingStaff(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not update staff member")),
+    onError: (err) => !(err instanceof LoginConflictError) && toast.error(err instanceof Error ? err.message : t("Could not update staff member")),
   });
 
   const promoteMutation = useMutation({
@@ -116,14 +125,15 @@ function StaffDirectoryTab() {
       const matchesSearch = !q || fullName.includes(q) || s.employeeId.toLowerCase().includes(q);
       const matchesDesignation = designationFilter === "all" || s.designation === designationFilter;
       const matchesStatus = statusFilter === "all" || s.status === statusFilter;
-      return matchesSearch && matchesDesignation && matchesStatus;
+      return matchesSearch && matchesDesignation && matchesStatus && matchesLoginFilter(Boolean(s.userId), loginFilter);
     });
-  }, [staffList, search, designationFilter, statusFilter]);
+  }, [staffList, search, designationFilter, statusFilter, loginFilter]);
 
   const clearFilters = () => {
     setSearch("");
     setDesignationFilter("all");
     setStatusFilter("all");
+    setLoginFilter("all");
   };
   const activeFilters: ActiveFilter[] = [];
   if (search.trim()) activeFilters.push({ id: "search", label: t("Search"), value: search.trim(), onRemove: () => setSearch("") });
@@ -134,6 +144,9 @@ function StaffDirectoryTab() {
     const label = option ? t(option.label) : statusFilter;
     activeFilters.push({ id: "status", label: t("Status"), value: label, onRemove: () => setStatusFilter("all") });
   }
+
+  if (loginFilter !== "all")
+    activeFilters.push({ id: "login", label: t("Login account"), value: loginFilterLabel(loginFilter, t), onRemove: () => setLoginFilter("all") });
 
   const columns: ColumnDef<StaffMember, unknown>[] = [
     {
@@ -178,6 +191,12 @@ function StaffDirectoryTab() {
       cell: ({ row }) => <StaffStatusBadge status={row.original.status} />,
     },
     {
+      id: "loginAccount",
+      header: t("Login account"),
+      meta: { exportValue: (s) => (s.userId ? "Account linked" : "Not linked") },
+      cell: ({ row }) => <LoginAccountBadge linked={Boolean(row.original.userId)} />,
+    },
+    {
       accessorKey: "joiningDate",
       header: t("Joined"),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{new Date(row.original.joiningDate).toLocaleDateString()}</span>,
@@ -211,6 +230,12 @@ function StaffDirectoryTab() {
                 {t("Promote")}
               </DropdownMenuItem>
             )}
+            <ResetPasswordMenuItem
+              userId={s.userId}
+              status={s.userId ? loginStatuses.get(s.userId) : undefined}
+              personName={`${s.firstName} ${s.lastName}`}
+              onRequest={resetPassword.request}
+            />
             {s.status === "resigned" ? (
               <DropdownMenuItem onClick={() => reactivateMutation.mutate(s.id)}>
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -272,6 +297,7 @@ function StaffDirectoryTab() {
                 ))}
               </SelectContent>
             </Select>
+            <LoginAccountFilter value={loginFilter} onChange={setLoginFilter} />
           </>
         }
         activeFilters={activeFilters}
@@ -298,6 +324,8 @@ function StaffDirectoryTab() {
         selectable
         pageSize={25}
       />
+
+      {resetPassword.dialog}
 
       <BulkStaffImportDialog open={importOpen} onOpenChange={setImportOpen} onFinished={invalidate} />
 

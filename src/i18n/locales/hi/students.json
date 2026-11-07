@@ -248,5 +248,13 @@
   "View student": "छात्र देखें",
   "Who to reach first in a medical or safety emergency.": "चिकित्सा या सुरक्षा आपात स्थिति में सबसे पहले किससे संपर्क करें।",
   "Withdraw": "वापस लें",
-  "Withdraw application": "आवेदन वापस लें"
+  "Withdraw application": "आवेदन वापस लें",
+  "Guardian mobile": "अभिभावक का मोबाइल",
+  "Student mobile": "छात्र का मोबाइल",
+  "Student login": "छात्र का लॉगिन",
+  "Parent login": "अभिभावक का लॉगिन",
+  "Reset student password": "छात्र का पासवर्ड रीसेट करें",
+  "Reset parent password": "अभिभावक का पासवर्ड रीसेट करें",
+  "Parent": "अभिभावक",
+  "The parent's login comes from the parent email and the guardian mobile. If a parent login with either one already exists (a brother or sister), this student is linked to it instead of a new one being made. An email gets an invitation to set a password; a mobile number signs in with a one-time code.": "अभिभावक का लॉगिन अभिभावक के ईमेल और अभिभावक के मोबाइल से बनता है। यदि इनमें से किसी के साथ अभिभावक का लॉगिन पहले से है (भाई या बहन), तो नया बनाने के बजाय यह छात्र उसी से जुड़ जाता है। ईमेल पर पासवर्ड सेट करने का निमंत्रण जाता है; मोबाइल नंबर वन-टाइम कोड से साइन इन करता है।"
 }

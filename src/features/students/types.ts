@@ -37,6 +37,8 @@ export interface GuardianDetails {
   phone: string;
   email?: string;
   occupation?: string;
+  /** The parent login this guardian is linked to (shared by every child of the same parent); absent = not linked. */
+  userId?: string;
 }
 
 export interface EmergencyContact {
@@ -85,6 +87,8 @@ export interface Student {
   id: string;
   /** Only on the response to creating a student: why a sign-in account could not be made or linked. */
   loginIssues?: string[];
+  /** The student's own login, when one is linked. */
+  userId?: string;
   tenantId: string;
   branchId: string;
   admissionNumber: string;
@@ -123,6 +127,8 @@ export interface StudentFormValues {
   guardianPhone: string;
   /** Registering only: each email given creates a login (student / parent role) linked to the student. */
   studentEmail?: string;
+  /** The student's own mobile number: with or without an email it gives the student a login (signed in with a code). */
+  studentMobile?: string;
   parentEmail?: string;
 }
 

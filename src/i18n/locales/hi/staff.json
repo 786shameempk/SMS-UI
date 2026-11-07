@@ -235,5 +235,9 @@
   "Degree is required": "उपाधि आवश्यक है",
   "Institution is required": "संस्थान आवश्यक है",
   "Organization is required": "संगठन आवश्यक है",
-  "Role is required": "भूमिका आवश्यक है"
+  "Role is required": "भूमिका आवश्यक है",
+  "Mobile number": "मोबाइल नंबर",
+  "Give an email, a mobile number or both. An email gets an invitation to set a password; a mobile number signs in with a one-time code. With neither, no sign-in account is created.": "ईमेल, मोबाइल नंबर या दोनों दें। ईमेल पर पासवर्ड सेट करने का निमंत्रण जाता है; मोबाइल नंबर वन-टाइम कोड से साइन इन करता है। दोनों न होने पर साइन-इन खाता नहीं बनता।",
+  "This email or mobile number already has a sign-in account, so it can't be given to a new staff member. Change it, or save the person without a sign-in account.": "इस ईमेल या मोबाइल नंबर का पहले से साइन-इन खाता है, इसलिए इसे नए स्टाफ सदस्य को नहीं दिया जा सकता। इसे बदलें या साइन-इन खाते के बिना सहेजें।",
+  "Save without a sign-in account": "साइन-इन खाते के बिना सहेजें"
 }

@@ -95,6 +95,8 @@ export interface StaffMember {
   id: string;
   /** Only on the response to creating a staff member: why a sign-in account could not be made or linked. */
   loginIssues?: string[];
+  /** The sign-in account linked to this person, when there is one; absent = not linked. */
+  userId?: string;
   tenantId: string;
   branchId: string;
   employeeId: string;
@@ -137,6 +139,8 @@ export interface StaffFormValues {
   reportingToStaffId?: string;
   /** Sign-in role for a new joiner; empty = the designation's own role (none for designations without one). */
   loginRole?: string;
+  /** Registering only: save the profile without a sign-in account (used when the email / mobile already has one). */
+  createWithoutLogin?: boolean;
 }
 
 /** A built-in staff role, or any other role key the school offers (custom roles). */

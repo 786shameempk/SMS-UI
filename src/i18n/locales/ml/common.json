@@ -164,5 +164,16 @@
   "User": "ഉപയോക്താവ്",
   "View": "കാണുക",
   "We couldn't load this": "ഇത് ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല",
-  "Yes": "അതെ"
+  "Yes": "അതെ",
+  "Login account": "ലോഗിൻ അക്കൗണ്ട്",
+  "Account linked": "അക്കൗണ്ട് ബന്ധിപ്പിച്ചു",
+  "Not linked": "ബന്ധിപ്പിച്ചിട്ടില്ല",
+  "All login accounts": "എല്ലാ ലോഗിൻ അക്കൗണ്ടുകളും",
+  "Filter by login account": "ലോഗിൻ അക്കൗണ്ട് അനുസരിച്ച് ഫിൽട്ടർ ചെയ്യുക",
+  "Reset password": "പാസ്‌വേഡ് റീസെറ്റ് ചെയ്യുക",
+  "Reset password?": "പാസ്‌വേഡ് റീസെറ്റ് ചെയ്യണോ?",
+  "Could not reset password": "പാസ്‌വേഡ് റീസെറ്റ് ചെയ്യാൻ കഴിഞ്ഞില്ല",
+  "Password reset for {{name}}. A temporary password has been emailed.": "{{name}} ന്റെ പാസ്‌വേഡ് റീസെറ്റ് ചെയ്തു. താൽക്കാലിക പാസ്‌വേഡ് ഇമെയിൽ ചെയ്തിട്ടുണ്ട്.",
+  "{{name}} will be emailed a temporary password and signed out everywhere. They choose a new password when they next sign in.": "{{name}} ന് താൽക്കാലിക പാസ്‌വേഡ് ഇമെയിൽ ചെയ്യുകയും എല്ലായിടത്തുനിന്നും സൈൻ ഔട്ട് ചെയ്യുകയും ചെയ്യും. അടുത്ത തവണ സൈൻ ഇൻ ചെയ്യുമ്പോൾ അവർ പുതിയ പാസ്‌വേഡ് തിരഞ്ഞെടുക്കും.",
+  "Enter a valid mobile number": "സാധുവായ മൊബൈൽ നമ്പർ നൽകുക"
 }

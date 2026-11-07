@@ -90,7 +90,7 @@ describe("students api", () => {
     expect(calls[0].body).toEqual({
       branchId: "tenant-educore-north", firstName: "Asha", lastName: "Nair", dateOfBirth: "2015-01-01", gender: "Female", sectionId: "s5na",
       rollNumber: "12", address: "Kochi", guardianName: "Ravi", guardianRelation: "Mother", guardianPhone: "999",
-      studentEmail: null, parentEmail: null,
+      studentEmail: null, studentMobile: null, parentEmail: null,
     });
     expect(calls[1].body).toMatchObject({ sectionId: "s5na", firstName: "Asha" });
   });

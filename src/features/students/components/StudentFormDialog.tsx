@@ -30,8 +30,9 @@ const studentFormSchema = z.object({
   address: z.string().min(1, "Address is required"),
   guardianName: z.string().min(1, "Guardian name is required"),
   guardianRelation: z.enum(["father", "mother", "guardian"]),
-  guardianPhone: z.string().min(1, "Guardian phone is required"),
+  guardianPhone: z.string().min(1, "Guardian phone is required").refine((v) => /^\+?[\d\s().-]{8,20}$/.test(v.trim()), "Enter a valid mobile number"),
   studentEmail: z.union([z.literal(""), z.string().trim().email("Enter a valid email address")]).optional(),
+  studentMobile: z.string().refine((v) => v.trim() === "" || /^\+?[\d\s().-]{8,20}$/.test(v.trim()), "Enter a valid mobile number").optional(),
   parentEmail: z.union([z.literal(""), z.string().trim().email("Enter a valid email address")]).optional(),
 });
 
@@ -70,6 +71,7 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
       guardianRelation: "father",
       guardianPhone: "",
       studentEmail: "",
+      studentMobile: "",
       parentEmail: "",
     },
   });
@@ -97,6 +99,7 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
               guardianRelation: primaryGuardian?.relation ?? "father",
               guardianPhone: primaryGuardian?.phone ?? "",
               studentEmail: "",
+              studentMobile: "",
               parentEmail: "",
             }
           : {
@@ -113,6 +116,7 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
               guardianRelation: "father",
               guardianPhone: "",
               studentEmail: "",
+              studentMobile: "",
               parentEmail: "",
             },
       );
@@ -296,7 +300,7 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
                 />
               </div>
               <div className="space-y-1.5 col-span-1">
-                <Label htmlFor="guardianPhone" required>{t("Guardian phone")}</Label>
+                <Label htmlFor="guardianPhone" required>{t("Guardian mobile")}</Label>
                 <Input id="guardianPhone" aria-invalid={errors.guardianPhone ? true : undefined} {...register("guardianPhone")} />
                 {errors.guardianPhone && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.guardianPhone.message ?? "")}</p>}
               </div>
@@ -310,12 +314,17 @@ export default function StudentFormDialog({ open, onOpenChange, student, onSubmi
                   {errors.studentEmail && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentEmail.message ?? "")}</p>}
                 </div>
                 <div className="space-y-1.5">
+                  <Label htmlFor="studentMobile">{t("Student mobile")}</Label>
+                  <Input id="studentMobile" type="tel" inputMode="tel" autoComplete="off" placeholder={t("Optional")} aria-invalid={errors.studentMobile ? true : undefined} {...register("studentMobile")} />
+                  {errors.studentMobile && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.studentMobile.message ?? "")}</p>}
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="parentEmail">{t("Parent email")}</Label>
                   <Input id="parentEmail" type="email" autoComplete="off" placeholder={t("Optional")} aria-invalid={errors.parentEmail ? true : undefined} {...register("parentEmail")} />
                   {errors.parentEmail && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.parentEmail.message ?? "")}</p>}
                 </div>
                 <p className="text-xs text-muted-foreground sm:col-span-2">
-                  {t("Each email you enter gets a login created automatically (student / parent), linked to this student, with a temporary password emailed to it.")}
+                  {t("The parent's login comes from the parent email and the guardian mobile. If a parent login with either one already exists (a brother or sister), this student is linked to it instead of a new one being made. An email gets an invitation to set a password; a mobile number signs in with a one-time code.")}
                 </p>
               </div>
             )}
