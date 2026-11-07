@@ -84,7 +84,7 @@ export default function SubjectsTab() {
     },
     {
       id: "classes",
-      header: t("Classes"),
+      header: t("Standards"),
       cell: ({ row }) => <span className="text-sm text-secondary-foreground block max-w-md truncate">{classNames(row.original.classIds)}</span>,
     },
     {
@@ -116,7 +116,7 @@ export default function SubjectsTab() {
   return (
     <div className="space-y-4">
       <DataTableToolbar>
-        <p className="text-sm text-muted-foreground">{t("Subjects are core or elective and can be linked to one or more classes.")}</p>
+        <p className="text-sm text-muted-foreground">{t("Subjects are core or elective and can be linked to one or more standards.")}</p>
         {!readOnly && (
           <Button
           onClick={() => {

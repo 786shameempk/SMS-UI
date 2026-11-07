@@ -104,5 +104,8 @@
   "Your session has expired. Please sign in again to continue where you left off.": "உங்கள் அமர்வு காலாவதியானது. விட்ட இடத்திலிருந்து தொடர மீண்டும் உள்நுழையவும்.",
   "last active {{time}}": "கடைசியாகச் செயலில் {{time}}",
   "last used {{time}}": "கடைசியாகப் பயன்படுத்தியது {{time}}",
-  "{{device}} removed": "{{device}} அகற்றப்பட்டது"
+  "{{device}} removed": "{{device}} அகற்றப்பட்டது",
+  "WhatsApp OTP": "வாட்ஸ்அப் OTP",
+  "If {{destination}} is registered, we've sent a {{count}}-digit code to it on WhatsApp. It expires in {{minutes}} minutes.": "{{destination}} பதிவு செய்யப்பட்டிருந்தால், வாட்ஸ்அப்பில் {{count}} இலக்க குறியீட்டை அனுப்பியுள்ளோம். இது {{minutes}} நிமிடங்களில் காலாவதியாகும்.",
+  "We'll send a code on WhatsApp if this number is registered and verified.": "இந்த எண் பதிவு செய்யப்பட்டு சரிபார்க்கப்பட்டிருந்தால் வாட்ஸ்அப்பில் குறியீட்டை அனுப்புவோம்."
 }

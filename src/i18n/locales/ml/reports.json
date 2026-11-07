@@ -69,5 +69,19 @@
   "Dropout Analysis": "കൊഴിഞ്ഞുപോക്ക് വിശകലനം",
   "Library Usage": "ലൈബ്രറി ഉപയോഗം",
   "Transport": "ഗതാഗതം",
-  "Hostel Occupancy": "ഹോസ്റ്റൽ ഉപയോഗം"
+  "Hostel Occupancy": "ഹോസ്റ്റൽ ഉപയോഗം",
+  "Favourites": "പ്രിയപ്പെട്ടവ",
+  "Add {{name}} to favourites": "{{name}} പ്രിയപ്പെട്ടവയിൽ ചേർക്കുക",
+  "Remove {{name}} from favourites": "{{name}} പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കുക",
+  "Add to favourites": "പ്രിയപ്പെട്ടവയിൽ ചേർക്കുക",
+  "Remove from favourites": "പ്രിയപ്പെട്ടവയിൽ നിന്ന് നീക്കുക",
+  "We couldn't update your favourites. Please try again.": "പ്രിയപ്പെട്ടവ പുതുക്കാനായില്ല. വീണ്ടും ശ്രമിക്കുക.",
+  "No favourite reports yet": "ഇതുവരെ പ്രിയപ്പെട്ട റിപ്പോർട്ടുകളില്ല",
+  "Select the star on a report in the Report library to keep it here.": "റിപ്പോർട്ട് ലൈബ്രറിയിലെ ഒരു റിപ്പോർട്ടിലെ നക്ഷത്രം തിരഞ്ഞെടുത്താൽ അത് ഇവിടെ ഉണ്ടാകും.",
+  "Browse the report library": "റിപ്പോർട്ട് ലൈബ്രറി കാണുക",
+  "Search your favourite reports…": "പ്രിയപ്പെട്ട റിപ്പോർട്ടുകൾ തിരയുക…",
+  "Search favourite reports": "പ്രിയപ്പെട്ട റിപ്പോർട്ടുകൾ തിരയുക",
+  "{{count}} favourite reports": "{{count}} പ്രിയപ്പെട്ട റിപ്പോർട്ടുകൾ",
+  "Try a different word.": "മറ്റൊരു വാക്ക് പരീക്ഷിക്കുക.",
+  "Select the star on a report to add it to your Favourites tab.": "ഒരു റിപ്പോർട്ട് പ്രിയപ്പെട്ടവ ടാബിൽ ചേർക്കാൻ അതിലെ നക്ഷത്രം തിരഞ്ഞെടുക്കുക."
 }

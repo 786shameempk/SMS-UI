@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { History, Lock, Star } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { History, Lock, Star, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/cn";
-import { listReportCatalog } from "./api";
+import { addReportFavourite, listReportCatalog, listReportFavourites, removeReportFavourite } from "./api";
 import { categoryIcon } from "./categoryIcon";
 import ReportViewer from "./ReportViewer";
 import type { ReportDescriptor } from "./types";
@@ -75,15 +77,34 @@ export function matchesReport(report: ReportDescriptor, term: string): boolean {
   return [report.title, report.description, report.categoryTitle].some((text) => text.toLowerCase().includes(needle));
 }
 
-function ReportCard({ report, onOpen }: { report: ReportDescriptor; onOpen: () => void }) {
+/** The star on a report card: adds the report to (or takes it out of) this person's favourites. */
+function FavouriteStar({ title, active, onToggle }: { title: string; active: boolean; onToggle: () => void }) {
+  const { t } = useTranslation("reports");
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      aria-label={active ? t("Remove {{name}} from favourites", { name: title }) : t("Add {{name}} to favourites", { name: title })}
+      title={active ? t("Remove from favourites") : t("Add to favourites")}
+      onClick={onToggle}
+      className="absolute end-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Star className={cn("h-4 w-4", active && "fill-amber-400 text-amber-500")} aria-hidden="true" />
+    </button>
+  );
+}
+
+function ReportCard({ report, onOpen, favourite, onToggleFavourite }: { report: ReportDescriptor; onOpen: () => void; favourite: boolean; onToggleFavourite: () => void }) {
   const { t } = useTranslation("reports");
   const Icon = categoryIcon(report.category);
   const id = `report-card-${report.key}`;
   return (
-    <button type="button" id={id} data-report-key={report.key} onClick={onOpen} aria-describedby={`${id}-info`} className="group block h-full text-start focus-visible:outline-none">
+    <div className="relative h-full">
+    <FavouriteStar title={report.title} active={favourite} onToggle={onToggleFavourite} />
+    <button type="button" id={id} data-report-key={report.key} onClick={onOpen} aria-describedby={`${id}-info`} className="group block h-full w-full text-start focus-visible:outline-none">
       <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2">
         <CardContent className="flex h-full flex-col gap-2 p-4">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-2 pe-8">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text" aria-hidden="true">
               <Icon className="h-4.5 w-4.5" />
             </span>
@@ -104,6 +125,7 @@ function ReportCard({ report, onOpen }: { report: ReportDescriptor; onOpen: () =
         </CardContent>
       </Card>
     </button>
+    </div>
   );
 }
 
@@ -117,7 +139,7 @@ function CardGrid({ children }: { children: React.ReactNode }) {
  * scrolling row of chips on phones) with counts, a search that announces how many reports match, and cards grouped by category.
  * Opening a report moves focus to its heading, and closing it returns focus to the card it came from.
  */
-export default function ReportLibraryTab() {
+export default function ReportLibraryTab({ view = "all", onBrowseLibrary }: { view?: "all" | "favourites"; onBrowseLibrary?: () => void } = {}) {
   const { t } = useTranslation("reports");
   const catalog = useQuery({ queryKey: ["reports", "catalog"], queryFn: listReportCatalog, staleTime: 60_000 });
   const [search, setSearch] = useState("");
@@ -125,6 +147,28 @@ export default function ReportLibraryTab() {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [recent, setRecent] = useState<string[]>(readRecent);
   const returnTo = useRef<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // This person's starred reports. They live on the server (so they follow the person), and a failure to load them must never
+  // hide the library: the list is simply empty until it can be read.
+  const favouritesQuery = useQuery({ queryKey: ["reports", "favourites"], queryFn: listReportFavourites, staleTime: 60_000, retry: 1 });
+  const favouriteKeys = useMemo(() => favouritesQuery.data ?? [], [favouritesQuery.data]);
+  const toggleFavourite = useMutation({
+    mutationFn: ({ key, add }: { key: string; add: boolean }) => (add ? addReportFavourite(key) : removeReportFavourite(key)),
+    onMutate: async ({ key, add }) => {
+      await queryClient.cancelQueries({ queryKey: ["reports", "favourites"] });
+      const previous = queryClient.getQueryData<string[]>(["reports", "favourites"]);
+      queryClient.setQueryData<string[]>(["reports", "favourites"], (current = []) => (add ? [...current.filter((k) => k !== key), key] : current.filter((k) => k !== key)));
+      return { previous };
+    },
+    onError: (error, _vars, context) => {
+      queryClient.setQueryData(["reports", "favourites"], context?.previous);
+      toast.error(error instanceof Error ? error.message : t("We couldn't update your favourites. Please try again."));
+    },
+    onSuccess: (list) => queryClient.setQueryData(["reports", "favourites"], list),
+  });
+  const isFavourite = (key: string) => favouriteKeys.includes(key);
+  const flipFavourite = (key: string) => toggleFavourite.mutate({ key, add: !isFavourite(key) });
 
   const [usage, setUsage] = useState<Record<string, number>>(readUsage);
 
@@ -140,6 +184,7 @@ export default function ReportLibraryTab() {
   const recentReports = recent.map((k) => reports.find((r) => r.key === k)).filter((r): r is ReportDescriptor => Boolean(r));
 
   const frequent = useMemo(() => frequentReports(reports, usage), [reports, usage]);
+  const favouriteReports = favouriteKeys.map((k) => reports.find((r) => r.key === k)).filter((r): r is ReportDescriptor => Boolean(r));
 
   const openReport = (key: string) => {
     returnTo.current = key;
@@ -175,6 +220,41 @@ export default function ReportLibraryTab() {
   }
   if (reports.length === 0) {
     return <EmptyState title={t("No reports are available to you")} description={t("Reports appear here when your school's plan includes Reports & Analytics and your role may view them.")} />;
+  }
+
+  // The Favourites tab: only this person's starred reports, in the order they were added.
+  if (view === "favourites") {
+    const shown = favouriteReports.filter((r) => matchesReport(r, search));
+    if (favouriteReports.length === 0) {
+      return (
+        <EmptyState
+          icon={Star}
+          title={t("No favourite reports yet")}
+          description={t("Select the star on a report in the Report library to keep it here.")}
+          action={onBrowseLibrary ? <Button onClick={onBrowseLibrary}>{t("Browse the report library")}</Button> : undefined}
+        />
+      );
+    }
+    return (
+      <div className="space-y-4">
+        <div role="search" className="space-y-2">
+          <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search your favourite reports…")} aria-label={t("Search favourite reports")} containerClassName="sm:max-w-lg" />
+          <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+            {t("{{count}} favourite reports", { count: shown.length })}
+            {search.trim() ? ` · “${search.trim()}”` : ""}
+          </p>
+        </div>
+        {shown.length === 0 ? (
+          <EmptyState title={t("No reports match your search")} description={t("Try a different word.")} />
+        ) : (
+          <CardGrid>
+            {shown.map((r) => (
+              <ReportCard key={r.key} report={r} onOpen={() => openReport(r.key)} favourite onToggleFavourite={() => flipFavourite(r.key)} />
+            ))}
+          </CardGrid>
+        )}
+      </div>
+    );
   }
 
   const chips = [{ key: "all", title: t("All categories"), count: reports.length }, ...categories];
@@ -218,15 +298,22 @@ export default function ReportLibraryTab() {
           </p>
         </div>
 
+        {!search && category === "all" && favouritesQuery.isSuccess && (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Star className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("Select the star on a report to add it to your Favourites tab.")}
+          </p>
+        )}
+
         {!search && category === "all" && frequent.length > 0 && (
           <section aria-labelledby="reports-frequent" className="space-y-2">
             <h3 id="reports-frequent" className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <Star className="h-4 w-4" aria-hidden="true" />
+              <TrendingUp className="h-4 w-4" aria-hidden="true" />
               {t("Frequently used")}
             </h3>
             <CardGrid>
               {frequent.map((r) => (
-                <ReportCard key={r.key} report={r} onOpen={() => openReport(r.key)} />
+                <ReportCard key={r.key} report={r} onOpen={() => openReport(r.key)} favourite={isFavourite(r.key)} onToggleFavourite={() => flipFavourite(r.key)} />
               ))}
             </CardGrid>
           </section>
@@ -240,7 +327,7 @@ export default function ReportLibraryTab() {
             </h3>
             <CardGrid>
               {recentReports.map((r) => (
-                <ReportCard key={r.key} report={r} onOpen={() => openReport(r.key)} />
+                <ReportCard key={r.key} report={r} onOpen={() => openReport(r.key)} favourite={isFavourite(r.key)} onToggleFavourite={() => flipFavourite(r.key)} />
               ))}
             </CardGrid>
           </section>
@@ -260,7 +347,7 @@ export default function ReportLibraryTab() {
                   {visible
                     .filter((r) => r.category === c.key)
                     .map((r) => (
-                      <ReportCard key={r.key} report={r} onOpen={() => openReport(r.key)} />
+                      <ReportCard key={r.key} report={r} onOpen={() => openReport(r.key)} favourite={isFavourite(r.key)} onToggleFavourite={() => flipFavourite(r.key)} />
                     ))}
                 </CardGrid>
               </section>

@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosInstance } from "axios";
-import { academicHttpClient, campusHttpClient, engagementHttpClient, extractApiErrorMessage, financeHttpClient, meetingHttpClient } from "@/lib/httpClient";
+import { academicHttpClient, authHttpClient, campusHttpClient, engagementHttpClient, extractApiErrorMessage, financeHttpClient, meetingHttpClient } from "@/lib/httpClient";
 import type { ReportAccess, ReportDescriptor, ReportPage, ReportQuery, ReportRow, ReportSummaryItem } from "./types";
 
 /** Only filters with a value are sent; empty ones mean "no filter". */
@@ -36,6 +36,17 @@ const DEFAULT_SERVICE = "academic";
 function clientFor(service: string | undefined): AxiosInstance {
   return REPORT_SERVICES[service ?? DEFAULT_SERVICE] ?? academicHttpClient;
 }
+
+// ── Favourites: the signed-in person's own starred reports, kept by AuthService so they follow them to any device ──
+
+/** The report keys this person starred, in the order they were added. */
+export const listReportFavourites = () => unwrap(authHttpClient.get<string[]>("/api/account/report-favourites"));
+
+export const addReportFavourite = (reportKey: string) =>
+  unwrap(authHttpClient.put<string[]>(`/api/account/report-favourites/${encodeURIComponent(reportKey)}`));
+
+export const removeReportFavourite = (reportKey: string) =>
+  unwrap(authHttpClient.delete<string[]>(`/api/account/report-favourites/${encodeURIComponent(reportKey)}`));
 
 export interface ReportCatalog {
   reports: ReportDescriptor[];

@@ -11,13 +11,13 @@ const challenge = { challengeId: "c1", expiresInSeconds: 300, resendAfterSeconds
 
 describe("one-time code api", () => {
   it("reads which methods the server offers, and treats any failure as password only", async () => {
-    const calls = stubClient(authHttpClient, { "GET /api/auth/methods": { password: true, otpEmail: true, otpMobile: false } });
-    expect(await otp.getAuthMethods()).toEqual({ password: true, otpEmail: true, otpMobile: false });
+    const calls = stubClient(authHttpClient, { "GET /api/auth/methods": { password: true, otpEmail: true, otpMobile: false, otpWhatsApp: false } });
+    expect(await otp.getAuthMethods()).toEqual({ password: true, otpEmail: true, otpMobile: false, otpWhatsApp: false });
     expect((calls[0].config as { params: unknown }).params).toEqual({ subdomain: null }); // the school the page was opened for, so a pilot can be per school
 
     vi.restoreAllMocks();
     vi.spyOn(authHttpClient, "get").mockRejectedValue(apiError(500));
-    expect(await otp.getAuthMethods()).toEqual({ password: true, otpEmail: false, otpMobile: false });
+    expect(await otp.getAuthMethods()).toEqual({ password: true, otpEmail: false, otpMobile: false, otpWhatsApp: false });
   });
 
   it("requests, resends and verifies a code for the school the page was opened on", async () => {

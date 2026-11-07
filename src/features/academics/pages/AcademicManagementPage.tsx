@@ -15,7 +15,7 @@ export default function AcademicManagementPage() {
     <PageContainer>
       <PageHeader
         title={t("Academic management")}
-        description={t("Foundational master data — academic years, terms, departments, classes, sections, and subjects — used across attendance, timetable, and examinations.")}
+        description={t("Foundational master data — academic years, terms, departments, standards, divisions, and subjects — used across attendance, timetable, and examinations.")}
       />
 
       <Tabs defaultValue="academic-years">
@@ -23,9 +23,9 @@ export default function AcademicManagementPage() {
           <TabsTrigger value="academic-years">{t("Academic Years")}</TabsTrigger>
           <TabsTrigger value="terms">{t("Terms")}</TabsTrigger>
           <TabsTrigger value="departments">{t("Departments")}</TabsTrigger>
-          <TabsTrigger value="classes-sections">{t("Classes & Sections")}</TabsTrigger>
+          <TabsTrigger value="classes-sections">{t("Standards & Divisions")}</TabsTrigger>
           <TabsTrigger value="subjects">{t("Subjects")}</TabsTrigger>
-          <TabsTrigger value="capacity">{t("Class Capacity")}</TabsTrigger>
+          <TabsTrigger value="capacity">{t("Standard Capacity")}</TabsTrigger>
           <TabsTrigger value="calendar">{t("Academic Calendar")}</TabsTrigger>
         </TabsList>
         <TabsContent value="academic-years">

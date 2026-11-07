@@ -13,6 +13,8 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
+      // The dashboard tests run on the sample-data source (the product itself is always live, see dashboard/dataSource.ts).
+      env: { VITE_ALLOW_DEMO_DATA: "true", VITE_DASHBOARD_DATA_SOURCE: "mock" },
       environment: "jsdom",
       globals: true,
       setupFiles: ["./src/test/setup.ts"],

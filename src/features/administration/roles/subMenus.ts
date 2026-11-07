@@ -33,7 +33,7 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     routeId: "academic-setup.home",
     matrixModule: "Academic Setup",
     title: "Academic management",
-    tabs: [t("academic-years", "Academic Years"), t("terms", "Terms"), t("departments", "Departments"), t("classes-sections", "Classes & Sections"), t("subjects", "Subjects"), t("capacity", "Class Capacity"), t("calendar", "Academic Calendar")],
+    tabs: [t("academic-years", "Academic Years"), t("terms", "Terms"), t("departments", "Departments"), t("classes-sections", "Standards & Divisions"), t("subjects", "Subjects"), t("capacity", "Standard Capacity"), t("calendar", "Academic Calendar")],
   },
   { routeId: "attendance.home", matrixModule: "Attendance", title: "Attendance management", tabs: [t("mark-attendance", "Mark Attendance"), t("staff-attendance", "Staff Attendance / My Leave"), t("reports", "Reports")] },
   {

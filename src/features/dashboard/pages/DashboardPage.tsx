@@ -4,13 +4,12 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
-import { Check, Users, FlaskConical, Layers, LayoutGrid, Move, Pencil, Plus, RotateCcw, RotateCw, SplitSquareHorizontal, Wifi, WifiOff } from "lucide-react";
+import { Check, Users, Layers, LayoutGrid, Move, Pencil, Plus, RotateCcw, RotateCw, SplitSquareHorizontal, WifiOff } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useUiStore } from "@/store/useUiStore";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { timeOfDayGreeting, WelcomeHero } from "@/components/common/WelcomeHero";
 import { cn } from "@/utils/cn";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ToggleChip } from "@/components/ui/toggle-chip";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +18,7 @@ import { PageContainer } from "@/components/ui/page";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { canSwitchScopeView } from "../scopeApi";
 import { describeDateRange } from "../dateRange";
-import { useDashboardDataSource, type DashboardDataSource } from "../dataSource";
+import { useDashboardDataSource } from "../dataSource";
 import { quickActionsFor, ROLE_TAGLINE } from "../quickActions";
 import { buildContext, useDashboardIdentity, useDashboardUpdatedAt } from "../useDashboard";
 import { useDashboardLayout } from "../useDashboardLayout";
@@ -86,11 +85,6 @@ const SCOPE_VIEW_OPTIONS: Array<{ value: DashboardScopeView; label: string; icon
   { value: "segregated", label: "Segregated", icon: SplitSquareHorizontal },
 ];
 
-const SOURCE_OPTIONS: Array<{ value: DashboardDataSource; label: string; icon: typeof Layers }> = [
-  { value: "live", label: "Live", icon: Wifi },
-  { value: "mock", label: "Demo", icon: FlaskConical },
-];
-
 
 function updatedLabel(ms: number, now: number, t: TFunction): string {
   const s = Math.max(0, Math.round((now - ms) / 1000));
@@ -115,7 +109,7 @@ export default function DashboardPage() {
   const setScopeView = useUiStore((s) => s.setDashboardScopeView);
   const dateRange = useUiStore((s) => s.dashboardDateRange);
   const setDateRange = useUiStore((s) => s.setDashboardDateRange);
-  const { source, canSwitch, setSource } = useDashboardDataSource();
+  const { source } = useDashboardDataSource();
   const online = useOnlineStatus();
 
   const allBranches = canSwitchScopeView(user);
@@ -213,7 +207,6 @@ export default function DashboardPage() {
   }
   if (!ctx || layout.isLoading) return <DashboardSkeleton />;
 
-  const isDemo = source === "mock";
   const scopeShown = visible.some((i) => i.id === "scopeOverview");
 
   return (
@@ -225,7 +218,6 @@ export default function DashboardPage() {
         subtitle={ROLE_TAGLINE[role] ? t(ROLE_TAGLINE[role]) : undefined}
         aside={
           <div className="flex flex-wrap items-center gap-2">
-            {canSwitch && <Segmented label={t("Data source")} value={source} onChange={setSource} options={SOURCE_OPTIONS} />}
             {onOverview && children.length > 1 && (
               <Select value={focusedChild ? childId : "all"} onValueChange={setChildId}>
                 <SelectTrigger className="h-9 w-48" aria-label={t("Show the dashboard for")}>
@@ -351,20 +343,6 @@ export default function DashboardPage() {
         <div role="status" className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-muted-foreground">
           <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden="true" />
           {t("We couldn't load your saved layout, so this is the copy on this device. Changes will save here until the server is back.")}
-        </div>
-      )}
-
-      {isDemo && (
-        <div role="status" className="flex flex-wrap items-center gap-2 rounded-lg border border-warning/30 bg-warning-soft px-3.5 py-2.5 text-sm text-warning-strong">
-          <Badge variant="warning" dot>
-            {t("Demo data")}
-          </Badge>
-          <span>{t("These figures are sample values, not your school's records.")}</span>
-          {canSwitch && (
-            <button type="button" onClick={() => setSource("live")} className="font-medium underline underline-offset-4 cursor-pointer">
-              {t("Switch to live data")}
-            </button>
-          )}
         </div>
       )}
 

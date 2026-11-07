@@ -69,5 +69,19 @@
   "Dropout Analysis": "இடைநிற்றல் பகுப்பாய்வு",
   "Library Usage": "நூலக பயன்பாடு",
   "Transport": "போக்குவரத்து",
-  "Hostel Occupancy": "விடுதி பயன்பாடு"
+  "Hostel Occupancy": "விடுதி பயன்பாடு",
+  "Favourites": "விருப்பமானவை",
+  "Add {{name}} to favourites": "{{name}} ஐ விருப்பமானவையில் சேர்",
+  "Remove {{name}} from favourites": "{{name}} ஐ விருப்பமானவையிலிருந்து நீக்கு",
+  "Add to favourites": "விருப்பமானவையில் சேர்",
+  "Remove from favourites": "விருப்பமானவையிலிருந்து நீக்கு",
+  "We couldn't update your favourites. Please try again.": "விருப்பமானவற்றை புதுப்பிக்க முடியவில்லை. மீண்டும் முயலவும்.",
+  "No favourite reports yet": "இன்னும் விருப்பமான அறிக்கைகள் இல்லை",
+  "Select the star on a report in the Report library to keep it here.": "அறிக்கை நூலகத்தில் ஒரு அறிக்கையின் நட்சத்திரத்தைத் தேர்ந்தெடுத்தால் அது இங்கே இருக்கும்.",
+  "Browse the report library": "அறிக்கை நூலகத்தைப் பார்",
+  "Search your favourite reports…": "விருப்பமான அறிக்கைகளைத் தேடு…",
+  "Search favourite reports": "விருப்பமான அறிக்கைகளைத் தேடு",
+  "{{count}} favourite reports": "{{count}} விருப்பமான அறிக்கைகள்",
+  "Try a different word.": "வேறு சொல்லை முயலவும்.",
+  "Select the star on a report to add it to your Favourites tab.": "அறிக்கையை விருப்பமானவை தாவலில் சேர்க்க அதன் நட்சத்திரத்தைத் தேர்ந்தெடுக்கவும்."
 }

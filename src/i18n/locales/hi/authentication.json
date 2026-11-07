@@ -104,5 +104,8 @@
   "Your session has expired. Please sign in again to continue where you left off.": "आपका सत्र समाप्त हो गया है। जहां छोड़ा था वहीं से जारी रखने के लिए फिर साइन इन करें।",
   "last active {{time}}": "अंतिम सक्रिय {{time}}",
   "last used {{time}}": "अंतिम उपयोग {{time}}",
-  "{{device}} removed": "{{device}} हटा दिया गया"
+  "{{device}} removed": "{{device}} हटा दिया गया",
+  "WhatsApp OTP": "व्हाट्सऐप OTP",
+  "If {{destination}} is registered, we've sent a {{count}}-digit code to it on WhatsApp. It expires in {{minutes}} minutes.": "यदि {{destination}} पंजीकृत है, तो हमने उस पर व्हाट्सऐप से {{count}} अंकों का कोड भेजा है। यह {{minutes}} मिनट में समाप्त हो जाएगा।",
+  "We'll send a code on WhatsApp if this number is registered and verified.": "यदि यह नंबर पंजीकृत और सत्यापित है, तो हम व्हाट्सऐप पर कोड भेजेंगे।"
 }

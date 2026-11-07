@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
+import DepartmentSelect from "@/features/academics/components/DepartmentSelect";
 import type { Role } from "@/features/administration/roles/types";
 import type { SystemUser, UserFormValues } from "../types";
 
@@ -110,7 +111,7 @@ export default function UserFormDialog({ open, onOpenChange, user, roles, onSubm
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="department">{t("Department")}</Label>
-              <Input id="department" {...register("department")} />
+              <Controller control={control} name="department" render={({ field }) => <DepartmentSelect id="department" value={field.value} onChange={field.onChange} allowNone />} />
             </div>
           </div>
 

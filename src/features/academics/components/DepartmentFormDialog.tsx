@@ -51,7 +51,7 @@ export default function DepartmentFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEdit ? t("Edit department") : t("New department / stream")}</DialogTitle>
-          <DialogDescription>{t("Departments and streams group classes, e.g. Primary, Secondary, Science, Commerce.")}</DialogDescription>
+          <DialogDescription>{t("Departments and streams group standards, e.g. Primary, Secondary, Science, Commerce.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">

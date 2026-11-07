@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, ArrowRight, Check, ChevronDown, Clock, Eye, EyeOff, Lock, Mail, ShieldCheck, Smartphone } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, ChevronDown, Clock, Eye, EyeOff, Lock, Mail, MessageCircle, ShieldCheck, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -296,14 +296,14 @@ function CredentialsForm() {
   );
 }
 
-type SignInMethod = "password" | "mobile" | "email";
+type SignInMethod = "password" | "mobile" | "whatsapp" | "email";
 
 const METHOD_KEY = "sms.signInMethod";
 
 function readSavedMethod(): SignInMethod | null {
   try {
     const saved = localStorage.getItem(METHOD_KEY);
-    return saved === "mobile" || saved === "email" || saved === "password" ? saved : null;
+    return saved === "mobile" || saved === "whatsapp" || saved === "email" || saved === "password" ? saved : null;
   } catch {
     return null;
   }
@@ -327,6 +327,7 @@ function SignInMethods() {
 
   const options: Array<{ value: SignInMethod; label: string; icon: typeof Lock }> = [{ value: "password", label: t("Password"), icon: Lock }];
   if (methods?.otpMobile) options.push({ value: "mobile", label: t("Mobile OTP"), icon: Smartphone });
+  if (methods?.otpWhatsApp) options.push({ value: "whatsapp", label: t("WhatsApp OTP"), icon: MessageCircle });
   if (methods?.otpEmail) options.push({ value: "email", label: t("Email OTP"), icon: Mail });
   const method = options.some((o) => o.value === chosen) ? chosen : "password";
 
