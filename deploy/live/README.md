@@ -156,7 +156,7 @@ New settings in `.env` (all optional; the defaults work and every secret default
 |---|---|
 | `PAYMENTS_APP_BASE_URL`, `PAYMENTS_API_BASE_URL` | Where Cashfree, PayU and Stripe send the payer back to. Default to `https://$APP_DOMAIN` and `https://$APP_DOMAIN/services/finance`. |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Optional platform-wide Razorpay account. Schools normally save their own gateway keys in the app (Fees → Payment gateways). |
-| `PLATFORM_EMAIL_PROVIDER`, `SMTP_*` | Default e-mail provider for schools that have not set up their own (Messaging). SMS and WhatsApp are set per school in the app. |
+| `PLATFORM_EMAIL_PROVIDER`, `SMTP_*` | Default e-mail provider for schools that have not set up their own (Messaging); also sends one-time codes and login invitations. `SMTP_FROM_EMAIL` must be a sender the provider accepts (with Azure Communication Services, e.g. `DoNotReply@<guid>.azurecomm.net`). SMS and WhatsApp are set per school in the app. |
 | `ATTENDANCE_SIGNING_KEY` | Signs QR attendance passes and card hashes. Empty = derived from the JWT key. Changing it invalidates printed passes. |
 | `FACE_RECOGNITION_PROVIDER`, `COMPREFACE_URL`, `COMPREFACE_API_KEY` | Face attendance. `None` by default (off). |
 | `RETENTION_VISITOR_ID_PROOF_DAYS`, `RETENTION_VISITOR_SCAN_DAYS`, `RETENTION_CERTIFICATE_VERIFICATION_DAYS` | How long visitor and certificate-check records are kept (90 / 90 / 180; `0` keeps them). |
@@ -180,7 +180,7 @@ is kept in each app's `.env.production` in the SMS Mobile repo; change it there 
 
 ## 6c. Sign-in with a one-time code
 
-Mobile and email one-time-code sign-in is **off** until you set `OTP_ENABLED=true` in `.env`. Before turning it on set `OTP_HASH_KEY` (32+ characters, not the JWT secret), working SMTP for email codes and, for SMS codes, a real provider (`SMS_PROVIDER=Msg91` or `Twilio` with its keys; production refuses `Logging`). Use `OTP_PILOT_TENANTS` to try it with a few schools first. Mobile codes only go to a verified phone number. Full rollout steps are in `docs/OTP_ROLLOUT.md`.
+Email, WhatsApp and mobile (SMS) one-time-code sign-in is **off** until you set `OTP_ENABLED=true` in `.env`. Before turning it on set `OTP_HASH_KEY` (32+ characters, not the JWT secret), working SMTP for email codes and, for SMS codes, a real provider (`SMS_PROVIDER=Msg91` or `Twilio` with its keys; production refuses `Logging`). Use `OTP_PILOT_TENANTS` to try it with a few schools first. Mobile codes only go to a verified phone number. Full rollout steps are in `docs/OTP_ROLLOUT.md`.
 
 ## Updating
 
