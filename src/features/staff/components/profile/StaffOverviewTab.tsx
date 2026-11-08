@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { uploadStaffPhoto } from "../../api";
 import type { StaffMember } from "../../types";
+import { roleLabel } from "@/features/staff/constants";
 
 function initialsOf(first: string, last: string) {
   return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
@@ -83,7 +84,7 @@ export default function StaffOverviewTab({ staff, readOnly = false }: { staff: S
                 {staff.firstName} {staff.lastName}
               </p>
               <p className="text-sm text-muted-foreground">
-                {t(staff.designation)} &middot; {staff.department}
+                {t(roleLabel(staff))} &middot; {staff.department}
               </p>
             </div>
           </div>

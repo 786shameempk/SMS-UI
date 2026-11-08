@@ -29,7 +29,8 @@ import {
   type AdminWidgetSettingInput,
 } from "../layoutApi";
 import { WIDGET_CATEGORY_LABEL, WIDGETS_BY_ID, type DashboardWidgetId, type WidgetCategory } from "../widgets";
-import { ASSIGNABLE_ROLES, ROLE_NAME, SCHOOL_ROLES } from "./roles";
+import { ASSIGNABLE_ROLES, ROLE_NAME } from "./roles";
+import { useDashboardRoles } from "./useDashboardRoles";
 import WidgetSettingDialog from "./WidgetSettingDialog";
 
 const QUERY_KEY = ["dashboard-admin-widgets"] as const;
@@ -58,6 +59,8 @@ function refreshLabel(seconds: number, t: TFunction): string {
 
 function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidgetSetting; onEdit: () => void; onToggle: (enabled: boolean) => void; toggling: boolean }) {
   const { t } = useTranslation("dashboard");
+  const { roles: roleOptions } = useDashboardRoles();
+  const roleLabel = (r: UserRole) => roleOptions.find((o) => o.value === r)?.label ?? ROLE_NAME[r];
   const roles = rolesOf(widget);
   const name = t(widget.name);
   return (
@@ -74,7 +77,7 @@ function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidget
         </div>
         <p className="truncate text-xs text-muted-foreground">{t(WIDGETS_BY_ID.get(widget.id)?.description ?? "")}</p>
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">{roles.length === ASSIGNABLE_ROLES.length ? t("Every role") : roles.map((r) => t(ROLE_NAME[r])).join(", ")}</span>
+          <span className="font-medium text-foreground">{roles.length === ASSIGNABLE_ROLES.length ? t("Every role") : roles.map((r) => t(roleLabel(r))).join(", ")}</span>
           {" · "}
           {t(WIDTH_LABEL[widget.defaultWidth])}, {t(HEIGHT_LABEL[widget.defaultHeight]).toLowerCase()}
           {" · "}
@@ -96,6 +99,7 @@ function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidget
 
 function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation("dashboard");
+  const { roles: roleOptions } = useDashboardRoles();
   const [role, setRole] = useState<UserRole>("teacher");
   const reset = useMutation({
     mutationFn: () => resetRoleDashboards(role),
@@ -127,11 +131,13 @@ function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {SCHOOL_ROLES.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {t(ROLE_NAME[r])}
-                </SelectItem>
-              ))}
+              {roleOptions
+                .filter((r) => r.value !== "superAdmin")
+                .map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {t(r.label)}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </FormField>
@@ -160,6 +166,7 @@ export default function WidgetManagementTab() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<DashboardWidgetId | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
+  const { roles: roleOptions } = useDashboardRoles();
 
   const afterChange = (updated: AdminWidgetSetting) => {
     queryClient.setQueryData<AdminWidgetSetting[]>(QUERY_KEY, (old) => old?.map((w) => (w.id === updated.id ? updated : w)));
@@ -232,9 +239,9 @@ export default function WidgetManagementTab() {
             <ToggleChip pressed={roleFilter === "all"} onClick={() => setRoleFilter("all")}>
               {t("All roles")}
             </ToggleChip>
-            {ASSIGNABLE_ROLES.map((r) => (
-              <ToggleChip key={r} pressed={roleFilter === r} onClick={() => setRoleFilter(r)}>
-                {t(ROLE_NAME[r])}
+            {roleOptions.map((r) => (
+              <ToggleChip key={r.value} pressed={roleFilter === r.value} onClick={() => setRoleFilter(r.value)}>
+                {t(r.label)}
               </ToggleChip>
             ))}
           </div>

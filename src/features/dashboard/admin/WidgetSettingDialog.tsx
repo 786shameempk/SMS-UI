@@ -14,6 +14,7 @@ import { HEIGHT_LABEL, WIDTH_LABEL } from "../layout";
 import type { AdminWidgetSetting, AdminWidgetSettingInput } from "../layoutApi";
 import { WIDGET_HEIGHTS, WIDGET_WIDTHS, WIDGETS_BY_ID, type WidgetHeight, type WidgetWidth } from "../widgets";
 import { ASSIGNABLE_ROLES, ROLE_NAME } from "./roles";
+import { useDashboardRoles } from "./useDashboardRoles";
 
 /** Refresh choices (seconds). The server accepts 0 or 15 s - 24 h. Labels are translated where they render. */
 const REFRESH_OPTIONS: Array<{ value: number; label: string }> = [
@@ -48,6 +49,7 @@ export default function WidgetSettingDialog({
 }) {
   const { t } = useTranslation("dashboard");
   const config = WIDGETS_BY_ID.get(widget.id);
+  const { roles: roleOptions } = useDashboardRoles();
   const possibleRoles: UserRole[] = widget.catalogRoles ?? ASSIGNABLE_ROLES;
   const [form, setForm] = useState<AdminWidgetSettingInput>(() => ({
     enabled: widget.enabled,
@@ -111,7 +113,7 @@ export default function WidgetSettingDialog({
             <div role="group" aria-label={t("Roles that get this widget")} className="flex flex-wrap gap-1.5">
               {possibleRoles.map((role) => (
                 <ToggleChip key={role} size="lg" pressed={selectedRoles.includes(role)} onClick={() => toggleRole(role)}>
-                  {t(ROLE_NAME[role])}
+                  {t(roleOptions.find((o) => o.value === role)?.label ?? ROLE_NAME[role])}
                 </ToggleChip>
               ))}
             </div>

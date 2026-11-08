@@ -162,5 +162,6 @@
   "Add departments in Academic setup first.": "ആദ്യം അക്കാദമിക് സെറ്റപ്പിൽ വകുപ്പുകൾ ചേർക്കുക.",
   "Open Academic setup": "അക്കാദമിക് സെറ്റപ്പ് തുറക്കുക",
   "Select a department": "ഒരു വകുപ്പ് തിരഞ്ഞെടുക്കുക",
-  "No department": "വകുപ്പില്ല"
+  "No department": "വകുപ്പില്ല",
+  "Clear selection (no department)": "തിരഞ്ഞെടുപ്പ് മായ്ക്കുക (വകുപ്പില്ല)"
 }

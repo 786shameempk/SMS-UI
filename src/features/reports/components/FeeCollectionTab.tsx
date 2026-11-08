@@ -7,6 +7,7 @@ import { CHART_AXIS_TICK, CHART_DANGER, CHART_GRID_COLOR, CHART_PRIMARY, CHART_T
 import { getFeeCollectionReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 export default function FeeCollectionTab() {
   const { t } = useTranslation("reports");
@@ -16,6 +17,9 @@ export default function FeeCollectionTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={t("Fee Collection")} sections={[
+          { title: t("Monthly collection"), headers: [t("Month"), t("Collected"), t("Pending")], rows: data.monthly.map((m) => [m.month, m.collected, m.pending]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatTile label={t("Collected")} value={formatCurrency(data.totalCollected)} icon={Wallet} />
         <StatTile label={t("Pending")} value={formatCurrency(data.totalPending)} icon={WalletCards} />

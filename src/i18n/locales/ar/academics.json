@@ -162,5 +162,6 @@
   "Add departments in Academic setup first.": "أضف الأقسام في الإعداد الأكاديمي أولاً.",
   "Open Academic setup": "افتح الإعداد الأكاديمي",
   "Select a department": "اختر قسماً",
-  "No department": "بدون قسم"
+  "No department": "بدون قسم",
+  "Clear selection (no department)": "مسح الاختيار (بدون قسم)"
 }

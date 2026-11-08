@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { listStaff } from "@/features/staff/api";
 import { AUDIENCE_OPTIONS, MAX_CHOICE_OPTIONS, MAX_QUESTIONS, MIN_CHOICE_OPTIONS, MIN_QUESTIONS, QUESTION_TYPE_OPTIONS, todayDateValue } from "../constants";
 import type { QuestionType, SurveyAudience, SurveyFormValues } from "../types";
+import { roleLabel } from "@/features/staff/constants";
 
 const questionSchema = z
   .object({
@@ -157,7 +158,7 @@ export default function SurveyFormDialog({
                     <SelectContent>
                       {staff.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          {s.firstName} {s.lastName} · {s.designation}
+                          {s.firstName} {s.lastName} · {roleLabel(s)}
                         </SelectItem>
                       ))}
                     </SelectContent>

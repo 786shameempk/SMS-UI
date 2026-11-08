@@ -55,5 +55,6 @@
   "Basic": "मूल वेतन",
   "Allowances": "भत्ते",
   "Deductions": "कटौतियाँ",
-  "This is a system-generated payslip and does not require a signature.": "यह सिस्टम द्वारा बनाई गई वेतन पर्ची है और इस पर हस्ताक्षर की आवश्यकता नहीं है।"
+  "This is a system-generated payslip and does not require a signature.": "यह सिस्टम द्वारा बनाई गई वेतन पर्ची है और इस पर हस्ताक्षर की आवश्यकता नहीं है।",
+  "Role:": "भूमिका:"
 }

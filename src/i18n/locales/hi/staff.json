@@ -239,5 +239,16 @@
   "Mobile number": "मोबाइल नंबर",
   "Give an email, a mobile number or both. An email gets an invitation to set a password; a mobile number signs in with a one-time code. With neither, no sign-in account is created.": "ईमेल, मोबाइल नंबर या दोनों दें। ईमेल पर पासवर्ड सेट करने का निमंत्रण जाता है; मोबाइल नंबर वन-टाइम कोड से साइन इन करता है। दोनों न होने पर साइन-इन खाता नहीं बनता।",
   "This email or mobile number already has a sign-in account, so it can't be given to a new staff member. Change it, or save the person without a sign-in account.": "इस ईमेल या मोबाइल नंबर का पहले से साइन-इन खाता है, इसलिए इसे नए स्टाफ सदस्य को नहीं दिया जा सकता। इसे बदलें या साइन-इन खाते के बिना सहेजें।",
-  "Save without a sign-in account": "साइन-इन खाते के बिना सहेजें"
+  "Save without a sign-in account": "साइन-इन खाते के बिना सहेजें",
+  "Designation / Role": "पदनाम / भूमिका",
+  "Select designation / role": "पदनाम / भूमिका चुनें",
+  "Pick any number, or none. The first one picked is the main department.": "कितने भी चुनें, या कोई नहीं। पहला चुना गया मुख्य विभाग होगा।",
+  "This designation has no sign-in of its own. Pick a role from the list to give them access.": "इस पदनाम का अपना साइन-इन नहीं है। पहुँच देने के लिए सूची से कोई भूमिका चुनें।",
+  "Role and department": "भूमिका और विभाग",
+  "Select a role": "भूमिका चुनें",
+  "New role": "नई भूमिका",
+  "All roles": "सभी भूमिकाएँ",
+  "Filter by role": "भूमिका से फ़िल्टर करें",
+  "Change {{name}}'s role.": "{{name}} की भूमिका बदलें।",
+  "This role has no sign-in of its own. Pick a role from the list to give them access.": "इस भूमिका का अपना साइन-इन नहीं है। पहुँच देने के लिए सूची से कोई भूमिका चुनें।"
 }

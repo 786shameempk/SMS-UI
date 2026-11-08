@@ -14,6 +14,7 @@ import { STAFF_ATTENDANCE_STATUSES, staffAttendanceStatusBadgeVariant, todayDate
 import StatusToggleGroup from "./StatusToggleGroup";
 import type { StaffMember } from "@/features/staff/types";
 import type { MarkStaffAttendanceEntry, StaffAttendanceRecord, StaffAttendanceStatus } from "../types";
+import { roleLabel } from "@/features/staff/constants";
 
 import { useTranslation } from "react-i18next";
 // Stable fallbacks — see MarkAttendanceTab: an inline `= []` default re-triggers the status-map
@@ -141,7 +142,7 @@ export default function StaffAttendanceTab() {
                         {member.firstName} {member.lastName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {member.designation} · {member.employeeId}
+                        {roleLabel(member)} · {member.employeeId}
                       </p>
                     </div>
                   </div>

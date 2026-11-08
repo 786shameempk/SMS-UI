@@ -17,6 +17,7 @@ import { listStaff } from "@/features/staff/api";
 import { CATEGORY_OPTIONS, PRIORITY_OPTIONS, RAISED_BY_TYPE_OPTIONS } from "../constants";
 import { raiseTicket } from "../api";
 import type { RaisedByType, TicketCategory, TicketPriority } from "../types";
+import { roleLabel } from "@/features/staff/constants";
 
 const raiseTicketSchema = z
   .object({
@@ -222,7 +223,7 @@ export default function RaiseTicketTab() {
                       <SelectContent>
                         {staff.map((s) => (
                           <SelectItem key={s.id} value={s.id}>
-                            {s.firstName} {s.lastName} · {s.designation}
+                            {s.firstName} {s.lastName} · {roleLabel(s)}
                           </SelectItem>
                         ))}
                       </SelectContent>

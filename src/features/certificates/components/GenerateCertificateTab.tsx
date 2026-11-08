@@ -15,6 +15,7 @@ import { listStudents } from "@/features/students/api";
 import { listStaff } from "@/features/staff/api";
 import { CERTIFICATE_TYPE_OPTIONS } from "../constants";
 import { useIssuingSchoolName } from "../verifyUrl";
+import { roleLabel } from "@/features/staff/constants";
 import {
   generateAchievementCertificate,
   generateBonafide,
@@ -195,7 +196,7 @@ export default function GenerateCertificateTab() {
                       <SelectContent>
                         {staff.map((s) => (
                           <SelectItem key={s.id} value={s.id}>
-                            {s.firstName} {s.lastName} · {s.designation} ({s.employeeId})
+                            {s.firstName} {s.lastName} · {roleLabel(s)} ({s.employeeId})
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -6,6 +6,7 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_INFO, CHART_PRIMARY, CHART_TOO
 import { getAttendanceTrendReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 export default function AttendanceTrendsTab() {
   const { t } = useTranslation("reports");
@@ -15,6 +16,9 @@ export default function AttendanceTrendsTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={t("Attendance")} sections={[
+          { title: t("Monthly attendance"), headers: [t("Month"), t("Students %"), t("Staff %")], rows: data.trend.map((p) => [p.month, p.studentPercent ?? "", p.staffPercent ?? ""]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatTile label={t("Student attendance (avg.)")} value={`${data.studentAverage}%`} icon={CalendarCheck} />
         <StatTile label={t("Staff attendance (avg.)")} value={`${data.staffAverage}%`} icon={UserCheck} />

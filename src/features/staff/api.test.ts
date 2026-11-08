@@ -64,7 +64,7 @@ describe("staff api", () => {
     expect((await staff.reactivateStaff("sf1")).status).toBe("active");
 
     expect(calls[1].body).toMatchObject({ gender: "Female", designation: "ITSupport", loginRole: null });
-    expect(calls[3].body).toEqual({ toDesignation: "Principal", effectiveDate: "2026-10-01", remarks: null });
+    expect(calls[3].body).toEqual({ toDesignation: "Principal", effectiveDate: "2026-10-01", remarks: null, roleTitle: null });
     expect(calls[4].body).toEqual({ lastWorkingDate: "2026-10-31", reason: "Moving" });
   });
 

@@ -9,7 +9,7 @@ import { DataTable, DataTableToolbar } from "@/components/tables/DataTable";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
 import { createTerm, deleteTerm, listAcademicYears, listTerms, updateTerm } from "../api";
-import { statusBadgeVariant } from "../constants";
+import { computeTermStatus, statusBadgeVariant } from "../constants";
 import type { Term, TermFormValues } from "../types";
 import TermFormDialog from "./TermFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
@@ -76,7 +76,11 @@ export default function TermsTab() {
     {
       accessorKey: "status",
       header: t("Status"),
-      cell: ({ row }) => <Badge variant={statusBadgeVariant(row.original.status)} className="capitalize">{row.original.status}</Badge>,
+      accessorFn: (term) => computeTermStatus(term.startDate, term.endDate),
+      cell: ({ row }) => {
+        const status = computeTermStatus(row.original.startDate, row.original.endDate);
+        return <Badge variant={statusBadgeVariant(status)} className="capitalize">{status}</Badge>;
+      },
     },
     {
       id: "actions",

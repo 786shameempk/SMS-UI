@@ -6,6 +6,7 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, CHART_TOOLTIP_STYLE }
 import { getTeacherPerformanceReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 export default function TeacherPerformanceTab() {
   const { t: tr } = useTranslation("reports");
@@ -18,6 +19,9 @@ export default function TeacherPerformanceTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={tr("Teacher Performance")} sections={[
+          { title: tr("Teacher Performance"), headers: [tr("Teacher"), tr("Average score"), tr("Classes")], rows: data.map((p) => [p.teacherName, p.averageScore, p.classCount]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatTile label={tr("Teachers with classes")} value={String(data.length)} icon={Users} />
         <StatTile label={tr("School-wide average")} value={`${overallAverage}%`} icon={TrendingUp} />

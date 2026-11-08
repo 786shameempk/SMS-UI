@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { roleLabel } from "@/features/staff/constants";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,7 @@ export default function GroupFormDialog({
 
   const memberOptions = useMemo(() => {
     if (audienceType === "staff") {
-      return staff.map((s) => ({ id: s.id, label: `${s.firstName} ${s.lastName}`, sublabel: `${s.designation} · ${s.employeeId}` }));
+      return staff.map((s) => ({ id: s.id, label: `${s.firstName} ${s.lastName}`, sublabel: `${roleLabel(s)} · ${s.employeeId}` }));
     }
     return students.map((s) => ({
       id: s.id,

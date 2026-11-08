@@ -10,14 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DESIGNATIONS } from "../constants";
-import type { PromoteStaffFormValues, StaffDesignation, StaffMember } from "../types";
+import { LEGACY_ROLE, resolveRole, roleKeyFor, useStaffRoles } from "../useStaffRoles";
+import { roleLabel } from "../constants";
+import type { PromoteStaffFormValues, StaffMember } from "../types";
 
 const promoteFormSchema = z.object({
-  toDesignation: z.enum(DESIGNATIONS as unknown as [StaffDesignation, ...StaffDesignation[]]),
+  roleKey: z.string().min(1, "Select a role"),
   effectiveDate: z.string().min(1, "Effective date is required"),
   remarks: z.string().optional(),
 });
+
+type PromoteFormShape = z.infer<typeof promoteFormSchema>;
 
 export default function PromoteStaffDialog({
   open,
@@ -33,20 +36,28 @@ export default function PromoteStaffDialog({
   submitting: boolean;
 }) {
   const { t } = useTranslation("staff");
+  const roles = useStaffRoles();
+  const legacy = staff && !staff.roleTitle && roleKeyFor(staff, roles).startsWith(LEGACY_ROLE) ? staff : null;
   const {
     register,
     handleSubmit,
     reset,
     control,
     formState: { errors },
-  } = useForm<PromoteStaffFormValues>({
+  } = useForm<PromoteFormShape>({
     resolver: zodResolver(promoteFormSchema),
-    defaultValues: { toDesignation: "Teacher", effectiveDate: "", remarks: "" },
+    defaultValues: { roleKey: "teacher", effectiveDate: "", remarks: "" },
   });
 
   useEffect(() => {
-    if (open) reset({ toDesignation: staff?.designation ?? "Teacher", effectiveDate: "", remarks: "" });
+    if (open) reset({ roleKey: staff ? roleKeyFor(staff, roles) : "teacher", effectiveDate: "", remarks: "" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the role list is read once, when the dialog opens
   }, [open, staff, reset]);
+
+  const submit = (v: PromoteFormShape) => {
+    const { designation, roleTitle } = resolveRole(v.roleKey, roles, staff?.roleTitle);
+    return onSubmit({ toDesignation: designation, roleTitle, effectiveDate: v.effectiveDate, remarks: v.remarks });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,26 +65,27 @@ export default function PromoteStaffDialog({
         <DialogHeader>
           <DialogTitle>{t("Promote staff member")}</DialogTitle>
           <DialogDescription>
-            {staff ? t("Change {{name}}'s designation.", { name: `${staff.firstName} ${staff.lastName}` }) : ""}
+            {staff ? t("Change {{name}}'s role.", { name: `${staff.firstName} ${staff.lastName}` }) : ""}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(submit)} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="toDesignation" required>{t("New designation")}</Label>
+            <Label htmlFor="roleKey" required>{t("New role")}</Label>
             <Controller
               control={control}
-              name="toDesignation"
+              name="roleKey"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="toDesignation">
+                  <SelectTrigger id="roleKey">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {DESIGNATIONS.map((d) => (
-                      <SelectItem key={d} value={d}>
-                        {t(d)}
+                    {roles.map((r) => (
+                      <SelectItem key={r.key} value={r.key}>
+                        {r.name}
                       </SelectItem>
                     ))}
+                    {legacy && <SelectItem value={LEGACY_ROLE + legacy.designation}>{t(roleLabel(legacy))}</SelectItem>}
                   </SelectContent>
                 </Select>
               )}

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable, type ActiveFilter } from "@/components/tables/DataTable";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { DESIGNATIONS } from "../constants";
+import { roleKeyFor, useStaffRoles } from "../useStaffRoles";
 import { createStaff, getMyStaffId, getStaffMember, listStaff, promoteStaff, reactivateStaff, resignStaff, updateStaff } from "../api";
 import { useIsHrManager } from "../access";
 import PayslipsTab from "@/features/payroll/components/PayslipsTab";
@@ -34,6 +34,7 @@ import type { PromoteStaffFormValues, ResignStaffFormValues, StaffFormValues, St
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { RowActions } from "@/components/ui/row-actions";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
+import { roleLabel } from "@/features/staff/constants";
 
 const STATUS_OPTIONS: { value: StaffMember["status"]; label: string }[] = [
   { value: "active", label: "Active" },
@@ -54,8 +55,11 @@ function StaffDirectoryTab() {
 
   const [search, setSearch] = useState("");
   const [designationFilter, setDesignationFilter] = useState("all");
+  const roles = useStaffRoles();
   const [statusFilter, setStatusFilter] = useState("all");
   const [loginFilter, setLoginFilter] = useState<LoginFilter>("all");
+  // Designations no role in the master stands for (older records) stay filterable.
+  const legacyRoleKeys = [...new Set(staffList.map((s) => roleKeyFor(s, roles)).filter((k) => k.startsWith("d:")))];
   const loginStatuses = useLoginStatuses(staffList.map((s) => s.userId));
   const resetPassword = useResetPasswordDialog();
 
@@ -123,11 +127,11 @@ function StaffDirectoryTab() {
     return staffList.filter((s) => {
       const fullName = `${s.firstName} ${s.lastName}`.toLowerCase();
       const matchesSearch = !q || fullName.includes(q) || s.employeeId.toLowerCase().includes(q);
-      const matchesDesignation = designationFilter === "all" || s.designation === designationFilter;
+      const matchesDesignation = designationFilter === "all" || roleKeyFor(s, roles) === designationFilter;
       const matchesStatus = statusFilter === "all" || s.status === statusFilter;
       return matchesSearch && matchesDesignation && matchesStatus && matchesLoginFilter(Boolean(s.userId), loginFilter);
     });
-  }, [staffList, search, designationFilter, statusFilter, loginFilter]);
+  }, [staffList, search, designationFilter, statusFilter, loginFilter, roles]);
 
   const clearFilters = () => {
     setSearch("");
@@ -138,7 +142,7 @@ function StaffDirectoryTab() {
   const activeFilters: ActiveFilter[] = [];
   if (search.trim()) activeFilters.push({ id: "search", label: t("Search"), value: search.trim(), onRemove: () => setSearch("") });
   if (designationFilter !== "all")
-    activeFilters.push({ id: "designation", label: t("Designation"), value: t(designationFilter), onRemove: () => setDesignationFilter("all") });
+    activeFilters.push({ id: "designation", label: t("Role"), value: roles.find((r) => r.key === designationFilter)?.name ?? t(designationFilter.replace(/^d:/, "")), onRemove: () => setDesignationFilter("all") });
   if (statusFilter !== "all") {
     const option = STATUS_OPTIONS.find((o) => o.value === statusFilter);
     const label = option ? t(option.label) : statusFilter;
@@ -177,8 +181,8 @@ function StaffDirectoryTab() {
     },
     {
       accessorKey: "designation",
-      header: t("Designation"),
-      cell: ({ row }) => <span className="text-sm text-foreground">{t(row.original.designation)}</span>,
+      header: t("Role"),
+      cell: ({ row }) => <span className="text-sm text-foreground">{t(roleLabel(row.original))}</span>,
     },
     {
       accessorKey: "department",
@@ -272,14 +276,19 @@ function StaffDirectoryTab() {
           <>
             <SearchInput value={search} onValueChange={setSearch} placeholder={t("Search by name or employee ID")} containerClassName="sm:w-72" />
             <Select value={designationFilter} onValueChange={setDesignationFilter}>
-              <SelectTrigger className="sm:w-40" aria-label={t("Filter by designation")}>
-                <SelectValue placeholder={t("Designation")} />
+              <SelectTrigger className="sm:w-40" aria-label={t("Filter by role")}>
+                <SelectValue placeholder={t("Role")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("All designations")}</SelectItem>
-                {DESIGNATIONS.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {t(d)}
+                <SelectItem value="all">{t("All roles")}</SelectItem>
+                {roles.map((r) => (
+                  <SelectItem key={r.key} value={r.key}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+                {legacyRoleKeys.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {t(k.slice(2))}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -419,7 +428,7 @@ function MyDetailsTab() {
         </h2>
         <StaffStatusBadge status={staff.status} />
         <p className="w-full text-sm text-muted-foreground">
-          {t(staff.designation)} &middot; {staff.department} &middot; {staff.employeeId}
+          {t(roleLabel(staff))} &middot; {staff.department} &middot; {staff.employeeId}
         </p>
       </div>
       <StaffOverviewTab staff={staff} />

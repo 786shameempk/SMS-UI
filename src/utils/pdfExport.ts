@@ -11,6 +11,8 @@ export interface PdfTable {
   orientation?: "portrait" | "landscape";
   branding?: TenantBranding;
   generatedBy?: string;
+  /** Further tables printed after the first, each under its own heading (for a screen made of several small tables). */
+  extraTables?: { title: string; headers: string[]; rows: unknown[][] }[];
   locale?: string;
 }
 
@@ -36,6 +38,14 @@ tbody tr:nth-child(even){background:#f8fafc}
 ${LETTERHEAD_CSS}
 `;
 
+function extraTableHtml(t: { title: string; headers: string[]; rows: unknown[][] }) {
+  const numeric = t.headers.map((_, c) => t.rows.length > 0 && t.rows.every((r) => r[c] == null || r[c] === "" || looksNumeric(r[c])) && t.rows.some((r) => r[c] != null && r[c] !== ""));
+  const body = t.rows.length
+    ? t.rows.map((r) => `<tr>${t.headers.map((_, c) => `<td class="${numeric[c] ? "num" : ""}">${esc(r[c])}</td>`).join("")}</tr>`).join("")
+    : `<tr><td class="empty" colspan="${Math.max(1, t.headers.length)}">No records to show.</td></tr>`;
+  return `<h2 style="font-size:12px;margin:14px 0 4px">${esc(t.title)}</h2><table><thead><tr>${t.headers.map((h, c) => `<th class="${numeric[c] ? "num" : ""}">${esc(h)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
 /**
  * A complete, self-contained printable table. The browser's own print engine lays it out, so every script (Malayalam, Arabic, Hindi...) is shaped
  * correctly, the header row repeats on each page and the page number is printed. Pure, so it can be tested.
@@ -54,6 +64,7 @@ ${input.branding ? letterheadHtml(input.branding) : ""}
 ${input.subtitle ? `<p class="sub">${esc(input.subtitle)}</p>` : ""}
 <p class="meta">${input.rows.length.toLocaleString()} record${input.rows.length === 1 ? "" : "s"} · Generated ${esc(generated)}${input.generatedBy ? ` by ${esc(input.generatedBy)}` : ""}</p>
 <table><thead><tr>${input.headers.map((h, c) => `<th class="${numeric[c] ? "num" : ""}">${esc(h)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>
+${(input.extraTables ?? []).map(extraTableHtml).join("")}
 <div class="foot"><span>${esc(school)}</span><span>Generated ${esc(generated)}</span></div>
 <script>window.onload=function(){window.focus();window.print()}</script>
 </body></html>`;
