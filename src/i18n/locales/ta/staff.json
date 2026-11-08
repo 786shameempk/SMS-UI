@@ -239,5 +239,16 @@
   "Mobile number": "மொபைல் எண்",
   "Give an email, a mobile number or both. An email gets an invitation to set a password; a mobile number signs in with a one-time code. With neither, no sign-in account is created.": "மின்னஞ்சல், மொபைல் எண் அல்லது இரண்டையும் வழங்கவும். மின்னஞ்சலுக்கு கடவுச்சொல் அமைக்க அழைப்பு அனுப்பப்படும்; மொபைல் எண் ஒருமுறை குறியீட்டுடன் உள்நுழையும். இரண்டும் இல்லையெனில் உள்நுழைவு கணக்கு உருவாக்கப்படாது.",
   "This email or mobile number already has a sign-in account, so it can't be given to a new staff member. Change it, or save the person without a sign-in account.": "இந்த மின்னஞ்சல் அல்லது மொபைல் எண்ணுக்கு ஏற்கனவே உள்நுழைவு கணக்கு உள்ளது, எனவே புதிய பணியாளருக்கு வழங்க முடியாது. அதை மாற்றவும் அல்லது உள்நுழைவு கணக்கு இல்லாமல் சேமிக்கவும்.",
-  "Save without a sign-in account": "உள்நுழைவு கணக்கு இல்லாமல் சேமி"
+  "Save without a sign-in account": "உள்நுழைவு கணக்கு இல்லாமல் சேமி",
+  "Designation / Role": "பதவி / பங்கு",
+  "Select designation / role": "பதவி / பங்கைத் தேர்ந்தெடுக்கவும்",
+  "Pick any number, or none. The first one picked is the main department.": "எத்தனை வேண்டுமானாலும் தேர்ந்தெடுக்கலாம், அல்லது எதுவும் வேண்டாம். முதலில் தேர்ந்தெடுப்பது முதன்மைத் துறை.",
+  "This designation has no sign-in of its own. Pick a role from the list to give them access.": "இந்தப் பதவிக்கு தனி உள்நுழைவு இல்லை. அணுகல் வழங்க பட்டியலிலிருந்து ஒரு பங்கைத் தேர்ந்தெடுக்கவும்.",
+  "Role and department": "பங்கும் துறையும்",
+  "Select a role": "பங்கைத் தேர்ந்தெடுக்கவும்",
+  "New role": "புதிய பங்கு",
+  "All roles": "அனைத்து பங்குகள்",
+  "Filter by role": "பங்கு வாரியாக வடிகட்டு",
+  "Change {{name}}'s role.": "{{name}} இன் பங்கை மாற்றவும்.",
+  "This role has no sign-in of its own. Pick a role from the list to give them access.": "இந்தப் பங்குக்கு தனி உள்நுழைவு இல்லை. அணுகல் வழங்க பட்டியலிலிருந்து ஒரு பங்கைத் தேர்ந்தெடுக்கவும்."
 }

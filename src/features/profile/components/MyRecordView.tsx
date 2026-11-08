@@ -19,6 +19,7 @@ import SalaryTab from "@/features/staff/components/profile/SalaryTab";
 import StaffAttendanceTab from "@/features/staff/components/profile/StaffAttendanceTab";
 import PerformanceTab from "@/features/staff/components/profile/PerformanceTab";
 import StaffDocumentsTab from "@/features/staff/components/profile/StaffDocumentsTab";
+import { roleLabel } from "@/features/staff/constants";
 
 /** `actions` sits beside the name (the change-request button); `notice` under it (what is waiting for approval). */
 interface ViewProps {
@@ -110,7 +111,7 @@ export function MyStaffRecord({ personId, actions, notice }: ViewProps) {
       <Header
         title={`${staff.firstName} ${staff.lastName}`}
         badge={<StaffStatusBadge status={staff.status} />}
-        subtitle={<>{t(staff.designation)} &middot; {staff.department} &middot; {staff.employeeId}</>}
+        subtitle={<>{t(roleLabel(staff))} &middot; {staff.department} &middot; {staff.employeeId}</>}
         actions={actions}
       />
       {notice}

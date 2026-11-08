@@ -35,6 +35,21 @@ export const DESIGNATION_LOGIN_ROLE: Partial<Record<StaffDesignation, StaffLogin
   Receptionist: "receptionist",
 };
 
+/**
+ * The designation a role from the role master stands for: its own (teacher -> Teacher), the one that carries the same name
+ * ("Driver", "HR"...), or "Other" for a custom role (whose name is then kept as the person's role title).
+ */
+export function designationForRole(key: string, name: string): StaffDesignation {
+  const byKey = (Object.entries(DESIGNATION_LOGIN_ROLE) as [StaffDesignation, string][]).find(([d, role]) => role === key && d !== "Vice Principal")?.[0];
+  if (byKey) return byKey;
+  return DESIGNATIONS.find((d) => d.toLowerCase() === name.trim().toLowerCase()) ?? "Other";
+}
+
+/** What to show as a person's role: the role-master name when there is one (custom roles), else the designation. */
+export function roleLabel(person: { designation: string; roleTitle?: string | null }): string {
+  return person.roleTitle || person.designation;
+}
+
 /** Matches a CSV cell (case-insensitive) to a login role; empty means automatic, anything else is invalid (null). */
 export function parseLoginRole(value: string | undefined): StaffLoginRole | "" | null {
   const v = (value ?? "").trim().toLowerCase();

@@ -18,6 +18,7 @@ import StudentPerformanceTab from "../components/profile/StudentPerformanceTab";
 import { PageContainer } from "@/components/ui/page";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
 import { useIsTeacher } from "@/lib/roleAccess";
+import { roleLabel } from "@/features/staff/constants";
 
 export default function TeacherProfilePage() {
   const { staffId } = useParams<{ staffId: string }>();
@@ -81,7 +82,7 @@ export default function TeacherProfilePage() {
           <StaffStatusBadge status={staff.status} />
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          {staff.designation} &middot; {staff.department} &middot; {staff.employeeId}
+          {roleLabel(staff)} &middot; {staff.department} &middot; {staff.employeeId}
         </p>
       </div>
 

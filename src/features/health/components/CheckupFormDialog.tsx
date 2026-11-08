@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
+import { roleLabel } from "@/features/staff/constants";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,7 +166,7 @@ export default function CheckupFormDialog({
                   <SelectContent>
                     {staff.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
-                        {s.firstName} {s.lastName} · {s.designation}
+                        {s.firstName} {s.lastName} · {roleLabel(s)}
                       </SelectItem>
                     ))}
                   </SelectContent>

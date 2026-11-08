@@ -239,5 +239,16 @@
   "Mobile number": "رقم الجوال",
   "Give an email, a mobile number or both. An email gets an invitation to set a password; a mobile number signs in with a one-time code. With neither, no sign-in account is created.": "أدخل بريدًا إلكترونيًا أو رقم جوال أو كليهما. يصل البريد دعوة لتعيين كلمة مرور؛ ويسجّل رقم الجوال الدخول برمز لمرة واحدة. وبدون أيٍّ منهما لا يُنشأ حساب دخول.",
   "This email or mobile number already has a sign-in account, so it can't be given to a new staff member. Change it, or save the person without a sign-in account.": "هذا البريد أو رقم الجوال لديه حساب دخول بالفعل، فلا يمكن منحه لموظف جديد. غيّره أو احفظ الشخص دون حساب دخول.",
-  "Save without a sign-in account": "الحفظ دون حساب دخول"
+  "Save without a sign-in account": "الحفظ دون حساب دخول",
+  "Designation / Role": "المسمى الوظيفي / الدور",
+  "Select designation / role": "اختر المسمى الوظيفي / الدور",
+  "Pick any number, or none. The first one picked is the main department.": "اختر أي عدد أو لا شيء. أول قسم تختاره هو القسم الرئيسي.",
+  "This designation has no sign-in of its own. Pick a role from the list to give them access.": "هذا المسمى ليس له تسجيل دخول خاص. اختر دورًا من القائمة لمنحه الوصول.",
+  "Role and department": "الدور والقسم",
+  "Select a role": "اختر دورًا",
+  "New role": "دور جديد",
+  "All roles": "كل الأدوار",
+  "Filter by role": "تصفية حسب الدور",
+  "Change {{name}}'s role.": "تغيير دور {{name}}.",
+  "This role has no sign-in of its own. Pick a role from the list to give them access.": "هذا الدور ليس له تسجيل دخول خاص. اختر دورًا من القائمة لمنحه الوصول."
 }

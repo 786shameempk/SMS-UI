@@ -239,5 +239,16 @@
   "Mobile number": "മൊബൈൽ നമ്പർ",
   "Give an email, a mobile number or both. An email gets an invitation to set a password; a mobile number signs in with a one-time code. With neither, no sign-in account is created.": "ഇമെയിൽ, മൊബൈൽ നമ്പർ, അല്ലെങ്കിൽ രണ്ടും നൽകുക. ഇമെയിലിന് പാസ്‌വേഡ് സജ്ജമാക്കാനുള്ള ക്ഷണം ലഭിക്കും; മൊബൈൽ നമ്പർ വൺ-ടൈം കോഡ് ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യും. രണ്ടും ഇല്ലെങ്കിൽ സൈൻ-ഇൻ അക്കൗണ്ട് ഉണ്ടാക്കില്ല.",
   "This email or mobile number already has a sign-in account, so it can't be given to a new staff member. Change it, or save the person without a sign-in account.": "ഈ ഇമെയിലിനോ മൊബൈൽ നമ്പറിനോ ഇതിനകം സൈൻ-ഇൻ അക്കൗണ്ട് ഉണ്ട്, അതിനാൽ പുതിയ സ്റ്റാഫ് അംഗത്തിന് നൽകാൻ കഴിയില്ല. അത് മാറ്റുക, അല്ലെങ്കിൽ സൈൻ-ഇൻ അക്കൗണ്ട് ഇല്ലാതെ സേവ് ചെയ്യുക.",
-  "Save without a sign-in account": "സൈൻ-ഇൻ അക്കൗണ്ട് ഇല്ലാതെ സേവ് ചെയ്യുക"
+  "Save without a sign-in account": "സൈൻ-ഇൻ അക്കൗണ്ട് ഇല്ലാതെ സേവ് ചെയ്യുക",
+  "Designation / Role": "തസ്തിക / റോൾ",
+  "Select designation / role": "തസ്തിക / റോൾ തിരഞ്ഞെടുക്കുക",
+  "Pick any number, or none. The first one picked is the main department.": "എത്രയും തിരഞ്ഞെടുക്കാം, അല്ലെങ്കിൽ ഒന്നും വേണ്ട. ആദ്യം തിരഞ്ഞെടുക്കുന്നത് പ്രധാന വകുപ്പായിരിക്കും.",
+  "This designation has no sign-in of its own. Pick a role from the list to give them access.": "ഈ തസ്തികയ്ക്ക് സ്വന്തമായി സൈൻ-ഇൻ ഇല്ല. ആക്സസ് നൽകാൻ പട്ടികയിൽ നിന്ന് ഒരു റോൾ തിരഞ്ഞെടുക്കുക.",
+  "Role and department": "റോളും വകുപ്പും",
+  "Select a role": "റോൾ തിരഞ്ഞെടുക്കുക",
+  "New role": "പുതിയ റോൾ",
+  "All roles": "എല്ലാ റോളുകളും",
+  "Filter by role": "റോൾ അനുസരിച്ച് ഫിൽട്ടർ ചെയ്യുക",
+  "Change {{name}}'s role.": "{{name}} യുടെ റോൾ മാറ്റുക.",
+  "This role has no sign-in of its own. Pick a role from the list to give them access.": "ഈ റോളിന് സ്വന്തമായി സൈൻ-ഇൻ ഇല്ല. ആക്സസ് നൽകാൻ പട്ടികയിൽ നിന്ന് ഒരു റോൾ തിരഞ്ഞെടുക്കുക."
 }

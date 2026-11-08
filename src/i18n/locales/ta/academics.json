@@ -162,5 +162,6 @@
   "Add departments in Academic setup first.": "முதலில் கல்வி அமைப்பில் துறைகளைச் சேர்க்கவும்.",
   "Open Academic setup": "கல்வி அமைப்பைத் திற",
   "Select a department": "ஒரு துறையைத் தேர்ந்தெடுக்கவும்",
-  "No department": "துறை இல்லை"
+  "No department": "துறை இல்லை",
+  "Clear selection (no department)": "தேர்வை அழிக்கவும் (துறை இல்லை)"
 }

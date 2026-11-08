@@ -15,6 +15,7 @@ import { formatDateTime } from "@/utils/format";
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, STATUS_CONFIG } from "../constants";
 import { addComment, assignTicket, closeTicket, deleteTicket, getTicket, reopenTicket, resolveTicket } from "../api";
 import type { TicketRow } from "../types";
+import { roleLabel } from "@/features/staff/constants";
 
 export default function TicketDetailDialog({
   ticketId,
@@ -142,7 +143,7 @@ export default function TicketDetailDialog({
             </div>
             <div>
               <p className="text-xs text-muted-foreground">{t("Assigned to")}</p>
-              <p className="text-foreground">{tk.assignedTo ? `${tk.assignedTo.firstName} ${tk.assignedTo.lastName} (${tk.assignedTo.designation})` : t("Unassigned")}</p>
+              <p className="text-foreground">{tk.assignedTo ? `${tk.assignedTo.firstName} ${tk.assignedTo.lastName} (${roleLabel(tk.assignedTo)})` : t("Unassigned")}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">{t("Created")}</p>
@@ -173,7 +174,7 @@ export default function TicketDetailDialog({
               <SelectContent>
                 {staff.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.firstName} {s.lastName} · {s.designation}
+                    {s.firstName} {s.lastName} · {roleLabel(s)}
                   </SelectItem>
                 ))}
               </SelectContent>

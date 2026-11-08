@@ -6,6 +6,7 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_NEUTRAL, CHART_PRIMARY, CHART_
 import { getHostelOccupancyReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 export default function HostelOccupancyTab() {
   const { t } = useTranslation("reports");
@@ -15,6 +16,9 @@ export default function HostelOccupancyTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={t("Hostel Occupancy")} sections={[
+          { title: t("Hostel occupancy"), headers: [t("Hostel"), t("Occupied"), t("Vacant"), t("Beds")], rows: data.hostels.map((h) => [h.hostelName, h.occupied, h.vacant, h.bedCount]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatTile label={t("Beds occupied")} value={String(data.totalOccupied)} icon={BedDouble} />
         <StatTile label={t("Total beds")} value={String(data.totalBeds)} icon={Building2} />

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { roleLabel } from "@/features/staff/constants";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +79,7 @@ export default function LeaveRequestFormDialog({
                 </p>
               ) : (
                 <>
-                  <Input id="staffId" readOnly value={me ? `${me.firstName} ${me.lastName} · ${t(me.designation)}` : t("You")} aria-describedby="staffId-hint" />
+                  <Input id="staffId" readOnly value={me ? `${me.firstName} ${me.lastName} · ${t(roleLabel(me))}` : t("You")} aria-describedby="staffId-hint" />
                   <p id="staffId-hint" className="text-xs text-muted-foreground">{t("Leave is requested for you; it can't be filed for someone else.")}</p>
                 </>
               )}
@@ -97,7 +98,7 @@ export default function LeaveRequestFormDialog({
                     <SelectContent>
                       {staffList.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          {s.firstName} {s.lastName} &middot; {t(s.designation)}
+                          {s.firstName} {s.lastName} &middot; {t(roleLabel(s))}
                         </SelectItem>
                       ))}
                     </SelectContent>

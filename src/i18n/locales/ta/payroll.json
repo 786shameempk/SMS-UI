@@ -55,5 +55,6 @@
   "Basic": "அடிப்படை ஊதியம்",
   "Allowances": "படிகள்",
   "Deductions": "பிடித்தங்கள்",
-  "This is a system-generated payslip and does not require a signature.": "இது கணினியால் உருவாக்கப்பட்ட ஊதியச் சீட்டு; கையொப்பம் தேவையில்லை."
+  "This is a system-generated payslip and does not require a signature.": "இது கணினியால் உருவாக்கப்பட்ட ஊதியச் சீட்டு; கையொப்பம் தேவையில்லை.",
+  "Role:": "பங்கு:"
 }

@@ -11,7 +11,9 @@ export type StaffDesignation =
   | "Cleaner"
   | "Security"
   | "HR"
-  | "IT Support";
+  | "IT Support"
+  /** A role from the role master with no designation of its own; its name is in `roleTitle`. */
+  | "Other";
 
 export type StaffStatus = "active" | "on-leave" | "resigned" | "terminated";
 export type Gender = "male" | "female" | "other";
@@ -104,7 +106,12 @@ export interface StaffMember {
   lastName: string;
   photoUrl?: string | null;
   designation: StaffDesignation;
+  /** The main department (the first one picked); empty when the person has none. */
   department: string;
+  /** Every department the person belongs to, main one first. */
+  departments: string[];
+  /** The role-master name picked as "Designation / Role" when `designation` is "Other". */
+  roleTitle?: string;
   departmentId?: string;
   reportingToStaffId?: string;
   status: StaffStatus;
@@ -131,6 +138,11 @@ export interface StaffFormValues {
   dateOfBirth: string;
   gender: Gender;
   designation: StaffDesignation;
+  /** The role-master name, kept when `designation` is "Other". */
+  roleTitle?: string;
+  /** Every department picked (none allowed); the first is the main one. */
+  departments?: string[];
+  /** Main department; derived from `departments` when that is given. */
   department: string;
   phone: string;
   email: string;
@@ -149,6 +161,8 @@ export type BuiltInStaffLoginRole = "teacher" | "principal" | "accountant" | "li
 
 export interface PromoteStaffFormValues {
   toDesignation: StaffDesignation;
+  /** The role-master name when `toDesignation` is "Other". */
+  roleTitle?: string;
   effectiveDate: string;
   remarks?: string;
 }

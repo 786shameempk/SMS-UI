@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TERM_STATUSES } from "../constants";
+import { TERM_STATUSES, computeTermStatus } from "../constants";
 import type { AcademicYear, Term, TermFormValues } from "../types";
 
 import { useTranslation } from "react-i18next";
@@ -64,7 +64,9 @@ export default function TermFormDialog({
           <DialogTitle>{isEdit ? t("Edit term") : t("New term")}</DialogTitle>
           <DialogDescription>{t("Terms/semesters divide an academic year for grading and scheduling.")}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit((values) => onSubmit({ ...values, status: computeTermStatus(values.startDate, values.endDate) }))}
+className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="name" required>{t("Name")}</Label>
             <Input id="name" placeholder={t("e.g. Term 1")} aria-invalid={errors.name ? true : undefined} {...register("name")} />
@@ -107,27 +109,7 @@ export default function TermFormDialog({
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="status" required>{t("Status")}</Label>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TERM_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s} className="capitalize">
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">{t("Status (upcoming, ongoing or completed) is set automatically from the start and end dates.")}</p>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

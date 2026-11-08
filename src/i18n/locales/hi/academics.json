@@ -162,5 +162,6 @@
   "Add departments in Academic setup first.": "पहले अकादमिक सेटअप में विभाग जोड़ें।",
   "Open Academic setup": "अकादमिक सेटअप खोलें",
   "Select a department": "एक विभाग चुनें",
-  "No department": "कोई विभाग नहीं"
+  "No department": "कोई विभाग नहीं",
+  "Clear selection (no department)": "चयन हटाएँ (कोई विभाग नहीं)"
 }

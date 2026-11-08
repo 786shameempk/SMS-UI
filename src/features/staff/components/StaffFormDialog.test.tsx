@@ -8,7 +8,7 @@ import type { StaffFormValues } from "../types";
 
 vi.mock("@/features/administration/branches/api", () => ({ listBranches: vi.fn(async () => [{ id: "tenant-educore-main", name: "Main" }]) }));
 vi.mock("@/features/academics/api", () => ({
-  listDepartments: vi.fn(async () => [{ id: "d1", name: "Science" }]),
+  listDepartments: vi.fn(async () => [{ id: "d1", name: "Science" }, { id: "d2", name: "Arts" }]),
   listReportingOptions: vi.fn(async () => []),
 }));
 vi.mock("../api", () => ({ listAssignableLoginRoles: vi.fn(async () => []) }));
@@ -21,8 +21,6 @@ async function fillRequired(user: ReturnType<typeof userEvent.setup>, contact: {
   await user.type(screen.getByLabelText(/^First name/), "Tara");
   await user.type(screen.getByLabelText(/^Last name/), "Menon");
   await user.type(screen.getByLabelText(/^Date of birth/), "1990-04-05");
-  await user.click(await screen.findByRole("combobox", { name: /^Department/ }));
-  await user.click(await screen.findByRole("option", { name: "Science" }));
   await user.type(screen.getByLabelText(/^Address/), "12 Lake Road");
   if (contact.email) await user.type(screen.getByLabelText(/^Email/), contact.email);
   if (contact.phone) await user.type(screen.getByLabelText(/^Mobile number/), contact.phone);
@@ -42,6 +40,26 @@ describe("StaffFormDialog contact details", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ email: "", phone: "" });
+  });
+
+  it("labels the field Role and lets departments be none or several", async () => {
+    const onSubmit = vi.fn(async (_values: StaffFormValues) => {});
+    const user = userEvent.setup();
+    renderWithProviders(<StaffFormDialog open onOpenChange={() => {}} onSubmit={onSubmit} submitting={false} />);
+
+    expect(screen.getByRole("combobox", { name: /^Role/ })).toBeInTheDocument();
+    await fillRequired(user, {});
+    await user.click(screen.getByRole("button", { name: "Add staff member" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ designation: "Teacher", loginRole: "teacher", department: "", departments: [] });
+
+    await user.click(await screen.findByRole("combobox", { name: /^Department/ }));
+    await user.click(await screen.findByLabelText("Science"));
+    await user.click(await screen.findByLabelText("Arts"));
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Add staff member" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+    expect(onSubmit.mock.calls[1][0]).toMatchObject({ department: "Science", departments: ["Science", "Arts"] });
   });
 
   it("rejects a malformed email or mobile number", async () => {

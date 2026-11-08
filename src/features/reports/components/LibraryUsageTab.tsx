@@ -6,6 +6,7 @@ import { CATEGORICAL_COLORS, CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, C
 import { getLibraryUsageReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 export default function LibraryUsageTab() {
   const { t } = useTranslation("reports");
@@ -15,6 +16,10 @@ export default function LibraryUsageTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={t("Library Usage")} sections={[
+          { title: t("Monthly loans"), headers: [t("Month"), t("Loans")], rows: data.monthlyLoans.map((m) => [m.month, m.value]) },
+          { title: t("Top categories"), headers: [t("Category"), t("Loans")], rows: data.topCategories.map((c) => [c.category, c.count]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatTile label={t("Total loans")} value={String(data.totalLoans)} icon={Library} />
         <StatTile label={t("Currently issued")} value={String(data.currentlyIssued)} icon={BookOpen} />

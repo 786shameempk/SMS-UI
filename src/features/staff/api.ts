@@ -44,6 +44,7 @@ const DESIGNATION_TO_API: Record<StaffDesignation, string> = {
   Security: "Security",
   HR: "HR",
   "IT Support": "ITSupport",
+  Other: "Other",
 };
 const DESIGNATION_FROM_API: Record<string, StaffDesignation> = {
   Teacher: "Teacher",
@@ -59,7 +60,14 @@ const DESIGNATION_FROM_API: Record<string, StaffDesignation> = {
   Security: "Security",
   HR: "HR",
   ITSupport: "IT Support",
+  Other: "Other",
 };
+
+/** The department fields sent to the API: the first department is the main one, the rest are kept alongside; none is allowed. */
+function departmentFields(values: StaffFormValues) {
+  const all = (values.departments ?? (values.department ? [values.department] : [])).map((d) => d.trim()).filter(Boolean);
+  return { department: all[0] ?? "", otherDepartments: all.slice(1), roleTitle: values.designation === "Other" ? values.roleTitle?.trim() || null : null };
+}
 
 const STAFF_STATUS_FROM_API: Record<string, StaffStatus> = {
   Active: "active",
@@ -165,6 +173,9 @@ interface ApiStaffMember {
   photoUrl: string | null;
   designation: string;
   department: string;
+  roleTitle?: string | null;
+  /** Further departments, joined with "|". */
+  otherDepartments?: string | null;
   departmentId?: string | null;
   reportingToStaffId?: string | null;
   status: string;
@@ -212,6 +223,8 @@ function mapStaff(dto: ApiStaffMember): StaffMember {
     photoUrl: resolveFileUrl(dto.photoUrl, ACADEMIC_API_BASE_URL) ?? null,
     designation: DESIGNATION_FROM_API[dto.designation] ?? "Teacher",
     department: dto.department,
+    departments: [dto.department, ...(dto.otherDepartments ?? "").split("|")].map((d) => d.trim()).filter(Boolean),
+    roleTitle: dto.roleTitle ?? undefined,
     departmentId: dto.departmentId ?? undefined,
     reportingToStaffId: dto.reportingToStaffId ?? undefined,
     status: STAFF_STATUS_FROM_API[dto.status] ?? "active",
@@ -338,7 +351,7 @@ export async function createStaff(values: StaffFormValues): Promise<StaffMember>
       dateOfBirth: values.dateOfBirth,
       gender: GENDER_TO_API[values.gender],
       designation: DESIGNATION_TO_API[values.designation],
-      department: values.department,
+      ...departmentFields(values),
       phone: values.phone,
       email: values.email,
       address: values.address,
@@ -359,7 +372,7 @@ export async function updateStaff(id: string, values: StaffFormValues): Promise<
       dateOfBirth: values.dateOfBirth,
       gender: GENDER_TO_API[values.gender],
       designation: DESIGNATION_TO_API[values.designation],
-      department: values.department,
+      ...departmentFields(values),
       phone: values.phone,
       email: values.email,
       address: values.address,
@@ -373,6 +386,7 @@ export async function promoteStaff(id: string, values: PromoteStaffFormValues): 
   const dto = await unwrap(
     academicHttpClient.post<ApiStaffMember>(`/api/staff/${id}/promote`, {
       toDesignation: DESIGNATION_TO_API[values.toDesignation],
+      roleTitle: values.toDesignation === "Other" ? values.roleTitle ?? null : null,
       effectiveDate: values.effectiveDate,
       remarks: values.remarks ?? null,
     }),

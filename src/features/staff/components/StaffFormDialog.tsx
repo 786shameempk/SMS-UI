@@ -14,9 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getCurrentBranchId } from "@/utils/tenant";
 import { listBranches } from "@/features/administration/branches/api";
 import { listDepartments, listReportingOptions } from "@/features/academics/api";
-import DepartmentSelect from "@/features/academics/components/DepartmentSelect";
+import DepartmentMultiSelect from "@/features/academics/components/DepartmentMultiSelect";
 import { listAssignableLoginRoles } from "../api";
-import { DESIGNATIONS, DESIGNATION_LOGIN_ROLE, STAFF_LOGIN_ROLES } from "../constants";
+import { STAFF_LOGIN_ROLES, designationForRole } from "../constants";
 import type { StaffDesignation, StaffFormValues, StaffMember } from "../types";
 import { FormSection } from "@/components/ui/form-field";
 import { LoginConflictError } from "@/features/login-accounts/loginConflict";
@@ -27,15 +27,19 @@ const staffFormSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.enum(["male", "female", "other"]),
-  designation: z.enum(DESIGNATIONS as unknown as [StaffDesignation, ...StaffDesignation[]]),
-  department: z.string().min(1, "Department is required"),
+  // A role from the role master, or "d:<Designation>" for a designation no role stands for (kept when editing older records).
+  roleKey: z.string().min(1, "Select a role"),
+  // Any number of departments, including none.
+  departments: z.array(z.string()),
   // Either, both or neither: they decide whether (and how) the person can sign in.
   phone: z.string().refine((v) => v.trim() === "" || /^\+?[\d\s().-]{8,20}$/.test(v.trim()), "Enter a valid mobile number"),
   email: z.string().refine((v) => v.trim() === "" || z.string().email().safeParse(v.trim()).success, "Enter a valid email"),
   address: z.string().min(1, "Address is required"),
-  loginRole: z.string().optional(),
   reportingToStaffId: z.string().optional(),
 });
+
+type StaffFormShape = z.infer<typeof staffFormSchema>;
+const LEGACY = "d:";
 
 interface StaffFormDialogProps {
   open: boolean;
@@ -56,7 +60,7 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
     setError,
     clearErrors,
     formState: { errors },
-  } = useForm<StaffFormValues>({
+  } = useForm<StaffFormShape>({
     resolver: zodResolver(staffFormSchema),
     defaultValues: {
       branchId: getCurrentBranchId(),
@@ -64,30 +68,28 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
       lastName: "",
       dateOfBirth: "",
       gender: "male",
-      designation: "Teacher",
-      department: "",
+      roleKey: "teacher",
+      departments: [],
       phone: "",
       email: "",
       address: "",
-      loginRole: "",
       reportingToStaffId: "",
     },
   });
   // The email / mobile number is already taken: which field, and whether the person can still be saved without a sign-in account.
   const [conflict, setConflict] = useState<LoginConflictError | null>(null);
-  const designation = useWatch({ control, name: "designation" });
-  const loginRole = useWatch({ control, name: "loginRole" });
-  const automaticRole = DESIGNATION_LOGIN_ROLE[designation];
+  const roleKey = useWatch({ control, name: "roleKey" });
 
   // Built-in staff roles and the school's custom roles; the fixed list is the fallback while it loads or if it can't.
   const { data: loginRoleOptions } = useQuery({ queryKey: ["staff", "login-roles"], queryFn: listAssignableLoginRoles, staleTime: 60_000, retry: false });
-  const roleChoices = loginRoleOptions ?? STAFF_LOGIN_ROLES.map((r) => ({ key: r.value, name: t(r.label) }));
-  const automaticRoleName = automaticRole ? roleChoices.find((r) => r.key === automaticRole)?.name ?? automaticRole : undefined;
+  const roleChoices = loginRoleOptions?.length ? loginRoleOptions : STAFF_LOGIN_ROLES.map((r) => ({ key: r.value, name: t(r.label) }));
+  // An older record whose designation no role in the master stands for stays selectable as it is.
+  const legacyDesignation = staff && !staff.roleTitle && !roleChoices.some((r) => designationForRole(r.key, r.name) === staff.designation) ? staff.designation : null;
   const { data: branches = [] } = useQuery({ queryKey: ["admin", "branches"], queryFn: listBranches });
   const { data: departments = [] } = useQuery({ queryKey: ["academics", "departments"], queryFn: listDepartments });
   // Chosen from the school's departments (Academic Management); a value saved earlier that is no longer listed stays selectable.
-  const departmentName = useWatch({ control, name: "department" });
-  const departmentId = departments.find((d) => d.name === departmentName)?.id;
+  const selectedDepartments = useWatch({ control, name: "departments" });
+  const departmentId = departments.find((d) => d.name === selectedDepartments?.[0])?.id;
   const { data: reportingOptions = [] } = useQuery({
     queryKey: ["academics", "reporting-options", staff?.id ?? "new", departmentId ?? "none"],
     queryFn: () => listReportingOptions({ staffId: staff?.id, departmentId }),
@@ -105,12 +107,11 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               lastName: staff.lastName,
               dateOfBirth: staff.dateOfBirth.slice(0, 10),
               gender: staff.gender,
-              designation: staff.designation,
-              department: staff.department,
+              roleKey: initialRoleKey(staff),
+              departments: staff.departments,
               phone: staff.phone,
               email: staff.email,
               address: staff.address,
-              loginRole: "",
               reportingToStaffId: staff.reportingToStaffId ?? "",
             }
           : {
@@ -119,21 +120,39 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               lastName: "",
               dateOfBirth: "",
               gender: "male",
-              designation: "Teacher",
-              department: "",
+              roleKey: "teacher",
+              departments: [],
               phone: "",
               email: "",
               address: "",
-              loginRole: "",
               reportingToStaffId: "",
             },
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the role list is read once, when the dialog opens
   }, [open, staff, reset]);
 
+  /** The select value for an existing record: the role that carries its designation or role title, else the designation itself. */
+  function initialRoleKey(s: StaffMember): string {
+    if (s.roleTitle) return roleChoices.find((r) => r.name.toLowerCase() === s.roleTitle!.toLowerCase())?.key ?? LEGACY + "Other";
+    return roleChoices.find((r) => designationForRole(r.key, r.name) === s.designation)?.key ?? LEGACY + s.designation;
+  }
+
   /** Saves; a taken email / mobile number marks its field instead of just failing, and may offer to save without a sign-in account. */
-  const submit = async (values: StaffFormValues, createWithoutLogin = false) => {
+  const submit = async (form: StaffFormShape, createWithoutLogin = false) => {
     setConflict(null);
+    const { roleKey: picked, departments: picks, ...rest } = form;
+    const role = roleChoices.find((r) => r.key === picked);
+    const designation: StaffDesignation = role ? designationForRole(role.key, role.name) : ((picked.slice(LEGACY.length) as StaffDesignation) || "Other");
+    const values: StaffFormValues = {
+      ...rest,
+      designation,
+      roleTitle: designation === "Other" ? role?.name ?? staff?.roleTitle : undefined,
+      departments: picks,
+      department: picks[0] ?? "",
+      // A new joiner signs in with the role picked; designations with no role of their own get no sign-in.
+      loginRole: !isEdit && role ? role.key : "",
+    };
     try {
       await onSubmit(createWithoutLogin ? { ...values, createWithoutLogin: true } : values);
     } catch (err) {
@@ -221,37 +240,39 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
             </div>
           </FormSection>
 
-          <FormSection title={t("Role")}>
+          <FormSection title={t("Role and department")}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="designation" required>{t("Designation")}</Label>
+                <Label htmlFor="roleKey" required>{t("Role")}</Label>
                 <Controller
                   control={control}
-                  name="designation"
+                  name="roleKey"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="designation">
-                        <SelectValue />
+                      <SelectTrigger id="roleKey" aria-invalid={errors.roleKey ? true : undefined}>
+                        <SelectValue placeholder={t("Select a role")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {DESIGNATIONS.map((d) => (
-                          <SelectItem key={d} value={d}>
-                            {t(d)}
+                        {roleChoices.map((r) => (
+                          <SelectItem key={r.key} value={r.key}>
+                            {r.name}
                           </SelectItem>
                         ))}
+                        {legacyDesignation && <SelectItem value={LEGACY + legacyDesignation}>{t(legacyDesignation)}</SelectItem>}
                       </SelectContent>
                     </Select>
                   )}
                 />
+                {errors.roleKey && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.roleKey.message ?? "")}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="department" required>{t("Department")}</Label>
+                <Label htmlFor="departments" optional>{t("Department")}</Label>
                 <Controller
                   control={control}
-                  name="department"
-                  render={({ field }) => <DepartmentSelect id="department" value={field.value} onChange={field.onChange} invalid={Boolean(errors.department)} />}
+                  name="departments"
+                  render={({ field }) => <DepartmentMultiSelect id="departments" value={field.value} onChange={field.onChange} />}
                 />
-                {errors.department && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{t(errors.department.message ?? "")}</p>}
+                <p className="text-xs text-muted-foreground">{t("Pick any number, or none. The first one picked is the main department.")}</p>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -278,33 +299,11 @@ export default function StaffFormDialog({ open, onOpenChange, staff, onSubmit, s
               <p className="text-xs text-muted-foreground">{t("Their profile changes are sent to this person for approval. With none, they go to the school administrators.")}</p>
             </div>
             {!isEdit && (
-              <div className="space-y-1.5">
-                <Label htmlFor="loginRole">{t("Sign-in role")}</Label>
-                <Controller
-                  control={control}
-                  name="loginRole"
-                  render={({ field }) => (
-                    <Select value={field.value || "auto"} onValueChange={(v) => field.onChange(v === "auto" ? "" : v)}>
-                      <SelectTrigger id="loginRole">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto">{automaticRoleName ? t("Automatic ({{role}})", { role: automaticRoleName }) : t("Automatic (no sign-in)")}</SelectItem>
-                        {roleChoices.map((r) => (
-                          <SelectItem key={r.key} value={r.key}>
-                            {r.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {loginRole || automaticRole
-                    ? t("A sign-in is created for the email below and an invitation to set a password is sent.")
-                    : t("This designation has no sign-in of its own. Pick a sign-in role to give them access.")}
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                {roleKey.startsWith(LEGACY)
+                  ? t("This role has no sign-in of its own. Pick a role from the list to give them access.")
+                  : t("A sign-in is created for the email below and an invitation to set a password is sent.")}
+              </p>
             )}
           </FormSection>
 

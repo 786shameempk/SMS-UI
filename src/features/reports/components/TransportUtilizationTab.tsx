@@ -6,6 +6,7 @@ import { CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, CHART_TOOLTIP_STYLE }
 import { getTransportUtilizationReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 export default function TransportUtilizationTab() {
   const { t } = useTranslation("reports");
@@ -15,6 +16,9 @@ export default function TransportUtilizationTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={t("Transport")} sections={[
+          { title: t("Route utilisation"), headers: [t("Route"), t("Assigned"), t("Capacity"), t("Utilisation %")], rows: data.routes.map((r) => [r.routeName, r.assigned, r.capacity, r.utilizationPercent]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatTile label={t("Students assigned")} value={String(data.totalAssigned)} icon={Users} />
         <StatTile label={t("Total seating capacity")} value={String(data.totalCapacity)} icon={Bus} />

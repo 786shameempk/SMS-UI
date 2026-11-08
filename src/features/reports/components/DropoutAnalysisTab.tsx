@@ -6,6 +6,7 @@ import { CATEGORICAL_COLORS, CHART_AXIS_TICK, CHART_DANGER, CHART_GRID_COLOR, CH
 import { getDropoutReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 const STATUS_LABEL: Record<string, string> = {
   active: "Active",
@@ -25,6 +26,10 @@ export default function DropoutAnalysisTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={t("Dropout Analysis")} sections={[
+          { title: t("Students by status"), headers: [t("Status"), t("Students")], rows: data.statusBreakdown.map((s) => [STATUS_LABEL[s.status] ?? s.status, s.count]) },
+          { title: t("Inactive students by class"), headers: [t("Class"), t("Students")], rows: data.inactiveByClass.map((c) => [c.className, c.count]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatTile label={t("Total students")} value={String(data.totalStudents)} icon={Users} />
         <StatTile label={t("Inactive (dropout)")} value={String(inactiveCount)} icon={UserRoundX} />

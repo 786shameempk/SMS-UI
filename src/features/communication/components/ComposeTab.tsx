@@ -17,6 +17,7 @@ import { composeMessage, listGroups, listTemplates } from "../api";
 import type { ComposeMessageFormValues } from "../types";
 import ChannelSelector from "./ChannelSelector";
 import MultiSelectList from "./MultiSelectList";
+import { roleLabel } from "@/features/staff/constants";
 
 import { useTranslation } from "react-i18next";
 const NONE = "__none__";
@@ -82,7 +83,7 @@ export default function ComposeTab() {
     () => students.map((s) => ({ id: s.id, label: `${s.firstName} ${s.lastName}`, sublabel: `${s.className}-${s.section}` })),
     [students],
   );
-  const staffOptions = useMemo(() => staff.map((s) => ({ id: s.id, label: `${s.firstName} ${s.lastName}`, sublabel: s.designation })), [staff]);
+  const staffOptions = useMemo(() => staff.map((s) => ({ id: s.id, label: `${s.firstName} ${s.lastName}`, sublabel: roleLabel(s) })), [staff]);
 
   const composeMutation = useMutation({
     mutationFn: composeMessage,

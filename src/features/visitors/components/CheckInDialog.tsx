@@ -16,6 +16,7 @@ import { listStaff } from "@/features/staff/api";
 import { ID_PROOF_TYPES, PURPOSE_OPTIONS } from "../constants";
 import { getWatchlistMatch } from "../api";
 import type { VisitorCheckInFormValues, VisitorHostType, VisitPurpose } from "../types";
+import { roleLabel } from "@/features/staff/constants";
 
 const checkInSchema = z
   .object({
@@ -219,7 +220,7 @@ export default function CheckInDialog({
                     <SelectContent>
                       {staff.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          {s.firstName} {s.lastName} · {s.designation}
+                          {s.firstName} {s.lastName} · {roleLabel(s)}
                         </SelectItem>
                       ))}
                     </SelectContent>

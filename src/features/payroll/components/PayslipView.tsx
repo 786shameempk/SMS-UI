@@ -7,6 +7,7 @@ import Letterhead from "@/features/tenant/Letterhead";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 import { monthLabel } from "../constants";
 import type { PayslipRow } from "../types";
+import { roleLabel } from "@/features/staff/constants";
 
 const PRINT_STYLE = `
   @media print {
@@ -58,8 +59,8 @@ export default function PayslipView({
                 <span className="font-medium text-slate-800">{payslip.staff.employeeId}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">{t("Designation:")} </span>
-                <span className="font-medium text-slate-800">{payslip.staff.designation}</span>
+                <span className="text-muted-foreground">{t("Role:")} </span>
+                <span className="font-medium text-slate-800">{roleLabel(payslip.staff)}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">{t("Department:")} </span>

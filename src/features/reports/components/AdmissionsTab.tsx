@@ -6,6 +6,7 @@ import { CATEGORICAL_COLORS, CHART_AXIS_TICK, CHART_GRID_COLOR, CHART_PRIMARY, C
 import { getAdmissionsReport } from "../api";
 import StatTile from "./StatTile";
 
+import ReportExport from "./ReportExport";
 import { useTranslation } from "react-i18next";
 const STATUS_LABEL: Record<string, string> = {
   inquiry: "Inquiry",
@@ -27,6 +28,10 @@ export default function AdmissionsTab() {
 
   return (
     <div className="space-y-5">
+      <ReportExport title={t("Admissions")} sections={[
+          { title: t("Applications by status"), headers: [t("Status"), t("Applications")], rows: data.statusBreakdown.map((s) => [STATUS_LABEL[s.status] ?? s.status, s.count]) },
+          { title: t("Applications received"), headers: [t("Month"), t("Applications")], rows: data.monthlyApplications.map((m) => [m.month, m.value]) },
+        ]} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatTile label={t("Total applications")} value={String(data.totalApplications)} icon={FileText} />
         <StatTile label={t("Enrollment rate")} value={`${data.approvalRate}%`} icon={Percent} />

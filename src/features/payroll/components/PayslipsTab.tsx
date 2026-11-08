@@ -13,6 +13,7 @@ import { monthLabel } from "../constants";
 import { listPayrollRuns, listPayslips, markPayslipPaid } from "../api";
 import type { PayslipRow } from "../types";
 import PayslipView from "./PayslipView";
+import { roleLabel } from "@/features/staff/constants";
 
 /** `mine`: a staff member's own payslips - read-only, with no payroll-run controls. */
 export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
@@ -63,7 +64,7 @@ export default function PayslipsTab({ mine = false }: { mine?: boolean }) {
             {row.original.staff.firstName} {row.original.staff.lastName}
           </p>
           <p className="text-xs text-muted-foreground">
-            {row.original.staff.employeeId} &middot; {row.original.staff.designation}
+            {row.original.staff.employeeId} &middot; {roleLabel(row.original.staff)}
           </p>
         </div>
       ),

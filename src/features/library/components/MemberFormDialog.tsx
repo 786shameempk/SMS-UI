@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { roleLabel } from "@/features/staff/constants";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -72,7 +73,7 @@ export default function MemberFormDialog({
     }
     return staff
       .filter((s) => !memberPersonIds.has(s.id))
-      .map((s) => ({ value: s.id, label: `${s.firstName} ${s.lastName} · ${s.designation} (${s.employeeId})` }));
+      .map((s) => ({ value: s.id, label: `${s.firstName} ${s.lastName} · ${roleLabel(s)} (${s.employeeId})` }));
   }, [personType, students, staff, memberPersonIds]);
 
   return (

@@ -16,6 +16,7 @@ import LinkedLoginsPanel from "@/features/administration/users/components/Linked
 import { useAuthStore } from "@/store/authStore";
 import { PageContainer } from "@/components/ui/page";
 import { EmptyState, PageSkeleton } from "@/components/ui/states";
+import { roleLabel } from "@/features/staff/constants";
 
 export default function StaffProfilePage() {
   const { t } = useTranslation("staff");
@@ -72,7 +73,7 @@ export default function StaffProfilePage() {
           <StaffStatusBadge status={staff.status} />
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          {t(staff.designation)} &middot; {staff.department} &middot; {staff.employeeId}
+          {t(roleLabel(staff))} &middot; {staff.department} &middot; {staff.employeeId}
         </p>
       </div>
 

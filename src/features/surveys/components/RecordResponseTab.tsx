@@ -15,6 +15,7 @@ import { listStaff } from "@/features/staff/api";
 import { RATING_SCALE, RESPONDENT_TYPE_OPTIONS } from "../constants";
 import { listSurveys, recordResponse } from "../api";
 import type { RespondentType, Survey } from "../types";
+import { roleLabel } from "@/features/staff/constants";
 
 export default function RecordResponseTab() {
   const { t } = useTranslation("surveys");
@@ -130,7 +131,7 @@ export default function RecordResponseTab() {
                     <SelectContent>
                       {staff.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          {s.firstName} {s.lastName} · {s.designation}
+                          {s.firstName} {s.lastName} · {roleLabel(s)}
                         </SelectItem>
                       ))}
                     </SelectContent>
