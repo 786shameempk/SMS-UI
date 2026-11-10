@@ -49,6 +49,7 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     tabs: [t("class-section", "Class/Section View"), t("teacher", "Teacher View"), t("student-parent", "Student/Parent View"), t("periods", "Periods"), t("rooms", "Rooms"), t("substitutions", "Substitutions")],
   },
   { routeId: "examinations.home", matrixModule: "Examinations", title: "Examinations", tabs: [t("exams", "Exams"), t("marks-entry", "Marks Entry"), t("results-ranking", "Results & Ranking"), t("report-cards", "Report Cards"), t("transcript", "Transcript")] },
+  { routeId: "custom-reports.home", matrixModule: "Reports & Analytics", title: "Custom Report Generator", tabs: [t("mine", "My Custom Reports"), t("new", "Create New Report"), t("shared", "Shared Reports"), t("favourites", "Favourite Reports")] },
   { routeId: "progress-cards.home", matrixModule: "Examinations", title: "Progress Card Generator", tabs: [t("generate", "Generate"), t("published", "Cards and publishing"), t("coscholastic", "Co-scholastic and remarks"), t("templates", "Template library"), t("grading", "Grading configuration")] },
   { routeId: "homework.manage", matrixModule: "Homework", title: "Homework", tabs: [t("homework", "Homework"), t("resources", "Learning Resources"), t("progress", "Progress Overview")] },
   { routeId: "homework.mine", matrixModule: "Homework", title: "My Homework", tabs: [t("homework", "My Homework"), t("resources", "Resources")] },
