@@ -1,36 +1,36 @@
 {
   "summary": {
     "appVersion": "0.0.0",
-    "revision": "88b2e0d84a",
+    "revision": "8c0dfeb4f8",
     "modules": {
-      "total": 42,
-      "withArticles": 42,
-      "withOverview": 9
+      "total": 43,
+      "withArticles": 43,
+      "withOverview": 10
     },
     "routes": {
-      "total": 131,
-      "countedScreens": 129,
-      "documented": 84,
+      "total": 144,
+      "countedScreens": 142,
+      "documented": 94,
       "excluded": 2
     },
     "actions": {
-      "identified": 24,
+      "identified": 26,
       "documented": 15,
       "heuristic": true
     },
     "articles": {
-      "total": 115,
-      "draft": 0,
-      "reviewed": 115,
+      "total": 132,
+      "draft": 8,
+      "reviewed": 124,
       "verified": 0,
-      "tasks": 185
+      "tasks": 212
     },
     "assets": {
       "screenshotsCaptured": 12,
       "screenshotsReferencedButMissing": 0,
       "videosRecorded": 0,
-      "taskArticlesWithoutScreenshot": 90,
-      "taskArticlesWithoutVideo": 99
+      "taskArticlesWithoutScreenshot": 103,
+      "taskArticlesWithoutVideo": 112
     },
     "problems": {
       "errors": 0,
@@ -74,6 +74,9 @@
     "appraisal.result",
     "appraisal.history",
     "staff.profile",
+    "store.stores",
+    "store.categories",
+    "store.suppliers",
     "azure.cost",
     "azure.resources",
     "azure.resource-detail",
@@ -88,7 +91,7 @@
     "help-center.role",
     "help-center.article"
   ],
-  "actionsOpen": 9,
+  "actionsOpen": 11,
   "drift": [],
   "metadataIssues": [],
   "errors": [],

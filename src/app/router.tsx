@@ -95,6 +95,20 @@ const PortionsExamPortionsPage = lazy(() => import("@/features/lesson-portions/p
 const PortionsResourcesPage = lazy(() => import("@/features/lesson-portions/pages/ResourcesPage"));
 const PortionsSettingsPage = lazy(() => import("@/features/lesson-portions/pages/SettingsPage"));
 const PortionsFamilyPage = lazy(() => import("@/features/lesson-portions/pages/FamilyPage"));
+const StoreLayout = lazy(() => import("@/features/store/components/StoreLayout"));
+const StoreDashboardPage = lazy(() => import("@/features/store/pages/DashboardPage"));
+const StoreStoresPage = lazy(() => import("@/features/store/pages/StoresPage"));
+const StoreItemsPage = lazy(() => import("@/features/store/pages/ItemsPage"));
+const StoreCategoriesPage = lazy(() => import("@/features/store/pages/CategoriesPage"));
+const StoreSuppliersPage = lazy(() => import("@/features/store/pages/SuppliersPage"));
+const StoreRequisitionsPage = lazy(() => import("@/features/store/pages/RequisitionsPage"));
+const StorePurchaseOrdersPage = lazy(() => import("@/features/store/pages/PurchaseOrdersPage"));
+const StoreReceiptsPage = lazy(() => import("@/features/store/pages/ReceiptsPage"));
+const StoreStockPage = lazy(() => import("@/features/store/pages/StockPage"));
+const StoreIssuesPage = lazy(() => import("@/features/store/pages/IssuesPage"));
+const StoreSalesPage = lazy(() => import("@/features/store/pages/SalesPage"));
+const StoreReturnsPage = lazy(() => import("@/features/store/pages/ReturnsPage"));
+const StoreReportsPage = lazy(() => import("@/features/store/pages/ReportsPage"));
 const ExtracurricularLayout = lazy(() => import("@/features/extracurricular/components/ExtracurricularLayout"));
 const ExtracurricularOverviewPage = lazy(() => import("@/features/extracurricular/pages/OverviewPage"));
 const ExtracurricularActivitiesPage = lazy(() => import("@/features/extracurricular/pages/ActivitiesPage"));
@@ -291,6 +305,25 @@ export const router = createBrowserRouter([
           { path: "resources", element: <PortionsResourcesPage /> },
           { path: "settings", element: <PortionsSettingsPage /> },
           { path: "family", element: <PortionsFamilyPage /> },
+        ],
+      },
+      {
+        path: "store",
+        element: <StoreLayout />,
+        children: [
+          { index: true, element: <StoreDashboardPage /> },
+          { path: "stores", element: <StoreStoresPage /> },
+          { path: "items", element: <StoreItemsPage /> },
+          { path: "categories", element: <StoreCategoriesPage /> },
+          { path: "suppliers", element: <StoreSuppliersPage /> },
+          { path: "requisitions", element: <StoreRequisitionsPage /> },
+          { path: "purchase-orders", element: <StorePurchaseOrdersPage /> },
+          { path: "receipts", element: <StoreReceiptsPage /> },
+          { path: "stock", element: <StoreStockPage /> },
+          { path: "issues", element: <StoreIssuesPage /> },
+          { path: "sales", element: <StoreSalesPage /> },
+          { path: "returns", element: <StoreReturnsPage /> },
+          { path: "reports", element: <StoreReportsPage /> },
         ],
       },
       {

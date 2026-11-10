@@ -71,7 +71,7 @@ function CycleBody({ cycle }: { cycle: CycleDetail }) {
             <div className="min-w-0">
               <h2 className="text-lg font-semibold">{cycle.summary.name}</h2>
               <p className="text-sm text-muted-foreground">
-                {[cycle.summary.appraisalType, cycle.summary.evaluationPeriod, `${formatDate(cycle.summary.startDate)} – ${formatDate(cycle.summary.endDate)}`].filter(Boolean).join(" · ")}
+                {[cycle.summary.appraisalType, cycle.evaluationPeriod, `${formatDate(cycle.summary.startDate)} – ${formatDate(cycle.summary.endDate)}`].filter(Boolean).join(" · ")}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -175,9 +175,9 @@ function Overview({ cycle }: { cycle: CycleDetail }) {
   const rules = c.reviewerRules.filter((r) => r.enabled);
   const dates: [string, string | null | undefined][] = [
     [t("Reviews open"), cycle.reviewOpenDate],
-    [t("Submission deadline"), cycle.submissionDeadline],
+    [t("Submission deadline"), cycle.summary.submissionDeadline],
     [t("Manager review deadline"), cycle.managerDeadline],
-    [t("Approval deadline"), cycle.approvalDeadline],
+    [t("Approval deadline"), cycle.summary.approvalDeadline],
     [t("Finalization date"), cycle.finalizationDate],
     [t("Keep records until"), cycle.retainUntil],
   ];

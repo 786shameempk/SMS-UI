@@ -63,6 +63,8 @@ function ProviderCard({ config }: { config: ProviderConfig }) {
   const [cost, setCost] = useState(config.costPerMessage?.toString() ?? "");
   const [optInAtAdmission, setOptInAtAdmission] = useState(config.optInCollectedAtAdmission);
   const [testTo, setTestTo] = useState("");
+  const [quota, setQuota] = useState(config.monthlyQuota?.toString() ?? "");
+  const [alertPercent, setAlertPercent] = useState(config.quotaAlertPercent || 80);
 
   const save = useMutation({
     mutationFn: () =>
@@ -75,6 +77,8 @@ function ProviderCard({ config }: { config: ProviderConfig }) {
         dailyLimit: daily,
         costPerMessage: cost === "" ? null : Number(cost),
         optInCollectedAtAdmission: optInAtAdmission,
+        monthlyQuota: quota === "" ? null : Number(quota),
+        quotaAlertPercent: alertPercent,
       }),
     onSuccess: () => {
       toast.success(t("{{v1}} settings saved", { v1: CHANNEL_TITLES[config.channel] }));
@@ -169,6 +173,21 @@ function ProviderCard({ config }: { config: ProviderConfig }) {
           <div className="space-y-1.5">
             <Label htmlFor={`${config.channel}-cost`}>{t("Your price per message (for usage reports)")}</Label>
             <Input id={`${config.channel}-cost`} type="number" min={0} step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${config.channel}-quota`}>{t("Monthly quota (messages)")}</Label>
+            <Input
+              id={`${config.channel}-quota`}
+              type="number"
+              min={0}
+              placeholder={t("No quota")}
+              value={quota}
+              onChange={(e) => setQuota(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${config.channel}-alert`}>{t("Alert administrators at (% of quota)")}</Label>
+            <Input id={`${config.channel}-alert`} type="number" min={1} max={100} value={alertPercent} onChange={(e) => setAlertPercent(Number(e.target.value))} />
           </div>
         </div>
 

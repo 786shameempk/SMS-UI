@@ -32,6 +32,7 @@ describe("communication api", () => {
     expect(calls[1].body).toEqual({
       name: "Fee reminder", category: null, subject: null, body: "Pay", channels: ["Sms", "InApp"],
       language: "en", smsTemplateId: null, whatsAppTemplateName: null, whatsAppTemplateLanguage: null,
+      eventType: null, approvalStatus: null, isActive: null, whatsAppCategory: null,
     });
     expect(calls[2].body).toMatchObject({ name: "N", category: "Fees", subject: "New", body: "B", channels: ["WhatsApp"] });
   });

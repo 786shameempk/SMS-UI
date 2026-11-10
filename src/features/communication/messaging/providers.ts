@@ -50,6 +50,23 @@ export const PROVIDERS: ProviderDefinition[] = [
     webhookHelp: "Brevo → Transactional → Settings → Webhooks: add this URL with events Delivered, Hard bounce, Soft bounce, Blocked, Spam, Unsubscribed, Opened.",
   },
   {
+    name: "AmazonSes",
+    label: "Amazon SES (API)",
+    channel: "email",
+    help: "Amazon Simple Email Service API. Bounces, complaints and deliveries come back through an SNS topic subscribed to the webhook below. The sender address or domain must be verified in SES.",
+    fields: [
+      { key: "region", label: "AWS region", required: true, placeholder: "ap-south-1" },
+      { key: "accessKeyId", label: "Access key id", secret: true, required: true },
+      { key: "secretAccessKey", label: "Secret access key", secret: true, required: true },
+      { key: "fromEmail", label: "Verified sender address", required: true },
+      { key: "fromName", label: "From name (school name)", required: true },
+      { key: "configurationSet", label: "Configuration set (for delivery events)" },
+      { key: "replyTo", label: "Reply-to address" },
+    ],
+    webhookHelp:
+      "SES → Configuration sets (or Verified identities → Notifications): publish Delivery, Bounce and Complaint to an SNS topic, then add an HTTPS subscription with this URL. It confirms itself.",
+  },
+  {
     name: "Msg91",
     label: "MSG91",
     channel: "sms",

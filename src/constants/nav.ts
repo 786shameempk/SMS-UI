@@ -46,6 +46,7 @@ import {
   BookMarked,
   Wallet,
   WalletCards,
+  Store,
 } from "lucide-react";
 import type { ModulePermissions } from "@/types/auth";
 
@@ -84,6 +85,7 @@ export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Online Classes", to: "/online-classes", icon: Video, permissionKey: "meetings" },
   { label: "Talent Showcase", to: "/talents", icon: Star, permissionKey: "talents" },
   { label: "Co-Curricular", to: "/extracurricular", icon: Trophy, permissionKey: "extracurricular" },
+  { label: "Store Management", to: "/store", icon: Store, permissionKey: "store" },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
   // Parents and students read the syllabus the school publishes; staff reach the module from Academics.
   { label: "Syllabus Progress", to: "/lesson-portions/family", icon: BookMarked, permissionKey: "portions", audience: "family" },

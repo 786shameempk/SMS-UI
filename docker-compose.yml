@@ -147,6 +147,9 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=FinanceServiceDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
       # Parent/student fee access asks AcademicService whose children they are.
       Services__AcademicServiceUrl: http://academicservice:8080/
+      # Fee reminders (3 days before the due date, on it, then weekly while overdue) go to EngagementService's central notification API.
+      Services__EngagementServiceUrl: http://engagementservice:8080/
+      ServiceAuth__Secret: ${SERVICE_AUTH_SECRET:?SERVICE_AUTH_SECRET is required}
       # Razorpay online fee payment (School Sphere Student app). Empty = off; use rzp_test_ keys for testing.
       Razorpay__KeyId: ${RAZORPAY_KEY_ID:-}
       Razorpay__KeySecret: ${RAZORPAY_KEY_SECRET:-}

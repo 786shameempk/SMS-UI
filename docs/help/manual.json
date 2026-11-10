@@ -1,7 +1,16 @@
 {
-  "manualVersion": "1.0",
+  "manualVersion": "1.1",
   "subtitle": "Step-by-step guides for every part of School Sphere, for school staff, parents and students.",
   "revisions": [
-    { "version": "1.0", "date": "2026-10-09", "notes": "First edition, generated from the Help Center articles." }
+    {
+      "version": "1.0",
+      "date": "2026-10-09",
+      "notes": "First edition, generated from the Help Center articles."
+    },
+    {
+      "version": "1.1",
+      "date": "2026-11-09",
+      "notes": "Added notification rules, delivery log and usage, providers and consent, QR and face attendance, corrections and setup, login accounts, sub-menus per role and the announcement banner."
+    }
   ]
 }

@@ -64,7 +64,7 @@ describe("useVisibleNav", () => {
 
   it("drops sections left empty", () => {
     signIn("accountant", {}, permissions(["accounting"]));
-    useAuthStore.setState({ modulePermissions: permissions(["library", "transport", "hostel", "inventory", "visitors", "health"]) });
+    useAuthStore.setState({ modulePermissions: permissions(["library", "transport", "hostel", "inventory", "store", "visitors", "health"]) });
     const nav = renderHook(() => useVisibleNav()).result.current;
 
     expect(nav.sections.map((s) => s.title)).not.toContain("Campus Operations");

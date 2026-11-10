@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { ComboboxOption } from "@/components/ui/combobox";
 import { listAcademicYears } from "@/features/academics/api";
 import { listStudents } from "@/features/students/api";
+import axios from "axios";
 import { extractApiErrorMessage } from "@/lib/httpClient";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
@@ -75,7 +76,8 @@ export function useAcademicYears() {
 // ── Mutations ───────────────────────────────────────────────────────────────
 
 export function toastApiError(error: unknown) {
-  const message = extractApiErrorMessage(error);
+  // The api layer has already turned the server's reply into an Error carrying its message, so show a plain Error as is.
+  const message = error instanceof Error && !axios.isAxiosError(error) && error.message ? error.message : extractApiErrorMessage(error);
   toast.error(message, { id: `ec-${message}` });
 }
 

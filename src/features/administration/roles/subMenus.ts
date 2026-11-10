@@ -35,7 +35,7 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     title: "Academic management",
     tabs: [t("academic-years", "Academic Years"), t("terms", "Terms"), t("departments", "Departments"), t("classes-sections", "Standards & Divisions"), t("subjects", "Subjects"), t("capacity", "Standard Capacity"), t("calendar", "Academic Calendar")],
   },
-  { routeId: "attendance.home", matrixModule: "Attendance", title: "Attendance management", tabs: [t("mark-attendance", "Mark Attendance"), t("staff-attendance", "Staff Attendance / My Leave"), t("reports", "Reports")] },
+  { routeId: "attendance.home", matrixModule: "Attendance", title: "Attendance management", tabs: [t("mark-attendance", "Mark Attendance"), t("scan", "Scan"), t("staff-attendance", "Staff Attendance / My Leave"), t("corrections", "Corrections"), t("exceptions", "Exceptions"), t("reports", "Reports"), t("setup", "Setup")] },
   {
     routeId: "teachers.profile",
     matrixModule: "Teachers",
@@ -69,7 +69,7 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     routeId: "fees.home",
     matrixModule: "Fee Management",
     title: "Fee management",
-    tabs: [t("structures", "Fee Structures"), t("discounts", "Discounts & Scholarships"), t("invoices", "Student Invoices"), t("overdue", "Overdue"), t("receipts", "Receipts"), t("refunds", "Refunds")],
+    tabs: [t("structures", "Fee Structures"), t("discounts", "Discounts & Scholarships"), t("invoices", "Student Invoices"), t("previous-dues", "Previous dues"), t("overdue", "Overdue"), t("receipts", "Receipts"), t("refunds", "Refunds"), t("gateways", "Payment gateways"), t("gateway-activity", "Gateway activity")],
   },
   { routeId: "accounting.home", matrixModule: "Accounting", title: "Accounting", tabs: [t("accounts", "Chart of Accounts"), t("journal", "Journal"), t("trial-balance", "Trial Balance"), t("pnl", "Profit & Loss"), t("gst", "GST")] },
   {
@@ -91,9 +91,15 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     tabs: [t("hostels", "Hostels & Rooms"), t("allocations", "Student Allocation"), t("visitors", "Visitor Register"), t("attendance", "Hostel Attendance"), t("fees", "Hostel Fees"), t("mess", "Mess Menu")],
   },
   { routeId: "inventory.home", matrixModule: "Inventory Management", title: "Inventory", tabs: [t("items", "Items"), t("transactions", "Stock Transactions"), t("vendors", "Vendors & Categories"), t("reports", "Reports")] },
+  {
+    routeId: "store.home",
+    matrixModule: "Store Management",
+    title: "Store Management",
+    tabs: [t("dashboard", "Dashboard"), t("stores", "Stores & Warehouses"), t("items", "Items"), t("categories", "Categories"), t("suppliers", "Suppliers"), t("requisitions", "Purchase Requisitions"), t("purchase-orders", "Purchase Orders"), t("receipts", "Goods Receipt (GRN)"), t("stock", "Stock Management"), t("issues", "Item Issue / Distribution"), t("sales", "Store Sales"), t("returns", "Returns"), t("reports", "Reports")],
+  },
   { routeId: "visitors.home", matrixModule: "Visitor Management", title: "Visitors", tabs: [t("log", "Visitor Log"), t("preapproved", "Pre-Approved Visits"), t("watchlist", "Watchlist"), t("reports", "Reports")] },
   { routeId: "health.home", matrixModule: "Health & Medical", title: "Health & Medical", tabs: [t("records", "Health Records"), t("checkups", "Checkups"), t("vaccinations", "Vaccinations"), t("visits", "Infirmary Visits"), t("reports", "Reports")] },
-  { routeId: "communication.home", matrixModule: "Communication Center", title: "Communication Center", tabs: [t("compose", "Compose"), t("templates", "Templates"), t("groups", "Groups"), t("history", "History")] },
+  { routeId: "communication.home", matrixModule: "Communication Center", title: "Communication Center", tabs: [t("compose", "Compose"), t("templates", "Templates"), t("groups", "Groups"), t("history", "History"), t("log", "Delivery log"), t("usage", "Usage"), t("rules", "Rules"), t("consent", "Consent & audit"), t("settings", "Settings")] },
   { routeId: "surveys.home", matrixModule: "Surveys & Feedback", title: "Surveys & Feedback", tabs: [t("surveys", "Surveys"), t("respond", "Record a Response"), t("reports", "Reports")] },
   { routeId: "helpdesk.home", matrixModule: "Complaint / Help Desk", title: "Help Desk", tabs: [t("tickets", "Tickets"), t("raise", "Raise a Ticket"), t("reports", "Reports")] },
   { routeId: "certificates.home", matrixModule: "Certificate Generator", title: "Certificates", tabs: [t("generate", "Generate"), t("issued", "Issued Certificates")] },
@@ -101,7 +107,7 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     routeId: "reports.home",
     matrixModule: "Reports & Analytics",
     title: "Reports & Analytics",
-    tabs: [t("student-performance", "Student Performance"), t("attendance", "Attendance"), t("fees", "Fee Collection"), t("teachers", "Teacher Performance"), t("admissions", "Admissions"), t("dropout", "Dropout Analysis"), t("library", "Library Usage"), t("transport", "Transport"), t("hostel", "Hostel Occupancy")],
+    tabs: [t("library", "Report library"), t("favourites", "Favourites"), t("student-performance", "Student Performance"), t("attendance", "Attendance"), t("fees", "Fee Collection"), t("teachers", "Teacher Performance"), t("admissions", "Admissions"), t("dropout", "Dropout Analysis"), t("library-usage", "Library Usage"), t("transport", "Transport"), t("hostel", "Hostel Occupancy")],
   },
   {
     routeId: "settings.home",
@@ -109,6 +115,15 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     title: "Settings",
     tabs: [t("profile", "School Profile"), t("subscription", "Plan & Subscription"), t("branding", "Appearance"), t("dashboard", "Dashboard"), t("localization", "Localization"), t("templates", "Templates"), t("backup", "Backup & Restore"), t("audit", "Audit Log")],
   },
+  { routeId: "lesson-portions.dashboard", matrixModule: "Syllabus & Portions", title: "Lesson & Portions", tabs: [t("mine", "My teaching"), t("school", "School overview")] },
+  { routeId: "lesson-portions.syllabus", matrixModule: "Syllabus & Portions", title: "Curriculum and syllabus setup", tabs: [t("syllabi", "Syllabus plans"), t("templates", "Templates"), t("curricula", "Curricula")] },
+  { routeId: "lesson-portions.tracking", matrixModule: "Syllabus & Portions", title: "Class-wise portion tracking", tabs: [t("completion", "Class and subject completion"), t("pending", "Pending chapters"), t("delayed", "Delayed lessons and actions")] },
+  { routeId: "lesson-portions.subject-report", matrixModule: "Syllabus & Portions", title: "Subject-wise completion report", tabs: [t("subjects", "By subject"), t("planned", "Planned vs actual"), t("exams", "Exam portions not covered")] },
+  { routeId: "lesson-portions.approvals", matrixModule: "Syllabus & Portions", title: "Lesson plan approval", tabs: [t("waiting", "Waiting for review"), t("decided", "Decided")] },
+  { routeId: "appraisal.cycle", matrixModule: "Performance & Appraisal", title: "Appraisal cycle", tabs: [t("overview", "Overview"), t("participants", "Participants"), t("reviewers", "Reviewer assignment"), t("monitoring", "Review monitoring"), t("approvals", "Approval & finalization")] },
+  { routeId: "appraisal.questions", matrixModule: "Performance & Appraisal", title: "Appraisal criteria and questions", tabs: [t("questions", "Questions"), t("criteria", "Criteria"), t("templates", "Templates & versions")] },
+  { routeId: "appraisal.configuration", matrixModule: "Performance & Appraisal", title: "Appraisal configuration", tabs: [t("participants", "Who is appraised"), t("reviewers", "Who reviews"), t("scale", "Scale & scoring"), t("privacy", "Feedback & privacy"), t("workflow", "Approval workflow"), t("notify", "Notifications & retention")] },
+  { routeId: "appraisal.history", matrixModule: "Performance & Appraisal", title: "Appraisal history", tabs: [t("cycles", "Past cycles"), t("audit", "Audit trail")] },
 ];
 
 /** The Permission matrix row id that makes `module` visible ("Fee Management" -> "perm-fee-management-menu"). */

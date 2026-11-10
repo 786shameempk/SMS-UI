@@ -38,15 +38,15 @@ const fromDetail = (d: CycleDetail): CycleValues => ({
   academicYearId: d.summary.academicYearId ?? null,
   startDate: d.summary.startDate.slice(0, 10),
   endDate: d.summary.endDate.slice(0, 10),
-  evaluationPeriod: d.summary.evaluationPeriod ?? "",
+  evaluationPeriod: d.evaluationPeriod ?? "",
   appraisalType: d.summary.appraisalType ?? "Annual",
   templateVersionId: d.templateVersionId ?? "",
   eligibleDepartmentIds: d.eligibleDepartmentIds,
   eligibleCategories: d.eligibleCategories,
   reviewOpenDate: d.reviewOpenDate?.slice(0, 10) ?? null,
-  submissionDeadline: d.submissionDeadline?.slice(0, 10) ?? null,
+  submissionDeadline: d.summary.submissionDeadline?.slice(0, 10) ?? null,
   managerDeadline: d.managerDeadline?.slice(0, 10) ?? null,
-  approvalDeadline: d.approvalDeadline?.slice(0, 10) ?? null,
+  approvalDeadline: d.summary.approvalDeadline?.slice(0, 10) ?? null,
   finalizationDate: d.finalizationDate?.slice(0, 10) ?? null,
   allowDuplicateParticipants: d.allowDuplicateParticipants,
   config: d.config,
@@ -71,6 +71,13 @@ export default function CycleFormDialog({ open, cycle, onClose, onSaved }: { ope
     setV(cycle ? fromDetail(cycle) : empty());
     setTemplateId(undefined);
   }, [open, cycle]);
+
+  // Editing: preselect the template the cycle uses (the detail carries its name), so its versions load and the current one is shown.
+  useEffect(() => {
+    if (!open || !cycle || templateId || !templates.data) return;
+    const current = templates.data.find((x) => x.name === cycle.templateName);
+    if (current) setTemplateId(current.id);
+  }, [open, cycle, templateId, templates.data]);
 
   const save = useApiMutation((values: CycleValues) => (cycle ? updateCycle(cycle.summary.id, values) : createCycle(values)), {
     success: editing ? t("Cycle updated") : t("Cycle created"),

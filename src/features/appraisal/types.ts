@@ -180,6 +180,7 @@ export interface CycleSummary {
   endDate: string;
   evaluationPeriod?: string | null;
   submissionDeadline?: string | null;
+  approvalDeadline?: string | null;
   participantCount?: number;
   scoringMode?: ScoringMode;
   rowVersion?: string;
@@ -187,6 +188,7 @@ export interface CycleSummary {
 
 export interface CycleDetail {
   summary: CycleSummary;
+  evaluationPeriod?: string | null;
   templateVersionId?: string | null;
   templateName?: string | null;
   templateVersionNo?: number | null;
@@ -195,7 +197,6 @@ export interface CycleDetail {
   reviewOpenDate?: string | null;
   submissionDeadline?: string | null;
   managerDeadline?: string | null;
-  approvalDeadline?: string | null;
   finalizationDate?: string | null;
   allowDuplicateParticipants: boolean;
   config: CycleConfig;
