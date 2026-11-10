@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DataTable } from "@/components/tables/DataTable";
-import { listClasses, listSubjects } from "@/features/academics/api";
+import { listClasses, listSections, listSubjects } from "@/features/academics/api";
 import { createStaff, getMyStaffId, updateStaff } from "@/features/staff/api";
 import { notifyLoginIssues } from "@/utils/loginIssues";
 import LoginAccountBadge from "@/features/login-accounts/LoginAccountBadge";
@@ -50,6 +50,7 @@ function TeachersDirectory() {
   const { data: assignments = [] } = useQuery({ queryKey: ["teachers", "subject-assignments"], queryFn: () => listSubjectAssignments() });
   const { data: subjects = [] } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
+  const { data: sections = [] } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
 
   const loginStatuses = useLoginStatuses(teachers.map((teacher) => teacher.userId));
   const resetPassword = useResetPasswordDialog();
@@ -203,7 +204,7 @@ function TeachersDirectory() {
     <PageContainer>
       <PageHeader
         title={t("Teacher management")}
-        description={t("Subject & class assignments, lesson plans, and student performance for teaching staff.")}
+        description={t("Subject & standard assignments, lesson plans, and student performance for teaching staff.")}
       />
 
       <DataTable
@@ -272,6 +273,7 @@ function TeachersDirectory() {
         open={Boolean(assignSubjectTarget)}
         onOpenChange={(v) => !v && setAssignSubjectTarget(null)}
         classes={classes}
+        sections={sections}
         subjects={subjects}
         submitting={assignSubjectMutation.isPending}
         onSubmit={async (values) => {

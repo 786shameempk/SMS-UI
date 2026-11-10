@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listAcademicYears, updateAcademicYear } from "@/features/academics/api";
 import BrandLogo from "@/components/common/BrandLogo";
@@ -18,6 +19,10 @@ import { getSchoolProfile, updateSchoolLogo, updateSchoolProfile } from "../api"
 
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+
+/** Suggestions only: the fields accept any text, so every board and school category fits. */
+const SCHOOL_TYPES = ["Primary", "Upper Primary", "Middle", "High School", "Secondary", "Senior Secondary", "Pre-Primary", "Composite (KG to 12)"];
+const BOARDS = ["CBSE", "CISCE (ICSE/ISC)", "Kerala State Board", "Other State Board", "NIOS", "IB", "Cambridge (CAIE)"];
 
 const readAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -36,6 +41,10 @@ const profileSchema = z.object({
   email: z.string().refine((v) => v.trim() === "" || z.string().email().safeParse(v.trim()).success, "Enter a valid email"),
   principalName: z.string().optional(),
   establishedYear: z.coerce.number().int().min(1800).max(new Date().getFullYear()).optional(),
+  schoolType: z.string().max(100).optional(),
+  affiliatedTo: z.string().max(200).optional(),
+  affiliationNumber: z.string().max(100).optional(),
+  affiliationDetails: z.string().max(1000).optional(),
 });
 
 type FormValues = z.infer<typeof profileSchema>;
@@ -191,6 +200,33 @@ export default function SchoolProfileTab() {
                 <Label htmlFor="sp-establishedYear">{t("Established year")}</Label>
                 <Input id="sp-establishedYear" type="number" aria-invalid={errors.establishedYear ? true : undefined} {...register("establishedYear")} />
                 {errors.establishedYear && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.establishedYear.message}</p>}
+              </div>
+            </div>
+
+            <div className="space-y-3 border-t border-border pt-4">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">{t("Affiliation")}</h3>
+                <p className="text-xs text-muted-foreground">{t("Saved with your school profile. Type them into a progress card template header to print them on cards.")}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="sp-schoolType" optional>{t("School type")}</Label>
+                  <Input id="sp-schoolType" list="sp-school-types" {...register("schoolType")} />
+                  <datalist id="sp-school-types">{SCHOOL_TYPES.map((x) => <option key={x} value={x} />)}</datalist>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sp-affiliatedTo" optional>{t("Affiliated to")}</Label>
+                  <Input id="sp-affiliatedTo" list="sp-boards" {...register("affiliatedTo")} />
+                  <datalist id="sp-boards">{BOARDS.map((x) => <option key={x} value={x} />)}</datalist>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sp-affiliationNumber" optional>{t("Affiliation number")}</Label>
+                <Input id="sp-affiliationNumber" {...register("affiliationNumber")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sp-affiliationDetails" optional>{t("Other affiliation details")}</Label>
+                <Textarea id="sp-affiliationDetails" rows={3} placeholder={t("Recognition, valid up to, UDISE code, society or trust")} {...register("affiliationDetails")} />
               </div>
             </div>
 

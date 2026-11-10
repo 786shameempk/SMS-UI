@@ -1,36 +1,36 @@
 {
   "summary": {
     "appVersion": "0.0.0",
-    "revision": "8c0dfeb4f8",
+    "revision": "e8d5b69dc4",
     "modules": {
-      "total": 43,
+      "total": 44,
       "withArticles": 43,
-      "withOverview": 10
+      "withOverview": 11
     },
     "routes": {
-      "total": 144,
-      "countedScreens": 142,
-      "documented": 94,
+      "total": 153,
+      "countedScreens": 151,
+      "documented": 96,
       "excluded": 2
     },
     "actions": {
-      "identified": 26,
+      "identified": 27,
       "documented": 15,
       "heuristic": true
     },
     "articles": {
-      "total": 132,
+      "total": 135,
       "draft": 8,
-      "reviewed": 124,
+      "reviewed": 127,
       "verified": 0,
-      "tasks": 212
+      "tasks": 219
     },
     "assets": {
       "screenshotsCaptured": 12,
       "screenshotsReferencedButMissing": 0,
       "videosRecorded": 0,
-      "taskArticlesWithoutScreenshot": 103,
-      "taskArticlesWithoutVideo": 112
+      "taskArticlesWithoutScreenshot": 105,
+      "taskArticlesWithoutVideo": 114
     },
     "problems": {
       "errors": 0,
@@ -40,7 +40,9 @@
       "stale": 0
     }
   },
-  "modulesWithoutArticles": [],
+  "modulesWithoutArticles": [
+    "custom-reports"
+  ],
   "routesUndocumented": [
     "certificates.verify",
     "online-classes.calendar",
@@ -58,6 +60,9 @@
     "lesson-portions.teacher-report",
     "students.profile",
     "teachers.profile",
+    "progress-cards.template-new",
+    "progress-cards.template-system",
+    "progress-cards.template",
     "online-exams.list",
     "online-exams.detail",
     "online-exams.edit",
@@ -77,6 +82,10 @@
     "store.stores",
     "store.categories",
     "store.suppliers",
+    "custom-reports.home",
+    "custom-reports.new",
+    "custom-reports.edit",
+    "custom-reports.run",
     "azure.cost",
     "azure.resources",
     "azure.resource-detail",
@@ -91,7 +100,7 @@
     "help-center.role",
     "help-center.article"
   ],
-  "actionsOpen": 11,
+  "actionsOpen": 12,
   "drift": [],
   "metadataIssues": [],
   "errors": [],

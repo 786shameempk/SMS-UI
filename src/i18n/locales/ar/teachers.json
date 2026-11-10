@@ -1,6 +1,5 @@
 {
   "Teacher management": "إدارة المعلمين",
-  "Subject & class assignments, lesson plans, and student performance for teaching staff.": "إسناد المواد والصفوف وخطط الدروس وأداء الطلاب للهيئة التدريسية.",
   "Teacher": "المعلم",
   "Department": "القسم",
   "Subjects": "المواد",
@@ -32,7 +31,6 @@
   "Attendance": "الحضور",
   "Performance": "الأداء",
   "Documents": "المستندات",
-  "Subjects & Classes": "المواد والصفوف",
   "Lesson Plans": "خطط الدروس",
   "Student Performance": "أداء الطلاب",
   "Pick a teacher to be the class teacher for each section.": "اختر معلمًا ليكون معلم الفصل لكل شعبة.",
@@ -77,7 +75,6 @@
   "Delete lesson plan": "حذف خطة الدرس",
   "This lesson plan will be permanently removed.": "سيتم حذف خطة الدرس هذه نهائيًا.",
   "Delete": "حذف",
-  "Subjects & classes": "المواد والصفوف",
   "Loading assignments…": "جارٍ تحميل الإسنادات…",
   "No subjects or classes assigned yet.": "لم يتم إسناد أي مواد أو صفوف بعد.",
   "Assignment removed": "تمت إزالة الإسناد",
@@ -94,5 +91,17 @@
   "Student": "الطالب",
   "Roll no.": "رقم الجلوس",
   "Avg. score": "متوسط الدرجة",
-  "Grade": "التقدير"
+  "Grade": "التقدير",
+  "Subjects & Standards": "المواد والمراحل",
+  "Standard": "المرحلة",
+  "Division": "الشعبة",
+  "All divisions": "كل الشعب",
+  "Select a standard": "اختر المرحلة",
+  "Select a standard first": "اختر المرحلة أولًا",
+  "Unknown standard": "مرحلة غير معروفة",
+  "Unknown division": "شعبة غير معروفة",
+  "No subjects or standards assigned yet.": "لم يتم إسناد مواد أو مراحل بعد.",
+  "Link a standard, division and subject to this teacher.": "اربط مرحلة وشعبة ومادة بهذا المعلم.",
+  "This will unassign the subject, standard and division from this teacher.": "سيؤدي هذا إلى إلغاء إسناد المادة والمرحلة والشعبة من هذا المعلم.",
+  "Subject & standard assignments, lesson plans, and student performance for teaching staff.": "إسناد المواد والمراحل وخطط الدروس وأداء الطلاب للهيئة التدريسية."
 }

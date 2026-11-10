@@ -24,6 +24,10 @@ interface ApiSchoolProfile {
   email: string;
   principalName: string | null;
   establishedYear: number | null;
+  schoolType?: string | null;
+  affiliatedTo?: string | null;
+  affiliationNumber?: string | null;
+  affiliationDetails?: string | null;
   logoUrl?: string | null;
 }
 
@@ -60,6 +64,10 @@ const mapProfile = (p: ApiSchoolProfile): SchoolProfile => ({
   email: p.email,
   principalName: p.principalName ?? undefined,
   establishedYear: p.establishedYear ?? undefined,
+  schoolType: p.schoolType ?? undefined,
+  affiliatedTo: p.affiliatedTo ?? undefined,
+  affiliationNumber: p.affiliationNumber ?? undefined,
+  affiliationDetails: p.affiliationDetails ?? undefined,
   logoUrl: resolveFileUrl(p.logoUrl || undefined, AUTH_API_BASE_URL),
 });
 
@@ -88,6 +96,10 @@ export async function updateSchoolProfile(values: SchoolProfileFormValues): Prom
         tagline: values.tagline || null,
         principalName: values.principalName || null,
         establishedYear: values.establishedYear || null,
+        schoolType: values.schoolType || null,
+        affiliatedTo: values.affiliatedTo || null,
+        affiliationNumber: values.affiliationNumber || null,
+        affiliationDetails: values.affiliationDetails || null,
       }),
     ),
   );

@@ -29,5 +29,6 @@ describe("sub-menu catalogue", () => {
     expect(tabs("fees.home")).toEqual(expect.arrayContaining(["previous-dues", "gateways", "gateway-activity"]));
     expect(tabs("reports.home")).toEqual(expect.arrayContaining(["library", "favourites", "library-usage"]));
     expect(tabs("appraisal.questions")).toEqual(["questions", "criteria", "templates"]);
+    expect(tabs("progress-cards.home")).toEqual(["generate", "published", "coscholastic", "templates", "grading"]);
   });
 });

@@ -230,8 +230,14 @@ async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
 
 // ── Roster ───────────────────────────────────────────────────────────────
 
-export async function listRosterSections(): Promise<RosterSectionOption[]> {
-  const options = await unwrap(academicHttpClient.get<ApiRosterSectionOption[]>("/api/attendance/roster-sections"));
+/**
+ * With `forAttendanceOn`, a teacher login only gets the divisions they may mark that day (class teacher, a period that
+ * weekday, covering, or an assigned subject); other roles still get every division.
+ */
+export async function listRosterSections(forAttendanceOn?: string): Promise<RosterSectionOption[]> {
+  const options = await unwrap(
+    academicHttpClient.get<ApiRosterSectionOption[]>("/api/attendance/roster-sections", { params: forAttendanceOn ? { forAttendanceOn } : undefined }),
+  );
   return options.map(mapRosterSection);
 }
 

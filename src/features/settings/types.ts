@@ -8,6 +8,11 @@ export interface SchoolProfile {
   email: string;
   principalName?: string;
   establishedYear?: number;
+  /** Kind of school (Primary, Secondary, ...), the board or authority it is affiliated to, its affiliation number and any other details. */
+  schoolType?: string;
+  affiliatedTo?: string;
+  affiliationNumber?: string;
+  affiliationDetails?: string;
   /** Ready-to-use link to the uploaded logo; undefined = School Sphere's logo is shown. Changed only through the logo upload. */
   logoUrl?: string;
 }

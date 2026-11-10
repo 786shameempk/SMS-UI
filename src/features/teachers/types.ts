@@ -8,12 +8,15 @@ export interface TeacherSubjectAssignment {
   staffId: string;
   subjectId: string;
   classId: string;
+  /** Division (section); undefined = every division of the standard. */
+  sectionId?: string;
 }
 
 export interface TeacherSubjectAssignmentFormValues {
   staffId: string;
   subjectId: string;
   classId: string;
+  sectionId?: string;
 }
 
 export type LessonPlanStatus = "draft" | "published";

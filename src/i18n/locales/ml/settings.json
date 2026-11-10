@@ -130,5 +130,12 @@
   "Which academic year is treated as \"current\" across Academics, Attendance, Timetable, and Examinations.": "അക്കാദമിക്സ്, ഹാജർ, ടൈംടേബിൾ, പരീക്ഷകൾ എന്നിവയിലുടനീളം ഏത് അക്കാദമിക് വർഷമാണ് \"നിലവിലെ\" ആയി കണക്കാക്കുന്നത്.",
   "You have every module": "നിങ്ങൾക്ക് എല്ലാ മൊഡ്യൂളുകളുമുണ്ട്",
   "Your own preference for this device — unlike the settings below, this isn't shared with the rest of the school.": "ഈ ഉപകരണത്തിനുള്ള നിങ്ങളുടെ സ്വന്തം ഇഷ്ടം — താഴെയുള്ള ക്രമീകരണങ്ങളിൽ നിന്ന് വ്യത്യസ്തമായി, ഇത് സ്കൂളിലെ മറ്റുള്ളവരുമായി പങ്കിടുന്നില്ല.",
-  "Your plan already includes the full School Sphere suite.": "നിങ്ങളുടെ പ്ലാനിൽ ഇതിനകം പൂർണ്ണ School Sphere സ്യൂട്ട് ഉൾപ്പെടുന്നു."
+  "Your plan already includes the full School Sphere suite.": "നിങ്ങളുടെ പ്ലാനിൽ ഇതിനകം പൂർണ്ണ School Sphere സ്യൂട്ട് ഉൾപ്പെടുന്നു.",
+  "Affiliation": "അഫിലിയേഷൻ",
+  "School type": "സ്കൂൾ തരം",
+  "Affiliated to": "അഫിലിയേറ്റ് ചെയ്തിരിക്കുന്നത്",
+  "Affiliation number": "അഫിലിയേഷൻ നമ്പർ",
+  "Other affiliation details": "മറ്റ് അഫിലിയേഷൻ വിവരങ്ങൾ",
+  "Recognition, valid up to, UDISE code, society or trust": "അംഗീകാരം, കാലാവധി, UDISE കോഡ്, സൊസൈറ്റി അല്ലെങ്കിൽ ട്രസ്റ്റ്",
+  "Saved with your school profile. Type them into a progress card template header to print them on cards.": "സ്കൂൾ പ്രൊഫൈലിനൊപ്പം സംരക്ഷിക്കുന്നു. കാർഡുകളിൽ അച്ചടിക്കാൻ പ്രോഗ്രസ് കാർഡ് ടെംപ്ലേറ്റ് ഹെഡറിൽ ഇവ നൽകുക."
 }

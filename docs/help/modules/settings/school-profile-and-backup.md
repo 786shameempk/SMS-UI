@@ -27,7 +27,7 @@ keywords: [settings, school profile, logo, academic year, backup, restore, audit
 ## Update the school profile
 
 1. Open **Settings** from the menu. The page is headed **Settings & administration**; stay on the **School Profile** tab.
-2. Under **School profile**, change the **School name** (required: "School name is required"), **Tagline**, **Address**, **Contact number**, **School email**, **Principal** and **Established year**.
+2. Under **School profile**, change the **School name** (required: "School name is required"), **Tagline**, **Address**, **Contact number**, **School email**, **Principal** and **Established year**. Under **Affiliation** add the **School type** (for example Primary, Secondary or Senior Secondary), **Affiliated to** (CBSE, Kerala State Board or any other board), the **Affiliation number** and **Other affiliation details** such as recognition, validity or UDISE code. These are saved with the profile and are optional; type them into a progress card template header to print them on cards.
 3. Select **Save profile** ("School profile saved").
 
 A contact number needs at least 6 characters ("Enter a valid contact number"), and the email must be valid ("Enter a valid email").

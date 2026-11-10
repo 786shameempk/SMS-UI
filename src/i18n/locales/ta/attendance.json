@@ -318,5 +318,10 @@
   "Attendance QR pass": "வருகை QR அனுமதிச்சீட்டு",
   "Getting a fresh pass…": "புதிய அனுமதிச்சீட்டைப் பெறுகிறது…",
   "Refreshes in {{secondsLeft}}s": "{{secondsLeft}} விநாடியில் புதுப்பிக்கப்படும்",
-  "New pass now": "இப்போது புதிய அனுமதிச்சீட்டு"
+  "New pass now": "இப்போது புதிய அனுமதிச்சீட்டு",
+  "Standard": "வகுப்பு நிலை",
+  "Division": "பிரிவு",
+  "Select standard": "வகுப்பு நிலையைத் தேர்ந்தெடுக்கவும்",
+  "Select division": "பிரிவைத் தேர்ந்தெடுக்கவும்",
+  "No standards available for this date.": "இந்த தேதிக்கு வகுப்பு நிலைகள் இல்லை."
 }

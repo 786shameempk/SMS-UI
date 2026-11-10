@@ -12,6 +12,7 @@ import {
   CalendarDays,
   CalendarRange,
   ChartColumn,
+  SlidersHorizontal,
   ChartNoAxesColumn,
   CircleCheckBig,
   Cloud,
@@ -88,6 +89,7 @@ export const CORE_NAV_ITEMS: NavItem[] = [
   { label: "Store Management", to: "/store", icon: Store, permissionKey: "store" },
   { label: "Parent Portal", to: "/parent-portal", icon: UsersRound, permissionKey: "parentPortal" },
   // Parents and students read the syllabus the school publishes; staff reach the module from Academics.
+  { label: "Progress Cards", to: "/my-progress-cards", icon: ClipboardCheck, permissionKey: "examinations", audience: "family" },
   { label: "Syllabus Progress", to: "/lesson-portions/family", icon: BookMarked, permissionKey: "portions", audience: "family" },
   // Top-level (not under Human Resources) because teachers and other staff fill in reviews and see their own appraisal here, and they can't see that section.
   { label: "Performance & Appraisal", to: "/appraisal", icon: Award, permissionKey: "appraisal", audience: "school" },
@@ -111,6 +113,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Teachers", to: "/teachers", icon: UserCheck, permissionKey: "teachers" },
       { label: "Timetable", to: "/timetable", icon: CalendarClock, permissionKey: "timetable" },
       { label: "Examinations", to: "/examinations", icon: FileCheck2, permissionKey: "examinations" },
+      { label: "Progress Card Generator", to: "/progress-cards", icon: ClipboardCheck, permissionKey: "examinations", audience: "school" },
       { label: "Homework", to: "/homework", icon: ClipboardList, permissionKey: "homework" },
       { label: "Lesson & Portions", to: "/lesson-portions", icon: BookMarked, permissionKey: "portions", audience: "school" },
     ],
@@ -181,6 +184,7 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: ChartColumn,
     items: [
       { label: "Reports & Analytics", to: "/reports", icon: ChartColumn, permissionKey: "reports" },
+      { label: "Custom Report Generator", to: "/custom-reports", icon: SlidersHorizontal, permissionKey: "reports" },
     ],
   },
   {

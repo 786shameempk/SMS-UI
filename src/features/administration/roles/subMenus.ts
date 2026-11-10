@@ -40,7 +40,7 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     routeId: "teachers.profile",
     matrixModule: "Teachers",
     title: "Teacher profile",
-    tabs: [t("overview", "Overview"), t("qualifications", "Qualifications & Experience"), t("salary", "Salary"), t("attendance", "Attendance"), t("performance", "Performance"), t("documents", "Documents"), t("subjects-classes", "Subjects & Classes"), t("lesson-plans", "Lesson Plans"), t("student-performance", "Student Performance")],
+    tabs: [t("overview", "Overview"), t("qualifications", "Qualifications & Experience"), t("salary", "Salary"), t("attendance", "Attendance"), t("performance", "Performance"), t("documents", "Documents"), t("subjects-classes", "Subjects & Standards"), t("lesson-plans", "Lesson Plans"), t("student-performance", "Student Performance")],
   },
   {
     routeId: "timetable.home",
@@ -49,6 +49,7 @@ export const SUB_MENU_CATALOG: readonly SubMenuPage[] = [
     tabs: [t("class-section", "Class/Section View"), t("teacher", "Teacher View"), t("student-parent", "Student/Parent View"), t("periods", "Periods"), t("rooms", "Rooms"), t("substitutions", "Substitutions")],
   },
   { routeId: "examinations.home", matrixModule: "Examinations", title: "Examinations", tabs: [t("exams", "Exams"), t("marks-entry", "Marks Entry"), t("results-ranking", "Results & Ranking"), t("report-cards", "Report Cards"), t("transcript", "Transcript")] },
+  { routeId: "progress-cards.home", matrixModule: "Examinations", title: "Progress Card Generator", tabs: [t("generate", "Generate"), t("published", "Cards and publishing"), t("coscholastic", "Co-scholastic and remarks"), t("templates", "Template library"), t("grading", "Grading configuration")] },
   { routeId: "homework.manage", matrixModule: "Homework", title: "Homework", tabs: [t("homework", "Homework"), t("resources", "Learning Resources"), t("progress", "Progress Overview")] },
   { routeId: "homework.mine", matrixModule: "Homework", title: "My Homework", tabs: [t("homework", "My Homework"), t("resources", "Resources")] },
   { routeId: "study-materials.home", matrixModule: "Study Materials", title: "Study Materials", tabs: [t("browse", "Browse"), t("mine", "My materials")] },

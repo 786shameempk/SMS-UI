@@ -1,6 +1,5 @@
 {
   "Teacher management": "शिक्षक प्रबंधन",
-  "Subject & class assignments, lesson plans, and student performance for teaching staff.": "शिक्षण स्टाफ के लिए विषय और कक्षा आवंटन, पाठ योजनाएँ और छात्र प्रदर्शन।",
   "Teacher": "शिक्षक",
   "Department": "विभाग",
   "Subjects": "विषय",
@@ -32,7 +31,6 @@
   "Attendance": "उपस्थिति",
   "Performance": "प्रदर्शन",
   "Documents": "दस्तावेज़",
-  "Subjects & Classes": "विषय और कक्षाएँ",
   "Lesson Plans": "पाठ योजनाएँ",
   "Student Performance": "छात्र प्रदर्शन",
   "Pick a teacher to be the class teacher for each section.": "हर सेक्शन के लिए कक्षा शिक्षक के रूप में एक शिक्षक चुनें।",
@@ -77,7 +75,6 @@
   "Delete lesson plan": "पाठ योजना हटाएँ",
   "This lesson plan will be permanently removed.": "यह पाठ योजना स्थायी रूप से हटा दी जाएगी।",
   "Delete": "हटाएँ",
-  "Subjects & classes": "विषय और कक्षाएँ",
   "Loading assignments…": "आवंटन लोड हो रहे हैं…",
   "No subjects or classes assigned yet.": "अभी तक कोई विषय या कक्षा नहीं सौंपी गई।",
   "Assignment removed": "आवंटन हटाया गया",
@@ -94,5 +91,17 @@
   "Student": "छात्र",
   "Roll no.": "रोल नं.",
   "Avg. score": "औसत अंक",
-  "Grade": "ग्रेड"
+  "Grade": "ग्रेड",
+  "Subjects & Standards": "विषय और कक्षा-स्तर",
+  "Standard": "कक्षा-स्तर",
+  "Division": "डिवीजन",
+  "All divisions": "सभी डिवीजन",
+  "Select a standard": "कक्षा-स्तर चुनें",
+  "Select a standard first": "पहले कक्षा-स्तर चुनें",
+  "Unknown standard": "अज्ञात कक्षा-स्तर",
+  "Unknown division": "अज्ञात डिवीजन",
+  "No subjects or standards assigned yet.": "अभी तक कोई विषय या कक्षा-स्तर नहीं सौंपा गया।",
+  "Link a standard, division and subject to this teacher.": "इस शिक्षक से कक्षा-स्तर, डिवीजन और विषय जोड़ें।",
+  "This will unassign the subject, standard and division from this teacher.": "इससे इस शिक्षक से विषय, कक्षा-स्तर और डिवीजन हट जाएँगे।",
+  "Subject & standard assignments, lesson plans, and student performance for teaching staff.": "शिक्षण स्टाफ के लिए विषय और कक्षा-स्तर आवंटन, पाठ योजनाएँ और छात्र प्रदर्शन।"
 }
