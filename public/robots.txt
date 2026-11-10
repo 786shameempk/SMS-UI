@@ -35,6 +35,7 @@ Disallow: /appraisal
 Disallow: /lesson-portions
 Disallow: /library
 Disallow: /my-homework
+Disallow: /my-progress-cards
 Disallow: /notifications
 Disallow: /office
 Disallow: /online-classes
@@ -42,6 +43,7 @@ Disallow: /online-exams
 Disallow: /parent-portal
 Disallow: /payroll
 Disallow: /platform
+Disallow: /progress-cards
 Disallow: /reports
 Disallow: /custom-reports
 Disallow: /staff

@@ -161,6 +161,7 @@ New settings in `.env` (all optional; the defaults work and every secret default
 | `FACE_RECOGNITION_PROVIDER`, `COMPREFACE_URL`, `COMPREFACE_API_KEY` | Face attendance. `None` by default (off). |
 | `RETENTION_VISITOR_ID_PROOF_DAYS`, `RETENTION_VISITOR_SCAN_DAYS`, `RETENTION_CERTIFICATE_VERIFICATION_DAYS` | How long visitor and certificate-check records are kept (90 / 90 / 180; `0` keeps them). |
 | `RATE_LIMIT_PUBLIC_VERIFY_PER_MINUTE` | Requests per minute per client for the public certificate check (20). |
+| `RATE_LIMIT_MESSAGING_WEBHOOK_PER_MINUTE` / `RATE_LIMIT_MESSAGING_NOTIFY_PER_MINUTE` | Messaging API limits: provider webhooks per provider (1200) and internal notify calls per school (600). |
 
 Two new volumes hold **encryption keys**: `finance-keys` (decrypts every school's saved payment-gateway keys) and `messaging-keys`
 (messaging provider secrets). If one is lost the schools must enter those keys again. Back them up with the databases.
