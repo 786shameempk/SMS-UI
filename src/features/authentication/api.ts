@@ -97,6 +97,7 @@ function mapModulePermissions(permissions: string[]): ModulePermissions {
     extracurricular: false,
     portions: false,
     appraisal: false,
+    store: false,
     meetings: false,
     studyMaterials: false,
     onlineExams: false,

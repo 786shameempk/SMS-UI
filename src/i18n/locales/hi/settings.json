@@ -130,5 +130,12 @@
   "Which academic year is treated as \"current\" across Academics, Attendance, Timetable, and Examinations.": "अकादमिक्स, उपस्थिति, समय-सारणी और परीक्षाओं में कौन सा शैक्षणिक वर्ष \"वर्तमान\" माना जाता है।",
   "You have every module": "आपके पास हर मॉड्यूल है",
   "Your own preference for this device — unlike the settings below, this isn't shared with the rest of the school.": "इस डिवाइस के लिए आपकी अपनी पसंद — नीचे की सेटिंग्स के विपरीत, यह स्कूल के बाकी लोगों के साथ साझा नहीं होती।",
-  "Your plan already includes the full School Sphere suite.": "आपके प्लान में पहले से पूरा School Sphere सूट शामिल है।"
+  "Your plan already includes the full School Sphere suite.": "आपके प्लान में पहले से पूरा School Sphere सूट शामिल है।",
+  "Affiliation": "संबद्धता",
+  "School type": "स्कूल का प्रकार",
+  "Affiliated to": "संबद्ध बोर्ड",
+  "Affiliation number": "संबद्धता संख्या",
+  "Other affiliation details": "अन्य संबद्धता विवरण",
+  "Recognition, valid up to, UDISE code, society or trust": "मान्यता, वैधता, UDISE कोड, सोसाइटी या ट्रस्ट",
+  "Saved with your school profile. Type them into a progress card template header to print them on cards.": "स्कूल प्रोफ़ाइल के साथ सहेजा जाता है। कार्ड पर छापने के लिए इन्हें प्रगति कार्ड टेम्पलेट के शीर्ष में लिखें।"
 }

@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TEMPLATE_CATEGORIES, TEMPLATE_LANGUAGES } from "../constants";
 import type { MessageTemplate, MessageTemplateFormValues } from "../types";
 import ChannelSelector from "./ChannelSelector";
+import { previewTemplate, type TemplatePreview } from "../messaging/platformApi";
 
 import { useTranslation } from "react-i18next";
 const NONE = "__none__";
@@ -28,6 +30,10 @@ const templateSchema = z.object({
   smsTemplateId: z.string().optional(),
   whatsAppTemplateName: z.string().optional(),
   whatsAppTemplateLanguage: z.string().optional(),
+  eventType: z.string().optional(),
+  approvalStatus: z.enum(["draft", "pending", "approved", "rejected"]),
+  whatsAppCategory: z.string().optional(),
+  isActive: z.boolean(),
 });
 
 type FormValues = z.infer<typeof templateSchema>;
@@ -42,6 +48,10 @@ const emptyValues: FormValues = {
   smsTemplateId: "",
   whatsAppTemplateName: "",
   whatsAppTemplateLanguage: "",
+  eventType: "",
+  approvalStatus: "approved",
+  whatsAppCategory: "",
+  isActive: true,
 };
 
 export default function TemplateFormDialog({
@@ -64,8 +74,15 @@ export default function TemplateFormDialog({
     handleSubmit,
     reset,
     control,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(templateSchema), defaultValues: emptyValues });
+
+  const [preview, setPreview] = useState<TemplatePreview | null>(null);
+  const runPreview = useMutation({
+    mutationFn: () => previewTemplate(getValues("subject"), getValues("body")),
+    onSuccess: setPreview,
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -81,13 +98,23 @@ export default function TemplateFormDialog({
             smsTemplateId: template.smsTemplateId ?? "",
             whatsAppTemplateName: template.whatsAppTemplateName ?? "",
             whatsAppTemplateLanguage: template.whatsAppTemplateLanguage ?? "",
+            eventType: template.eventType ?? "",
+            approvalStatus: template.approvalStatus ?? "approved",
+            whatsAppCategory: template.whatsAppCategory ?? "",
+            isActive: template.isActive ?? true,
           }
         : emptyValues,
     );
   }, [open, template, reset]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setPreview(null);
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEdit ? t("Edit template") : t("New template")}</DialogTitle>
@@ -182,6 +209,82 @@ export default function TemplateFormDialog({
           <p className="text-xs text-muted-foreground">
             {t("The approved SMS and WhatsApp templates must accept this message text as their variable. Messages sent from this template use them.")}
           </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-event">{t("Event (for automatic notifications)")}</Label>
+              <Input id="tpl-event" placeholder={t("e.g. fee.reminder, attendance.absent")} {...register("eventType")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-approval">{t("Approval status")}</Label>
+              <Controller
+                control={control}
+                name="approvalStatus"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="tpl-approval">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">{t("Draft")}</SelectItem>
+                      <SelectItem value="pending">{t("Pending approval")}</SelectItem>
+                      <SelectItem value="approved">{t("Approved")}</SelectItem>
+                      <SelectItem value="rejected">{t("Rejected")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl-wa-cat">{t("WhatsApp category")}</Label>
+              <Controller
+                control={control}
+                name="whatsAppCategory"
+                render={({ field }) => (
+                  <Select value={field.value || NONE} onValueChange={(v) => field.onChange(v === NONE ? "" : v)}>
+                    <SelectTrigger id="tpl-wa-cat">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t("Not set")}</SelectItem>
+                      <SelectItem value="utility">{t("Utility")}</SelectItem>
+                      <SelectItem value="authentication">{t("Authentication")}</SelectItem>
+                      <SelectItem value="marketing">{t("Marketing")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <label className="flex items-center gap-2 self-end text-sm">
+              <input type="checkbox" {...register("isActive")} /> {t("Template switched on")}
+            </label>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("Automatic notifications only use Approved templates that are switched on. Editing the wording starts a new version and asks for approval again.")}
+          </p>
+
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t("Preview")}</span>
+              <Button type="button" size="sm" variant="outline" onClick={() => runPreview.mutate()} loading={runPreview.isPending}>
+                {t("Preview with sample data")}
+              </Button>
+            </div>
+            {preview ? (
+              <div className="space-y-1 text-sm">
+                {preview.subject && <p className="font-medium">{preview.subject}</p>}
+                <p className="whitespace-pre-wrap">{preview.body}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("{{n}} characters", { n: preview.length })} · {t("{{n}} SMS part(s)", { n: preview.smsSegments })}
+                </p>
+                {preview.unknown.length > 0 && (
+                  <p className="text-xs text-warning-strong">{t("Not a standard placeholder: {{names}}. Make sure the sender provides it.", { names: preview.unknown.join(", ") })}</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("Placeholders such as {{StudentName}} are filled for each recipient. Preview shows sample values.")}</p>
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <Label>{t("Default channels")}</Label>

@@ -31,6 +31,7 @@ const STATUS_LABEL: Record<DeliveryStatus, string> = {
   failed: "Failed",
   bounced: "Bounced",
   skipped: "Skipped",
+  standby: "Standby (fallback)",
 };
 
 const STATUS_TONE: Record<DeliveryStatus, "neutral" | "info" | "success" | "danger" | "warning"> = {
@@ -42,6 +43,7 @@ const STATUS_TONE: Record<DeliveryStatus, "neutral" | "info" | "success" | "dang
   failed: "danger",
   bounced: "danger",
   skipped: "neutral",
+  standby: "neutral",
 };
 
 export default function MessageDetailDialog({

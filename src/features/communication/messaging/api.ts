@@ -2,7 +2,7 @@ import { engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { CHANNEL_FROM_API, CHANNEL_TO_API } from "../api";
 import type { Channel, DeliveryStatus } from "../types";
 
-export type ProviderName = "Smtp" | "Brevo" | "Msg91" | "Twilio" | "WhatsAppCloud";
+export type ProviderName = "Smtp" | "Brevo" | "Msg91" | "Twilio" | "WhatsAppCloud" | "AmazonSes";
 export type ConfigurableChannel = "email" | "sms" | "whatsapp";
 
 export interface ChannelStatus {
@@ -31,6 +31,9 @@ export interface ProviderConfig {
   lastTestAt: string | null;
   lastTestSucceeded: boolean | null;
   lastTestMessage: string | null;
+  /** Messages per calendar month in the school's plan; null = no quota. */
+  monthlyQuota: number | null;
+  quotaAlertPercent: number;
 }
 
 export interface SaveProviderInput {
@@ -43,6 +46,8 @@ export interface SaveProviderInput {
   dailyLimit: number;
   costPerMessage: number | null;
   optInCollectedAtAdmission: boolean;
+  monthlyQuota?: number | null;
+  quotaAlertPercent?: number;
 }
 
 export interface TestResult {

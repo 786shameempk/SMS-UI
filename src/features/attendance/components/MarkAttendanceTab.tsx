@@ -59,6 +59,7 @@ export default function MarkAttendanceTab() {
     select: keepValue,
     ...offlineQuery,
   });
+  const [date, setDate] = useState(todayDateKey());
   const { data: classes = [] } = useQuery({
     queryKey: ["attendance", "classes", "with-device-fallback"],
     queryFn: () => withDeviceFallback("classes", listClasses),
@@ -72,8 +73,8 @@ export default function MarkAttendanceTab() {
     ...offlineQuery,
   });
   const { data: rosterSections = [] } = useQuery({
-    queryKey: ["attendance", "roster-sections", "with-device-fallback"],
-    queryFn: () => withDeviceFallback("roster-sections", listRosterSections),
+    queryKey: ["attendance", "roster-sections", "with-device-fallback", date],
+    queryFn: () => withDeviceFallback(`roster-sections:${date}`, () => listRosterSections(date)),
     select: keepValue,
     ...offlineQuery,
   });
@@ -81,7 +82,6 @@ export default function MarkAttendanceTab() {
   const [academicYearId, setAcademicYearId] = useState("");
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
-  const [date, setDate] = useState(todayDateKey());
   const [statusMap, setStatusMap] = useState<Record<string, AttendanceStatus>>({});
 
   const rosterClassIds = useMemo(() => new Set(rosterSections.map((r) => r.classId)), [rosterSections]);
@@ -180,7 +180,7 @@ export default function MarkAttendanceTab() {
     // Re-derive whenever the roster, the persisted records or the register waiting on this device change.
   }, [roster, existingRecords, pendingOp]);
 
-  const sectionLabelFor = () => `${classes.find((c) => c.id === classId)?.name ?? "Class"} · ${sections.find((s) => s.id === sectionId)?.name ?? "Section"}`;
+  const sectionLabelFor = () => `${classes.find((c) => c.id === classId)?.name ?? "Standard"} · ${sections.find((s) => s.id === sectionId)?.name ?? "Division"}`;
 
   const saveMutation = useMutation({
     // Runs offline too: a register that can't be sent is kept on the device instead of waiting for a connection.
@@ -342,10 +342,10 @@ export default function MarkAttendanceTab() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>{t("Class")}</Label>
+              <Label>{t("Standard")}</Label>
               <Select value={classId} onValueChange={setClassId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t("Select class")} />
+                  <SelectValue placeholder={t("Select standard")} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableClasses.map((c) => (
@@ -355,13 +355,13 @@ export default function MarkAttendanceTab() {
                   ))}
                 </SelectContent>
               </Select>
-              {!availableClasses.length && <p className="text-xs text-muted-foreground">{t("No rosters seeded for this academic year.")}</p>}
+              {!availableClasses.length && <p className="text-xs text-muted-foreground">{t("No standards available for this date.")}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label>{t("Section")}</Label>
+              <Label>{t("Division")}</Label>
               <Select value={sectionId} onValueChange={setSectionId} disabled={!availableSections.length}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t("Select section")} />
+                  <SelectValue placeholder={t("Select division")} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableSections.map((s) => (

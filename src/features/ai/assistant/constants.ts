@@ -20,6 +20,7 @@ export const SOURCE_LABELS: Record<AssistantSource, string> = {
   hostel: "Hostel",
   campus: "Campus",
   "extra-curricular": "Co-Curricular",
+  store: "Store Management",
   "lesson-portions": "Syllabus & Portions",
   profile: "Profile",
   sustainability: "Sustainability",

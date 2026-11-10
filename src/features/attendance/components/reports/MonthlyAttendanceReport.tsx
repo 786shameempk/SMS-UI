@@ -22,7 +22,7 @@ export default function MonthlyAttendanceReport() {
   const { t } = useTranslation("attendance");
   const { data: classes = [] } = useQuery({ queryKey: ["attendance", "classes"], queryFn: listClasses });
   const { data: sections = [] } = useQuery({ queryKey: ["attendance", "sections"], queryFn: listSections });
-  const { data: rosterSections = [] } = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: listRosterSections });
+  const { data: rosterSections = [] } = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: () => listRosterSections() });
 
   const now = new Date();
   const currentMonthValue = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;

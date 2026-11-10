@@ -8,6 +8,7 @@ route: communication.home
 summary: Write a message, choose channels and recipients, and send it now or later.
 order: 10
 status: reviewed
+related: [communication-rules, communication-delivery-log, communication-consent-providers]
 tasks:
   - id: send-message
     label: Send a message
@@ -34,7 +35,7 @@ Use this to message parents, students, staff or groups.
 
 A "Message sent" or "Message scheduled" message appears. The checks are "Message body is required" and "Select at least one channel".
 
-> **Important:** Only **In-app** delivery works in this version. The page warns that email, SMS, push and WhatsApp delivery is not connected to a real provider in the demo. Do not rely on those channels for urgent notices unless your school has confirmed they are set up.
+> **Important:** Email, SMS and WhatsApp messages leave School Sphere only through providers your administrator has connected, and WhatsApp only reaches people who opted in. If a channel is not set up, the delivery is recorded as skipped. See [Connect providers and manage consent](help:communication-consent-providers) and check results in the [Delivery log](help:communication-delivery-log).
 
 Use **History** to see sent and scheduled messages, and **Templates** and **Groups** to prepare reusable text and recipient lists.
 

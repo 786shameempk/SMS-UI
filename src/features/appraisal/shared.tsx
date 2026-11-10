@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-quer
 import toast from "react-hot-toast";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import axios from "axios";
 import { extractApiErrorMessage } from "@/lib/httpClient";
 import { useAuthStore } from "@/store/authStore";
 import type { Answer, ApprovalStageKey, AssignmentStatus, CycleStatus, FormQuestion, GoalStatus, ParticipantStatus, QuestionType, ReviewForm } from "./types";
@@ -320,7 +321,9 @@ export function setAnswer(answers: Answer[], next: Answer): Answer[] {
 // ── Mutations ───────────────────────────────────────────────────────────────
 
 export function toastApiError(error: unknown) {
-  const message = extractApiErrorMessage(error);
+  // The api layer has already turned the server's reply into an Error carrying its message ("A cycle with that name already exists."),
+  // so a plain Error is shown as is; only a raw request failure still needs translating.
+  const message = error instanceof Error && !axios.isAxiosError(error) && error.message ? error.message : extractApiErrorMessage(error);
   toast.error(message, { id: `ap-${message}` });
 }
 

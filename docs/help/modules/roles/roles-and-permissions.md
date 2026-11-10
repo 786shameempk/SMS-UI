@@ -51,7 +51,7 @@ You cannot change the permissions of a role you hold yourself unless you are a s
 ## Other tabs
 
 - **Policies** holds attribute-based policies.
-- **Staff actions** and **AI permissions** control specific actions for staff and for the AI features.
+- **Staff actions** and **AI permissions** control specific actions for staff and for the AI features. Under Examinations, **Staff actions** lists **Manage progress card templates and grading** and **Approve and publish progress cards** (school leaders by default) and **Generate progress cards** (class teachers for their own class, leaders for every class). The Progress Card Generator shows only the tabs and buttons the role may use.
 - **Feature toggles** turns whole features on or off for the application, whoever has permission. A message says whether the feature was enabled or disabled.
 
 Give the role to a person in [Add a user and manage their account](help:users-add).

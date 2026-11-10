@@ -1,6 +1,5 @@
 {
   "Teacher management": "ஆசிரியர் மேலாண்மை",
-  "Subject & class assignments, lesson plans, and student performance for teaching staff.": "ஆசிரியர்களுக்கான பாட மற்றும் வகுப்பு ஒதுக்கீடுகள், பாடத் திட்டங்கள், மாணவர் செயல்திறன்.",
   "Teacher": "ஆசிரியர்",
   "Department": "துறை",
   "Subjects": "பாடங்கள்",
@@ -32,7 +31,6 @@
   "Attendance": "வருகை",
   "Performance": "செயல்திறன்",
   "Documents": "ஆவணங்கள்",
-  "Subjects & Classes": "பாடங்கள் மற்றும் வகுப்புகள்",
   "Lesson Plans": "பாடத் திட்டங்கள்",
   "Student Performance": "மாணவர் செயல்திறன்",
   "Pick a teacher to be the class teacher for each section.": "ஒவ்வொரு பிரிவுக்கும் வகுப்பாசிரியராக ஒரு ஆசிரியரைத் தேர்ந்தெடுக்கவும்.",
@@ -77,7 +75,6 @@
   "Delete lesson plan": "பாடத் திட்டத்தை நீக்கு",
   "This lesson plan will be permanently removed.": "இந்தப் பாடத் திட்டம் நிரந்தரமாக நீக்கப்படும்.",
   "Delete": "நீக்கு",
-  "Subjects & classes": "பாடங்கள் மற்றும் வகுப்புகள்",
   "Loading assignments…": "ஒதுக்கீடுகள் ஏற்றப்படுகின்றன…",
   "No subjects or classes assigned yet.": "இன்னும் பாடங்களோ வகுப்புகளோ ஒதுக்கப்படவில்லை.",
   "Assignment removed": "ஒதுக்கீடு நீக்கப்பட்டது",
@@ -94,5 +91,17 @@
   "Student": "மாணவர்",
   "Roll no.": "வரிசை எண்",
   "Avg. score": "சராசரி மதிப்பெண்",
-  "Grade": "தரம்"
+  "Grade": "தரம்",
+  "Subjects & Standards": "பாடங்கள் மற்றும் வகுப்பு நிலைகள்",
+  "Standard": "வகுப்பு நிலை",
+  "Division": "பிரிவு",
+  "All divisions": "அனைத்து பிரிவுகள்",
+  "Select a standard": "வகுப்பு நிலையைத் தேர்ந்தெடுக்கவும்",
+  "Select a standard first": "முதலில் வகுப்பு நிலையைத் தேர்ந்தெடுக்கவும்",
+  "Unknown standard": "தெரியாத வகுப்பு நிலை",
+  "Unknown division": "தெரியாத பிரிவு",
+  "No subjects or standards assigned yet.": "இதுவரை பாடங்கள் அல்லது வகுப்பு நிலைகள் ஒதுக்கப்படவில்லை.",
+  "Link a standard, division and subject to this teacher.": "இந்த ஆசிரியருக்கு வகுப்பு நிலை, பிரிவு மற்றும் பாடத்தை ஒதுக்கவும்.",
+  "This will unassign the subject, standard and division from this teacher.": "இது இந்த ஆசிரியரிடமிருந்து பாடம், வகுப்பு நிலை மற்றும் பிரிவை நீக்கும்.",
+  "Subject & standard assignments, lesson plans, and student performance for teaching staff.": "ஆசிரியர்களுக்கான பாட மற்றும் வகுப்பு நிலை ஒதுக்கீடுகள், பாடத் திட்டங்கள், மாணவர் செயல்திறன்."
 }

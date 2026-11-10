@@ -318,5 +318,10 @@
   "Attendance QR pass": "ഹാജർ QR പാസ്",
   "Getting a fresh pass…": "പുതിയ പാസ് എടുക്കുന്നു…",
   "Refreshes in {{secondsLeft}}s": "{{secondsLeft}} സെക്കൻഡിൽ പുതുക്കും",
-  "New pass now": "ഇപ്പോൾ പുതിയ പാസ്"
+  "New pass now": "ഇപ്പോൾ പുതിയ പാസ്",
+  "Standard": "സ്റ്റാൻഡേർഡ്",
+  "Division": "ഡിവിഷൻ",
+  "Select standard": "സ്റ്റാൻഡേർഡ് തിരഞ്ഞെടുക്കുക",
+  "Select division": "ഡിവിഷൻ തിരഞ്ഞെടുക്കുക",
+  "No standards available for this date.": "ഈ തീയതിയിൽ സ്റ്റാൻഡേർഡുകളൊന്നും ലഭ്യമല്ല."
 }

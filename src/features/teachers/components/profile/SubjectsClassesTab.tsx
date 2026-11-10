@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog";
-import { listClasses, listSubjects } from "@/features/academics/api";
+import { listClasses, listSections, listSubjects } from "@/features/academics/api";
 import type { StaffMember } from "@/features/staff/types";
 import AssignSubjectDialog from "../AssignSubjectDialog";
 import { assignSubject, listSubjectAssignments, removeSubjectAssignment } from "../../api";
@@ -23,11 +23,12 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
   });
   const { data: subjects = [] } = useQuery({ queryKey: ["academics", "subjects"], queryFn: listSubjects });
   const { data: classes = [] } = useQuery({ queryKey: ["academics", "classes"], queryFn: listClasses });
+  const { data: sections = [] } = useQuery({ queryKey: ["academics", "sections"], queryFn: listSections });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["teachers", "subject-assignments", staff.id] });
 
   const assignMutation = useMutation({
-    mutationFn: (values: { subjectId: string; classId: string }) => assignSubject({ staffId: staff.id, ...values }),
+    mutationFn: (values: { subjectId: string; classId: string; sectionId?: string }) => assignSubject({ staffId: staff.id, ...values }),
     onSuccess: () => {
       invalidate();
       toast.success(t("Subject assigned"));
@@ -46,14 +47,15 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
   });
 
   const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? t("Unknown subject");
-  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? t("Unknown class");
+  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? t("Unknown standard");
+  const divisionName = (id?: string) => (id ? sections.find((s) => s.id === id)?.name ?? t("Unknown division") : t("All divisions"));
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-muted-foreground" />
-          {t("Subjects & classes")}
+          {t("Subjects & Standards")}
         </CardTitle>
         <Button size="sm" onClick={() => setFormOpen(true)}>
           <Plus className="w-3.5 h-3.5" />
@@ -63,14 +65,14 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
       <CardContent className="space-y-2">
         {isLoading && <p className="text-sm text-muted-foreground">{t("Loading assignments…")}</p>}
         {!isLoading && assignments.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t("No subjects or classes assigned yet.")}</p>
+          <p className="text-sm text-muted-foreground">{t("No subjects or standards assigned yet.")}</p>
         )}
         {!isLoading &&
           assignments.map((a) => (
             <div key={a.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
                 <p className="text-sm font-medium text-foreground">{subjectName(a.subjectId)}</p>
-                <p className="text-xs text-muted-foreground">{className(a.classId)}</p>
+                <p className="text-xs text-muted-foreground">{className(a.classId)} · {t("Division")}: {divisionName(a.sectionId)}</p>
               </div>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive-strong" onClick={() => setRemoveId(a.id)}>
                 <Trash2 className="w-3.5 h-3.5" />
@@ -83,6 +85,7 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
         open={formOpen}
         onOpenChange={setFormOpen}
         classes={classes}
+        sections={sections}
         subjects={subjects}
         submitting={assignMutation.isPending}
         onSubmit={async (values) => {
@@ -94,7 +97,7 @@ export default function SubjectsClassesTab({ staff }: { staff: StaffMember }) {
         open={Boolean(removeId)}
         onOpenChange={(v) => !v && setRemoveId(null)}
         title={t("Remove assignment")}
-        description={t("This will unassign the subject and class from this teacher.")}
+        description={t("This will unassign the subject, standard and division from this teacher.")}
         confirmLabel={t("Remove")}
         confirmVariant="destructive"
         submitting={removeMutation.isPending}

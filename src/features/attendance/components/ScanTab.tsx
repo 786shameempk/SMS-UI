@@ -108,7 +108,7 @@ export default function ScanTab() {
 
 function OpenSessionCard({ isAdmin, onOpened }: { isAdmin: boolean; onOpened: (s: ScanSession) => void }) {
   const { t } = useTranslation("attendance");
-  const roster = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: listRosterSections });
+  const roster = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: () => listRosterSections() });
   const classes = useQuery({ queryKey: ["attendance", "classes"], queryFn: listClasses });
   const sections = useQuery({ queryKey: ["attendance", "sections"], queryFn: listSections });
   const [audience, setAudience] = useState<PersonType>("student");

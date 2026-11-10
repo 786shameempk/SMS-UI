@@ -22,6 +22,7 @@ Disallow: /communication
 Disallow: /dashboard
 Disallow: /examinations
 Disallow: /extracurricular
+Disallow: /store
 Disallow: /fees
 Disallow: /guide
 Disallow: /health
@@ -42,6 +43,7 @@ Disallow: /parent-portal
 Disallow: /payroll
 Disallow: /platform
 Disallow: /reports
+Disallow: /custom-reports
 Disallow: /staff
 Disallow: /students
 Disallow: /study-materials

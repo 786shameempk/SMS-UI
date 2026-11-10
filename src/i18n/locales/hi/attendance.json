@@ -318,5 +318,10 @@
   "Attendance QR pass": "उपस्थिति QR पास",
   "Getting a fresh pass…": "नया पास लिया जा रहा है…",
   "Refreshes in {{secondsLeft}}s": "{{secondsLeft}} सेकंड में रीफ़्रेश होगा",
-  "New pass now": "अभी नया पास"
+  "New pass now": "अभी नया पास",
+  "Standard": "कक्षा-स्तर",
+  "Division": "डिवीजन",
+  "Select standard": "कक्षा-स्तर चुनें",
+  "Select division": "डिवीजन चुनें",
+  "No standards available for this date.": "इस तारीख के लिए कोई कक्षा-स्तर उपलब्ध नहीं।"
 }

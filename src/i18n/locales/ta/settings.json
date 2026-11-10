@@ -130,5 +130,12 @@
   "Which academic year is treated as \"current\" across Academics, Attendance, Timetable, and Examinations.": "கல்வி, வருகை, நேரப்பட்டியல், தேர்வுகள் முழுவதும் எந்தக் கல்வியாண்டு \"தற்போதையது\" எனக் கருதப்படுகிறது.",
   "You have every module": "உங்களிடம் அனைத்துத் தொகுதிகளும் உள்ளன",
   "Your own preference for this device — unlike the settings below, this isn't shared with the rest of the school.": "இந்தச் சாதனத்துக்கான உங்கள் சொந்த விருப்பம் — கீழுள்ள அமைப்புகளைப் போலன்றி, இது பள்ளியின் மற்றவர்களுடன் பகிரப்படாது.",
-  "Your plan already includes the full School Sphere suite.": "உங்கள் திட்டத்தில் ஏற்கனவே முழு School Sphere தொகுப்பும் உள்ளது."
+  "Your plan already includes the full School Sphere suite.": "உங்கள் திட்டத்தில் ஏற்கனவே முழு School Sphere தொகுப்பும் உள்ளது.",
+  "Affiliation": "இணைப்பு",
+  "School type": "பள்ளி வகை",
+  "Affiliated to": "இணைக்கப்பட்ட வாரியம்",
+  "Affiliation number": "இணைப்பு எண்",
+  "Other affiliation details": "பிற இணைப்பு விவரங்கள்",
+  "Recognition, valid up to, UDISE code, society or trust": "அங்கீகாரம், செல்லுபடியாகும் காலம், UDISE குறியீடு, சங்கம் அல்லது அறக்கட்டளை",
+  "Saved with your school profile. Type them into a progress card template header to print them on cards.": "பள்ளி சுயவிவரத்துடன் சேமிக்கப்படும். அட்டைகளில் அச்சிட முன்னேற்ற அட்டை வார்ப்புருத் தலைப்பில் இவற்றை உள்ளிடவும்."
 }

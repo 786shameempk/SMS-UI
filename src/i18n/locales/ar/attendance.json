@@ -318,5 +318,10 @@
   "Attendance QR pass": "تصريح حضور QR",
   "Getting a fresh pass…": "جارٍ الحصول على تصريح جديد…",
   "Refreshes in {{secondsLeft}}s": "يتجدد خلال {{secondsLeft}} ث",
-  "New pass now": "تصريح جديد الآن"
+  "New pass now": "تصريح جديد الآن",
+  "Standard": "المرحلة",
+  "Division": "الشعبة",
+  "Select standard": "اختر المرحلة",
+  "Select division": "اختر الشعبة",
+  "No standards available for this date.": "لا توجد مراحل متاحة لهذا التاريخ."
 }

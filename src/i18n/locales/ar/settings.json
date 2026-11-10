@@ -130,5 +130,12 @@
   "Which academic year is treated as \"current\" across Academics, Attendance, Timetable, and Examinations.": "أي عام دراسي يُعتبر \"الحالي\" في الأكاديميات والحضور والجدول والامتحانات.",
   "You have every module": "لديك جميع الوحدات",
   "Your own preference for this device — unlike the settings below, this isn't shared with the rest of the school.": "تفضيلك الخاص لهذا الجهاز — على عكس الإعدادات أدناه، لا تتم مشاركته مع بقية المدرسة.",
-  "Your plan already includes the full School Sphere suite.": "تتضمن خطتك بالفعل مجموعة School Sphere كاملة."
+  "Your plan already includes the full School Sphere suite.": "تتضمن خطتك بالفعل مجموعة School Sphere كاملة.",
+  "Affiliation": "الانتساب",
+  "School type": "نوع المدرسة",
+  "Affiliated to": "المنتسبة إلى",
+  "Affiliation number": "رقم الانتساب",
+  "Other affiliation details": "تفاصيل انتساب أخرى",
+  "Recognition, valid up to, UDISE code, society or trust": "الاعتماد، الصلاحية، رمز UDISE، الجمعية أو الوقف",
+  "Saved with your school profile. Type them into a progress card template header to print them on cards.": "تُحفظ مع ملف المدرسة. اكتبها في ترويسة قالب بطاقة التقدّم لطباعتها على البطاقات."
 }

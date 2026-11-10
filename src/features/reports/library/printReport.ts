@@ -16,6 +16,16 @@ export interface PrintableReport {
   generatedBy?: string;
   generatedAt?: Date;
   locale?: string;
+  /** Custom reports only: the report's own layout choices. Every library report leaves these out and prints exactly as before. */
+  layout?: {
+    pageSize?: "A4" | "A3" | "Letter";
+    description?: string;
+    header?: string;
+    footer?: string;
+    showGeneratedAt?: boolean;
+    showPageNumbers?: boolean;
+    showSignatures?: boolean;
+  };
 }
 
 const esc = (value: unknown) =>
@@ -47,10 +57,12 @@ table.data tbody tr:nth-child(even){background:#f8fafc}
 ${LETTERHEAD_CSS}
 `;
 
-function pageRule(orientation: string, schoolName: string) {
+function pageRule(orientation: string, schoolName: string, pageSize = "A4", pageNumbers = true, footer?: string) {
   // Chrome 131+ prints these margin boxes on every page; older browsers simply omit them (the in-page footer remains).
-  return `@page{size:A4 ${orientation};margin:12mm 10mm 14mm}
-@page{@bottom-left{content:"${schoolName.replace(/["\\]/g, "")}";font:8px Arial;color:#64748b}@bottom-right{content:"Page " counter(page) " of " counter(pages);font:8px Arial;color:#64748b}}`;
+  const left = (footer || schoolName).replace(/["\\\r\n]/g, " ");
+  const right = pageNumbers ? `@bottom-right{content:"Page " counter(page) " of " counter(pages);font:8px Arial;color:#64748b}` : "";
+  return `@page{size:${pageSize} ${orientation};margin:12mm 10mm 14mm}
+@page{@bottom-left{content:"${left}";font:8px Arial;color:#64748b}${right}}`;
 }
 
 function headerCell(c: ReportColumnDef) {
@@ -70,25 +82,28 @@ export function buildReportPrintHtml(input: PrintableReport): string {
         .join("")
     : `<tr><td class="empty" colspan="${columns.length}">No records match the selected filters.</td></tr>`;
 
+  const layout = input.layout;
   const meta = [
     ...filterLines.map((f) => `<span>${esc(f.label)}: <b>${esc(f.text)}</b></span>`),
     `<span>Records: <b>${esc(input.scopeLabel)}</b></span>`,
-    `<span>Generated: <b>${esc(generated)}</b>${input.generatedBy ? ` by <b>${esc(input.generatedBy)}</b>` : ""}</span>`,
+    layout?.showGeneratedAt === false ? "" : `<span>Generated: <b>${esc(generated)}</b>${input.generatedBy ? ` by <b>${esc(input.generatedBy)}</b>` : ""}</span>`,
   ].join("");
 
   const totals = summary.length
     ? `<div class="sum">${summary.map((s) => `<div>${esc(s.label)}<b>${esc(formatCell(s.value, s.type, input.locale))}</b></div>`).join("")}</div>`
     : "";
 
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(descriptor.title)}</title><style>${pageRule(descriptor.orientation, school)}${CSS}</style></head><body>
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(descriptor.title)}</title><style>${pageRule(descriptor.orientation, school, layout?.pageSize, layout?.showPageNumbers !== false, layout?.footer)}${CSS}</style></head><body>
 ${input.branding ? letterheadHtml(input.branding) : ""}
+${layout?.header ? `<p style="text-align:center;margin:0 0 6px;font-weight:600">${esc(layout.header)}</p>` : ""}
 <h1>${esc(descriptor.title)}</h1>
+${layout?.description ? `<p style="text-align:center;margin:0 0 8px;color:#475569">${esc(layout.description)}</p>` : ""}
 <div class="meta">${meta}</div>
 <table class="data"><thead><tr>${columns.map(headerCell).join("")}</tr></thead><tbody>${body}</tbody></table>
 ${totals}
-<div class="sign"><div>Prepared by</div><div>Checked by</div><div>Principal</div></div>
+${layout?.showSignatures === false ? "" : `<div class="sign"><div>Prepared by</div><div>Checked by</div><div>Principal</div></div>`}
 ${descriptor.sensitive ? `<p class="conf">CONFIDENTIAL: contains personal information. Share only with authorised staff.</p>` : ""}
-<div class="foot"><span>${esc(school)}</span><span>Generated ${esc(generated)}</span></div>
+<div class="foot"><span>${esc(layout?.footer || school)}</span>${layout?.showGeneratedAt === false ? "" : `<span>Generated ${esc(generated)}</span>`}</div>
 <script>window.onload=function(){window.focus();window.print()}</script>
 </body></html>`;
 }

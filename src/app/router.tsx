@@ -33,6 +33,9 @@ const TeachersManagementPage = lazy(() => import("@/features/teachers/pages/Teac
 const TeacherProfilePage = lazy(() => import("@/features/teachers/pages/TeacherProfilePage"));
 const TimetableManagementPage = lazy(() => import("@/features/timetable/pages/TimetableManagementPage"));
 const ExaminationManagementPage = lazy(() => import("@/features/examinations/pages/ExaminationManagementPage"));
+const ProgressCardsPage = lazy(() => import("@/features/progress-cards/ProgressCardsPage"));
+const ProgressCardDesignerPage = lazy(() => import("@/features/progress-cards/TemplateDesignerPage"));
+const MyProgressCardsPage = lazy(() => import("@/features/progress-cards/MyProgressCardsPage"));
 const HomeworkManagementPage = lazy(() => import("@/features/homework/pages/HomeworkManagementPage"));
 const MyHomeworkPage = lazy(() => import("@/features/homework/pages/MyHomeworkPage"));
 const FeeManagementPage = lazy(() => import("@/features/fees/pages/FeeManagementPage"));
@@ -65,6 +68,9 @@ const CommunicationCenterPage = lazy(() => import("@/features/communication/page
 const NotificationCenterPage = lazy(() => import("@/features/notifications/pages/NotificationCenterPage"));
 const CalendarPage = lazy(() => import("@/features/calendar/pages/CalendarPage"));
 const ReportsPage = lazy(() => import("@/features/reports/pages/ReportsPage"));
+const CustomReportsHomePage = lazy(() => import("@/features/reports/custom/CustomReportsHomePage"));
+const CustomReportBuilderPage = lazy(() => import("@/features/reports/custom/CustomReportBuilderPage"));
+const CustomReportRunPage = lazy(() => import("@/features/reports/custom/CustomReportRunPage"));
 const StudyMaterialsPage = lazy(() => import("@/features/study-materials/pages/StudyMaterialsPage"));
 const SettingsPage = lazy(() => import("@/features/settings/pages/SettingsPage"));
 const AppraisalLayout = lazy(() => import("@/features/appraisal/components/AppraisalLayout"));
@@ -95,6 +101,20 @@ const PortionsExamPortionsPage = lazy(() => import("@/features/lesson-portions/p
 const PortionsResourcesPage = lazy(() => import("@/features/lesson-portions/pages/ResourcesPage"));
 const PortionsSettingsPage = lazy(() => import("@/features/lesson-portions/pages/SettingsPage"));
 const PortionsFamilyPage = lazy(() => import("@/features/lesson-portions/pages/FamilyPage"));
+const StoreLayout = lazy(() => import("@/features/store/components/StoreLayout"));
+const StoreDashboardPage = lazy(() => import("@/features/store/pages/DashboardPage"));
+const StoreStoresPage = lazy(() => import("@/features/store/pages/StoresPage"));
+const StoreItemsPage = lazy(() => import("@/features/store/pages/ItemsPage"));
+const StoreCategoriesPage = lazy(() => import("@/features/store/pages/CategoriesPage"));
+const StoreSuppliersPage = lazy(() => import("@/features/store/pages/SuppliersPage"));
+const StoreRequisitionsPage = lazy(() => import("@/features/store/pages/RequisitionsPage"));
+const StorePurchaseOrdersPage = lazy(() => import("@/features/store/pages/PurchaseOrdersPage"));
+const StoreReceiptsPage = lazy(() => import("@/features/store/pages/ReceiptsPage"));
+const StoreStockPage = lazy(() => import("@/features/store/pages/StockPage"));
+const StoreIssuesPage = lazy(() => import("@/features/store/pages/IssuesPage"));
+const StoreSalesPage = lazy(() => import("@/features/store/pages/SalesPage"));
+const StoreReturnsPage = lazy(() => import("@/features/store/pages/ReturnsPage"));
+const StoreReportsPage = lazy(() => import("@/features/store/pages/ReportsPage"));
 const ExtracurricularLayout = lazy(() => import("@/features/extracurricular/components/ExtracurricularLayout"));
 const ExtracurricularOverviewPage = lazy(() => import("@/features/extracurricular/pages/OverviewPage"));
 const ExtracurricularActivitiesPage = lazy(() => import("@/features/extracurricular/pages/ActivitiesPage"));
@@ -222,6 +242,11 @@ export const router = createBrowserRouter([
       { path: "teachers/:staffId", element: <TeacherProfilePage /> },
       { path: "timetable", element: <TimetableManagementPage /> },
       { path: "examinations", element: <ExaminationManagementPage /> },
+      { path: "progress-cards", element: <ProgressCardsPage /> },
+      { path: "progress-cards/templates/new", element: <ProgressCardDesignerPage /> },
+      { path: "progress-cards/templates/system/:key", element: <ProgressCardDesignerPage /> },
+      { path: "progress-cards/templates/:id", element: <ProgressCardDesignerPage /> },
+      { path: "my-progress-cards", element: <MyProgressCardsPage /> },
       { path: "homework", element: <HomeworkManagementPage /> },
       { path: "my-homework", element: <MyHomeworkPage /> },
       { path: "fees", element: <FeeManagementPage /> },
@@ -294,6 +319,25 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        path: "store",
+        element: <StoreLayout />,
+        children: [
+          { index: true, element: <StoreDashboardPage /> },
+          { path: "stores", element: <StoreStoresPage /> },
+          { path: "items", element: <StoreItemsPage /> },
+          { path: "categories", element: <StoreCategoriesPage /> },
+          { path: "suppliers", element: <StoreSuppliersPage /> },
+          { path: "requisitions", element: <StoreRequisitionsPage /> },
+          { path: "purchase-orders", element: <StorePurchaseOrdersPage /> },
+          { path: "receipts", element: <StoreReceiptsPage /> },
+          { path: "stock", element: <StoreStockPage /> },
+          { path: "issues", element: <StoreIssuesPage /> },
+          { path: "sales", element: <StoreSalesPage /> },
+          { path: "returns", element: <StoreReturnsPage /> },
+          { path: "reports", element: <StoreReportsPage /> },
+        ],
+      },
+      {
         path: "extracurricular",
         element: <ExtracurricularLayout />,
         children: [
@@ -320,6 +364,10 @@ export const router = createBrowserRouter([
       { path: "online-classes/reports", element: <MeetingReportsPage /> },
       { path: "online-classes/:id", element: <MeetingDetailsPage /> },
       { path: "reports", element: <ReportsPage /> },
+      { path: "custom-reports", element: <CustomReportsHomePage /> },
+      { path: "custom-reports/new", element: <CustomReportBuilderPage /> },
+      { path: "custom-reports/:id/edit", element: <CustomReportBuilderPage /> },
+      { path: "custom-reports/:id", element: <CustomReportRunPage /> },
       { path: "study-materials", element: <StudyMaterialsPage /> },
       { path: "online-exams", element: <ExamDashboardPage /> },
       { path: "online-exams/exams", element: <ExamListPage /> },

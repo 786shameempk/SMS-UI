@@ -94,7 +94,7 @@ export default function TeacherProfilePage() {
           <TabsTrigger value="attendance">{t("Attendance")}</TabsTrigger>
           <TabsTrigger value="performance">{t("Performance")}</TabsTrigger>
           <TabsTrigger value="documents">{t("Documents")}</TabsTrigger>
-          <TabsTrigger value="subjects-classes">{t("Subjects & Classes")}</TabsTrigger>
+          <TabsTrigger value="subjects-classes">{t("Subjects & Standards")}</TabsTrigger>
           <TabsTrigger value="lesson-plans">{t("Lesson Plans")}</TabsTrigger>
           <TabsTrigger value="student-performance">{t("Student Performance")}</TabsTrigger>
         </TabsList>

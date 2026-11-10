@@ -12,7 +12,7 @@ export default function YearlyAttendanceReport() {
   const { t } = useTranslation("attendance");
   const { data: classes = [] } = useQuery({ queryKey: ["attendance", "classes"], queryFn: listClasses });
   const { data: sections = [] } = useQuery({ queryKey: ["attendance", "sections"], queryFn: listSections });
-  const { data: rosterSections = [] } = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: listRosterSections });
+  const { data: rosterSections = [] } = useQuery({ queryKey: ["attendance", "roster-sections"], queryFn: () => listRosterSections() });
 
   const [sectionId, setSectionId] = useState("all");
   const [year, setYear] = useState(new Date().getFullYear());

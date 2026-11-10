@@ -14,6 +14,7 @@ export const PERMISSION_MODULES = [
   "Online Classes",
   "Talent Showcase",
   "Extra-Curricular",
+  "Store Management",
   "Parent Portal",
   "Students",
   "Academic Setup",

@@ -1,6 +1,5 @@
 {
   "Teacher management": "അധ്യാപക മാനേജ്മെന്റ്",
-  "Subject & class assignments, lesson plans, and student performance for teaching staff.": "അധ്യാപകരുടെ വിഷയ-ക്ലാസ് ചുമതലകൾ, പാഠാസൂത്രണങ്ങൾ, വിദ്യാർത്ഥികളുടെ പ്രകടനം.",
   "Teacher": "അധ്യാപകൻ",
   "Department": "വകുപ്പ്",
   "Subjects": "വിഷയങ്ങൾ",
@@ -32,7 +31,6 @@
   "Attendance": "ഹാജർ",
   "Performance": "പ്രകടനം",
   "Documents": "രേഖകൾ",
-  "Subjects & Classes": "വിഷയങ്ങളും ക്ലാസുകളും",
   "Lesson Plans": "പാഠാസൂത്രണങ്ങൾ",
   "Student Performance": "വിദ്യാർത്ഥി പ്രകടനം",
   "Pick a teacher to be the class teacher for each section.": "ഓരോ ഡിവിഷനും ക്ലാസ് അധ്യാപകനായി ഒരാളെ തിരഞ്ഞെടുക്കുക.",
@@ -77,7 +75,6 @@
   "Delete lesson plan": "പാഠാസൂത്രണം ഇല്ലാതാക്കുക",
   "This lesson plan will be permanently removed.": "ഈ പാഠാസൂത്രണം സ്ഥിരമായി നീക്കം ചെയ്യപ്പെടും.",
   "Delete": "ഇല്ലാതാക്കുക",
-  "Subjects & classes": "വിഷയങ്ങളും ക്ലാസുകളും",
   "Loading assignments…": "ചുമതലകൾ ലോഡ് ചെയ്യുന്നു…",
   "No subjects or classes assigned yet.": "ഇതുവരെ വിഷയങ്ങളോ ക്ലാസുകളോ നൽകിയിട്ടില്ല.",
   "Assignment removed": "ചുമതല നീക്കി",
@@ -94,5 +91,17 @@
   "Student": "വിദ്യാർത്ഥി",
   "Roll no.": "റോൾ നമ്പർ",
   "Avg. score": "ശരാശരി മാർക്ക്",
-  "Grade": "ഗ്രേഡ്"
+  "Grade": "ഗ്രേഡ്",
+  "Subjects & Standards": "വിഷയങ്ങളും സ്റ്റാൻഡേർഡുകളും",
+  "Standard": "സ്റ്റാൻഡേർഡ്",
+  "Division": "ഡിവിഷൻ",
+  "All divisions": "എല്ലാ ഡിവിഷനുകളും",
+  "Select a standard": "സ്റ്റാൻഡേർഡ് തിരഞ്ഞെടുക്കുക",
+  "Select a standard first": "ആദ്യം സ്റ്റാൻഡേർഡ് തിരഞ്ഞെടുക്കുക",
+  "Unknown standard": "അജ്ഞാത സ്റ്റാൻഡേർഡ്",
+  "Unknown division": "അജ്ഞാത ഡിവിഷൻ",
+  "No subjects or standards assigned yet.": "ഇതുവരെ വിഷയങ്ങളോ സ്റ്റാൻഡേർഡുകളോ നൽകിയിട്ടില്ല.",
+  "Link a standard, division and subject to this teacher.": "ഈ അധ്യാപകന് സ്റ്റാൻഡേർഡ്, ഡിവിഷൻ, വിഷയം എന്നിവ നൽകുക.",
+  "This will unassign the subject, standard and division from this teacher.": "ഇത് ഈ അധ്യാപകനിൽ നിന്ന് വിഷയം, സ്റ്റാൻഡേർഡ്, ഡിവിഷൻ എന്നിവ നീക്കും.",
+  "Subject & standard assignments, lesson plans, and student performance for teaching staff.": "അധ്യാപകരുടെ വിഷയ-സ്റ്റാൻഡേർഡ് ചുമതലകൾ, പാഠാസൂത്രണങ്ങൾ, വിദ്യാർത്ഥികളുടെ പ്രകടനം."
 }

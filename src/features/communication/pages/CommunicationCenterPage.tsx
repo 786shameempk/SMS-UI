@@ -4,6 +4,9 @@ import GroupsTab from "../components/GroupsTab";
 import HistoryTab from "../components/HistoryTab";
 import TemplatesTab from "../components/TemplatesTab";
 import UsageTab from "../components/UsageTab";
+import RulesTab from "../components/RulesTab";
+import DeliveryLogTab from "../components/DeliveryLogTab";
+import ConsentAuditTab from "../components/ConsentAuditTab";
 import MessagingSettingsTab from "../components/MessagingSettingsTab";
 import { useAuthStore } from "@/store/authStore";
 import { PageContainer, PageHeader } from "@/components/ui/page";
@@ -27,7 +30,10 @@ export default function CommunicationCenterPage() {
           <TabsTrigger value="templates">{t("Templates")}</TabsTrigger>
           <TabsTrigger value="groups">{t("Groups")}</TabsTrigger>
           <TabsTrigger value="history">{t("History")}</TabsTrigger>
+          <TabsTrigger value="log">{t("Delivery log")}</TabsTrigger>
           <TabsTrigger value="usage">{t("Usage")}</TabsTrigger>
+          {canConfigure && <TabsTrigger value="rules">{t("Rules")}</TabsTrigger>}
+          {canConfigure && <TabsTrigger value="consent">{t("Consent & audit")}</TabsTrigger>}
           {canConfigure && <TabsTrigger value="settings">{t("Settings")}</TabsTrigger>}
         </TabsList>
         <TabsContent value="compose">
@@ -42,6 +48,19 @@ export default function CommunicationCenterPage() {
         <TabsContent value="history">
           <HistoryTab />
         </TabsContent>
+        <TabsContent value="log">
+          <DeliveryLogTab />
+        </TabsContent>
+        {canConfigure && (
+          <TabsContent value="rules">
+            <RulesTab />
+          </TabsContent>
+        )}
+        {canConfigure && (
+          <TabsContent value="consent">
+            <ConsentAuditTab />
+          </TabsContent>
+        )}
         <TabsContent value="usage">
           <UsageTab />
         </TabsContent>

@@ -1,5 +1,6 @@
 import { engagementHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import type {
+  ApprovalStatus,
   AudienceType,
   BroadcastMessage,
   Channel,
@@ -38,6 +39,11 @@ interface ApiTemplate {
   smsTemplateId?: string | null;
   whatsAppTemplateName?: string | null;
   whatsAppTemplateLanguage?: string | null;
+  eventType?: string | null;
+  version?: number;
+  approvalStatus?: string;
+  isActive?: boolean;
+  whatsAppCategory?: string | null;
 }
 
 interface ApiGroup {
@@ -99,6 +105,11 @@ function mapTemplate(t: ApiTemplate): MessageTemplate {
     smsTemplateId: t.smsTemplateId ?? undefined,
     whatsAppTemplateName: t.whatsAppTemplateName ?? undefined,
     whatsAppTemplateLanguage: t.whatsAppTemplateLanguage ?? undefined,
+    eventType: t.eventType ?? undefined,
+    version: t.version ?? 1,
+    approvalStatus: (t.approvalStatus ?? "Approved").toLowerCase() as ApprovalStatus,
+    isActive: t.isActive ?? true,
+    whatsAppCategory: t.whatsAppCategory ?? undefined,
   };
 }
 
@@ -143,6 +154,10 @@ function templateBody(values: MessageTemplateFormValues) {
     smsTemplateId: values.smsTemplateId?.trim() || null,
     whatsAppTemplateName: values.whatsAppTemplateName?.trim() || null,
     whatsAppTemplateLanguage: values.whatsAppTemplateLanguage?.trim() || null,
+    eventType: values.eventType?.trim() || null,
+    approvalStatus: values.approvalStatus ? values.approvalStatus.charAt(0).toUpperCase() + values.approvalStatus.slice(1) : null,
+    isActive: values.isActive ?? null,
+    whatsAppCategory: values.whatsAppCategory?.trim() || null,
   };
 }
 

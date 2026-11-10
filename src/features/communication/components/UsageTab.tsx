@@ -7,6 +7,8 @@ import { ErrorState } from "@/components/ui/states";
 import { formatCurrency } from "@/utils/format";
 import { CHANNELS } from "../constants";
 import { getUsage } from "../messaging/api";
+import { useAuthStore } from "@/store/authStore";
+import { AnalyticsCard, MonthlyUsageCard, PlatformUsageCard } from "./UsageInsights";
 
 import { useTranslation } from "react-i18next";
 const isoDay = (d: Date) => d.toISOString().slice(0, 10);
@@ -17,6 +19,9 @@ export default function UsageTab() {
   const [to, setTo] = useState(() => isoDay(new Date()));
   const [from, setFrom] = useState(() => isoDay(new Date(Date.now() - 29 * 86_400_000)));
   const usage = useQuery({ queryKey: ["communication", "usage", from, to], queryFn: () => getUsage(from, to) });
+  const user = useAuthStore((s) => s.user);
+  // The server answers platform-wide usage only for the platform administrator who has not picked a school.
+  const isPlatformAdmin = user?.role === "superAdmin" && !user.tenantId;
 
   const totals = useMemo(() => {
     const rows = usage.data ?? [];
@@ -82,6 +87,9 @@ export default function UsageTab() {
           )}
         </CardContent>
       </Card>
+      <MonthlyUsageCard />
+      <AnalyticsCard from={from} to={to} />
+      {isPlatformAdmin && <PlatformUsageCard from={from} to={to} />}
     </div>
   );
 }

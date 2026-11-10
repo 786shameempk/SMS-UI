@@ -30,7 +30,15 @@ export interface MessageTemplate {
   smsTemplateId?: string;
   whatsAppTemplateName?: string;
   whatsAppTemplateLanguage?: string;
+  /** The business event this template serves (fee.reminder...); empty for free-form broadcast templates. */
+  eventType?: string;
+  version?: number;
+  approvalStatus?: ApprovalStatus;
+  isActive?: boolean;
+  whatsAppCategory?: string;
 }
+
+export type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
 
 export interface MessageTemplateFormValues {
   name: string;
@@ -42,6 +50,10 @@ export interface MessageTemplateFormValues {
   smsTemplateId?: string;
   whatsAppTemplateName?: string;
   whatsAppTemplateLanguage?: string;
+  eventType?: string;
+  approvalStatus?: ApprovalStatus;
+  isActive?: boolean;
+  whatsAppCategory?: string;
 }
 
 export type MessageStatus = "scheduled" | "sent" | "cancelled";
@@ -79,7 +91,7 @@ export interface ComposeMessageFormValues {
 
 export type RecipientKind = "student" | "staff" | "parent";
 /** Real statuses: queued until the worker sends, sent when the provider accepted, delivered/read/failed/bounced from receipts, skipped when never attempted. */
-export type DeliveryStatus = "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "bounced" | "skipped";
+export type DeliveryStatus = "queued" | "sending" | "sent" | "delivered" | "read" | "failed" | "bounced" | "skipped" | "standby";
 
 export interface DeliveryLogEntry {
   id: string;

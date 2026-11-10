@@ -1,5 +1,7 @@
 # Reports & Analytics: report library (phases 1 and 2)
 
+> Custom reports (build-your-own, saved, shared): see [CUSTOM_REPORT_GENERATOR.md](CUSTOM_REPORT_GENERATOR.md).
+
 Phase 1 (foundation + 10 reports) and phase 2 (9 examination and admissions reports) built 2026-10-26. This is **19 working reports**, not the whole 300-report catalogue in the brief. Every report listed as built below runs on real data, was exercised against SQL Server through the Docker stack, and is covered by tests. Everything else is listed under "Not built" with the reason.
 
 ## What exists

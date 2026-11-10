@@ -24,6 +24,7 @@ interface ApiTeacherSubjectAssignment {
   staffId: string;
   subjectId: string;
   classId: string;
+  sectionId: string | null;
 }
 
 const mapAssignment = (dto: ApiTeacherSubjectAssignment): TeacherSubjectAssignment => ({
@@ -33,6 +34,7 @@ const mapAssignment = (dto: ApiTeacherSubjectAssignment): TeacherSubjectAssignme
   staffId: dto.staffId,
   subjectId: dto.subjectId,
   classId: dto.classId,
+  sectionId: dto.sectionId ?? undefined,
 });
 
 async function unwrap<T>(request: Promise<{ data: T }>): Promise<T> {
@@ -60,7 +62,7 @@ export async function listSubjectAssignments(staffId?: string): Promise<TeacherS
 }
 
 export async function assignSubject(values: TeacherSubjectAssignmentFormValues): Promise<TeacherSubjectAssignment> {
-  const assignment = await unwrap(academicHttpClient.post<ApiTeacherSubjectAssignment>("/api/teacher-assignments", values));
+  const assignment = await unwrap(academicHttpClient.post<ApiTeacherSubjectAssignment>("/api/teacher-assignments", { ...values, sectionId: values.sectionId || null }));
   return mapAssignment(assignment);
 }
 
