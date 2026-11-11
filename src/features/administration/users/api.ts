@@ -105,6 +105,25 @@ export async function listUsers(): Promise<SystemUser[]> {
   return (await unwrap(authHttpClient.get<ApiSchoolUser[]>(base))).map(mapUser);
 }
 
+export interface UserPageQuery {
+  search?: string;
+  roleId?: string;
+  status?: string;
+  /** One-based. */
+  page: number;
+  pageSize: number;
+}
+
+/** One page of the directory, filtered on the server (search matches name, email and phone). */
+export async function listUsersPage(q: UserPageQuery): Promise<{ items: SystemUser[]; totalCount: number }> {
+  const params: Record<string, string | number> = { page: q.page, pageSize: q.pageSize };
+  if (q.search) params.search = q.search;
+  if (q.roleId) params.roleId = q.roleId;
+  if (q.status) params.status = q.status;
+  const data = await unwrap(authHttpClient.get<{ items: ApiSchoolUser[]; totalCount: number }>(`${base}/page`, { params }));
+  return { items: data.items.map(mapUser), totalCount: data.totalCount };
+}
+
 /** The temporary password is emailed too, but email delivery is optional, so it's returned for the admin to hand over. */
 export async function createUser(values: UserFormValues): Promise<{ user: SystemUser; tempPassword: string }> {
   const result = await unwrap(

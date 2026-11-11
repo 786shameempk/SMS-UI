@@ -22,7 +22,10 @@ export function useProgressCardAccess(): ProgressCardAccess {
   // No permission map at all means a session that carries no per-module limits (for example the platform operator): show everything.
   if (!permissions) return { canManage: true, canGenerate: true, canApprove: true };
   if (!permissions.examinations) return { canManage: false, canGenerate: false, canApprove: false };
-  const managed = Boolean(permissions["Staff.Managed"]);
+  // A session issued before progress cards existed carries staff actions but none of ProgressCards.*; judge it like an unmanaged one
+  // so an administrator isn't left without the generator's tabs until they sign in again.
+  const knowsProgressCards = Object.keys(permissions).some((k) => k.startsWith("ProgressCards."));
+  const managed = Boolean(permissions["Staff.Managed"]) && knowsProgressCards;
   const leader = role === "admin" || role === "principal" || role === "superAdmin";
   const can = (action: string, elevated: boolean) => (managed ? Boolean(permissions[action]) : !elevated || leader);
   return { canManage: can("ProgressCards.Manage", true), canGenerate: can("ProgressCards.Generate", false), canApprove: can("ProgressCards.Approve", true) };

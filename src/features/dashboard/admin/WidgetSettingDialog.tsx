@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ToggleChip } from "@/components/ui/toggle-chip";
-import type { UserRole } from "@/types/auth";
 import WidgetPreview from "../components/WidgetPreview";
 import { HEIGHT_LABEL, WIDTH_LABEL } from "../layout";
 import type { AdminWidgetSetting, AdminWidgetSettingInput } from "../layoutApi";
 import { WIDGET_HEIGHTS, WIDGET_WIDTHS, WIDGETS_BY_ID, type WidgetHeight, type WidgetWidth } from "../widgets";
-import { ASSIGNABLE_ROLES, ROLE_NAME } from "./roles";
+import { ASSIGNABLE_ROLES } from "./roles";
 import { useDashboardRoles } from "./useDashboardRoles";
 
 /** Refresh choices (seconds). The server accepts 0 or 15 s - 24 h. Labels are translated where they render. */
@@ -49,11 +48,12 @@ export default function WidgetSettingDialog({
 }) {
   const { t } = useTranslation("dashboard");
   const config = WIDGETS_BY_ID.get(widget.id);
-  const { roles: roleOptions } = useDashboardRoles();
-  const possibleRoles: UserRole[] = widget.catalogRoles ?? ASSIGNABLE_ROLES;
+  const { expand, labelOf } = useDashboardRoles();
+  // The catalog's "staff" (every custom role) becomes one chip per custom role, so each can be given the widget on its own.
+  const possibleRoles: string[] = useMemo(() => expand(widget.catalogRoles ?? ASSIGNABLE_ROLES), [expand, widget.catalogRoles]);
   const [form, setForm] = useState<AdminWidgetSettingInput>(() => ({
     enabled: widget.enabled,
-    allowedRoles: widget.allowedRoles,
+    allowedRoles: widget.allowedRoles ? expand(widget.allowedRoles) : null,
     defaultVisible: widget.defaultVisible,
     defaultOrder: widget.defaultOrder,
     defaultWidth: widget.defaultWidth,
@@ -64,7 +64,7 @@ export default function WidgetSettingDialog({
   const set = <K extends keyof AdminWidgetSettingInput>(key: K, value: AdminWidgetSettingInput[K]) => setForm((f) => ({ ...f, [key]: value }));
 
   const selectedRoles = form.allowedRoles ?? possibleRoles;
-  const toggleRole = (role: UserRole) => {
+  const toggleRole = (role: string) => {
     const next = selectedRoles.includes(role) ? selectedRoles.filter((r) => r !== role) : [...selectedRoles, role];
     // Every possible role ticked = "follow the catalog" (null), so roles the catalog adds later are included too.
     set("allowedRoles", possibleRoles.every((r) => next.includes(r)) ? null : possibleRoles.filter((r) => next.includes(r)));
@@ -113,7 +113,7 @@ export default function WidgetSettingDialog({
             <div role="group" aria-label={t("Roles that get this widget")} className="flex flex-wrap gap-1.5">
               {possibleRoles.map((role) => (
                 <ToggleChip key={role} size="lg" pressed={selectedRoles.includes(role)} onClick={() => toggleRole(role)}>
-                  {t(roleOptions.find((o) => o.value === role)?.label ?? ROLE_NAME[role])}
+                  {t(labelOf(role))}
                 </ToggleChip>
               ))}
             </div>
