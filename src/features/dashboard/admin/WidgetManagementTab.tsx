@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { Switch } from "@/components/ui/switch";
 import { ToggleChip } from "@/components/ui/toggle-chip";
-import type { UserRole } from "@/types/auth";
 import { cn } from "@/utils/cn";
 import WidgetPreview from "../components/WidgetPreview";
 import { HEIGHT_LABEL, WIDTH_LABEL } from "../layout";
@@ -29,7 +28,7 @@ import {
   type AdminWidgetSettingInput,
 } from "../layoutApi";
 import { WIDGET_CATEGORY_LABEL, WIDGETS_BY_ID, type DashboardWidgetId, type WidgetCategory } from "../widgets";
-import { ASSIGNABLE_ROLES, ROLE_NAME } from "./roles";
+import { ASSIGNABLE_ROLES } from "./roles";
 import { useDashboardRoles } from "./useDashboardRoles";
 import WidgetSettingDialog from "./WidgetSettingDialog";
 
@@ -48,7 +47,7 @@ const toInput = (w: AdminWidgetSetting): AdminWidgetSettingInput => ({
 });
 
 /** The roles that actually get a widget in this school. */
-const rolesOf = (w: AdminWidgetSetting): UserRole[] => w.allowedRoles ?? w.catalogRoles ?? ASSIGNABLE_ROLES;
+const rolesOf = (w: AdminWidgetSetting, expand: (roles: readonly string[]) => string[]): string[] => expand(w.allowedRoles ?? w.catalogRoles ?? ASSIGNABLE_ROLES);
 
 function refreshLabel(seconds: number, t: TFunction): string {
   if (seconds === 0) return t("No auto-refresh");
@@ -59,9 +58,8 @@ function refreshLabel(seconds: number, t: TFunction): string {
 
 function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidgetSetting; onEdit: () => void; onToggle: (enabled: boolean) => void; toggling: boolean }) {
   const { t } = useTranslation("dashboard");
-  const { roles: roleOptions } = useDashboardRoles();
-  const roleLabel = (r: UserRole) => roleOptions.find((o) => o.value === r)?.label ?? ROLE_NAME[r];
-  const roles = rolesOf(widget);
+  const { roles: roleOptions, expand, labelOf: roleLabel } = useDashboardRoles();
+  const roles = rolesOf(widget, expand);
   const name = t(widget.name);
   return (
     <li className={cn("flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center", !widget.enabled && "bg-muted/40")}>
@@ -77,7 +75,7 @@ function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidget
         </div>
         <p className="truncate text-xs text-muted-foreground">{t(WIDGETS_BY_ID.get(widget.id)?.description ?? "")}</p>
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">{roles.length === ASSIGNABLE_ROLES.length ? t("Every role") : roles.map((r) => t(roleLabel(r))).join(", ")}</span>
+          <span className="font-medium text-foreground">{roleOptions.every((o) => roles.includes(o.value)) ? t("Every role") : roles.map((r) => t(roleLabel(r))).join(", ")}</span>
           {" · "}
           {t(WIDTH_LABEL[widget.defaultWidth])}, {t(HEIGHT_LABEL[widget.defaultHeight]).toLowerCase()}
           {" · "}
@@ -99,12 +97,12 @@ function WidgetRow({ widget, onEdit, onToggle, toggling }: { widget: AdminWidget
 
 function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation("dashboard");
-  const { roles: roleOptions } = useDashboardRoles();
-  const [role, setRole] = useState<UserRole>("teacher");
+  const { roles: roleOptions, labelOf } = useDashboardRoles();
+  const [role, setRole] = useState<string>("teacher");
   const reset = useMutation({
     mutationFn: () => resetRoleDashboards(role),
     onSuccess: (count) => {
-      const roleName = t(ROLE_NAME[role]).toLowerCase();
+      const roleName = t(labelOf(role)).toLowerCase();
       toast.success(
         count
           ? count === 1
@@ -126,7 +124,7 @@ function ResetRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
           </DialogDescription>
         </DialogHeader>
         <FormField label={t("Role")} htmlFor="reset-role">
-          <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
+          <Select value={role} onValueChange={(v) => setRole(v)}>
             <SelectTrigger id="reset-role">
               <SelectValue />
             </SelectTrigger>
@@ -162,11 +160,11 @@ export default function WidgetManagementTab() {
   const { t } = useTranslation("dashboard");
   const queryClient = useQueryClient();
   const widgets = useQuery({ queryKey: QUERY_KEY, queryFn: listAdminWidgetSettings });
-  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<DashboardWidgetId | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
-  const { roles: roleOptions } = useDashboardRoles();
+  const { roles: roleOptions, expand } = useDashboardRoles();
 
   const afterChange = (updated: AdminWidgetSetting) => {
     queryClient.setQueryData<AdminWidgetSetting[]>(QUERY_KEY, (old) => old?.map((w) => (w.id === updated.id ? updated : w)));
@@ -197,10 +195,10 @@ export default function WidgetManagementTab() {
     const q = search.trim().toLowerCase();
     return (widgets.data ?? []).filter(
       (w) =>
-        (roleFilter === "all" || rolesOf(w).includes(roleFilter)) &&
+        (roleFilter === "all" || rolesOf(w, expand).includes(roleFilter)) &&
         (!q || w.name.toLowerCase().includes(q) || (WIDGETS_BY_ID.get(w.id)?.description ?? "").toLowerCase().includes(q)),
     );
-  }, [widgets.data, roleFilter, search]);
+  }, [widgets.data, roleFilter, search, expand]);
 
   const grouped = CATEGORY_ORDER.map((c) => ({
     category: c,

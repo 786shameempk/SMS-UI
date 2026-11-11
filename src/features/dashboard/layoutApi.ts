@@ -56,12 +56,14 @@ export interface AdminWidgetSetting {
   id: DashboardWidgetId;
   name: string;
   /** Roles the widget can ever be given to; null = every role. */
-  catalogRoles: UserRole[] | null;
+  /** Built-in role names, plus "staff" (every custom role). */
+  catalogRoles: string[] | null;
   requiredModule: string | null;
   allBranchesOnly: boolean;
   enabled: boolean;
   /** Roles this school gives it to; null = all catalog roles. */
-  allowedRoles: UserRole[] | null;
+  /** Built-in role names, "staff" (every custom role) or a custom role's key. */
+  allowedRoles: string[] | null;
   defaultVisible: boolean;
   defaultOrder: number;
   defaultWidth: WidgetWidth;
@@ -93,7 +95,7 @@ export async function resetAdminWidgetSetting(id: DashboardWidgetId): Promise<Ad
 }
 
 /** Clears every saved dashboard of one role in this school; returns how many were reset. */
-export async function resetRoleDashboards(role: UserRole): Promise<number> {
+export async function resetRoleDashboards(role: string): Promise<number> {
   const { data } = await authHttpClient.post<{ reset: number }>("/api/dashboard/admin/layouts/reset", { role });
   return data.reset;
 }

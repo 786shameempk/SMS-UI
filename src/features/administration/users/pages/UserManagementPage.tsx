@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { KeyRound, Lock, Pencil, Plus, Trash2, Unlock, UserCheck, UserCog, UserPlus, UserX } from "lucide-react";
 import toast from "react-hot-toast";
@@ -15,7 +15,7 @@ import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdow
 import {
   createUser,
   deleteUser,
-  listUsers,
+  listUsersPage,
   resetUserPassword,
   setUserStatus,
   updateUser,
@@ -42,13 +42,36 @@ function initialsOf(name: string) {
 export default function UserManagementPage() {
   const { t } = useTranslation("administration");
   const queryClient = useQueryClient();
-  const { data: users = [], isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "users"], queryFn: listUsers });
   const { data: roles = [] } = useQuery({ queryKey: ["admin", "roles"], queryFn: listRoles });
 
   const [missingOpen, setMissingOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [search]);
+  // A new filter starts again from the first page.
+  useEffect(() => setPageIndex(0), [debouncedSearch, roleFilter, statusFilter]);
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["admin", "users", { search: debouncedSearch, roleFilter, statusFilter, pageIndex, pageSize }],
+    queryFn: () =>
+      listUsersPage({
+        search: debouncedSearch || undefined,
+        roleId: roleFilter === "all" ? undefined : roleFilter,
+        status: statusFilter === "all" ? undefined : statusFilter,
+        page: pageIndex + 1,
+        pageSize,
+      }),
+    placeholderData: keepPreviousData,
+  });
+  const users = data?.items ?? [];
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
@@ -107,16 +130,6 @@ export default function UserManagementPage() {
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : t("Could not reset password")),
   });
-
-  const filteredUsers = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return users.filter((u) => {
-      const matchesSearch = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-      const matchesRole = roleFilter === "all" || u.roleId === roleFilter;
-      const matchesStatus = statusFilter === "all" || u.status === statusFilter;
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [users, search, roleFilter, statusFilter]);
 
   // Bulk change through the existing per-user endpoint; reports partial failures instead of hiding them.
   const bulkStatusMutation = useMutation({
@@ -282,7 +295,17 @@ export default function UserManagementPage() {
 
       <DataTable
         columns={columns}
-        data={filteredUsers}
+        data={users}
+        serverPagination={{
+          pageIndex,
+          pageSize,
+          totalCount: data?.totalCount ?? 0,
+          onPageChange: setPageIndex,
+          onPageSizeChange: (n) => {
+            setPageSize(n);
+            setPageIndex(0);
+          },
+        }}
         isLoading={isLoading}
         isError={isError}
         onRetry={() => refetch()}
@@ -335,7 +358,6 @@ export default function UserManagementPage() {
             </Button>
           </>
         )}
-        pageSize={25}
       />
 
       <UserFormDialog
