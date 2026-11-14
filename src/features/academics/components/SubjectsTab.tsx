@@ -12,6 +12,7 @@ import { createSubject, deleteSubject, listClasses, listSubjects, updateSubject 
 import type { Subject, SubjectFormValues } from "../types";
 import SubjectFormDialog from "./SubjectFormDialog";
 import { RowActions } from "@/components/ui/row-actions";
+import { deleteAssessmentAssignment, listAssessmentAssignments, saveAssessmentAssignment } from "@/features/examinations/api";
 import { useIsTeacher } from "@/lib/roleAccess";
 
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,21 @@ export default function SubjectsTab() {
   const [deleteTarget, setDeleteTarget] = useState<Subject | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["academics", "subjects"] });
+
+  /** Points the subject at the chosen assessment structure (or clears it). A failure here never loses the subject itself. */
+  const syncAssessment = async (subjectId: string, structureId: string) => {
+    try {
+      const own = (await listAssessmentAssignments()).find((a) => a.subjectId === subjectId && !a.classId && !a.academicYearId);
+      if (structureId) {
+        if (own?.structureId !== structureId) await saveAssessmentAssignment({ structureId, subjectId });
+      } else if (own) {
+        await deleteAssessmentAssignment(own.id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["examinations", "assessment-assignments"] });
+    } catch {
+      toast.error(t("The subject was saved, but its assessment configuration could not be updated."));
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: createSubject,
@@ -141,9 +157,14 @@ export default function SubjectsTab() {
         subject={editing}
         classes={classes}
         submitting={createMutation.isPending || updateMutation.isPending}
-        onSubmit={async (values) => {
-          if (editing) await updateMutation.mutateAsync({ id: editing.id, values });
-          else await createMutation.mutateAsync(values);
+        onSubmit={async (values, structureId) => {
+          if (editing) {
+            await updateMutation.mutateAsync({ id: editing.id, values });
+            await syncAssessment(editing.id, structureId);
+          } else {
+            const created = await createMutation.mutateAsync(values);
+            await syncAssessment(created.id, structureId);
+          }
         }}
       />
 

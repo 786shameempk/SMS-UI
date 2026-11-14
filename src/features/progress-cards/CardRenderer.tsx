@@ -12,7 +12,7 @@ export const PAGE_MM: Record<string, { w: number; h: number }> = { A4: { w: 210,
 
 const COLUMN_LABELS: Record<string, string> = {
   subject: "Subject", max: "Max marks", pass: "Pass marks", marks: "Marks obtained", percentage: "%", grade: "Grade", gradePoint: "Grade point",
-  remarks: "Remarks", internal: "Internal", external: "External",
+  remarks: "Remarks", internal: "Internal", external: "External", components: "Assessment components",
 };
 
 const STUDENT_FIELDS: Record<string, { label: string; value: (d: CardData) => string }> = {
@@ -97,6 +97,23 @@ function cell(subject: CardSubject, col: string): string {
   }
 }
 
+/** Labels of the assessment components to print, in the order the subjects first use them, leaving out any the school hides on the card. */
+function componentLabels(subjects: CardSubject[]): string[] {
+  const seen: string[] = [];
+  for (const sub of subjects)
+    for (const part of sub.parts ?? [])
+      for (const c of part.components ?? []) if (c.showOnCard && !seen.some((x) => x.toLowerCase() === c.label.toLowerCase())) seen.push(c.label);
+  return seen;
+}
+
+function componentCell(subject: CardSubject, label: string): string {
+  for (const part of subject.parts ?? []) {
+    const c = part.components?.find((x) => x.showOnCard && x.label.toLowerCase() === label.toLowerCase());
+    if (c) return subject.absent ? "AB" : String(Math.round(c.obtained * 100) / 100);
+  }
+  return "-";
+}
+
 interface Props {
   config: TemplateConfig;
   data: CardData;
@@ -165,10 +182,12 @@ export function CardRenderer({ config, data, selectedId, onSelect }: Props) {
         );
       }
       case "marks": {
-        const cols = strings(p.columns).filter((c) => COLUMN_LABELS[c]);
+        // "components" stands for one column per assessment component (PT, NBS, Half Yearly ...) the subjects were set up with.
+        const comps = componentLabels(data.subjects);
+        const cols = strings(p.columns).filter((c) => COLUMN_LABELS[c]).flatMap((c) => (c === "components" ? comps.map((l) => "c:" + l) : [c]));
         const showRemarks = false;
         const widths = (p.widths ?? {}) as Record<string, number>;
-        const numeric = new Set(["max", "pass", "marks", "percentage", "gradePoint", "internal", "external"]);
+        const numeric = { has: (c: string) => c.startsWith("c:") || ["max", "pass", "marks", "percentage", "gradePoint", "internal", "external"].includes(c) };
         const totalLabel = t("Total");
         return (
           <div>
@@ -176,14 +195,14 @@ export function CardRenderer({ config, data, selectedId, onSelect }: Props) {
             <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: Object.keys(widths).length ? "fixed" : "auto" }}>
               <thead>
                 <tr>
-                  {cols.map((c) => <th key={c} style={{ ...th, textAlign: numeric.has(c) ? "right" : "left", width: widths[c] ? `${widths[c]}%` : undefined }}>{columnLabel(c)}</th>)}
+                  {cols.map((c) => <th key={c} style={{ ...th, textAlign: numeric.has(c) ? "right" : "left", width: widths[c] ? `${widths[c]}%` : undefined }}>{c.startsWith("c:") ? c.slice(2) : columnLabel(c)}</th>)}
                   {showRemarks && <th style={th}></th>}
                 </tr>
               </thead>
               <tbody>
                 {data.subjects.map((sub) => (
                   <tr key={sub.name + sub.code} style={{ breakInside: "avoid" }}>
-                    {cols.map((c) => <td key={c} style={{ ...td, textAlign: numeric.has(c) ? "right" : "left", color: c === "grade" && !sub.passed ? "#b91c1c" : undefined }}>{cell(sub, c)}</td>)}
+                    {cols.map((c) => <td key={c} style={{ ...td, textAlign: numeric.has(c) ? "right" : "left", color: c === "grade" && !sub.passed ? "#b91c1c" : undefined }}>{c.startsWith("c:") ? componentCell(sub, c.slice(2)) : cell(sub, c)}</td>)}
                     {showRemarks && <td style={td}></td>}
                   </tr>
                 ))}

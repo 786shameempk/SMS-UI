@@ -5,8 +5,9 @@ import type { CardData, CardSubject, LayoutSection, SubjectPart } from "./types"
  * column's exam text. Mirrors AcademicService TermLayout.cs; keep the two in step.
  */
 
-export interface TermColumn { label: string; exam: string; max: number }
-export interface TermDef { title: string; totalMax: number; columns: TermColumn[] }
+/** component: optional label (or key) of one assessment component of the exam, so a column can show PT, NBS ... instead of the exam total. */
+export interface TermColumn { label: string; exam: string; max: number; component: string }
+export interface TermDef { title: string; totalMax: number; columns: TermColumn[]; first?: boolean }
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" ? (v as Record<string, unknown>) : {});
 const text = (v: unknown): string => (typeof v === "string" ? v : "");
@@ -14,9 +15,9 @@ const num = (v: unknown, fallback = 0): number => (typeof v === "number" ? v : f
 
 export function termsOf(props: Record<string, unknown>): TermDef[] {
   const arr = Array.isArray(props.terms) ? props.terms : [];
-  return arr.map((t) => {
+  return arr.map((t, index) => {
     const o = obj(t);
-    return { title: text(o.title), totalMax: num(o.totalMax, 100), columns: (Array.isArray(o.columns) ? o.columns : []).map((c) => { const x = obj(c); return { label: text(x.label), exam: text(x.exam), max: num(x.max) }; }) };
+    return { first: index === 0, title: text(o.title), totalMax: num(o.totalMax, 100), columns: (Array.isArray(o.columns) ? o.columns : []).map((c) => { const x = obj(c); return { label: text(x.label), exam: text(x.exam), max: num(x.max), component: text(x.component) }; }) };
   });
 }
 
@@ -31,7 +32,38 @@ export function firstTerms(sections: LayoutSection[]): TermDef[] {
 }
 
 const matches = (p: SubjectPart, exam: string) => exam.length > 0 && p.examName.toLowerCase().includes(exam.toLowerCase());
-const matched = (s: CardSubject, t: TermDef) => t.columns.map((c) => ({ c, part: (s.parts ?? []).find((p) => matches(p, c.exam)) }));
+const norm = (v: string) => v.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+const hasComponent = (p: SubjectPart, label: string) => !!p.components?.some((c) => c.label.toLowerCase() === label.toLowerCase() || c.key.toLowerCase() === label.toLowerCase());
+
+/**
+ * The exam (part) each column reads and the component to show from it ("" = the exam total). A column looks for an exam whose name contains
+ * its exam text; failing that it uses the school's assessment components: an exam whose name holds the term title, or, on a card made from
+ * one exam, the first term, taking the component named like the column. Mirrors TermLayout.cs.
+ */
+const matched = (s: CardSubject, t: TermDef): { c: TermColumn; part?: SubjectPart; component: string }[] => {
+  const parts = s.parts ?? [];
+  const title = norm(t.title);
+  return t.columns.map((c) => {
+    const byExam = parts.find((p) => matches(p, c.exam));
+    if (byExam) return { c, part: byExam, component: c.component };
+    const label = c.component || c.label;
+    if (label) {
+      const byTerm = title ? parts.find((p) => norm(p.examName).includes(title) && hasComponent(p, label)) : undefined;
+      if (byTerm) return { c, part: byTerm, component: label };
+      if (t.first && parts.length === 1 && hasComponent(parts[0], label)) return { c, part: parts[0], component: label };
+    }
+    return { c, component: c.component };
+  });
+};
+/** The parts behind a term's columns, each once, so several component columns of one exam count its total a single time. */
+const distinctParts = (m: { part?: SubjectPart }[]): SubjectPart[] => [...new Set(m.flatMap((x) => (x.part ? [x.part] : [])))];
+const cellOf = (component: string, part?: SubjectPart): string => {
+  if (!part) return "-";
+  if (part.absent) return "AB";
+  if (!component) return String(part.obtained);
+  const k = part.components?.find((x) => x.label.toLowerCase() === component.toLowerCase() || x.key.toLowerCase() === component.toLowerCase());
+  return k ? String(Math.round(k.obtained * 100) / 100) : "-";
+};
 
 export function gradeOf(pct: number, bands: CardData["bands"]): string {
   if (!bands || bands.length === 0) return "";
@@ -41,8 +73,8 @@ export function gradeOf(pct: number, bands: CardData["bands"]): string {
 
 export function termRow(s: CardSubject, t: TermDef, bands: CardData["bands"]): { cells: string[]; total: string; grade: string } {
   const m = matched(s, t);
-  const cells = m.map((x) => (!x.part ? "-" : x.part.absent ? "AB" : String(x.part.obtained)));
-  const found = m.flatMap((x) => (x.part ? [x.part] : []));
+  const cells = m.map((x) => cellOf(x.component, x.part));
+  const found = distinctParts(m);
   if (found.length === 0) return { cells, total: "-", grade: "-" };
   const sum = found.reduce((a, p) => a + (p.absent ? 0 : p.obtained), 0);
   const max = found.reduce((a, p) => a + p.max, 0);
@@ -53,14 +85,14 @@ export function termRow(s: CardSubject, t: TermDef, bands: CardData["bands"]): {
 export function termOverall(d: CardData, t: TermDef): { sum: string; max: string; grade: string } {
   let sum = 0, max = 0;
   for (const s of d.subjects.filter((x) => !x.additional))
-    for (const { part } of matched(s, t)) if (part) { max += part.max; sum += part.absent ? 0 : part.obtained; }
+    for (const part of distinctParts(matched(s, t))) { max += part.max; sum += part.absent ? 0 : part.obtained; }
   if (max <= 0) return { sum: "-", max: "-", grade: "-" };
   return { sum: String(Math.round(sum * 100) / 100), max: String(max), grade: gradeOf((sum / max) * 100, d.bands) || "-" };
 }
 
 /** Student, class average and class top as percentages. The top adds each exam's highest mark, so it can exceed any real total. */
 export function termCompare(s: CardSubject, t: TermDef): { avg: number | null; top: number | null; student: number | null } {
-  const found = matched(s, t).flatMap((x) => (x.part ? [x.part] : []));
+  const found = distinctParts(matched(s, t));
   const max = found.reduce((a, p) => a + p.max, 0);
   if (max <= 0) return { avg: null, top: null, student: null };
   const of = (pick: (p: SubjectPart) => number | null | undefined) =>

@@ -312,6 +312,7 @@ export default function ExamsTab() {
         }}
         schedule={editingSchedule}
         subjects={subjects}
+        classId={exams.find((x) => x.id === (editingSchedule?.examId ?? activeScheduleExamId))?.classId}
         submitting={createScheduleMutation.isPending || updateScheduleMutation.isPending}
         onSubmit={async (values) => {
           if (editingSchedule) await updateScheduleMutation.mutateAsync({ id: editingSchedule.id, values });

@@ -19,7 +19,8 @@ export function printCards(config: TemplateConfig, cards: CardData[], title = "P
   w.document.write(
     `<!doctype html><html><head><meta charset="utf-8"><title>${esc}</title><style>
 @page{size:${config.page.size} ${landscape ? "landscape" : "portrait"};margin:0}
-*{box-sizing:border-box}body{margin:0;background:#e5e7eb}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:0;background:#e5e7eb}
+svg{display:block;max-width:100%;overflow:visible}
 .pc{break-after:page;page-break-after:always;width:${landscape ? page.h : page.w}mm;margin:0 auto 8px;background:#fff}
 .pc:last-child{break-after:auto;page-break-after:auto}
 @media print{body{background:#fff}.pc{margin:0}}

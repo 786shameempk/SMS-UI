@@ -36,8 +36,32 @@ describe("term-wise layout", () => {
   });
 
   it("shows dashes when no exam matches", () => {
-    const row = termRow(eng, { title: "T", totalMax: 100, columns: [{ label: "X", exam: "Nothing", max: 10 }] }, SAMPLE_TWO_TERM_CARD.bands);
+    const row = termRow(eng, { title: "T", totalMax: 100, columns: [{ label: "X", exam: "Nothing", max: 10, component: "" }] }, SAMPLE_TWO_TERM_CARD.bands);
     expect(row).toEqual({ cells: ["-"], total: "-", grade: "-" });
+  });
+
+  it("reads one assessment component per column and counts the exam total once", () => {
+    const comp = (key: string, label: string, obtained: number, max: number) => ({ key, label, obtained, max, counts: true, showOnCard: true, optional: false });
+    const subject = {
+      ...eng,
+      parts: [{ examName: "Term 1", obtained: 78, max: 100, weight: 100, absent: false, components: [comp("pt", "PT", 8, 10), comp("nbs", "NBS", 5, 5), comp("half-yearly", "Half Yearly", 65, 85)] }],
+    } as typeof eng;
+    const term = { title: "Term 1", totalMax: 100, columns: [{ label: "PT", exam: "Term 1", max: 10, component: "PT" }, { label: "NBS", exam: "Term 1", max: 5, component: "nbs" }, { label: "X", exam: "Term 1", max: 5, component: "Missing" }] };
+    const row = termRow(subject, term, SAMPLE_TWO_TERM_CARD.bands);
+    expect(row.cells).toEqual(["8", "5", "-"]);
+    expect(row.total).toBe("78");
+  });
+
+  it("falls back to components by term title, or by the first term on a one-exam card", () => {
+    const comp = (key: string, label: string, obtained: number, max: number) => ({ key, label, obtained, max, counts: true, showOnCard: true, optional: false });
+    const comps = [comp("pt", "PT", 8, 10), comp("nbs", "NBS", 5, 5), comp("sea", "SEA", 4, 5), comp("half-yearly", "Half Yearly", 60, 80)];
+    const mk = (examName: string) => ({ ...eng, parts: [{ examName, obtained: 77, max: 100, weight: 100, absent: false, components: comps }] }) as typeof eng;
+    const cols = (title: string) => ({ title, totalMax: 100, columns: [{ label: "PT", exam: "PT-1", max: 10, component: "" }, { label: "Half Yearly", exam: "Half Yearly", max: 80, component: "" }] });
+    // an exam named for the term
+    expect(termRow(mk("Term 1 Examination"), { ...cols("Term-1"), first: false }, SAMPLE_TWO_TERM_CARD.bands).cells).toEqual(["8", "60"]);
+    // one exam of any name: only the first term reads it
+    expect(termRow(mk("Test exam 01"), { ...cols("Term-1"), first: true }, SAMPLE_TWO_TERM_CARD.bands).cells).toEqual(["8", "60"]);
+    expect(termRow(mk("Test exam 01"), { ...cols("Term-2"), first: false }, SAMPLE_TWO_TERM_CARD.bands).cells).toEqual(["-", "-"]);
   });
 
   it("totals a term across subjects and compares with the class", () => {
