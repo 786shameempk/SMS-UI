@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { copySystemTemplate, createTemplate, getSystemTemplate, getTemplate, updateTemplate } from "./api";
 import { CardRenderer, MARK_COLUMN_KEYS, STUDENT_FIELD_KEYS, SUMMARY_FIELD_KEYS, columnLabel, studentFieldLabel, summaryFieldLabel } from "./CardRenderer";
 import { printCards } from "./printCards";
-import { SAMPLE_CARD } from "./sample";
+import { SAMPLE_CARD, SAMPLE_TWO_TERM_CARD } from "./sample";
+import { firstTerms } from "./termLayout";
+import { ChartEditor, TermsEditor } from "./TermsEditor";
 import type { CardData, LayoutSection, SectionType, TemplateConfig, TemplateDetail } from "./types";
 
 const BLANK: TemplateConfig = {
@@ -33,6 +35,7 @@ const BLANK: TemplateConfig = {
 const SECTION_NAMES: Record<SectionType, string> = {
   header: "School header", student: "Student details", marks: "Marks table", summary: "Result summary", attendance: "Attendance", coscholastic: "Co-scholastic / activities",
   remarks: "Remarks", text: "Custom text or notes", signatures: "Signature areas", table: "Custom table",
+  termMarks: "Term-wise marks table", termChart: "Class comparison charts", gradeKey: "Grade description",
 };
 
 const FONTS = ["Arial", "Georgia", "Times New Roman", "Verdana", "Tahoma", "Trebuchet MS", "Courier New"];
@@ -46,6 +49,11 @@ const DEFAULT_PROPS: Partial<Record<SectionType, Record<string, unknown>>> = {
   text: { text: "" },
   table: { headers: ["Column 1", "Column 2"], rows: [["", ""]] },
   signatures: { labels: ["Class Teacher", "Principal", "Parent / Guardian"] },
+  termMarks: { terms: [
+    { title: "Term-1", totalMax: 100, columns: [{ label: "PT", exam: "PT-1", max: 10 }, { label: "Half Yearly", exam: "Half Yearly", max: 90 }] },
+    { title: "Term-2", totalMax: 100, columns: [{ label: "PT", exam: "PT-2", max: 10 }, { label: "Annual", exam: "Annual", max: 90 }] },
+  ] },
+  gradeKey: { coScholastic: "A : 3, B : 2, C : 1" },
 };
 
 const lines = (v: unknown): string => (Array.isArray(v) ? v.join("\n") : "");
@@ -97,7 +105,8 @@ export default function TemplateDesignerPage() {
     setMeta({ name: s.name, board: s.board, category: s.category ?? "", classFrom: s.classFrom?.toString() ?? "", classTo: s.classTo?.toString() ?? "", description: s.description ?? "", note: "" });
   }, [detail.data]);
 
-  const sample: CardData = useMemo(() => SAMPLE_CARD, []);
+  const hasTerms = config.sections.some((x) => x.type === "termMarks");
+  const sample: CardData = hasTerms ? SAMPLE_TWO_TERM_CARD : SAMPLE_CARD;
   const fieldLabel = (k: string) => (current?.type === "summary" ? summaryFieldLabel(k) : studentFieldLabel(k));
   const current = config.sections.find((s) => s.id === selected) ?? null;
 
@@ -254,7 +263,7 @@ export default function TemplateDesignerPage() {
                 )}
                 {current.type === "header" && (
                   <>
-                    {([["schoolName", t("School name")], ["address", t("Address")], ["affiliation", t("Affiliation / recognition")], ["contact", t("Contact details")], ["logoUrl", t("Logo image address")], ["title", t("Card title")]] as const).map(([k, label]) => (
+                    {([["schoolName", t("School name")], ["address", t("Address")], ["affiliation", t("Affiliation / recognition")], ["contact", t("Contact details")], ["logoUrl", t("Logo image address")], ["title", t("Card title")], ["subtitle", t("Second line (use {class} and {year})")]] as const).map(([k, label]) => (
                       <div key={k} className="space-y-1.5"><Label htmlFor={`h-${k}`}>{label}</Label><Input id={`h-${k}`} value={typeof p[k] === "string" ? (p[k] as string) : ""} disabled={readOnly} onChange={(e) => patchProps(current.id, { [k]: e.target.value })} /></div>
                     ))}
                   </>
@@ -294,7 +303,19 @@ export default function TemplateDesignerPage() {
                   </>
                 )}
                 {current.type === "coscholastic" && (
-                  <div className="space-y-1.5"><Label htmlFor="co-items">{t("Areas (one per line)")}</Label><Textarea id="co-items" rows={6} disabled={readOnly} value={lines(p.items)} onChange={(e) => patchProps(current.id, { items: fromLines(e.target.value) })} /></div>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5"><Label htmlFor="co-items">{t("Areas (one per line)")}</Label><Textarea id="co-items" rows={6} disabled={readOnly} value={lines(p.items)} onChange={(e) => patchProps(current.id, { items: fromLines(e.target.value) })} /></div>
+                    <div className="space-y-1.5"><Label htmlFor="co-terms">{t("Term columns (optional, one per line: label | exam name contains)")}</Label>
+                      {!readOnly && <Button type="button" size="sm" variant="outline" onClick={() => patchProps(current.id, { terms: firstTerms(config.sections).map((x) => ({ label: x.title, exam: x.columns[x.columns.length - 1]?.exam ?? "" })) })}>{t("Use the terms of the marks table")}</Button>}
+                      <Textarea id="co-terms" rows={3} disabled={readOnly} value={(Array.isArray(p.terms) ? (p.terms as { label?: string; exam?: string }[]) : []).map((x) => `${x.label ?? ""} | ${x.exam ?? ""}`).join("\n")}
+                        onChange={(e) => patchProps(current.id, { terms: e.target.value.split("\n").map((l) => l.split("|").map((c) => c.trim())).filter((x) => x[0]).map(([label, exam]) => ({ label, exam: exam ?? "" })) })} /></div>
+                  </div>
+                )}
+                {current.type === "termMarks" && <TermsEditor props={p} disabled={readOnly} onChange={(patch) => patchProps(current.id, patch)} />}
+                {current.type === "termChart" && <ChartEditor props={p} disabled={readOnly} termTitles={firstTerms(config.sections).map((x) => x.title)} onChange={(patch) => patchProps(current.id, patch)} />}
+                {current.type === "gradeKey" && (
+                  <div className="space-y-1.5"><Label htmlFor="gk">{t("Co-scholastic grade description")}</Label><Input id="gk" value={typeof p.coScholastic === "string" ? p.coScholastic : ""} disabled={readOnly} onChange={(e) => patchProps(current.id, { coScholastic: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">{t("The scholastic grade ranges are printed from the grading scheme.")}</p></div>
                 )}
                 {current.type === "text" && (
                   <div className="space-y-1.5"><Label htmlFor="tx">{t("Text")}</Label><Textarea id="tx" rows={5} disabled={readOnly} value={typeof p.text === "string" ? p.text : ""} onChange={(e) => patchProps(current.id, { text: e.target.value })} /></div>

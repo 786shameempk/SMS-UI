@@ -1,5 +1,6 @@
-import type { CSSProperties, ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { t } from "./t";
+import { coColumns, coGrade, firstTerms, gradeKeyText, promotionText, shortName, termCompare, termOverall, termRow, termsOf, withTokens } from "./termLayout";
 import type { CardData, CardSubject, LayoutSection, TemplateConfig } from "./types";
 
 /**
@@ -22,6 +23,8 @@ const STUDENT_FIELDS: Record<string, { label: string; value: (d: CardData) => st
   dateOfBirth: { label: "Date of birth", value: (d) => d.dateOfBirth ?? "-" },
   guardian: { label: "Parent / guardian", value: (d) => d.guardian ?? "-" },
   academicYear: { label: "Academic year", value: (d) => d.academicYear ?? "-" },
+  fatherName: { label: "Father's name", value: (d) => d.fatherName ?? "-" },
+  motherName: { label: "Mother's name", value: (d) => d.motherName ?? "-" },
 };
 
 const SUMMARY_FIELDS: Record<string, { label: string; value: (d: CardData) => string }> = {
@@ -32,7 +35,41 @@ const SUMMARY_FIELDS: Record<string, { label: string; value: (d: CardData) => st
   rank: { label: "Rank", value: (d) => (d.rank > 0 ? `#${d.rank}` : "-") },
   classAverage: { label: "Class average", value: (d) => `${d.classAverage}%` },
   result: { label: "Result", value: (d) => t(d.result) },
+  promotion: { label: "Promotion", value: (d) => promotionText(d, t("Qualified for Promotion to Higher Class"), t("Not yet qualified for promotion")) },
 };
+
+const CHART_COLORS = { avg: "#9ca3af", top: "#2563eb", student: "#dc2626" };
+
+/** Grouped bars (class average, class top, this student) per subject for one term. Plain SVG so print matches the preview. */
+function TermBarChart({ title, d, term, series }: { title: string; d: CardData; term: ReturnType<typeof firstTerms>[number]; series: string[] }) {
+  const subjects = d.subjects.filter((s) => !s.additional);
+  const w = 300, h = 150, left = 24, bottom = 18, top = 6;
+  const plotH = h - bottom - top;
+  const groupW = (w - left) / Math.max(1, subjects.length);
+  const bar = Math.min(10, (groupW - 4) / Math.max(1, series.length));
+  const y = (v: number) => top + plotH - (Math.max(0, Math.min(100, v)) / 100) * plotH;
+  return (
+    <div style={{ flex: 1, minWidth: 0, breakInside: "avoid" }}>
+      <div style={{ fontWeight: 700, fontSize: "0.9em", textAlign: "center" }}>{title}</div>
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "auto" }} role="img" aria-label={title}>
+        {[0, 20, 40, 60, 80, 100].map((v) => (
+          <g key={v}><line x1={left} x2={w} y1={y(v)} y2={y(v)} stroke="#e5e7eb" /><text x={left - 3} y={y(v) + 3} fontSize="7" textAnchor="end" fill="#6b7280">{v}</text></g>
+        ))}
+        {subjects.map((s, i) => {
+          const c = termCompare(s, term);
+          const x0 = left + i * groupW + (groupW - bar * series.length) / 2;
+          return (
+            <g key={s.name + s.code}>
+              {([["avg", c.avg], ["top", c.top], ["student", c.student]] as const).filter(([k]) => series.includes(k)).map(([k, v], j) =>
+                v == null ? null : <rect key={k} x={x0 + j * bar} y={y(v)} width={bar - 1} height={top + plotH - y(v)} fill={CHART_COLORS[k]} />)}
+              <text x={left + i * groupW + groupW / 2} y={h - 6} fontSize="7" textAnchor="middle" fill="#374151">{shortName(s)}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
 
 export const STUDENT_FIELD_KEYS = Object.keys(STUDENT_FIELDS);
 export const SUMMARY_FIELD_KEYS = Object.keys(SUMMARY_FIELDS);
@@ -96,9 +133,16 @@ export function CardRenderer({ config, data, selectedId, onSelect }: Props) {
             {str(p.address) && <div style={{ fontSize: "0.9em", color: "#475569" }}>{str(p.address)}</div>}
             {str(p.affiliation) && <div style={{ fontSize: "0.9em", color: "#475569" }}>{str(p.affiliation)}</div>}
             {str(p.contact) && <div style={{ fontSize: "0.9em", color: "#475569" }}>{str(p.contact)}</div>}
-            <div style={{ marginTop: 6, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>
-              {str(p.title, t("Progress Card"))} - {data.examName}{data.academicYear ? ` (${data.academicYear})` : ""}
-            </div>
+            {str(p.subtitle) ? (
+              <div style={{ marginTop: 6, fontWeight: 700 }}>
+                <div style={{ fontSize: "1.1em" }}>{withTokens(str(p.title, t("Progress Card")), data)}</div>
+                <div>{withTokens(str(p.subtitle), data)}</div>
+              </div>
+            ) : (
+              <div style={{ marginTop: 6, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>
+                {str(p.title, t("Progress Card"))} - {data.examName}{data.academicYear ? ` (${data.academicYear})` : ""}
+              </div>
+            )}
           </div>
         );
       }
@@ -189,6 +233,18 @@ export function CardRenderer({ config, data, selectedId, onSelect }: Props) {
         );
       case "coscholastic": {
         const items = strings(p.items);
+        const cols = coColumns(p);
+        if (cols.length > 0) {
+          return (
+            <div>
+              {heading(s.title)}
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead><tr><th style={th}></th>{cols.map((c) => <th key={c.label} style={{ ...th, width: "18%", textAlign: "center" }}>{c.label}</th>)}</tr></thead>
+                <tbody>{items.map((i) => <tr key={i}><td style={td}>{i}</td>{cols.map((c) => <td key={c.label} style={{ ...td, textAlign: "center" }}>{coGrade(data, i, c.exam) || "\u00a0"}</td>)}</tr>)}</tbody>
+              </table>
+            </div>
+          );
+        }
         return (
           <div>
             {heading(s.title)}
@@ -223,6 +279,91 @@ export function CardRenderer({ config, data, selectedId, onSelect }: Props) {
               {head.length > 0 && <thead><tr>{head.map((h, i) => <th key={i} style={th}>{h}</th>)}</tr></thead>}
               <tbody>{rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} style={td}>{c}</td>)}</tr>)}</tbody>
             </table>
+          </div>
+        );
+      }
+      case "termMarks": {
+        const terms = termsOf(p);
+        const showTotal = p.showTotal !== false, showGrade = p.showGrade !== false, showTotalRow = p.showTotalRow !== false;
+        const extra = (showTotal ? 1 : 0) + (showGrade ? 1 : 0);
+        return (
+          <div>
+            {heading(s.title)}
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.92em" }}>
+              <thead>
+                <tr>
+                  <th style={th} rowSpan={2}>{t("Subject")}</th>
+                  {terms.map((tm) => <th key={tm.title} style={{ ...th, textAlign: "center" }} colSpan={tm.columns.length + extra}>{tm.title}</th>)}
+                </tr>
+                <tr>
+                  {terms.map((tm) => (
+                    <Fragment key={tm.title}>
+                      {tm.columns.map((c) => <th key={c.label + c.exam} style={{ ...th, textAlign: "center" }}>{c.label}<div style={{ fontWeight: 400 }}>({c.max})</div></th>)}
+                      {showTotal && <th style={{ ...th, textAlign: "center" }}>{t("Total")}<div style={{ fontWeight: 400 }}>({tm.totalMax})</div></th>}
+                      {showGrade && <th style={{ ...th, textAlign: "center" }}>{t("Gr.")}</th>}
+                    </Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.subjects.map((sub) => (
+                  <tr key={sub.name + sub.code} style={{ breakInside: "avoid" }}>
+                    <td style={td}>{sub.name}{sub.additional ? ` (${t("additional")})` : sub.optional ? ` (${t("optional")})` : ""}</td>
+                    {terms.map((tm) => {
+                      const r = termRow(sub, tm, data.bands);
+                      return (
+                        <Fragment key={tm.title}>
+                          {r.cells.map((c, i) => <td key={i} style={{ ...td, textAlign: "center" }}>{c}</td>)}
+                          {showTotal && <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{r.total}</td>}
+                          {showGrade && <td style={{ ...td, textAlign: "center" }}>{r.grade}</td>}
+                        </Fragment>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+              {showTotalRow && <tfoot>
+                <tr>
+                  <td style={{ ...td, fontWeight: 700 }}>{t("Total Marks")}</td>
+                  {terms.map((tm) => { const o = termOverall(data, tm); return (
+                    <Fragment key={tm.title}>
+                      <td style={{ ...td, textAlign: "center", fontWeight: 700 }} colSpan={tm.columns.length + (showTotal ? 1 : 0)}>{o.sum}</td>
+                      {showGrade && <td style={{ ...td, textAlign: "center", fontWeight: 700 }}>{o.grade}</td>}
+                    </Fragment>
+                  ); })}
+                </tr>
+                <tr>
+                  <td style={{ ...td, fontWeight: 700 }}>{t("Max.Marks")}</td>
+                  {terms.map((tm) => <td key={tm.title} style={{ ...td, textAlign: "center", fontWeight: 700 }} colSpan={tm.columns.length + extra}>{termOverall(data, tm).max}</td>)}
+                </tr>
+              </tfoot>}
+            </table>
+          </div>
+        );
+      }
+      case "termChart": {
+        const only = strings(p.terms);
+        const terms = firstTerms(config.sections).filter((x) => only.length === 0 || only.includes(x.title));
+        const picked = strings(p.series);
+        const series = ["avg", "top", "student"].filter((k) => picked.length === 0 || picked.includes(k));
+        if (terms.length === 0 || series.length === 0) return null;
+        return (
+          <div>
+            {heading(s.title)}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{terms.map((tm) => <TermBarChart key={tm.title} title={tm.title} d={data} term={tm} series={series} />)}</div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 14, fontSize: "0.8em", marginTop: 2 }}>
+              {series.includes("avg") && <span style={{ color: CHART_COLORS.avg }}>■ {t("Class Avg. %")}</span>}{series.includes("top") && <span style={{ color: CHART_COLORS.top }}>■ {t("Class Top %")}</span>}{series.includes("student") && <span style={{ color: CHART_COLORS.student }}>■ {t("Student %")}</span>}
+            </div>
+          </div>
+        );
+      }
+      case "gradeKey": {
+        const line = gradeKeyText(data.bands);
+        return (
+          <div style={{ fontSize: "0.9em" }}>
+            {heading(s.title)}
+            {line && <div><b>{t("Scholastic")} :-</b> {line}</div>}
+            {str(p.coScholastic) && <div><b>{t("Co-Scholastic")} :-</b> {str(p.coScholastic)}</div>}
           </div>
         );
       }

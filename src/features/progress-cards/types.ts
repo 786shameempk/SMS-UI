@@ -1,4 +1,4 @@
-export type SectionType = "header" | "student" | "marks" | "summary" | "attendance" | "coscholastic" | "remarks" | "text" | "signatures" | "table";
+export type SectionType = "header" | "student" | "marks" | "summary" | "attendance" | "coscholastic" | "remarks" | "text" | "signatures" | "table" | "termMarks" | "termChart" | "gradeKey";
 
 export interface LayoutSection {
   id: string;
@@ -85,6 +85,12 @@ export interface Assignment {
   isDefault: boolean;
 }
 
+export interface SubjectPart {
+  examName: string; obtained: number; max: number; weight: number; absent: boolean;
+  /** Class average / highest for this exam, as a percentage of its max. */
+  classAvg?: number | null; classTop?: number | null;
+}
+
 export interface CardSubject {
   name: string;
   code: string;
@@ -103,7 +109,7 @@ export interface CardSubject {
   optional?: boolean;
   additional?: boolean;
   remark?: string | null;
-  parts?: { examName: string; obtained: number; max: number; weight: number; absent: boolean }[] | null;
+  parts?: SubjectPart[] | null;
 }
 
 export interface CardData {
@@ -133,7 +139,11 @@ export interface CardData {
   remarks: string | null;
   schemeName: string;
   schemeMode: string;
-  coScholastic?: { area: string; grade: string | null; remark: string | null }[] | null;
+  coScholastic?: { area: string; grade: string | null; remark: string | null; examName?: string | null }[] | null;
+  fatherName?: string | null;
+  motherName?: string | null;
+  /** The grading scheme's bands (lower bound as a percentage); empty in Marks mode. */
+  bands?: { grade: string; min: number }[] | null;
 }
 
 export interface ValidationIssue {
