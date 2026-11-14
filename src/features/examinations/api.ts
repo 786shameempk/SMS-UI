@@ -1,6 +1,10 @@
 import { academicHttpClient, extractApiErrorMessage } from "@/lib/httpClient";
 import { listStudents } from "@/features/students/api";
 import type {
+  AssessmentAssignment,
+  AssessmentComponent,
+  AssessmentStructure,
+  AssessmentStructureForm,
   Exam,
   ExamFormValues,
   ExamResult,
@@ -8,6 +12,7 @@ import type {
   ExamSchedule,
   ExamScheduleFormValues,
   ExamStatus,
+  MarksProgress,
   ExamType,
   StudentExamSummary,
   SubjectResultRow,
@@ -70,6 +75,9 @@ interface ApiExamSchedule {
   endTime: string;
   maxMarks: number;
   internalMaxMarks: number | null;
+  components?: AssessmentComponent[] | null;
+  structureId?: string | null;
+  marksStatus?: "Open" | "Submitted";
   passMarks: number;
   room: string | null;
 }
@@ -85,6 +93,8 @@ interface ApiExamResult {
   maxMarks: number;
   internalMarks: number | null;
   internalMaxMarks: number | null;
+  componentMarks?: Record<string, number> | null;
+  exemption?: "Exempt" | "NotApplicable" | null;
   grade: string;
   isAbsent: boolean;
 }
@@ -169,6 +179,9 @@ const mapSchedule = (dto: ApiExamSchedule): ExamSchedule => ({
   endTime: dto.endTime,
   maxMarks: dto.maxMarks,
   internalMaxMarks: dto.internalMaxMarks ?? undefined,
+  components: dto.components?.length ? dto.components : undefined,
+  structureId: dto.structureId ?? undefined,
+  marksStatus: dto.marksStatus,
   passMarks: dto.passMarks,
   room: dto.room ?? undefined,
 });
@@ -184,6 +197,8 @@ const mapResult = (dto: ApiExamResult): ExamResult => ({
   maxMarks: dto.maxMarks,
   internalMarks: dto.internalMarks ?? undefined,
   internalMaxMarks: dto.internalMaxMarks ?? undefined,
+  componentMarks: dto.componentMarks && Object.keys(dto.componentMarks).length ? dto.componentMarks : undefined,
+  exemption: dto.exemption ?? undefined,
   grade: dto.grade,
   isAbsent: dto.isAbsent,
 });
@@ -338,6 +353,8 @@ export async function saveExamResults(
         studentId: r.studentId,
         marksObtained: r.marksObtained,
         ...(internalMaxMarks ? { internalMarks: r.internalMarks ?? 0, externalMarks: r.externalMarks ?? 0 } : {}),
+        ...(r.components ? { components: r.components } : {}),
+        ...(r.exemption ? { exemption: r.exemption } : {}),
         isAbsent: r.isAbsent,
       })),
     }),
@@ -371,4 +388,52 @@ export async function saveRemark(examId: string, studentId: string, remarks: str
 export async function getTranscript(studentId: string): Promise<Transcript> {
   const transcript = await unwrap(academicHttpClient.get<ApiTranscript>(`/api/exams/transcript/${studentId}`));
   return mapTranscript(transcript);
+}
+
+// ── Assessment structures ───────────────────────────────────────────────
+
+export async function listAssessmentStructures(includeArchived = false): Promise<AssessmentStructure[]> {
+  return unwrap(academicHttpClient.get<AssessmentStructure[]>("/api/assessments/structures", { params: { includeArchived } }));
+}
+
+export async function saveAssessmentStructure(form: AssessmentStructureForm, id?: string): Promise<AssessmentStructure> {
+  return unwrap(id ? academicHttpClient.put<AssessmentStructure>(`/api/assessments/structures/${id}`, form) : academicHttpClient.post<AssessmentStructure>("/api/assessments/structures", form));
+}
+
+export async function duplicateAssessmentStructure(id: string): Promise<AssessmentStructure> {
+  return unwrap(academicHttpClient.post<AssessmentStructure>(`/api/assessments/structures/${id}/duplicate`));
+}
+
+export async function archiveAssessmentStructure(id: string): Promise<void> {
+  await academicHttpClient.delete(`/api/assessments/structures/${id}`);
+}
+
+export async function listAssessmentAssignments(): Promise<AssessmentAssignment[]> {
+  return unwrap(academicHttpClient.get<AssessmentAssignment[]>("/api/assessments/assignments"));
+}
+
+export async function saveAssessmentAssignment(body: { structureId: string; classId?: string; subjectId?: string; academicYearId?: string }): Promise<AssessmentAssignment[]> {
+  return unwrap(academicHttpClient.post<AssessmentAssignment[]>("/api/assessments/assignments", body));
+}
+
+export async function deleteAssessmentAssignment(id: string): Promise<void> {
+  await academicHttpClient.delete(`/api/assessments/assignments/${id}`);
+}
+
+/** The structure that applies to a class and subject (most specific assignment wins), or null. */
+export async function resolveAssessmentStructure(params: { classId?: string; subjectId?: string; academicYearId?: string }): Promise<AssessmentStructure | null> {
+  const found = await unwrap(academicHttpClient.get<AssessmentStructure | "">("/api/assessments/resolve", { params }));
+  return found || null;
+}
+
+export async function getMarksProgress(examId: string): Promise<MarksProgress[]> {
+  return unwrap(academicHttpClient.get<MarksProgress[]>(`/api/exams/${examId}/marks-progress`));
+}
+
+export async function submitMarks(examId: string, subjectId: string): Promise<void> {
+  await academicHttpClient.post(`/api/exams/${examId}/subjects/${subjectId}/submit`);
+}
+
+export async function reopenMarks(examId: string, subjectId: string): Promise<void> {
+  await academicHttpClient.post(`/api/exams/${examId}/subjects/${subjectId}/reopen`);
 }

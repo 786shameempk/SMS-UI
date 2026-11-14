@@ -89,6 +89,18 @@ export interface SubjectPart {
   examName: string; obtained: number; max: number; weight: number; absent: boolean;
   /** Class average / highest for this exam, as a percentage of its max. */
   classAvg?: number | null; classTop?: number | null;
+  /** The assessment components behind this exam's mark (PT, NBS ...), when the subject was set up with them. */
+  components?: PartComponent[] | null;
+}
+
+export interface PartComponent {
+  key: string;
+  label: string;
+  obtained: number;
+  max: number;
+  counts: boolean;
+  showOnCard: boolean;
+  optional: boolean;
 }
 
 export interface CardSubject {

@@ -4,6 +4,7 @@ import MarksEntryTab from "../components/MarksEntryTab";
 import ResultsRankingTab from "../components/ResultsRankingTab";
 import ReportCardTab from "../components/ReportCardTab";
 import TranscriptTab from "../components/TranscriptTab";
+import AssessmentStructuresTab from "../components/AssessmentStructuresTab";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,7 @@ export default function ExaminationManagementPage() {
       <Tabs defaultValue="exams">
         <TabsList variant="line">
           <TabsTrigger value="exams">{t("Exams")}</TabsTrigger>
+          <TabsTrigger value="assessment">{t("Assessment")}</TabsTrigger>
           <TabsTrigger value="marks-entry">{t("Marks Entry")}</TabsTrigger>
           <TabsTrigger value="results-ranking">{t("Results & Ranking")}</TabsTrigger>
           <TabsTrigger value="report-cards">{t("Report Cards")}</TabsTrigger>
@@ -26,6 +28,9 @@ export default function ExaminationManagementPage() {
         </TabsList>
         <TabsContent value="exams">
           <ExamsTab />
+        </TabsContent>
+        <TabsContent value="assessment">
+          <AssessmentStructuresTab />
         </TabsContent>
         <TabsContent value="marks-entry">
           <MarksEntryTab />

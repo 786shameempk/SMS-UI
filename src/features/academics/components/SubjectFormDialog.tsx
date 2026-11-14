@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { listAssessmentAssignments, listAssessmentStructures } from "@/features/examinations/api";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,7 +36,8 @@ export default function SubjectFormDialog({
   onOpenChange: (open: boolean) => void;
   subject?: Subject | null;
   classes: SchoolClass[];
-  onSubmit: (values: SubjectFormValues) => Promise<void>;
+  /** structureId is the assessment structure chosen for this subject ("" = none). */
+  onSubmit: (values: SubjectFormValues, structureId: string) => Promise<void>;
   submitting: boolean;
 }) {
   const { t: tr } = useTranslation("academics");
@@ -46,6 +49,16 @@ export default function SubjectFormDialog({
     control,
     formState: { errors },
   } = useForm<SubjectFormValues>({ resolver: zodResolver(subjectFormSchema), defaultValues: emptyValues });
+
+  // Assessment configuration: the structure that applies to this subject in every class unless a more specific assignment exists.
+  const { data: structures = [] } = useQuery({ queryKey: ["examinations", "assessment-structures"], queryFn: () => listAssessmentStructures(), enabled: open });
+  const { data: assignments = [] } = useQuery({ queryKey: ["examinations", "assessment-assignments"], queryFn: listAssessmentAssignments, enabled: open });
+  const [structureId, setStructureId] = useState("");
+  useEffect(() => {
+    if (!open) return;
+    const own = subject ? assignments.find((a) => a.subjectId === subject.id && !a.classId && !a.academicYearId) : undefined;
+    setStructureId(own?.structureId ?? "");
+  }, [open, subject, assignments]);
 
   useEffect(() => {
     if (open) {
@@ -60,7 +73,7 @@ export default function SubjectFormDialog({
           <DialogTitle>{isEdit ? tr("Edit subject") : tr("New subject")}</DialogTitle>
           <DialogDescription>{tr("Subjects are core or elective and can be linked to one or more standards.")}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit((v) => onSubmit(v, structureId))} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="name" required>{tr("Name")}</Label>
@@ -122,6 +135,24 @@ export default function SubjectFormDialog({
               )}
             />
             {errors.classIds && <p data-slot="field-error" role="alert" className="text-xs text-destructive-strong">{errors.classIds.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="assessment-structure" optional>{tr("Assessment configuration")}</Label>
+            <Select value={structureId || "__none__"} onValueChange={(v) => setStructureId(v === "__none__" ? "" : v)}>
+              <SelectTrigger id="assessment-structure">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">{tr("None (a single total)")}</SelectItem>
+                {structures.map((x) => (
+                  <SelectItem key={x.id} value={x.id}>
+                    {x.name} ({x.components.map((c) => c.label).join(" + ")})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{tr("How the marks of this subject are collected, for example PT, NBS, SEA and Half Yearly. Define structures under Examinations, Assessment.")}</p>
           </div>
 
           <DialogFooter>
