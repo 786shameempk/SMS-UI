@@ -11,7 +11,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { listExams } from "@/features/examinations/api";
 import { changeIssueStatus, downloadExport, downloadIssuePdf, getIssue, listAudit, listIssues } from "./api";
-import { CardRenderer } from "./CardRenderer";
+import { CardPreviewDialog } from "./CardPreviewDialog";
 import { printCards } from "./printCards";
 import { useProgressCardAccess } from "./access";
 import type { IssueDetail, IssueSummary } from "./types";
@@ -100,17 +100,7 @@ export default function IssuesTab() {
         </CardContent>
       </Card>
 
-      {open && (
-        <Card>
-          <CardHeader><CardTitle>{open.data.studentName} · {open.data.examName}</CardTitle></CardHeader>
-          <CardContent>
-            <div className="mb-2"><Button size="sm" variant="outline" onClick={() => setOpen(null)}>{t("Close")}</Button></div>
-            <div className="overflow-auto rounded-xl border border-border bg-muted/40 p-4" style={{ maxHeight: "75vh" }}>
-              <div style={{ transform: "scale(0.85)", transformOrigin: "top left", width: "fit-content" }}><CardRenderer config={open.config} data={open.data} /></div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <CardPreviewDialog preview={open} onClose={() => setOpen(null)} />
 
       <Card>
         <CardHeader><CardTitle>{t("Activity log")}</CardTitle></CardHeader>
