@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Download, Eye, FileText, Printer } from "lucide-react";
+import { Download, Eye, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { downloadIssuePdf, getIssue, listMine } from "./api";
-import { CardRenderer } from "./CardRenderer";
-import { printCards } from "./printCards";
+import { CardPreviewDialog } from "./CardPreviewDialog";
 import type { IssueDetail } from "./types";
 
 /** Parent and student view: only published cards of their own children, newest first, with PDF download and print. */
@@ -53,20 +52,7 @@ export default function MyProgressCardsPage() {
           </section>
         ))
       )}
-      {open && (
-        <Card>
-          <CardHeader><CardTitle>{open.data.studentName} · {open.data.examName}</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => !printCards(open.config, [open.data], `${open.data.studentName} - ${open.data.examName}`) && toast.error(t("Allow pop-ups to print."))}><Printer className="h-4 w-4" /> {t("Print")}</Button>
-              <Button size="sm" variant="outline" onClick={() => setOpen(null)}>{t("Close")}</Button>
-            </div>
-            <div className="overflow-auto rounded-xl border border-border bg-muted/40 p-3" style={{ maxHeight: "75vh" }}>
-              <CardRenderer config={open.config} data={open.data} />
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <CardPreviewDialog preview={open} onClose={() => setOpen(null)} />
     </PageContainer>
   );
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ChevronLeft, ChevronRight, CircleAlert, Download, FileCheck2, Plus, Printer, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, CircleAlert, Download, Eye, FileCheck2, Plus, Printer, Search, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { listClasses } from "@/features/academics/api";
 import { listExams } from "@/features/examinations/api";
 import { downloadPreviewPdf, generateCards, listSchemes, listTemplates } from "./api";
-import { CardRenderer } from "./CardRenderer";
+import { CardPreviewDialog } from "./CardPreviewDialog";
 import { printCards } from "./printCards";
 import { useProgressCardAccess } from "./access";
 import type { GenerateResult } from "./types";
@@ -35,7 +35,7 @@ export default function GenerateTab() {
   const [weights, setWeights] = useState<{ examId: string; weight: string }[]>([]);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
-  const [index, setIndex] = useState(0);
+  const [viewing, setViewing] = useState<number | null>(null);
 
   const classExams = useMemo(() => exams.filter((e) => !classId || e.classId === classId), [exams, classId]);
   const mainExam = exams.find((e) => e.id === examId);
@@ -52,7 +52,6 @@ export default function GenerateTab() {
       setResult(r);
       if (previewOnly) {
         setPicked(new Set(r.cards.map((c) => c.data.studentId)));
-        setIndex(0);
       } else {
         queryClient.invalidateQueries({ queryKey: ["progress-cards", "issues"] });
         toast.success(r.saved ? t("{{count}} cards saved as drafts. Approve and publish them from the Cards and publishing tab.", { count: r.cards.length }) : t("Nothing was saved. Fix the errors first."));
@@ -67,7 +66,6 @@ export default function GenerateTab() {
 
   const errors = result?.issues.filter((i) => i.severity === "Error") ?? [];
   const warnings = result?.issues.filter((i) => i.severity === "Warning") ?? [];
-  const card = result?.cards[index]?.data;
   const sumWeights = weights.reduce((a, w) => a + (Number(w.weight) || 0), 0);
 
   return (
@@ -134,7 +132,7 @@ export default function GenerateTab() {
       )}
 
       {result && result.cards.length > 0 && (
-        <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="grid gap-4 ">
           <Card>
             <CardHeader><CardTitle>{t("{{count}} students", { count: result.cards.length })} · {result.templateName} v{result.templateVersion}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
@@ -151,12 +149,12 @@ export default function GenerateTab() {
                 <TableHeader>
                   <TableRow hover={false}>
                     <TableHead className="w-8"><input type="checkbox" aria-label={t("Select all")} checked={picked.size === result.cards.length} onChange={(e) => setPicked(e.target.checked ? new Set(result.cards.map((c) => c.data.studentId)) : new Set())} /></TableHead>
-                    <TableHead>{t("Student")}</TableHead><TableHead className="text-end">%</TableHead><TableHead>{t("Result")}</TableHead>
+                    <TableHead>{t("Student")}</TableHead><TableHead className="text-end">%</TableHead><TableHead>{t("Result")}</TableHead><TableHead />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {result.cards.map((c, i) => (
-                    <TableRow key={c.data.studentId} onClick={() => setIndex(i)} className={i === index ? "bg-primary/5" : "cursor-pointer"}>
+                    <TableRow key={c.data.studentId}>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <input type="checkbox" aria-label={c.data.studentName} checked={picked.has(c.data.studentId)}
                           onChange={(e) => setPicked((s) => { const n = new Set(s); if (e.target.checked) n.add(c.data.studentId); else n.delete(c.data.studentId); return n; })} />
@@ -164,26 +162,16 @@ export default function GenerateTab() {
                       <TableCell>{c.data.studentName}{c.status && <Badge variant="neutral" className="ms-2">{t(c.status)}</Badge>}</TableCell>
                       <TableCell className="text-end tabular-nums">{c.data.percentage}</TableCell>
                       <TableCell><Badge variant={c.data.result === "Pass" ? "success" : "danger"}>{t(c.data.result)}</Badge></TableCell>
+                      <TableCell className="text-end"><Button variant="ghost" size="icon-sm" aria-label={t("View card")} onClick={() => setViewing(i)}><Eye className="h-4 w-4" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
-
-          <div className="min-w-0 space-y-2">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon-sm" aria-label={t("Previous student")} disabled={index === 0} onClick={() => setIndex(index - 1)}><ChevronLeft className="h-4 w-4" /></Button>
-              <span className="text-sm text-muted-foreground">{t("{{n}} of {{total}}", { n: index + 1, total: result.cards.length })}</span>
-              <Button variant="outline" size="icon-sm" aria-label={t("Next student")} disabled={index >= result.cards.length - 1} onClick={() => setIndex(index + 1)}><ChevronRight className="h-4 w-4" /></Button>
-              <span className="ms-2 text-xs text-muted-foreground">{t("Graded with")}: {result.schemeName}</span>
-            </div>
-            <div className="overflow-auto rounded-xl border border-border bg-muted/40 p-4" style={{ maxHeight: "75vh" }}>
-              {card && <div style={{ transform: "scale(0.85)", transformOrigin: "top left", width: "fit-content" }}><CardRenderer config={result.config} data={card} /></div>}
-            </div>
-          </div>
         </div>
       )}
+      <CardPreviewDialog preview={result && viewing !== null && result.cards[viewing] ? { config: result.config, data: result.cards[viewing].data } : null} onClose={() => setViewing(null)} />
     </div>
   );
 }
